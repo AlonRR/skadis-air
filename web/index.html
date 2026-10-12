@@ -19,6 +19,83 @@
       [data-state='error'] {
         color: #a40000;
       }
+      label {
+        display: block;
+        margin-top: 0.6rem;
+      }
+      input[type='number'] {
+        margin-left: 0.5rem;
+        width: 6rem;
+      }
+      .count {
+        color: #555;
+        margin-left: 0.5rem;
+      }
+      .help {
+        color: #555;
+        font-size: 0.85rem;
+        margin: 0.2rem 0 0;
+      }
+      .error {
+        color: #a40000;
+        margin: 0.2rem 0 0;
+      }
+      .warning {
+        color: #8a5a00;
+        margin: 0.2rem 0 0;
+      }
+      .error:empty,
+      .warning:empty {
+        display: none;
+      }
+      fieldset.sides {
+        border: 1px solid #c8c8c8;
+        border-radius: 0.4rem;
+        margin-top: 0.8rem;
+      }
+      .sides-grid {
+        display: grid;
+        gap: 0.3rem;
+        grid-template-areas: '. top .' 'left board right' '. bottom .';
+        grid-template-columns: auto 6rem auto;
+        justify-content: start;
+        align-items: center;
+      }
+      .side-top {
+        grid-area: top;
+      }
+      .side-left {
+        grid-area: left;
+      }
+      .side-right {
+        grid-area: right;
+      }
+      .side-bottom {
+        grid-area: bottom;
+      }
+      .board-drawing {
+        grid-area: board;
+        aspect-ratio: 1;
+        background: #e4e4e0;
+        border: 2px dashed #888;
+      }
+      .side[aria-pressed='true'] {
+        font-weight: 600;
+      }
+      .side {
+        white-space: nowrap;
+      }
+      .side-top,
+      .side-bottom {
+        justify-self: center;
+      }
+      details {
+        margin-top: 1rem;
+      }
+      [data-state='invalid'],
+      [data-state='problem'] {
+        color: #a40000;
+      }
     </style>
   </head>
   <body>
@@ -28,6 +105,14 @@
       download a file your printer can make. Everything runs in this page; nothing is sent to a server.
     </p>
     <p class="note" data-testid="engine-status" data-state="loading">Starting the geometry engine…</p>
+    <form data-testid="board" onsubmit="return false">
+      <label>
+        Board type
+        <select data-testid="board-type"></select>
+      </label>
+      <div data-testid="board-form"></div>
+    </form>
+    <p data-testid="board-status" data-state="building">Making the board…</p>
     <footer>
       <p class="note" data-testid="output-statement">
         The STL and other files this tool generates, and anything you print from them, are yours to use, change,

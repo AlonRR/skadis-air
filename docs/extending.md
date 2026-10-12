@@ -1,0 +1,58 @@
+# Extending the generator
+
+For contributors: where a new board type or a new setting goes, and which check fails if a step is
+missed. The library (`packages/core`) holds every shape and every rule; the page (`web/`) builds its
+controls from the library's list of board types, so most additions need no page code at all.
+
+Run the checks in [`CLAUDE.md`](../CLAUDE.md) before and after: type check, lint, formatting, the unit
+tests, the browser test, and `npm run check:stl` for anything that changes a shape.
+
+## A new board type
+
+A board type is one file and one line in a list (D11, the extension-registry practice).
+
+1. **The file**, `packages/core/src/board-types/<id>.ts`, calls `defineBoardType` with:
+   - `id`: lower-case words joined by hyphens; it starts every file name, `skadis-<id>-…`;
+   - `name`: as the page lists it;
+   - `settings`: from `defineSettings([...])`, each a `number` or a `sides` setting. A number has
+     its unit, starting value, range and step; `onStep` when the value must be on the steps (a
+     board's size), `count` to show it as a count beside the box (`= 6 tiles`), `warnOutside` for a
+     range it allows but warns about, `advanced` to fold it under "Advanced" (D48), and `help`;
+   - `build(engine, values)`: the solid, from values typed by the settings above. A combination it
+     cannot make throws a `RangeError`, which the page shows as a problem instead of a board;
+   - `label(values)`: the rest of the file name.
+2. **The line**: add it to `BOARD_TYPES` in `packages/core/src/board-types/index.ts`, in the order
+   the page should list it. The page opens on the first.
+
+Nothing else. The page lists the type, builds its form, checks its values, rebuilds it on every
+change and names its file. **Proved 12 Oct 2026** by a trial type added and removed again: the type
+check, the contract test (which picked the type up by itself) and the browser test passed with
+only those two changes. The one other edit the trial needed was a test that had named the listed
+types, now reading them from the list.
+
+What fails if a step is missed:
+
+| Missed or wrong | Fails |
+| --- | --- |
+| A starting value outside its range, a key used twice, a build that makes nothing | `packages/core/test/board-types.test.ts`: the contract every listed type is held to |
+| The id not in lower-case words, two types with one id | the same contract |
+| The line in `BOARD_TYPES` | the type is simply not on the page; `web/e2e/form.spec.ts` lists what is |
+| A build or label written against settings it does not declare | the type check |
+
+`board-types.test.ts` also holds a type declared in the test file alone and puts it through the
+same calls, which shows the generic code names no board.
+
+## A new setting on an existing board type
+
+1. Add it to the type's `defineSettings([...])` list. The page shows a control for it, the reader
+   checks it, and `build` receives it, typed.
+2. Use it in the type's `build`, and in `label` if two values must give different file names.
+3. A test in `packages/core/test` for what it changes in the shape, measured on the solid; a
+   browser test in `web/e2e` if the page does more than show it.
+
+## A new kind of setting
+
+A setting that is neither a number nor the four sides (a choice from a list, say) needs three
+places: its interface beside `NumberSetting` in `packages/core/src/settings.ts`, its reading in
+`readValues` there, and its control in `web/src/form.ts`. `packages/core/test/settings.test.ts`
+declares its own settings and is where its reading is tested.

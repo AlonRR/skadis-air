@@ -51,7 +51,8 @@ outside this tree; do not vendor them in. The ones that bite most often here:
 - **Every gate needs a positive control**, and a result needs its denominator ("22 cases run,
   22 passed"). A check you wrote that confirms exactly what you expected is not yet evidence.
 - **A new board type, option or connector is one file and one entry in a list**
-  (`extension-registry`), with a contract test over every entry.
+  (`extension-registry`), with a contract test over every entry. [`docs/extending.md`](docs/extending.md)
+  says exactly which files, proved by a trial addition; keep it true.
 - **Verify before asserting.** Mark claims `(verified: <how>)`, `(inferred)` or `(relayed)`.
 
 ## Python

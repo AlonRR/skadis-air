@@ -5,3 +5,5 @@ export * from './engine.js';
 export * from './skadis.js';
 export * from './slots.js';
 export * from './stl.js';
+export * from './board-types/index.js';
+export * from './settings.js';

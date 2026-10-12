@@ -17,3 +17,6 @@ All notable changes to this project are recorded here. The format follows
 - The solid board in the library: 40 mm tiles cut through slot centres, each side open or closed,
   5.2 × 15.2 mm slots with a 1 mm chamfer, 10 mm corners where both sides are closed; and an STL check
   of sample boards through scad-tools and PrusaSlicer.
+- The page's form, built from the list of board types: size in 40 mm steps with its tiles shown,
+  thickness with a warning outside 4 to 5.5 mm, the four sides as toggles, the fine settings under
+  Advanced; the board rebuilt as the settings change. `docs/extending.md` says how a type is added.

@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). `repo-bootstrap`, `page-skeleton` and `board-solid` are done and on Gitea; next is `registry`. The evidence for the board types and
+Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). `repo-bootstrap`, `page-skeleton`, `board-solid` and `registry` are done and on Gitea; next is `preview-3d`. The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
@@ -46,6 +46,10 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D39 | **The board's corner radius is 10 mm**, where both sides at a corner are closed; open corners stay square so tiles fit together. `<<CONFIRM>>` until T17 | 12 Oct 2026 |
 | D40 | **Slots start at 5.2 × 15.2 mm**: the nominal 5 × 15 plus a 0.2 mm clearance setting, as real IKEA boards measure; the fit coupon and T17 settle it | 12 Oct 2026 |
 | D41 | **A 1 mm chamfer round each slot, at both faces** | 12 Oct 2026 |
+| D45 | **The board's size is entered in mm, in 40 mm steps, with its count of tiles shown beside** ("= 6 tiles") | 12 Oct 2026 |
+| D46 | **The four sides are toggles placed round a small drawing of the board**, one at each side | 12 Oct 2026 |
+| D47 | **The page lists only the board types that are built**; each appears when it is | 12 Oct 2026 |
+| D48 | **The fine settings (slot clearance, chamfer, corner radius) are folded under "Advanced"**; size, thickness and sides on the main form, with a warning outside 4 to 5.5 mm | 12 Oct 2026 |
 | A35 | **The history is rewritten to drop the bytecode file**: the last three commits replayed without it, signed, with their authors, committers and dates; force-pushed to Gitea with a lease on 12 Oct 2026. Gitea still serves the old commits by their full SHA until it prunes them | 12 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
