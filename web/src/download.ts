@@ -1,8 +1,8 @@
 // The download (backlog item download-stl; D60): the board the page last built, as a binary STL
-// named for its type, size and closed sides (C52). Whatever is generated is the user's (D8).
+// named for its type, size and closed sides (C52), lying as it prints: face down (D66). Whatever is generated is the user's (D8).
 // saveFile is parametric-window-sealer's web/src/download-dialog.ts function (C32).
 import type { Manifold } from 'manifold-3d';
-import { meshOf, toStl } from 'skadis-ultralight-generator';
+import { meshOf, printPose, toStl } from 'skadis-ultralight-generator';
 
 function saveFile(name: string, bytes: Uint8Array, type: string): void {
   const blob = new Blob([new Uint8Array(bytes)], { type });
@@ -17,6 +17,12 @@ function saveFile(name: string, bytes: Uint8Array, type: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
+/** The board as it prints, face down (D66): turned over from the way the page builds and shows it. */
 export function downloadStl(board: Manifold, fileName: string): void {
-  saveFile(fileName, toStl(meshOf(board), fileName.replace(/\.stl$/, '')), 'model/stl');
+  const printed = printPose(board);
+  try {
+    saveFile(fileName, toStl(meshOf(printed), fileName.replace(/\.stl$/, '')), 'model/stl');
+  } finally {
+    printed.delete();
+  }
 }

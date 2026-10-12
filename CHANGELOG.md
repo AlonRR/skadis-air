@@ -6,6 +6,11 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The STL lies as boards are printed: face down, the back up, turned over from the way the page shows
+  the board, so its sides keep their places once it hangs.
+
 ## [0.1.0] - 2026-10-12
 
 The first version: a solid board, set up on the page, shown in 3D and downloaded as STL. Nothing in it has been test-printed yet.

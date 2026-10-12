@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). **`v0.1.0` is released** (tag on Gitea, 12 Oct 2026): every P0 row of the backlog is done. The page makes a solid board, shows it in 3D and downloads it as STL; nothing is test-printed yet. Next is a P1 row; the owner picks which (D64). The evidence for the board types and
+Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). **`v0.1.0` is released** (tag on Gitea, 12 Oct 2026): every P0 row of the backlog is done. The page makes a solid board, shows it in 3D and downloads it as STL; nothing is test-printed yet. D64: the P1 rows go on in order, `fit-coupon` then `mounting`, after D66 (boards print face down). The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
@@ -56,6 +56,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D60 | **One "Download STL" button under the preview**, the file named as C52 says; STL and 3MF choices come with `download-3mf-zip` | 12 Oct 2026 |
 | D61 | **The printer bed starts at 200 × 200 mm**, which every full-size printer in the reference project's verified list fits, with a custom size beside it | 12 Oct 2026 |
 | D62 | **A board larger than the bed is warned about, not refused**: it can still be downloaded; splitting it into tiles comes with `tiling` | 12 Oct 2026 |
+| D66 | **Boards print face down**: the front on the bed, the back up, since some designs put standoffs on the back (replacing choice C58). A board is built and previewed as it hangs, front toward the viewer, and the download turns it over about the vertical axis, as a person turns it over to lay it on the bed; so a side chosen as left on the page is at the far x of the STL seen from above, and on the left again once it hangs | 12 Oct 2026 |
 | A35 | **The history is rewritten to drop the bytecode file**: the last three commits replayed without it, signed, with their authors, committers and dates; force-pushed to Gitea with a lease on 12 Oct 2026. Gitea still serves the old commits by their full SHA until it prunes them | 12 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 

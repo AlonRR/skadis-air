@@ -9,7 +9,14 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadEngine, makeSolidBoard, meshOf, solidBoardParams, toStl } from '../../packages/core/dist/index.js';
+import {
+  loadEngine,
+  makeSolidBoard,
+  meshOf,
+  printPose,
+  solidBoardParams,
+  toStl,
+} from '../../packages/core/dist/index.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const out = join(root, '.check', 'boards');
@@ -35,7 +42,9 @@ mkdirSync(out, { recursive: true });
 const engine = await loadEngine();
 for (const { name, given } of samples) {
   const board = makeSolidBoard(engine, solidBoardParams(given));
-  writeFileSync(join(out, `${name}.stl`), toStl(meshOf(board), name));
+  const printed = printPose(board); // as the page downloads it: face down (D66)
+  writeFileSync(join(out, `${name}.stl`), toStl(meshOf(printed), name));
+  printed.delete();
   console.log(`${name}.stl  volume ${board.volume().toFixed(1)} mm3  genus ${board.genus()}`);
   board.delete();
 }
