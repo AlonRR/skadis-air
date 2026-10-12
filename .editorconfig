@@ -1,0 +1,88 @@
+# Drop this in at the repo root. One place for indent, EOL, charset and final newline,
+# read by editors, shfmt and editorconfig-checker.
+#
+# ⚠️ ADOPTING THIS IS A ONE-TIME RE-SAVE for PowerShell. The [*.ps1] block requires
+# utf-8-bom, and editorconfig-checker will fail existing ASCII-only .ps1 files that have no
+# BOM. Windows PowerShell 5.1 reads a BOM-less file as the ANSI code page, which is why the
+# BOM is the right answer rather than the convenient one. Do the re-save as its own commit
+# and add that commit to .git-blame-ignore-revs.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml,json,jsonc,md,markdown}]
+indent_size = 2
+
+# Markdown uses two trailing spaces as a hard line break; stripping them changes rendering.
+# indent_size is unset because indentation in prose is SEMANTIC - list continuation, block
+# quotes, nested fences - not code layout. editorconfig-checker otherwise reports every
+# aligned continuation line as "wrong amount of left-padding" (30 such errors here).
+[*.{md,markdown}]
+trim_trailing_whitespace = false
+indent_size = unset
+
+[*.{ps1,psm1,psd1}]
+charset = utf-8-bom
+
+[Makefile]
+indent_style = tab
+
+[*.{c,h,cpp,hpp,ino}]
+indent_size = 2
+
+[*.py]
+indent_size = 4
+
+# TOML's own convention is 2, and every generator emits it that way.
+[*.toml]
+indent_size = 2
+
+# .repo-status is YAML without the extension, so it takes YAML's indent.
+[.repo-status]
+indent_size = 2
+
+# JavaScript, HTML and OpenSCAD: 2 spaces, the usual convention for each. The kit has no
+# profile for them; without this section the [*] default of 4 would apply.
+[*.{js,mjs,cjs,ts,html,scad}]
+indent_size = 2
+
+# Shell, including the EXTENSIONLESS git hooks. Separate sections on purpose: a brace
+# group that mixes a basename pattern with a path pattern (`{*.sh,.githooks/*}`) changes
+# how EditorConfig matches ALL of its alternatives, and made every .sh file fail. Found
+# by running the checker after "fixing" it, 20 Sep 2026.
+[*.sh]
+indent_size = 2
+
+[*.bash]
+indent_size = 2
+
+[.githooks/*]
+indent_size = 2
+
+[hooks/*]
+indent_size = 2
+
+# Sample/config fixtures carry their own layout; they are read, not compiled.
+[*.example]
+indent_size = unset
+
+[*.snippet]
+indent_size = unset
+
+[*.rs]
+indent_size = 4
+
+# Files whose format is fixed by their tool - never reformat them.
+[{*.patch,*.diff,uv.lock,Cargo.lock,poetry.lock,package-lock.json}]
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+# git writes .gitmodules itself, indented with tabs; its format is git's, not ours.
+[.gitmodules]
+indent_style = tab

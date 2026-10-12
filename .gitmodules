@@ -1,0 +1,3 @@
+[submodule "scad-tools"]
+	path = scad-tools
+	url = ../scad-tools.git

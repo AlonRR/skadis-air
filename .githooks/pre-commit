@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+# Refuse a commit whose author or committer is not the expected identity - address AND name.
+#
+# The leak this prevents is NOT a typo. When user.email is unset, git INVENTS an
+# identity as user@hostname and writes it into every commit - which is how a server's
+# root@<host>.<internal zone>, the owner's <name>@<internal zone>, and a collaborator's
+# <user>@<laptop>.local all reached real repositories. A private hostname then lives in
+# `git log`, where no content scan looks and no file-based redaction can reach it.
+#
+# `user.useConfigOnly = true` makes git refuse to invent one. This hook is the
+# second layer: it catches a WRONG configured identity, which useConfigOnly
+# cannot.
+#
+# THE EXPECTED IDENTITY IS CONFIGURATION, NOT CODE. It is read from git config:
+#
+#   git config --global hooks.expectEmail '<the public address commits must carry>'
+#   git config --global hooks.expectName  '<the exact name commits must carry>'
+#
+# (repo-local config overrides the global one, as git config always does). With either
+# key unset the hook REFUSES: a guard with nothing to compare against would pass every
+# commit, and a hook that accepts everything looks exactly like one that works.
+#
+# The NAME is checked too, exactly (added 23 Sep 2026). A right address with a wrong
+# name passes GitHub attribution and still publishes the wrong name: a college
+# server's account name, a variant spelling of the owner's, reached all 57 trees of one
+# repository that way, and undoing it meant a history rewrite. Because the address
+# check has already passed by then, a wrong name is always this account misconfigured,
+# and one `git config user.name` fixes it. It REFUSES rather than warns: agents pipe
+# hook output away, so a warning is never seen.
+#
+# Message rules (subject form, attribution trailers) are the commit-msg hook's
+# job. This hook owns identity only.
+#
+# ⚠️ THE VERDICT MUST NOT DEPEND ON BEING ABLE TO PRINT IT.
+#
+# Measured 18 Sep 2026, and it silently defeated this hook: run as
+#   git commit -m '...' 2>&1 | head -1
+# the hook printed "REFUSING COMMIT" and git committed anyway, with the wrong
+# identity, exit 0. `head -1` closes the pipe after the first line; the SECOND
+# diagnostic write then took SIGPIPE and killed the shell BEFORE it reached
+# `exit 1`. Unpiped, the identical commit was refused. So the guard against the one
+# leak class no content scan can see was disabled by a pipe - and piping git's
+# output through head/grep -m1/tail is something scripts and agents do constantly.
+#
+# Two changes make the verdict independent of output:
+#   trap '' PIPE  - a closed pipe returns EPIPE instead of killing the shell
+#   no `set -e`   - a failed diagnostic write must never abort before `exit 1`
+# The regression is a test row in tests/test-hooks.sh.
+trap '' PIPE
+set -uo pipefail
+EXPECT=$(git config --get hooks.expectEmail 2> /dev/null || true)
+EXPECT_NAME=$(git config --get hooks.expectName 2> /dev/null || true)
+if [ -z "$EXPECT" ] || [ -z "$EXPECT_NAME" ]; then
+  {
+    echo "REFUSING COMMIT: no expected identity is configured, so there is nothing to check against."
+    echo ""
+    echo "  git config --global hooks.expectEmail '<the public address commits must carry>'"
+    echo "  git config --global hooks.expectName  '<the exact name commits must carry>'"
+  } >&2 2> /dev/null || true
+  exit 1
+fi
+ai=$(git var GIT_AUTHOR_IDENT)
+ci=$(git var GIT_COMMITTER_IDENT)
+ae=$(printf '%s' "$ai" | sed -n 's/.*<\(.*\)>.*/\1/p')
+ce=$(printf '%s' "$ci" | sed -n 's/.*<\(.*\)>.*/\1/p')
+an=$(printf '%s' "$ai" | sed -n 's/ <.*//p')
+cn=$(printf '%s' "$ci" | sed -n 's/ <.*//p')
+
+# Compared case-INSENSITIVELY. Gitea lowercases the address when it stamps a
+# web-UI or API commit, and that address is the same GitHub account - GitHub
+# matches commit emails case-insensitively. A case-sensitive check here rejects a
+# commit that is in fact correctly attributed.
+# Measured 11 Sep 2026: the case-sensitive form refused Gitea's own address.
+lc() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
+expect_lc=$(lc "$EXPECT")
+
+fail=0
+for who in "author:$ae" "committer:$ce"; do
+  role=${who%%:*}
+  addr=${who#*:}
+  if [ "$(lc "$addr")" != "$expect_lc" ]; then
+    echo "REFUSING COMMIT: $role is '$addr', expected '$EXPECT'" >&2
+    fail=1
+  fi
+done
+# Exact, case included: unlike the address, nothing legitimate re-cases a name.
+for who in "author:$an" "committer:$cn"; do
+  role=${who%%:*}
+  nm=${who#*:}
+  if [ "$nm" != "$EXPECT_NAME" ]; then
+    echo "REFUSING COMMIT: $role name is '$nm', expected '$EXPECT_NAME'" >&2
+    fail=1
+  fi
+done
+if [ "$fail" -eq 1 ]; then
+  # Grouped into ONE write, and explicitly allowed to fail. Whatever happens to the
+  # output, the next statement is `exit 1`.
+  {
+    echo ""
+    echo "  git config user.email '$EXPECT'    # for this repo"
+    echo "  git config --global user.email '$EXPECT'"
+    echo "  git config user.name '$EXPECT_NAME'    # a repo-local name overrides the global one"
+    echo ""
+    echo "Committer is set independently by rebase and amend - check both."
+  } >&2 2> /dev/null || true
+  exit 1
+fi

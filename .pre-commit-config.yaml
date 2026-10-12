@@ -1,0 +1,163 @@
+# Common base for every repo. Assemble a repo's .pre-commit-config.yaml from this file
+# plus one language profile from templates/profiles/.
+#
+# WHY THIS FILE EXISTS AT ALL
+#
+# Hooks in .git/hooks do not travel. They are per clone, so a fresh clone on another
+# machine - a second workstation, a container, a rebuilt laptop - has no checks at all, and
+# `claude-config`'s sync only carries CLAUDE.md and skills/. This file is committed, so
+# `pre-commit install` recreates every hook type from it wherever the repo is cloned.
+#
+# default_install_hook_types matters: without it, `pre-commit install` wires ONLY
+# pre-commit, and the commit-msg hooks below would never run - passing silently, which is
+# the failure mode this estate keeps meeting.
+minimum_pre_commit_version: "4.5.1"
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+default_stages: [pre-commit]
+# LICENSE and COPYING are verbatim legal texts. Whitespace and layout are part of the
+# document as published, so no formatter, fixer or style checker may touch them - and
+# editorconfig-checker fails the MPL-2.0 text on sight otherwise.
+# LICENSES/ is the same thing in the REUSE layout this repo uses (one text per licence).
+exclude: |
+  (?x)^(
+    LICENSE$|
+    LICENSE\..*|
+    LICENSES/|
+    COPYING$|
+    \.pio/|
+    \.venv/|
+    build/|
+    target/|
+    node_modules/
+  )
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: [--maxkb=500]      # MediaPipeline once committed an 847 MB video by accident
+      - id: check-case-conflict
+      - id: check-illegal-windows-names
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: destroyed-symlinks
+      - id: detect-private-key
+        # A scanner's own positive-control fixture must contain the very string it
+        # detects. Excluding the fixture is not weakening the check: without a fixture
+        # that trips it, a broken pattern and a clean repo look identical.
+        exclude: ^tests/
+      # forbid-submodules is left out on purpose: this repo has one submodule, scad-tools,
+      # for its STL checks (C31), at the RELATIVE address ../scad-tools.git, which names no host.
+      # The hook exists because a submodule publishes its URL; a relative one publishes none.
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: fix-byte-order-marker
+        exclude: \.(ps1|psm1|psd1)$   # PowerShell 5.1 reads a BOM-less file as the ANSI code page
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+        exclude: ^\.vscode/           # VS Code files are JSONC, not JSON
+
+  # Secret scanning. gitleaks' own README now says it is "feature complete" and will get
+  # security patches only, and points at betterleaks; betterleaks still reads
+  # .gitleaks.toml / .gitleaksignore / gitleaks:allow, so moving back is a one-line change.
+  # NOTE: a pre-commit hook only ever sees STAGED content. History needs its own scan -
+  # that is what scan-repo.sh is for, and it is the gate before a repo goes public.
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: v1.8.1
+    hooks:
+      - id: betterleaks
+        # Same exemption as detect-private-key, and for the same reason: this repo's
+        # fixtures must contain credential-shaped strings to prove the patterns fire.
+        # ⚠️ It passed `run --all-files` and FAILED on the staged patch - the hook scans
+        # files in one mode and git.patch_content in the other, so "green on --all-files"
+        # does not mean "this will commit".
+        exclude: ^tests/
+
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+    rev: 3.11.1
+    hooks:
+      - id: editorconfig-checker
+        alias: ec
+
+  # ---------------------------------------------------------------------------
+  # The two house hooks, copied into .githooks/ from repo-secret-scan's hooks/.
+  #
+  # They are NOT reimplemented here, on purpose. These two scripts carry fixes that cost
+  # a full session to find, and each is covered by tests/test-hooks.sh:
+  #   - the expected identity is read from git config (hooks.expectEmail and
+  #     hooks.expectName), and with either unset every commit is refused;
+  #   - the verdict survives a closed output pipe (`| head -1` once made the identity hook
+  #     print REFUSING COMMIT and let the commit through anyway, exit 0);
+  #   - the message is normalised with `git stripspace --strip-comments` and cut at the
+  #     scissors line, so an editor's comment block and `commit -v`'s diff are not measured
+  #     as message text;
+  #   - line 2 must be blank, because git's subject is the first PARAGRAPH, not the first line;
+  #   - the attribution patterns are anchored to line starts, so prose that merely mentions
+  #     a trailer is not refused - five real commits in four repos did exactly that;
+  #   - the identity comparison is case-insensitive, because Gitea stores its own web/API
+  #     commits lowercased and that is the same GitHub account.
+  # A rewrite of either check here would silently drop all of that.
+  # ---------------------------------------------------------------------------
+  # `language: system` with an explicit interpreter, NOT `language: script`.
+  #
+  # Measured on Windows 20 Sep 2026: `language: script` asks the OS to execute the file,
+  # which follows its `#!/bin/sh` shebang and fails with
+  #   ExecutableNotFoundError: Executable `/bin/sh` not found
+  # because Windows has no /bin/sh. The hook then never runs - and the commit still
+  # fails, so it LOOKS like the hook refused it. A check that cannot run, failing in a
+  # way that resembles success, is the exact shape this repo exists to catch.
+  # Naming the interpreter lets git-bash's PATH resolve it on Windows and Linux alike.
+  - repo: local
+    hooks:
+      - id: house-identity
+        name: author and committer are the public noreply identity
+        language: system
+        entry: bash .githooks/pre-commit
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+      - id: house-commit-msg
+        name: subject form, length, blank line 2, and no attribution trailers
+        language: system
+        entry: sh .githooks/commit-msg
+        stages: [commit-msg]
+
+  # ---------------------------------------------------------------------------
+  # Language profiles, picked by what this repo tracks: shell (the hooks, scripts/
+  # and tests/), docs (Markdown, configured by .markdownlint-cli2.yaml) and yaml
+  # (configured by .yamllint.yaml; tests/test-yamllint.sh holds that config to
+  # both directions). Both configs are the kit's templates.
+  # ---------------------------------------------------------------------------
+
+  # shell
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        # Correctness and above. Style-level findings are shfmt's territory, and mixing
+        # the two means a repo can never go green without arguing about taste.
+        args: [--severity=warning]
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.12.0-2
+    hooks:
+      - id: shfmt
+        # -i 2 -ci -sr match the .editorconfig; shfmt reads .editorconfig only when no
+        # printer flag is given, so these two must be kept in step by hand.
+        args: [-i, "2", -ci, -sr, -w]
+
+  # docs
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.19.0
+    hooks:
+      - id: markdownlint-cli2
+
+  # yaml
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [--strict]

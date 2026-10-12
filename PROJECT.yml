@@ -1,0 +1,10 @@
+# The projects this repo holds. Schema: SCHEMA.md in project-ledger
+# schema version: set by `ledger migrate` or `ledger init` -- do not edit by hand
+schema: 1
+projects:
+  - name:     SKÅDIS board generator
+    kind:     build
+    state:    active
+    next:     "page-skeleton: the npm workspace with Manifold loaded and a browser test"
+    trackers: [docs/status.md, docs/backlog.md]
+    review:   2026-10-12

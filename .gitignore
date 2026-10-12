@@ -1,0 +1,60 @@
+# --- secrets and local configuration (append to every repo's .gitignore) ---
+#
+# Measured 19 Sep 2026: of 41 repos, 8 had no .gitignore at all and only 2 covered all of
+# .env, *.pem and *.key. A pattern here is cheaper than a history rewrite later.
+#
+# The pattern this estate actually uses for config: commit `<name>.example.<ext>` with
+# placeholder values, gitignore the real file, and document the path in the README.
+# smart-charger does this with include/config.hpp / include/config.example.hpp.
+
+# environment and dotfiles
+.env
+.env.*
+!.env.example
+*.env
+
+# keys, certificates, tokens
+*.pem
+*.key
+!*.pub.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+*_rsa
+*_ed25519
+*.ppk
+.netrc
+.npmrc
+*.token
+*token.json
+*credentials*.json
+!*credentials*.example.json
+
+# cloud and tool credential stores
+.aws/
+.azure/
+.gcloud/
+service-account*.json
+
+# local, machine-specific or generated config
+*.local
+*.local.*
+secrets.*
+!secrets.example.*
+config.local.*
+
+# --- dependencies installed by npm ---
+node_modules/
+
+# --- generated: the built page, browser-test results and package builds, each under one parent ---
+web/out/
+packages/*/dist/
+
+# --- the STL checks' working output ---
+.check/
+
+# --- the agent harness's own lock files ---
+.claude/*.lock

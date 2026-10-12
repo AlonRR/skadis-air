@@ -1,0 +1,24 @@
+# Copy to a repo root as `.markdownlint-cli2.yaml` when adopting the docs profile.
+#
+# These are prose repos: measured tables, long quoted command lines and audit evidence.
+# The rules disabled below are the ones that fight that content rather than improve it.
+config:
+  MD013: false   # line length: tables of measurements and quoted commands are long on purpose
+  MD033: false   # inline HTML: used for the occasional <br> inside a table cell
+  MD041: false   # first line need not be a top-level heading (front matter, badges)
+  MD024:
+    siblings_only: true   # repeated headings are fine across sections, not within one
+  MD060: false   # table pipe spacing: compact tables are deliberate here
+  # emphasis style: the mandated disclosure line is underscore-italic
+  # ("_Parts of this repository were drafted with the help of an LLM agent..._"),
+  # and that string is fixed by the house rules, so the rule loses.
+  MD049: false
+globs:
+  - "**/*.md"
+ignores:
+  - "reports/**"        # generated scanner output - lint the generator, not its output
+  - ".venv/**"
+  - "**/node_modules/**"  # at any depth; "node_modules/**" matched only the root one
+  - "web/out/**"        # the page's generated output: the build and browser-test reports
+  - "**/CHANGELOG.md"   # generated; its format is the tool's, not ours
+  - "scad-tools/**"     # a submodule: its docs are linted in its own repository

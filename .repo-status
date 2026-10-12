@@ -1,0 +1,9 @@
+# .repo-status -- the publish decision, where tooling can read it.
+# Template: publish-status.example in repo-secret-scan. One of: never | maybe | not-yet | ready | public.
+
+publish: not-yet
+reason:  meant to be public so people can make their boards from a web page
+review:  2026-10-12
+blockers:
+  - nothing is built yet
+  - the survey in docs/research names other designers' published models; to be reviewed before publishing

@@ -1,0 +1,35 @@
+# Copy to a repo root as `.yamllint.yaml` when adopting the yaml profile. yamllint finds it
+# there on its own; the profile passes no -c, so a repo without this file gets the defaults.
+#
+# Why it exists: on yamllint's defaults, `--strict` refused this kit's OWN files, so a repo
+# that took the profile went red on YAML it got from here (found 5 Oct 2026, assembling the
+# kit into a new repo). Each relaxation below is the narrowest one that lets correct files
+# through; tests/test-yamllint.sh proves the rule around each still refuses broken YAML.
+extends: default
+
+rules:
+  # Comments here explain WHY, and 80 columns breaks them mid-thought. The kit's longest
+  # line is 114. Unbroken words such as URLs are already allowed past the limit.
+  line-length:
+    max: 120
+
+  # No file here starts with `---`, and neither pre-commit's nor GitHub's configs ever do.
+  document-start: disable
+
+  # GitHub Actions' trigger key is `on:`, which YAML 1.1 reads as a boolean. Keys are not
+  # checked; VALUES still must be true/false, so `enabled: yes` is refused.
+  truthy:
+    allowed-values: ["true", "false"]
+    check-keys: false
+
+  # PROJECT.yml aligns its values in a column on purpose (`name:     x`).
+  colons:
+    max-spaces-after: -1
+
+  # Two spaces, as .editorconfig already says for YAML (the default only asks for
+  # "consistent", which passes 3). pre-commit's own sample config writes lists flush with
+  # their key; the base config here indents them. Either is fine, but one file must not mix
+  # the two.
+  indentation:
+    spaces: 2
+    indent-sequences: consistent

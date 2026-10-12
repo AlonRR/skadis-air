@@ -1,0 +1,47 @@
+# Licensing per the REUSE specification (https://reuse.software). Check with `reuse lint`.
+#
+# The split, as the reference project (D8, 12 Oct 2026):
+#   CERN-OHL-S-2.0  the documentation and the figures
+#   MPL-2.0         code: the page, the geometry library that defines the boards' and
+#                   connectors' shapes, and scripts, hooks, tests and tool configuration
+# Files the tool generates are not part of this repository; they are the user's to do with
+# as they wish, as the README says.
+#
+# When several annotations match a file, the LAST matching one wins, so the general
+# rule comes first and the narrower code rule after it.
+version = 1
+
+[[annotations]]
+path = "**"
+SPDX-FileCopyrightText = "2026 Alon A. Rabinowitz"
+SPDX-License-Identifier = "CERN-OHL-S-2.0"
+
+[[annotations]]
+path = [
+  ".githooks/**",
+  ".github/**",
+  "scripts/**",
+  "packages/**",
+  "tests/**",
+  "web/**",
+  ".editorconfig",
+  ".gitattributes",
+  ".gitignore",
+  ".gitmodules",
+  ".markdownlint-cli2.yaml",
+  ".pre-commit-config.yaml",
+  ".repo-status",
+  ".yamllint.yaml",
+  "PROJECT.yml",
+  "REUSE.toml",
+  "package.json",
+  "package-lock.json",
+]
+SPDX-FileCopyrightText = "2026 Alon A. Rabinowitz"
+SPDX-License-Identifier = "MPL-2.0"
+
+# Documentation inside the code folders stays under the documentation licence.
+[[annotations]]
+path = ["packages/**/README.md"]
+SPDX-FileCopyrightText = "2026 Alon A. Rabinowitz"
+SPDX-License-Identifier = "CERN-OHL-S-2.0"
