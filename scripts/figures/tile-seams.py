@@ -10,7 +10,7 @@
 
 Every slot drawn is checked against the panel's slot grid first, so the figure cannot show an arrangement
 that does not work: tiles turned 180 degrees keep the grid when the seams fall between slot columns, and
-mirrored tiles keep it when the seams run through slot centres, half a slot on each side (the design the
+tiles cut through slot centres in 40 mm steps keep it, half a slot on each side of a seam (the design the
 owner chose, D15, 12 Oct 2026). A slot cut anywhere but through its centre stops the script.
 Uses the Segoe UI fonts that come with Windows.
 """
@@ -116,7 +116,7 @@ def draw_cut_wall(d, ox, oy, wall_w, wall_h, tiles, outer_open, background):
                 d.rounded_rectangle([cx - 2.5 * K, cy - 7.5 * K, cx + 2.5 * K, cy + 7.5 * K], radius=2.5 * K, fill=SLOT)
     # trim the half slots on the wall's open outer sides back to the wall
     X0, Y0, X1, Y1 = ox, oy, ox + wall_w * K, oy + wall_h * K
-    m = 30 * K
+    m = 8 * K  # a half slot reaches 7.5 mm past an edge; no further, or it paints over a neighbouring drawing
     for box in ([X0 - m, Y0 - m, X0, Y1 + m], [X1, Y0 - m, X1 + m, Y1 + m],
                 [X0, Y0 - m, X1, Y0], [X0, Y1, X1, Y1 + m]):
         d.rectangle([box[0] + (1 if box[0] == X1 else 0), box[1], box[2] - (1 if box[2] == X0 else 0), box[3]],
@@ -200,23 +200,30 @@ def main():
     # (c) the chosen design (D15): seams cut through slot columns and rows, half a slot on each open side
     oy = oy + 120 * K + 80
     wh = 200
+    wh = 160
     tiles = [
-        (0, 0, 100, 100, "same", ""), (100, 0, 100, 100, "mirror-x", "mirrored"),
-        (0, 100, 100, 100, "mirror-y", "mirrored"), (100, 100, 100, 100, "turned", "turned\n180°"),
+        (0, 0, 80, 80, "same", ""), (80, 0, 80, 80, "same", ""),
+        (0, 80, 80, 80, "same", ""), (80, 80, 80, 80, "same", ""),
     ]
-    draw_cut_wall(d, ox, oy, 200, wh, tiles, {"right", "top"}, BACKGROUND)
-    text_block(d, ox + 200 * K + 40, oy, "(c)  CHOSEN (D15): cut through a slot, as AU3D's boards", [
-        "Each open side carries half slots; two neighbours' halves make",
-        "a whole slot, so no slot is missing and the grid runs on.",
-        "Each side is open (half slots: to join a neighbour, or to add",
-        "one later) or closed (a solid edge). Here the wall's left and",
-        "bottom are closed, its right and top open.",
-        "Tile sizes in 20 mm steps, both ways. A multiple of 40 mm",
-        "repeats as it is; other sizes alternate with mirrored copies,",
-        "a second file when the back differs (standoffs, chamfers).",
+    draw_cut_wall(d, ox, oy, 160, wh, tiles, {"right", "top"}, BACKGROUND)
+    # the smallest tile on its own, every side open: one whole slot and four quarter slots
+    sx = ox + 160 * K + 70
+    all_open = {"left", "right", "bottom", "top"}
+    draw_cut_wall(d, sx, oy + 120 * K, 40, 40, [(0, 0, 40, 40, "same", "")], all_open, BACKGROUND)
+    d.text((sx + 20 * K, oy + 120 * K - 14), "40 × 40", font=font(20, True), fill=TXT, anchor="mb")
+    text_block(d, sx + 40 * K + 50, oy, "(c)  CHOSEN (D15): cut through slot centres", [
+        "As Azat's and AU3D's boards: tile sizes in 40 mm steps, the",
+        "smallest 40 × 40 mm, one whole slot in its centre and a",
+        "quarter slot at each corner. Every tile is the same.",
+        "Neighbours' halves and quarters make whole slots, so no",
+        "slot is missing and the grid runs on across the seams.",
+        "Each side is open (half and quarter slots: to join a",
+        "neighbour, or to add one later) or closed (a solid edge).",
+        "Here the wall's left and bottom are closed, its right and",
+        "top open; the 40 × 40 tile is open all round.",
         "An open side has a notch every 40 mm: 2.5 mm deep down a",
-        "side, 7.5 mm deep along the top and bottom. Joins built into",
-        "the edges must fit between the notches.",
+        "side, 7.5 mm deep along the top and bottom. Joins built",
+        "into the edges must fit between the notches.",
     ])
 
     img.save(OUT)

@@ -2,8 +2,9 @@
 
 Azat's [Ultra light SKÅDIS (Skadis) Board](https://www.printables.com/model/1049033) (CC BY-NC-SA)
 is the design the skeleton type follows (Q12). Its 120 × 120 mm STL
-(`SKADIS ULTRA LIGHT 120x120.stl`, 1 401 484 bytes) was downloaded on 12 Oct 2026, with the
-owner's approval (A30), to measure it: **measured only, nothing copied**. The file is not in this
+(`SKADIS ULTRA LIGHT 120x120.stl`, 1 401 484 bytes, A30) and its 40 × 40 mm STL
+(`SKADIS ULTRA LIGHT 40x40.stl`, 245 084 bytes, at the owner's request with D15) were downloaded on
+12 Oct 2026 to measure them: **measured only, nothing copied**. The file is not in this
 repository. Every figure below was read from the mesh with scad-tools' `stl-inspect.py`
 (`bounds`, and `sections --axis z` at 19 heights), unless it says otherwise.
 
@@ -12,7 +13,9 @@ repository. Every figure below was read from the mesh with scad-tools' `stl-insp
 | Value | Measured |
 |---|---|
 | Size | 120.0 × 120.0 × 10.0 mm; the board from z = −2.5 to 2.5 (5 mm thick), four corner standoffs above it to z = 7.5 |
-| Corner standoffs | four, about 10 mm across with a hole of about 4 mm, 5 mm tall (from their cross-section: 313.6 mm² for the four, 50.2 mm² of it hole) |
+| Corner standoffs | four, about 10 mm across with a hole of about 4 mm, 5 mm tall (from their cross-section: 313.6 mm² for the four, 50.2 mm² of it hole); the 40 × 40 tile has two, at (9, 20) and (31, 20) |
+| Edges | **cut through slot centres**: half a slot every 40 mm down each side and along the top and bottom, and a quarter slot at each corner (cuts 1 mm inside the left and bottom edges find the openings centred at 0, 40, 80 and 120 mm). The 40 × 40 tile is one whole slot in its centre and a quarter slot at each corner. Tiles of the same pattern side by side make whole slots, with no slot missing |
+| Edge beams | hollow: a closed channel inside each, about 1.7 mm high (z −0.66 to 1.06) |
 | Volume | 16 551 mm³ (standoffs included) |
 | Mesh | 28 028 facets; the STL's header says OpenSCAD wrote it |
 
@@ -39,10 +42,10 @@ faces: about 1 mm at one face and about 0.75 mm at the other.
 
 ## What follows from it (inferred)
 
-- **Plastic**: a solid 5 mm board of the same size and slots is about 67 500 mm³ (worked out from
-  the slot grid: 13 slots), so this board uses **about a quarter of the plastic** of a solid one. At
-  full density, PLA at 1.24 g/cm³, that is about 20.5 g against about 84 g; real prints of both weigh
-  less, by their walls and infill.
+- **Plastic**: a solid 5 mm board of the same size and slots is about 65 700 mm³ (worked out from
+  the slot grid: 13 whole slots, 8 half and 4 quarter, 18 slots' worth), so this board uses **about a
+  quarter of the plastic** of a solid one. At full density, PLA at 1.24 g/cm³, that is about 20.5 g
+  against about 81 g; real prints of both weigh less, by their walls and infill.
 - **Tight slots and connectors**: an FDM hole prints smaller than drawn, so a slot drawn at exactly
   5 × 15 mm comes out under the IKEA size (real boards measure about 5.2 × 15.2 mm,
   [`skadis-standard.md`](../skadis-standard.md)). That fits the users' reports of tight connectors
