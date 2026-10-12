@@ -5,6 +5,6 @@ projects:
   - name:     SKÅDIS board generator
     kind:     build
     state:    active
-    next:     "printer-default: the bed the board must fit, 200 x 200 mm unless set, and a warning"
+    next:     "the first P1 row the owner picks (Q64): fit-coupon, mounting or a board type"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-12

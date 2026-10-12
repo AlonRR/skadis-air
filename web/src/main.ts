@@ -9,6 +9,7 @@ import {
   boardType,
   buildBoard,
   buildCheckPart,
+  fitsBed,
   loadEngine,
   readValues,
   type AnyBoardType,
@@ -16,6 +17,7 @@ import {
 import { renderForm, type Form } from './form.js';
 import { downloadStl } from './download.js';
 import { mountPreview } from './preview.js';
+import { mountPrinter } from './printer.js';
 
 const engineStatus = document.querySelector<HTMLElement>('[data-testid="engine-status"]');
 const boardStatus = document.querySelector<HTMLElement>('[data-testid="board-status"]');
@@ -24,6 +26,10 @@ const formBox = document.querySelector<HTMLElement>('[data-testid="board-form"]'
 const previewBox = document.querySelector<HTMLElement>('[data-testid="preview"]');
 const preview = previewBox ? mountPreview(previewBox) : null;
 const downloadButton = document.querySelector<HTMLButtonElement>('[data-testid="download-stl"]');
+const printerBox = document.querySelector<HTMLElement>('[data-testid="printer"]');
+const bedWarning = document.querySelector<HTMLElement>('[data-testid="bed-warning"]');
+let current: (() => void) | undefined; // rebuilds the board on show, for a change of printer
+const printer = printerBox ? mountPrinter(printerBox, () => current?.()) : null;
 
 const engine = () => loadEngine(wasmUrl);
 let board: Manifold | undefined; // the board as last built; freed when the next one replaces it
@@ -57,8 +63,22 @@ async function rebuild(type: AnyBoardType, form: Form): Promise<void> {
   const box = board.boundingBox();
   const size = [0, 1, 2].map((k) => Math.round(((box.max[k] ?? 0) - (box.min[k] ?? 0)) * 10) / 10).join(' × ');
   const fileName = boardFileName(type, read.values, 'stl');
+  warnAboutBed(box.max[0] ?? 0, box.max[1] ?? 0);
   setStatus('ready', `Board ready: ${size} mm, ${fileName}`, fileName);
   preview?.show(board, `${type.id} ${size}`); // framed again only when the type or size changes
+}
+
+/** A board larger than the bed is warned about, not refused (D62). */
+function warnAboutBed(widthMm: number, heightMm: number): void {
+  if (bedWarning === null || printer === null) return;
+  const chosen = printer.bed();
+  const fits = !chosen.ok || fitsBed(widthMm, heightMm, chosen.bed);
+  bedWarning.textContent =
+    fits || !chosen.ok
+      ? ''
+      : `This board is ${Math.round(widthMm)} × ${Math.round(heightMm)} mm; it does not fit the ` +
+        `${chosen.bed.xMm} × ${chosen.bed.yMm} mm bed. It can still be downloaded; splitting a board into ` +
+        'tiles that fit comes later.';
 }
 
 function show(type: AnyBoardType): void {
@@ -69,6 +89,7 @@ function show(type: AnyBoardType): void {
     timer = setTimeout(() => void rebuild(type, form), 150); // one build after a burst of typing
   };
   const form = renderForm(formBox, type, changed);
+  current = changed;
   void rebuild(type, form);
 }
 

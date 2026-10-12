@@ -48,6 +48,11 @@
       .warning:empty {
         display: none;
       }
+      fieldset.printer {
+        border: 1px solid #c8c8c8;
+        border-radius: 0.4rem;
+        margin-top: 1rem;
+      }
       fieldset.sides {
         border: 1px solid #c8c8c8;
         border-radius: 0.4rem;
@@ -122,8 +127,24 @@
         <select data-testid="board-type"></select>
       </label>
       <div data-testid="board-form"></div>
+      <fieldset class="printer" data-testid="printer">
+        <legend>Printer</legend>
+        <label>
+          Printer bed
+          <select data-testid="printer-bed">
+            <option value="default" selected>Safe default: 200 × 200 mm, most printers</option>
+            <option value="custom">Custom</option>
+          </select>
+        </label>
+        <div data-testid="custom-bed" hidden>
+          <label>Bed width (mm) <input type="number" name="bedXMm" min="50" max="1000" step="1" value="200" /></label>
+          <label>Bed depth (mm) <input type="number" name="bedYMm" min="50" max="1000" step="1" value="200" /></label>
+        </div>
+        <p class="error" data-testid="bed-error"></p>
+      </fieldset>
     </form>
     <p data-testid="board-status" data-state="building">Making the board…</p>
+    <p class="warning" data-testid="bed-warning"></p>
     <section class="preview" data-testid="preview" data-state="loading">
       <p class="note" data-testid="preview-message"></p>
       <button type="button" data-testid="preview-reset">Reset view</button>

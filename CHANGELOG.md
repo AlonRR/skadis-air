@@ -6,6 +6,10 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-12
+
+The first version: a solid board, set up on the page, shown in 3D and downloaded as STL. Nothing in it has been test-printed yet.
+
 ### Added
 
 - The plan: the decisions, the backlog, the SKÅDIS dimensions with their sources, the survey of
@@ -24,3 +28,5 @@ All notable changes to this project are recorded here. The format follows
   with a Reset view button; a message instead where the browser has no WebGL.
 - A Download STL button: the board as a binary STL lying as it prints, named for its type, size and
   closed sides; offered only while the settings make a board.
+- The printer bed: 200 × 200 mm unless set, or a custom size; a board larger than the bed is warned
+  about and can still be downloaded.

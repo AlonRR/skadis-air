@@ -7,6 +7,8 @@ decision shows which rows move.
 
 ## The first version (D16)
 
+**Released as `v0.1.0` on 12 Oct 2026**: every P0 row below is done. Nothing in it has been test-printed yet.
+
 > A user opens the page, chooses a solid SKÅDIS board, sets its size and thickness, sees it in
 > 3D and downloads an STL that prints, with every check passing.
 
@@ -31,13 +33,13 @@ that path. None needs the path rebuilt.
 | Key | Item | Priority | Ease | Depends on | From | Print | Spec | What makes the estimate uncertain |
 |---|---|---|---|---|---|---|---|---|
 | `repo-bootstrap` | **Done 12 Oct 2026.** Git, identity, the hooks from the convention kit, licences and REUSE, `README.md`, `CLAUDE.md`, `PROJECT.yml`, `.repo-status`, scad-tools as a submodule for its STL checks (C31), pushed to Gitea | P0 | S | | D2, D7, D8 | | | None |
-| `skadis-standard` | [`skadis-standard.md`](skadis-standard.md) reviewed; the survey read in full for anything that must not be published | P0 | S | `repo-bootstrap` | Q3 | | yes | None |
+| `skadis-standard` | **Done 12 Oct 2026.** [`skadis-standard.md`](skadis-standard.md) reviewed; the survey read in full for anything that must not be published | P0 | S | `repo-bootstrap` | Q3 | | yes | None |
 | `page-skeleton` | **Done 12 Oct 2026.** The page and the geometry library as one npm workspace: Vite, TypeScript, Vitest, Playwright, oxlint, Prettier, Manifold loaded; a browser test that the built page builds a part | P0 | S | `repo-bootstrap` | D2 | | | None: the reference has it (C32) |
 | `board-solid` | **Done 12 Oct 2026.** The solid board: the slot grid, in 40 mm steps with its edges through slot centres, each side open (half and quarter slots) or closed, open all round by default (D15, D34, D37), outline and corner radius, thickness. Geometry tests (slot count, pitch, volume), each with a control that must fail; the exported STL is one closed body by scad-tools' `stl-mesh.py` and slices in PrusaSlicer | P0 | M | `page-skeleton` | D2, D11 | slot fit | yes | None significant |
 | `registry` | **Done 12 Oct 2026, for board types (C49).** Board types, options and connectors as one list; the page's controls and the file names derived from it; a contract test over every entry, with a test-only entry | P0 | M | `board-solid` | D6, D11 | | | None: the reference has the pattern |
 | `preview-3d` | **Done 12 Oct 2026.** 3D preview, updating as the settings change | P0 | S | `page-skeleton` | D2 | | | Triangle count of a large board (C32) |
 | `download-stl` | **Done 12 Oct 2026.** Download the board as STL, named by type and size | P0 | S | `preview-3d` | D2 | | | None (C32) |
-| `printer-default` | The largest board that fits a bed: a safe default plus custom; a warning when the board is larger | P0 | S | `registry` | D4 | | | None: bed sizes from the reference's verified list (C25) |
+| `printer-default` | **Done 12 Oct 2026.** The largest board that fits a bed: a safe default plus custom; a warning when the board is larger | P0 | S | `registry` | D4 | | | None: bed sizes from the reference's verified list (C25) |
 | `fit-coupon` | A small test piece of a few slots and the board's edge, to settle slot clearance and thickness before printing a whole board | P1 | S | `board-solid` | Q3 | yes | yes | None |
 | `mounting` | Screw holes (round, countersunk, keyhole), integrated standoffs, and IKEA-compatible corner holes so IKEA's rail, spacers and joining plate fit | P1 | M | `board-solid` | D11, D14 | yes | yes | IKEA's hole positions are not published (T17) |
 | `conn-standoff` | Connector 1: a standoff or spacer, screwed or push-in, of any height; under 1 board's corner, or shared by 2 or 4 boards where they meet; solid, lightened or skeleton (D13) | P1 | S | `mounting` | D13 | yes | | None |
