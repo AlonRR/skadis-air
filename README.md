@@ -7,7 +7,13 @@ adjust and to print.
 
 ## Status
 
-**Planning done; nothing built yet.** What it will make:
+**Version 0.1.0: the solid board, on the page; not yet test printed.** The page in `web/` makes a
+solid board of 40 mm tiles: you set its size, its thickness and which sides are open (half slots, to
+join a neighbour) or closed, see it in 3D, and download it as an STL that lies as it prints. It warns
+when the board is larger than your printer's bed. The SKÅDIS dimensions it uses come from published
+sources and are still to be checked against a real board.
+
+What it will make:
 
 - **Boards** of three kinds, each with its outline, its tiling into printable pieces and its
   mounting as options:
@@ -17,8 +23,7 @@ adjust and to print.
 - **Connectors** of five kinds ([figure](docs/figures/connector-types.png)): a standoff, a seam
   plate, a slot clip, an angle joiner and a desk clamp, for 1, 2 or 4 boards where that applies.
 
-The first version is the solid board, end to end: set it up on the page, see it in 3D, download
-an STL. Every decision is in [`docs/status.md`](docs/status.md), the work in order in
+Every decision is in [`docs/status.md`](docs/status.md), the work in order in
 [`docs/backlog.md`](docs/backlog.md), and the SKÅDIS dimensions, each with its source, in
 [`docs/skadis-standard.md`](docs/skadis-standard.md). None of those dimensions has been checked
 against a real board yet; until it has, each is marked as such.
