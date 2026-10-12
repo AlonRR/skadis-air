@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). `repo-bootstrap`, `page-skeleton`, `board-solid`, `registry` and `preview-3d` are done and on Gitea; next is `download-stl`. The evidence for the board types and
+Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). `repo-bootstrap`, `page-skeleton`, `board-solid`, `registry`, `preview-3d` and `download-stl` are done and on Gitea; next is `printer-default`. The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
@@ -53,6 +53,9 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D55 | **The preview shows the board as it hangs**: upright, its front toward the viewer, slots vertical | 12 Oct 2026 |
 | D56 | **The preview draws the board in a fixed light grey**; a colour option can be added later (`preview-colour`) | 12 Oct 2026 |
 | D57 | **Drag turns the preview, the wheel or a pinch zooms, and "Reset view" brings back the first view** | 12 Oct 2026 |
+| D60 | **One "Download STL" button under the preview**, the file named as C52 says; STL and 3MF choices come with `download-3mf-zip` | 12 Oct 2026 |
+| D61 | **The printer bed starts at 200 × 200 mm**, which every full-size printer in the reference project's verified list fits, with a custom size beside it | 12 Oct 2026 |
+| D62 | **A board larger than the bed is warned about, not refused**: it can still be downloaded; splitting it into tiles comes with `tiling` | 12 Oct 2026 |
 | A35 | **The history is rewritten to drop the bytecode file**: the last three commits replayed without it, signed, with their authors, committers and dates; force-pushed to Gitea with a lease on 12 Oct 2026. Gitea still serves the old commits by their full SHA until it prunes them | 12 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 

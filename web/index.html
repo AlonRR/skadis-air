@@ -92,6 +92,10 @@
       details {
         margin-top: 1rem;
       }
+      button.download {
+        font-size: 1rem;
+        padding: 0.4rem 1rem;
+      }
       .preview canvas {
         border: 1px solid #ddd;
         border-radius: 0.4rem;
@@ -124,6 +128,9 @@
       <p class="note" data-testid="preview-message"></p>
       <button type="button" data-testid="preview-reset">Reset view</button>
     </section>
+    <p>
+      <button type="button" class="download" data-testid="download-stl" disabled>Download STL</button>
+    </p>
     <footer>
       <p class="note" data-testid="output-statement">
         The STL and other files this tool generates, and anything you print from them, are yours to use, change,

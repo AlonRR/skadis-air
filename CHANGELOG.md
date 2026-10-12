@@ -22,3 +22,5 @@ All notable changes to this project are recorded here. The format follows
   Advanced; the board rebuilt as the settings change. `docs/extending.md` says how a type is added.
 - A 3D preview of the board as it hangs, in light grey, turned by dragging and zoomed by scrolling,
   with a Reset view button; a message instead where the browser has no WebGL.
+- A Download STL button: the board as a binary STL lying as it prints, named for its type, size and
+  closed sides; offered only while the settings make a board.

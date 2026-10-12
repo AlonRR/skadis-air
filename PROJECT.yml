@@ -5,6 +5,6 @@ projects:
   - name:     SKÅDIS board generator
     kind:     build
     state:    active
-    next:     "download-stl: the board as an STL file from the page"
+    next:     "printer-default: the bed the board must fit, 200 x 200 mm unless set, and a warning"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-12

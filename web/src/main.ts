@@ -14,6 +14,7 @@ import {
   type AnyBoardType,
 } from 'skadis-ultralight-generator';
 import { renderForm, type Form } from './form.js';
+import { downloadStl } from './download.js';
 import { mountPreview } from './preview.js';
 
 const engineStatus = document.querySelector<HTMLElement>('[data-testid="engine-status"]');
@@ -22,11 +23,13 @@ const typeList = document.querySelector<HTMLSelectElement>('[data-testid="board-
 const formBox = document.querySelector<HTMLElement>('[data-testid="board-form"]');
 const previewBox = document.querySelector<HTMLElement>('[data-testid="preview"]');
 const preview = previewBox ? mountPreview(previewBox) : null;
+const downloadButton = document.querySelector<HTMLButtonElement>('[data-testid="download-stl"]');
 
 const engine = () => loadEngine(wasmUrl);
 let board: Manifold | undefined; // the board as last built; freed when the next one replaces it
 
 function setStatus(state: 'building' | 'ready' | 'invalid' | 'problem', text: string, fileName = ''): void {
+  if (downloadButton !== null) downloadButton.disabled = state !== 'ready'; // only a board that exists
   if (boardStatus === null) return;
   boardStatus.dataset['state'] = state;
   boardStatus.dataset['fileName'] = fileName;
@@ -68,6 +71,11 @@ function show(type: AnyBoardType): void {
   const form = renderForm(formBox, type, changed);
   void rebuild(type, form);
 }
+
+downloadButton?.addEventListener('click', () => {
+  const fileName = boardStatus?.dataset['fileName'] ?? '';
+  if (board !== undefined && fileName !== '') downloadStl(board, fileName);
+});
 
 async function start(): Promise<void> {
   if (engineStatus === null) return;
