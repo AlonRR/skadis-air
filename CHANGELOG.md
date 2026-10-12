@@ -11,3 +11,4 @@ All notable changes to this project are recorded here. The format follows
 - The plan: the decisions, the backlog, the SKÅDIS dimensions with their sources, the survey of
   published boards and connectors, and a figure of the connector types.
 - Repository conventions: commit hooks, licences in the REUSE layout, the publish status.
+- A figure of how tiles keep the slot grid across a seam, and the ultralight board's measurements.
