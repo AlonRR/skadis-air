@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). **`v0.1.0` is released** (tag on Gitea, 12 Oct 2026): every P0 row of the backlog is done. The page makes a solid board, shows it in 3D and downloads it as STL; nothing is test-printed yet. Next is a P1 row; the owner picks which (Q64). The evidence for the board types and
+Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). **`v0.1.0` is released** (tag on Gitea, 12 Oct 2026): every P0 row of the backlog is done. The page makes a solid board, shows it in 3D and downloads it as STL; nothing is test-printed yet. Next is a P1 row; the owner picks which (D64). The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
