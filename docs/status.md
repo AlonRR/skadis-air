@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). **`v0.1.0` is released** (tag on Gitea, 12 Oct 2026): every P0 row of the backlog is done. The page makes a solid board, shows it in 3D and downloads it as STL; nothing is test-printed yet. D64: the P1 rows go on in order, `fit-coupon` then `mounting`, after D66 (boards print face down). The evidence for the board types and
+Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). **`v0.1.0` is released** (tag on Gitea, 12 Oct 2026): every P0 row of the backlog is done. The page makes a solid board, shows it in 3D and downloads it as STL; nothing is test-printed yet. D64: the P1 rows go on in order; `fit-coupon` is done (on the page as a board type), next is `mounting`. The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
@@ -57,11 +57,14 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D61 | **The printer bed starts at 200 × 200 mm**, which every full-size printer in the reference project's verified list fits, with a custom size beside it | 12 Oct 2026 |
 | D62 | **A board larger than the bed is warned about, not refused**: it can still be downloaded; splitting it into tiles comes with `tiling` | 12 Oct 2026 |
 | D66 | **Boards print face down**: the front on the bed, the back up, since some designs put standoffs on the back (replacing choice C58). A board is built and previewed as it hangs, front toward the viewer, and the download turns it over about the vertical axis, as a person turns it over to lay it on the bed; so a side chosen as left on the page is at the far x of the STL seen from above, and on the left again once it hangs | 12 Oct 2026 |
+| D67 | **The fit coupon is four 40 mm tiles in a row**, 160 × 40 mm, each slot at its own clearance (0, 0.1, 0.2 and 0.3 mm unless set), told apart by 1 to 4 dots in the front face | 12 Oct 2026 |
+| D68 | **The coupon's left and right sides are open, its top and bottom closed.** Found when building it: on one row the only grid points on its edges are its corners, and a corner keeps its slot only when both its sides are open, so the open sides cut no half slots and only leave the corners square; testing that two coupons' halves meet needs a second row (D69) | 12 Oct 2026 |
 | A35 | **The history is rewritten to drop the bytecode file**: the last three commits replayed without it, signed, with their authors, committers and dates; force-pushed to Gitea with a lease on 12 Oct 2026. Gitea still serves the old commits by their full SHA until it prunes them | 12 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
 ## Open questions
 
+- **D69** A second row on the fit coupon, so two coupons pushed together test that the half slots meet into a whole slot, or one row and that test left to `tiling`.
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
 ## Inputs from outside this repository

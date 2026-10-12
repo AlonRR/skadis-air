@@ -9,3 +9,4 @@ export * from './board-types/index.js';
 export * from './settings.js';
 export * from './printer.js';
 export * from './print-pose.js';
+export * from './fit-coupon.js';

@@ -25,10 +25,14 @@ A board type is one file and one line in a list (D11, the extension-registry pra
    the page should list it. The page opens on the first.
 
 Nothing else. The page lists the type, builds its form, checks its values, rebuilds it on every
-change and names its file. **Proved 12 Oct 2026** by a trial type added and removed again: the type
-check, the contract test (which picked the type up by itself) and the browser test passed with
-only those two changes. The one other edit the trial needed was a test that had named the listed
-types, now reading them from the list.
+change and names its file, and `npm run check:stl` checks it at its starting values. **Proved
+12 Oct 2026** by a trial type added and removed again: the type check, the contract test (which
+picked the type up by itself) and the browser test passed with only those two changes. The one other
+edit the trial needed was a test that had named the listed types, now reading them from the list.
+The fit coupon (`fit-coupon.ts`) was then the first real type added this way.
+
+A type built on the solid board passes `makeSolidBoard` a third argument instead of copying it: a
+clearance per slot (`clearanceOf`) and more to cut away (`extraCutters`), as the fit coupon does.
 
 What fails if a step is missed:
 

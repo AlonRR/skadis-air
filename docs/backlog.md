@@ -40,7 +40,7 @@ that path. None needs the path rebuilt.
 | `preview-3d` | **Done 12 Oct 2026.** 3D preview, updating as the settings change | P0 | S | `page-skeleton` | D2 | | | Triangle count of a large board (C32) |
 | `download-stl` | **Done 12 Oct 2026.** Download the board as STL, named by type and size | P0 | S | `preview-3d` | D2 | | | None (C32) |
 | `printer-default` | **Done 12 Oct 2026.** The largest board that fits a bed: a safe default plus custom; a warning when the board is larger | P0 | S | `registry` | D4 | | | None: bed sizes from the reference's verified list (C25) |
-| `fit-coupon` | A small test piece of a few slots and the board's edge, to settle slot clearance and thickness before printing a whole board | P1 | S | `board-solid` | Q3 | yes | yes | None |
+| `fit-coupon` | **Done 12 Oct 2026** (D67, D68; a board type on the page). A small test piece of a few slots and the board's edge, to settle slot clearance and thickness before printing a whole board | P1 | S | `board-solid` | Q3 | yes | yes | None |
 | `mounting` | Screw holes (round, countersunk, keyhole), integrated standoffs, and IKEA-compatible corner holes so IKEA's rail, spacers and joining plate fit | P1 | M | `board-solid` | D11, D14 | yes | yes | IKEA's hole positions are not published (T17) |
 | `conn-standoff` | Connector 1: a standoff or spacer, screwed or push-in, of any height; under 1 board's corner, or shared by 2 or 4 boards where they meet; solid, lightened or skeleton (D13) | P1 | S | `mounting` | D13 | yes | | None |
 | `board-lightened` | Lightened board: pockets between the slots, a rim kept round each slot; a first pattern, then more; a minimum web check | P1 | M | `board-solid` | D11 | yes | | Strength and hook fit of thin webs: test prints |

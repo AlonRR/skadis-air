@@ -1,0 +1,28 @@
+// The fit coupon on the page (backlog item fit-coupon; D67): chosen from the board-type list, with its own
+// settings, previewed and downloaded like a board.
+import { expect, test } from '@playwright/test';
+
+test('the fit coupon is chosen from the list, shows its own settings, and downloads', async ({ page }) => {
+  await page.goto('./');
+  await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
+  await page.getByTestId('board-type').selectOption('fit-coupon');
+  for (const name of ['clearanceFromMm', 'clearanceStepMm', 'thicknessMm']) {
+    await expect(page.locator(`input[name="${name}"]`)).toBeVisible();
+  }
+  await expect(page.locator('[data-side="left"]')).toHaveCount(0); // its sides are fixed (D68)
+  await expect(page.getByTestId('board-status')).toHaveAttribute(
+    'data-file-name',
+    'skadis-fit-coupon-5mm-0-to-0.3.stl',
+  );
+  await expect(page.getByTestId('preview')).toHaveAttribute('data-state', 'ready');
+  await page.locator('input[name="clearanceFromMm"]').fill('0.1');
+  await expect(page.getByTestId('board-status')).toHaveAttribute(
+    'data-file-name',
+    'skadis-fit-coupon-5mm-0.1-to-0.4.stl',
+  );
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Download STL' }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe('skadis-fit-coupon-5mm-0.1-to-0.4.stl');
+});

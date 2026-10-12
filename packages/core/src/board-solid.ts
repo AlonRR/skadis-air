@@ -3,7 +3,7 @@
 import type { CrossSection, Manifold, Vec2, Vec3 } from 'manifold-3d';
 import type { Engine } from './engine.js';
 import { BOARD_THICKNESS_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
-import { ALL_OPEN, type Side, type Sides, slotPlaces } from './slots.js';
+import { ALL_OPEN, type Side, type Sides, type SlotPlace, slotPlaces } from './slots.js';
 
 export interface SolidBoardParams {
   columns: number; // tiles across, 40 mm each (D15)
@@ -129,13 +129,16 @@ function keep<T>(m: T, into: T[]): T {
   return m;
 }
 
-export function makeSolidBoard(engine: Engine, params: SolidBoardParams): Manifold {
+/** What a part built on the solid board may change: a slot's own clearance, and more to cut away. */
+export interface BoardCuts {
+  clearanceOf?: (slot: SlotPlace) => number; // in place of slotClearanceMm, slot by slot (the fit coupon)
+  extraCutters?: (engine: Engine) => Manifold[]; // cut away with the slots; freed here (the coupon's dots)
+}
+
+export function makeSolidBoard(engine: Engine, params: SolidBoardParams, cuts: BoardCuts = {}): Manifold {
   const { Manifold, CrossSection } = engine;
   const p = solidBoardParams(params);
   const [width, height, t, c] = [TILE_MM * p.columns, TILE_MM * p.rows, p.thicknessMm, p.slotChamferMm];
-  const w = SLOT_WIDTH_MM + p.slotClearanceMm;
-  const h = SLOT_HEIGHT_MM + p.slotClearanceMm;
-
   const sections: CrossSection[] = [];
   const solids: Manifold[] = [];
 
@@ -143,9 +146,13 @@ export function makeSolidBoard(engine: Engine, params: SolidBoardParams): Manifo
   const plate = keep(face.extrude(t), solids);
 
   // Every slot is cut whole; at an edge the cut runs past the plate, which leaves the half or quarter.
-  const cutters = slotPlaces(p.columns, p.rows, p.sides).map((slot) =>
-    keep(slotCutter(engine, slot.xMm, slot.yMm, w, h, t, c), solids),
-  );
+  const cutters = slotPlaces(p.columns, p.rows, p.sides).map((slot) => {
+    const clearance = cuts.clearanceOf?.(slot) ?? p.slotClearanceMm;
+    if (!(SLOT_WIDTH_MM + clearance > 0)) throw new RangeError('A slot clearance leaves no slot');
+    const [w, h] = [SLOT_WIDTH_MM + clearance, SLOT_HEIGHT_MM + clearance];
+    return keep(slotCutter(engine, slot.xMm, slot.yMm, w, h, t, c), solids);
+  });
+  for (const extra of cuts.extraCutters?.(engine) ?? []) cutters.push(keep(extra, solids));
   const cut = keep(Manifold.union(cutters), solids);
   const board = plate.subtract(cut);
   // WebAssembly memory is not garbage-collected: free every intermediate object.

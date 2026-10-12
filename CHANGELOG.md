@@ -6,6 +6,11 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- A fit test coupon, chosen on the page like a board: four slots at four clearances, told apart by
+  dots, to find the clearance that fits your printer before printing a whole board.
+
 ### Changed
 
 - The STL lies as boards are printed: face down, the back up, turned over from the way the page shows

@@ -10,11 +10,13 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  BOARD_TYPES,
+  boardType,
+  buildBoard,
+  defaultValues,
   loadEngine,
-  makeSolidBoard,
   meshOf,
   printPose,
-  solidBoardParams,
   toStl,
 } from '../../packages/core/dist/index.js';
 
@@ -23,25 +25,32 @@ const out = join(root, '.check', 'boards');
 
 const open = { left: 'open', right: 'open', bottom: 'open', top: 'open' };
 const closed = { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' };
+const solid = boardType('solid');
+const solidAt = (widthMm, heightMm, sides) => ({ ...defaultValues(solid.settings), widthMm, heightMm, sides });
 
-// One of each kind of edge: open all round, closed all round with rounded corners, both on one
-// board, and the largest a 250 x 210 mm bed takes (240 x 200 mm).
+// Every listed type at its starting values, so a new type is checked without touching this file; and
+// the solid board with one of each kind of edge: open all round, closed all round with rounded corners,
+// both on one board, and the largest a 250 x 210 mm bed takes (240 x 200 mm).
 const samples = [
-  { name: 'solid-1x1-open', given: { columns: 1, rows: 1, sides: open } },
-  { name: 'solid-1x1-closed', given: { columns: 1, rows: 1, sides: closed } },
+  ...BOARD_TYPES.map((type) => ({ name: `${type.id}-default`, type, values: defaultValues(type.settings) })),
+  { name: 'solid-1x1-open', type: solid, values: solidAt(40, 40, open) },
+  { name: 'solid-1x1-closed', type: solid, values: solidAt(40, 40, closed) },
   {
     name: 'solid-2x2-left-bottom-closed',
-    given: { columns: 2, rows: 2, sides: { ...open, left: 'closed', bottom: 'closed' } },
+    type: solid,
+    values: solidAt(80, 80, { ...open, left: 'closed', bottom: 'closed' }),
   },
-  { name: 'solid-3x2-closed', given: { columns: 3, rows: 2, sides: closed } },
-  { name: 'solid-6x5-open', given: { columns: 6, rows: 5, sides: open } },
+  { name: 'solid-3x2-closed', type: solid, values: solidAt(120, 80, closed) },
+  { name: 'solid-6x5-open', type: solid, values: solidAt(240, 200, open) },
 ];
 
 rmSync(out, { recursive: true, force: true }); // never judge a file a previous run left behind
 mkdirSync(out, { recursive: true });
 const engine = await loadEngine();
-for (const { name, given } of samples) {
-  const board = makeSolidBoard(engine, solidBoardParams(given));
+for (const { name, type, values } of samples) {
+  const built = buildBoard(engine, type, values);
+  if (!built.ok) throw new Error(`${name}: ${built.problem}`);
+  const board = built.solid;
   const printed = printPose(board); // as the page downloads it: face down (D66)
   writeFileSync(join(out, `${name}.stl`), toStl(meshOf(printed), name));
   printed.delete();
