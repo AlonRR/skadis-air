@@ -20,3 +20,5 @@ All notable changes to this project are recorded here. The format follows
 - The page's form, built from the list of board types: size in 40 mm steps with its tiles shown,
   thickness with a warning outside 4 to 5.5 mm, the four sides as toggles, the fine settings under
   Advanced; the board rebuilt as the settings change. `docs/extending.md` says how a type is added.
+- A 3D preview of the board as it hangs, in light grey, turned by dragging and zoomed by scrolling,
+  with a Reset view button; a message instead where the browser has no WebGL.

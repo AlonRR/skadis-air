@@ -1,7 +1,12 @@
-// The browser test: the BUILT page, served by `vite preview`, opened in Chromium.
+// The browser test: the BUILT page, served by `vite preview`, opened in Chromium. After parametric-
+// window-sealer's web/playwright.config.ts (C32).
 import { defineConfig, devices } from '@playwright/test';
 
 const port = 4173;
+// `npx playwright install chromium` fetches the build this Playwright version expects. A machine that
+// already has a Chromium-based browser can point at it instead.
+// oxlint-disable-next-line typescript/prefer-nullish-coalescing -- an empty variable means unset
+const executablePath = process.env.PW_CHROMIUM_PATH || undefined;
 
 export default defineConfig({
   testDir: 'e2e',
@@ -11,14 +16,21 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testIgnore: /no-webgl/,
       use: {
         ...devices['Desktop Chrome'],
-        // `npx playwright install chromium` fetches the build this Playwright version expects. A
-        // machine that already has a Chromium-based browser can point at it instead.
-        launchOptions: {
-          // oxlint-disable-next-line typescript/prefer-nullish-coalescing -- an empty variable means unset
-          executablePath: process.env.PW_CHROMIUM_PATH || undefined,
-        },
+        // Headless Chromium has no graphics card; these let it draw WebGL in software (SwiftShader),
+        // so the 3D preview can be tested.
+        launchOptions: { executablePath, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] },
+      },
+    },
+    {
+      // The same browser with 3D switched off, for the page's fallback (preview-3d).
+      name: 'no-webgl',
+      testMatch: /no-webgl/,
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: { executablePath, args: ['--disable-webgl', '--disable-webgl2', '--disable-3d-apis'] },
       },
     },
   ],

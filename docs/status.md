@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). `repo-bootstrap`, `page-skeleton`, `board-solid` and `registry` are done and on Gitea; next is `preview-3d`. The evidence for the board types and
+Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). `repo-bootstrap`, `page-skeleton`, `board-solid`, `registry` and `preview-3d` are done and on Gitea; next is `download-stl`. The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
@@ -50,6 +50,9 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D46 | **The four sides are toggles placed round a small drawing of the board**, one at each side | 12 Oct 2026 |
 | D47 | **The page lists only the board types that are built**; each appears when it is | 12 Oct 2026 |
 | D48 | **The fine settings (slot clearance, chamfer, corner radius) are folded under "Advanced"**; size, thickness and sides on the main form, with a warning outside 4 to 5.5 mm | 12 Oct 2026 |
+| D55 | **The preview shows the board as it hangs**: upright, its front toward the viewer, slots vertical | 12 Oct 2026 |
+| D56 | **The preview draws the board in a fixed light grey**; a colour option can be added later (`preview-colour`) | 12 Oct 2026 |
+| D57 | **Drag turns the preview, the wheel or a pinch zooms, and "Reset view" brings back the first view** | 12 Oct 2026 |
 | A35 | **The history is rewritten to drop the bytecode file**: the last three commits replayed without it, signed, with their authors, committers and dates; force-pushed to Gitea with a lease on 12 Oct 2026. Gitea still serves the old commits by their full SHA until it prunes them | 12 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 

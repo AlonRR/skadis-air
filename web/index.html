@@ -92,6 +92,13 @@
       details {
         margin-top: 1rem;
       }
+      .preview canvas {
+        border: 1px solid #ddd;
+        border-radius: 0.4rem;
+        display: block;
+        max-width: 100%;
+        touch-action: none;
+      }
       [data-state='invalid'],
       [data-state='problem'] {
         color: #a40000;
@@ -113,6 +120,10 @@
       <div data-testid="board-form"></div>
     </form>
     <p data-testid="board-status" data-state="building">Making the board…</p>
+    <section class="preview" data-testid="preview" data-state="loading">
+      <p class="note" data-testid="preview-message"></p>
+      <button type="button" data-testid="preview-reset">Reset view</button>
+    </section>
     <footer>
       <p class="note" data-testid="output-statement">
         The STL and other files this tool generates, and anything you print from them, are yours to use, change,

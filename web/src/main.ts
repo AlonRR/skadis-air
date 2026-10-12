@@ -14,11 +14,14 @@ import {
   type AnyBoardType,
 } from 'skadis-ultralight-generator';
 import { renderForm, type Form } from './form.js';
+import { mountPreview } from './preview.js';
 
 const engineStatus = document.querySelector<HTMLElement>('[data-testid="engine-status"]');
 const boardStatus = document.querySelector<HTMLElement>('[data-testid="board-status"]');
 const typeList = document.querySelector<HTMLSelectElement>('[data-testid="board-type"]');
 const formBox = document.querySelector<HTMLElement>('[data-testid="board-form"]');
+const previewBox = document.querySelector<HTMLElement>('[data-testid="preview"]');
+const preview = previewBox ? mountPreview(previewBox) : null;
 
 const engine = () => loadEngine(wasmUrl);
 let board: Manifold | undefined; // the board as last built; freed when the next one replaces it
@@ -35,6 +38,7 @@ async function rebuild(type: AnyBoardType, form: Form): Promise<void> {
   form.show(read.ok ? [] : read.errors, read.warnings);
   if (!read.ok) {
     setStatus('invalid', 'Correct the settings marked above to make the board.');
+    preview?.show(null, '');
     return;
   }
   setStatus('building', 'Making the board…');
@@ -43,6 +47,7 @@ async function rebuild(type: AnyBoardType, form: Form): Promise<void> {
   board = undefined;
   if (!built.ok) {
     setStatus('problem', `This board cannot be made: ${built.problem}`);
+    preview?.show(null, '');
     return;
   }
   board = built.solid;
@@ -50,6 +55,7 @@ async function rebuild(type: AnyBoardType, form: Form): Promise<void> {
   const size = [0, 1, 2].map((k) => Math.round(((box.max[k] ?? 0) - (box.min[k] ?? 0)) * 10) / 10).join(' × ');
   const fileName = boardFileName(type, read.values, 'stl');
   setStatus('ready', `Board ready: ${size} mm, ${fileName}`, fileName);
+  preview?.show(board, `${type.id} ${size}`); // framed again only when the type or size changes
 }
 
 function show(type: AnyBoardType): void {
@@ -74,6 +80,7 @@ async function start(): Promise<void> {
     engineStatus.dataset['state'] = 'error';
     engineStatus.textContent = `The geometry engine could not start: ${String(error)}`;
     setStatus('problem', 'No board can be made without the geometry engine.');
+    preview?.show(null, '');
     return;
   }
   if (typeList === null) return;

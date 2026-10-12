@@ -5,6 +5,6 @@ projects:
   - name:     SKÅDIS board generator
     kind:     build
     state:    active
-    next:     "preview-3d: the board in 3D on the page, updating as the settings change"
+    next:     "download-stl: the board as an STL file from the page"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-12

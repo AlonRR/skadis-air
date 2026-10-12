@@ -35,7 +35,7 @@ that path. None needs the path rebuilt.
 | `page-skeleton` | **Done 12 Oct 2026.** The page and the geometry library as one npm workspace: Vite, TypeScript, Vitest, Playwright, oxlint, Prettier, Manifold loaded; a browser test that the built page builds a part | P0 | S | `repo-bootstrap` | D2 | | | None: the reference has it (C32) |
 | `board-solid` | **Done 12 Oct 2026.** The solid board: the slot grid, in 40 mm steps with its edges through slot centres, each side open (half and quarter slots) or closed, open all round by default (D15, D34, D37), outline and corner radius, thickness. Geometry tests (slot count, pitch, volume), each with a control that must fail; the exported STL is one closed body by scad-tools' `stl-mesh.py` and slices in PrusaSlicer | P0 | M | `page-skeleton` | D2, D11 | slot fit | yes | None significant |
 | `registry` | **Done 12 Oct 2026, for board types (C49).** Board types, options and connectors as one list; the page's controls and the file names derived from it; a contract test over every entry, with a test-only entry | P0 | M | `board-solid` | D6, D11 | | | None: the reference has the pattern |
-| `preview-3d` | 3D preview, updating as the settings change | P0 | S | `page-skeleton` | D2 | | | Triangle count of a large board (C32) |
+| `preview-3d` | **Done 12 Oct 2026.** 3D preview, updating as the settings change | P0 | S | `page-skeleton` | D2 | | | Triangle count of a large board (C32) |
 | `download-stl` | Download the board as STL, named by type and size | P0 | S | `preview-3d` | D2 | | | None (C32) |
 | `printer-default` | The largest board that fits a bed: a safe default plus custom; a warning when the board is larger | P0 | S | `registry` | D4 | | | None: bed sizes from the reference's verified list (C25) |
 | `fit-coupon` | A small test piece of a few slots and the board's edge, to settle slot clearance and thickness before printing a whole board | P1 | S | `board-solid` | Q3 | yes | yes | None |
@@ -55,4 +55,5 @@ that path. None needs the path rebuilt.
 | `face-patterns` | More pocket patterns for the lightened board (hexagon, Voronoi, decorative) | P2 | M | `board-lightened` | D11 | yes | | Minimum web per pattern |
 | `offline-file` | The page as one file that works offline (about 0.7 MB with Manifold, inferred by the reference) | P2 | S | `download-stl` | D2 | | | None |
 | `extending-doc` | **Started 12 Oct 2026** with board types and settings. `docs/extending.md`: where a new board type, option or connector goes, and which test fails if a step is missed | P2 | S | `registry` | D6 | | | None |
+| `preview-colour` | The preview's colour as a setting, for the filament the user prints in | P2 | S | `preview-3d` | D56 | | | None |
 | `pages-deploy` | The site built for GitHub Pages; live only when the owner publishes | P3 | S | `download-stl` | D7 | | | The owner's decision (D7) |
