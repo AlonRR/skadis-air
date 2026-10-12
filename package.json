@@ -10,7 +10,8 @@
   "scripts": {
     "lint": "oxlint --type-aware --deny-warnings",
     "format": "prettier --write \"**/*.{ts,mjs,js}\"",
-    "format:check": "prettier --check \"**/*.{ts,mjs,js}\""
+    "format:check": "prettier --check \"**/*.{ts,mjs,js}\"",
+    "check:stl": "npm run build -w skadis-ultralight-generator && node scripts/checks/write-sample-boards.mjs && bash scripts/checks/stl-check.sh .check/boards/*.stl"
   },
   "engines": {
     "node": ">=22.12.0"

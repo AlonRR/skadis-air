@@ -50,6 +50,7 @@ npm test --workspaces                                   # unit tests
 npm run dev -w skadis-ultralight-generator-web          # the page, reloading as you edit
 npm run build -w skadis-ultralight-generator-web        # the static site, into web/out/site
 npm run test:browser -w skadis-ultralight-generator-web # the built page in Chromium
+npm run check:stl                                       # sample boards through scad-tools' STL checks and PrusaSlicer
 ```
 
 ## Licence

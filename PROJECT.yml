@@ -5,6 +5,6 @@ projects:
   - name:     SKÅDIS board generator
     kind:     build
     state:    active
-    next:     "board-solid: the solid board in 40 mm steps, with geometry tests and the STL checks"
+    next:     "registry: board types, options and connectors as one list the page reads"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-12

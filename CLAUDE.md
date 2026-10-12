@@ -146,4 +146,12 @@ The page's tests use the library's source (an alias in `web/vite.config.ts`), so
 apart. `npx playwright install chromium` fetches the browser the browser test expects; a machine that
 already has a Chromium can point at it with `PW_CHROMIUM_PATH=<path to chrome.exe>` instead.
 
-The STL checks through scad-tools are added with `board-solid`.
+The exported parts are judged as scad-tools judges an OpenSCAD part, from the STL on (C44):
+
+```bash
+npm run check:stl                 # sample boards to .check/boards/, then scripts/checks/stl-check.sh on each
+bash tests/test-stl-check.sh      # the check's controls: an open cube and a degenerate facet must fail it
+```
+
+Both need PrusaSlicer (`PSLICER`) and uv; the slicer profiles are scad-check.sh's defaults, overridable
+with `PRINTER`, `PRINT_PROFILE` and `FILAMENT`.

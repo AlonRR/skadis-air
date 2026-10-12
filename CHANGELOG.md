@@ -14,3 +14,6 @@ All notable changes to this project are recorded here. The format follows
 - A figure of how tiles keep the slot grid across a seam, and the ultralight board's measurements.
 - The page's skeleton: the geometry library and the page as one npm workspace, the Manifold engine
   started in the browser, and a browser test of the built page.
+- The solid board in the library: 40 mm tiles cut through slot centres, each side open or closed,
+  5.2 × 15.2 mm slots with a 1 mm chamfer, 10 mm corners where both sides are closed; and an STL check
+  of sample boards through scad-tools and PrusaSlicer.
