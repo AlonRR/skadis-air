@@ -8,7 +8,9 @@ import type { Manifold } from 'manifold-3d';
 import { meshOf } from 'skadis-ultralight-generator';
 
 // Shared by every board drawn; never disposed.
-const BOARD = new MeshPhongMaterial({ color: 0xc9cdd1, shininess: 20 });
+// Flat shading: a board is flat faces, and normals averaged across a face and its edges streaked the
+// faces with diagonal shading (seen on the fit coupon, 12 Oct 2026).
+const BOARD = new MeshPhongMaterial({ color: 0xc9cdd1, shininess: 20, flatShading: true });
 const OUTLINE = new LineBasicMaterial({ color: 0x4a525a });
 // Edges are outlined where faces meet at 30 degrees or more: the board's outline and the slots'
 // rims, not the facets of their round ends.
