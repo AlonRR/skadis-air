@@ -40,15 +40,13 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D13 | **Connectors in this order: standoff, seam plate, slot clip, angle joiner, desk clamp** ([figure](figures/connector-types.png)). **Each joiner (seam plate, slot clip, angle joiner) comes for 2 boards and for 4 boards**, where four corners meet; **each mount (standoff, desk clamp) for 1, 2 or 4 boards**, where that applies (a desk clamp reaches only the bottom row, so 1 or 2). **Connectors and mounts take D11's strength options (solid, lightened, skeleton) where they apply** | 12 Oct 2026 |
 | A19 | **The plan is approved; build starts with `repo-bootstrap`** | 12 Oct 2026 |
 | A30 | **One of Azat's STLs may be downloaded to measure** its beams and weight; measuring only, nothing copied. Done the same day: [`research/2026-10-12-ultralight-measured.md`](research/2026-10-12-ultralight-measured.md) (an I-section, a quarter of a solid board's plastic, slots at exactly 5 × 15 mm with no clearance, 5 mm standoffs) | 12 Oct 2026 |
+| D15 | **Tiles are cut through a slot column or row, as AU3D's boards are**: each open side carries half slots, and two neighbours' halves make a whole slot, so the grid runs on with no slot missing. **Each side is open or closed, the user's choice**: open (half slots, to join a neighbour or add one later) or closed (a solid edge, the half slots left out). Sizes go in 20 mm steps both ways; a multiple of 40 mm repeats as it is, other sizes alternate with mirrored copies (checked numerically, and in the [figure](figures/tile-seams.png)'s script). A board with every side closed has IKEA's 20 mm from edge to first slot | 12 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
 ## Open questions
 
-- **D15** How tiles line up at a seam, three options in
-  [`figures/tile-seams.png`](figures/tile-seams.png) (drawn by `scripts/figures/tile-seams.py`, which
-  checks every slot against the grid): (a) 40 mm steps, every tile the same, every slot whole;
-  (b) 20 mm steps one way, every other tile turned 180°; (c) 20 mm steps both ways with mirrored
-  neighbours and one slot column left out at every seam, as AU3D's boards and IKEA's own do.
+- **D34** The default for each side of a single board: closed (an IKEA-like edge) or open (half slots,
+  ready for a neighbour).
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
 ## Inputs from outside this repository

@@ -7,3 +7,4 @@ review:  2026-10-12
 blockers:
   - nothing is built yet
   - the survey in docs/research names other designers' published models; to be reviewed before publishing
+  - commit bf91641 holds a Python bytecode file whose header records a machine path; removed in the next commit, but still in history until rewritten

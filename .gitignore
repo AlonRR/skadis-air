@@ -58,3 +58,7 @@ packages/*/dist/
 
 # --- the agent harness's own lock files ---
 .claude/*.lock
+
+# --- Python bytecode: it records the absolute path of its source file ---
+__pycache__/
+*.pyc

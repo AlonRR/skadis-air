@@ -10,10 +10,12 @@
 
 Every slot drawn is checked against the panel's slot grid first, so the figure cannot show an arrangement
 that does not work: tiles turned 180 degrees keep the grid when the seams fall between slot columns, and
-mirrored tiles keep it only when the seams fall where a slot column would be (that column left out).
+mirrored tiles keep it when the seams run through slot centres, half a slot on each side (the design the
+owner chose, D15, 12 Oct 2026). A slot cut anywhere but through its centre stops the script.
 Uses the Segoe UI fonts that come with Windows.
 """
 
+import math
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -24,6 +26,7 @@ OUT = ROOT / "docs" / "figures" / "tile-seams.png"
 K = 3.2  # pixels per mm
 TILE, TURNED, MIRRORED = (222, 222, 218), (196, 214, 236), (226, 212, 236)
 SEAM, SLOT, TXT, NOTE, DIM = (210, 40, 40), (70, 70, 74), (30, 30, 30), (60, 60, 60), (0, 110, 60)
+BACKGROUND = (248, 248, 248)
 
 
 def font(size, bold=False):
@@ -71,6 +74,63 @@ def draw_wall(d, ox, oy, wall_h, tiles, phase, margin):
             d.multiline_text(c, label, font=font(20, True), fill=(40, 70, 120), anchor="mm", align="center")
 
 
+def grid_range(a, b):
+    """Every 20 mm grid line from a to b, in wall millimetres: the steps must sit on the grid, not on a tile edge."""
+    return range(math.floor(a / 20) * 20, math.ceil(b / 20) * 20 + 1, 20)
+
+
+def draw_cut_wall(d, ox, oy, wall_w, wall_h, tiles, outer_open, background):
+    """The chosen design (D15): tiles cut through slot columns and rows. A slot whose centre lies on an open
+    edge is cut in half; on a closed edge it is left out. tiles: (x0, y0, w, h, how, label); outer_open: the
+    wall's open sides among {"left", "right", "bottom", "top"}. Raises on a slot cut anywhere but its centre."""
+    for x0, y0, w, h, how, _ in tiles:
+        X0, Y0 = ox + x0 * K, oy + (wall_h - y0 - h) * K
+        fill = TILE if how == "same" else TURNED if how == "turned" else MIRRORED
+        d.rectangle([X0, Y0, X0 + w * K, Y0 + h * K], fill=fill)
+    edges = {"left": 0, "right": wall_w, "bottom": 0, "top": wall_h}
+    for x in grid_range(-20, wall_w + 20):
+        for y in grid_range(-20, wall_h + 20):
+            if not on_grid(x, y, 0):
+                continue
+            touches = -2.5 < x < wall_w + 2.5 and -7.5 < y < wall_h + 7.5
+            if not touches:
+                continue
+            for side, at in edges.items():
+                on_this = (x == at) if side in ("left", "right") else (y == at)
+                if on_this and side not in outer_open:
+                    break                                  # a closed side: the slot is left out
+            else:
+                crossing = [s for s, at in edges.items()
+                            if (s in ("left", "right") and abs(x - at) < 2.5 and x != at)
+                            or (s in ("bottom", "top") and abs(y - at) < 7.5 and y != at)]
+                for x0, y0, w, h, _, _ in tiles:           # inner seams must run through slot centres too
+                    for at in (x0, x0 + w):
+                        if 0 < at < wall_w and abs(x - at) < 2.5 and x != at and y0 - 7.5 < y < y0 + h + 7.5:
+                            crossing.append(f"seam x={at}")
+                    for at in (y0, y0 + h):
+                        if 0 < at < wall_h and abs(y - at) < 7.5 and y != at and x0 - 2.5 < x < x0 + w + 2.5:
+                            crossing.append(f"seam y={at}")
+                if crossing:
+                    raise SystemExit(f"slot at ({x}, {y}) cut off its centre by {crossing}")
+                cx, cy = ox + x * K, oy + (wall_h - y) * K
+                d.rounded_rectangle([cx - 2.5 * K, cy - 7.5 * K, cx + 2.5 * K, cy + 7.5 * K], radius=2.5 * K, fill=SLOT)
+    # trim the half slots on the wall's open outer sides back to the wall
+    X0, Y0, X1, Y1 = ox, oy, ox + wall_w * K, oy + wall_h * K
+    m = 30 * K
+    for box in ([X0 - m, Y0 - m, X0, Y1 + m], [X1, Y0 - m, X1 + m, Y1 + m],
+                [X0, Y0 - m, X1, Y0], [X0, Y1, X1, Y1 + m]):
+        d.rectangle([box[0] + (1 if box[0] == X1 else 0), box[1], box[2] - (1 if box[2] == X0 else 0), box[3]],
+                    fill=background)
+    for x0, y0, w, h, how, text in tiles:
+        X0, Y0 = ox + x0 * K, oy + (wall_h - y0 - h) * K
+        d.rectangle([X0, Y0, X0 + w * K, Y0 + h * K], outline=SEAM, width=3)
+        if text:
+            c = (X0 + w * K / 2, Y0 + h * K / 2)
+            b = d.multiline_textbbox(c, text, font=font(20, True), anchor="mm", align="center")
+            d.rectangle([b[0] - 6, b[1] - 4, b[2] + 6, b[3] + 4], fill=(255, 255, 255), outline=(40, 70, 120))
+            d.multiline_text(c, text, font=font(20, True), fill=(40, 70, 120), anchor="mm", align="center")
+
+
 def label(d, ox, oy, wall_h, x_mm, y_mm, text):
     X, Y = ox + x_mm * K, oy + (wall_h - y_mm) * K
     b = d.textbbox((X, Y), text, font=font(20, True), anchor="lm")
@@ -89,9 +149,9 @@ def text_block(d, x, y, title, lines, recommended=False):
 
 
 def main():
-    img = Image.new("RGB", (2150, 2150), (248, 248, 248))
+    img = Image.new("RGB", (2150, 2150), BACKGROUND)
     d = ImageDraw.Draw(img)
-    d.text((30, 20), "D15: how printed tiles keep the SKÅDIS slot grid across a seam", font=font(30, True), fill=TXT)
+    d.text((30, 20), "D15: how printed tiles keep the SKÅDIS slot grid across a seam: (c) is the one chosen", font=font(30, True), fill=TXT)
     subtitle = ("Front view, to scale. Red lines are seams; the dark stadiums are the 5 × 15 mm slots on the 40 mm grid "
                 "with its 20 mm offset. Every slot is checked against that grid.")
     d.text((30, 64), subtitle, font=font(21), fill=(80, 80, 80))
@@ -118,7 +178,7 @@ def main():
         "Material beside a seam: 7.5 mm at a vertical seam,",
         "2.5 mm at a straight horizontal seam (a stepped seam",
         "round the slot ends leaves 7.5 mm there too).",
-    ], recommended=True)
+    ])
 
     # (b) seams between slot columns; every other tile turned 180 degrees; 20 mm steps one way
     oy = 150 + 240 * K + 80
@@ -137,24 +197,26 @@ def main():
         "tongue. Separate connectors work either way.",
     ])
 
-    # (c) seams where a slot column (or row) would be, that column left out; mirrored neighbours; 20 mm steps
+    # (c) the chosen design (D15): seams cut through slot columns and rows, half a slot on each open side
     oy = oy + 120 * K + 80
     wh = 200
     tiles = [
         (0, 0, 100, 100, "same", ""), (100, 0, 100, 100, "mirror-x", "mirrored"),
         (0, 100, 100, 100, "mirror-y", "mirrored"), (100, 100, 100, 100, "turned", "turned\n180°"),
     ]
-    draw_wall(d, ox, oy, wh, tiles, 0, (20, 20))
-    text_block(d, ox + 200 * K + 40, oy, "(c)  20 mm steps both ways, mirrored neighbours", [
-        "Tile sizes 60, 100, 140 … mm, in both directions: the layout",
-        "of AU3D's 'Infinity' boards; IKEA's own boards butted",
-        "together behave the same way.",
-        "The seam falls where a slot column (or row) would be, and",
-        "that column is left out: one column of slots is MISSING at",
-        "every seam. Material beside a seam: 17.5 mm and 12.5 mm.",
-        "Neighbours are mirror images, so a board with a different",
-        "back (standoffs, chamfers) needs a second, mirrored file.",
-        "Built-in edge joins: the same restriction as (b).",
+    draw_cut_wall(d, ox, oy, 200, wh, tiles, {"right", "top"}, BACKGROUND)
+    text_block(d, ox + 200 * K + 40, oy, "(c)  CHOSEN (D15): cut through a slot, as AU3D's boards", [
+        "Each open side carries half slots; two neighbours' halves make",
+        "a whole slot, so no slot is missing and the grid runs on.",
+        "Each side is open (half slots: to join a neighbour, or to add",
+        "one later) or closed (a solid edge). Here the wall's left and",
+        "bottom are closed, its right and top open.",
+        "Tile sizes in 20 mm steps, both ways. A multiple of 40 mm",
+        "repeats as it is; other sizes alternate with mirrored copies,",
+        "a second file when the back differs (standoffs, chamfers).",
+        "An open side has a notch every 40 mm: 2.5 mm deep down a",
+        "side, 7.5 mm deep along the top and bottom. Joins built into",
+        "the edges must fit between the notches.",
     ])
 
     img.save(OUT)
