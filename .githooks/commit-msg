@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 # Gate the COMMIT MESSAGE. Identity is the pre-commit hook's job - one rule, one place.
 #
 # Why this hook has to exist at all: a commit message is the ONE thing a sweep can

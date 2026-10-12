@@ -41,12 +41,13 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | A19 | **The plan is approved; build starts with `repo-bootstrap`** | 12 Oct 2026 |
 | A30 | **One of Azat's STLs may be downloaded to measure** its beams and weight; measuring only, nothing copied. Done the same day: [`research/2026-10-12-ultralight-measured.md`](research/2026-10-12-ultralight-measured.md) (an I-section, a quarter of a solid board's plastic, slots at exactly 5 × 15 mm with no clearance, 5 mm standoffs) | 12 Oct 2026 |
 | D15 | **Tiles are cut through slot centres, as Azat's and AU3D's boards are, in 40 mm steps**: the smallest tile, 40 × 40 mm, is one whole slot in its centre and a quarter slot at each corner; a larger tile has half a slot every 40 mm along each side. Tiles of the same pattern side by side make whole slots, so the grid runs on with no slot missing, and every tile is the same, with no mirrored copies. **Each side is open or closed, the user's choice**: open (the half and quarter slots, to join a neighbour or add one later) or closed (a solid edge, those slots left out); a board closed all round has IKEA's 20 mm from edge to first slot. Corrected the same day: 20 mm steps were first recorded, and the owner set 40 mm as the smallest, after measuring Azat's 40 × 40 tile ([measured](research/2026-10-12-ultralight-measured.md), [figure](figures/tile-seams.png)) | 12 Oct 2026 |
+| D34 | **Open or closed is chosen side by side**, on every board and tile. In the figure's panel (c), two tiles have one side closed, one has two, and one is open all round. The defaults are D37 | 12 Oct 2026 |
+| D37 | **The sides' defaults, and a wall's panels** (replacing choice C36): **a single panel is open all round** by default; **a wall is closed round its outer edge** and open at its seams; and for a wall the user sets **the panel size as a whole number of the smallest panel**, n × 40 mm in each direction | 12 Oct 2026 |
+| A35 | **The history is rewritten to drop the bytecode file**: the last three commits replayed without it, signed, with their authors, committers and dates; force-pushed to Gitea with a lease on 12 Oct 2026. Gitea still serves the old commits by their full SHA until it prunes them | 12 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
 ## Open questions
 
-- **D34** The default for each side of a single board: closed (an IKEA-like edge) or open (half slots,
-  ready for a neighbour).
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
 ## Inputs from outside this repository

@@ -199,11 +199,10 @@ def main():
 
     # (c) the chosen design (D15): seams cut through slot columns and rows, half a slot on each open side
     oy = oy + 120 * K + 80
-    wh = 200
     wh = 160
     tiles = [
-        (0, 0, 80, 80, "same", ""), (80, 0, 80, 80, "same", ""),
-        (0, 80, 80, 80, "same", ""), (80, 80, 80, 80, "same", ""),
+        (0, 0, 80, 80, "same", "2 sides\nclosed"), (80, 0, 80, 80, "same", "1 side\nclosed"),
+        (0, 80, 80, 80, "same", "1 side\nclosed"), (80, 80, 80, 80, "same", "all\nopen"),
     ]
     draw_cut_wall(d, ox, oy, 160, wh, tiles, {"right", "top"}, BACKGROUND)
     # the smallest tile on its own, every side open: one whole slot and four quarter slots
@@ -219,8 +218,11 @@ def main():
         "slot is missing and the grid runs on across the seams.",
         "Each side is open (half and quarter slots: to join a",
         "neighbour, or to add one later) or closed (a solid edge).",
-        "Here the wall's left and bottom are closed, its right and",
-        "top open; the 40 × 40 tile is open all round.",
+        "Open or closed is chosen side by side (D34): in this wall",
+        "two tiles have one side closed, one has two, one is open",
+        "all round. By default (D37) a single panel is open all",
+        "round, and a wall is closed round its outer edge and open",
+        "at its seams; a wall's panels are n × 40 mm, n chosen.",
         "An open side has a notch every 40 mm: 2.5 mm deep down a",
         "side, 7.5 mm deep along the top and bottom. Joins built",
         "into the edges must fit between the notches.",

@@ -7,4 +7,4 @@ review:  2026-10-12
 blockers:
   - nothing is built yet
   - the survey in docs/research names other designers' published models; to be reviewed before publishing
-  - commit bf91641 holds a Python bytecode file whose header records a machine path; removed in the next commit, but still in history until rewritten
+  - a Python bytecode file with a machine path was rewritten out of history on 12 Oct 2026 (A35), but Gitea serves the old commit bf9164146aa1c0d6291fd762416064d82edc2597 by its full SHA until the forge prunes unreferenced objects
