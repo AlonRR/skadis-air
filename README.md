@@ -32,7 +32,7 @@ library and runs in your browser; nothing is sent to a server.
 git clone --recursive <this repository>
 git config user.useConfigOnly true
 uv tool install pre-commit
-pre-commit install
+pre-commit install          # Windows: read the note below first
 bash tests/test-hooks.sh
 pre-commit run --all-files
 ```
@@ -40,9 +40,11 @@ pre-commit run --all-files
 `--recursive` fetches `scad-tools`, whose STL checks judge every part the page makes. The commit
 hooks check the commit's identity and message form; [`CLAUDE.md`](CLAUDE.md) lists the rules.
 
-On Windows, if the clone already has hooks in `.git/hooks` (from a git template, say), skip
-`pre-commit install`: it moves those hooks aside and then cannot start them, as they are
-`#!/bin/sh` scripts. Keep git's own hooks and run `pre-commit run --all-files` before each commit.
+On Windows, if the clone already has hooks in `.git/hooks` (from a git template, say),
+`pre-commit install` moves them aside and runs them itself, and it cannot start one written for
+`#!/bin/sh`, such as the convention kit's commit-msg hook: every commit is then refused with
+"Executable `/bin/sh` not found". There, skip `pre-commit install`, keep git's own hooks, and run
+`pre-commit run --all-files` before each commit.
 
 ## Licence
 

@@ -124,12 +124,13 @@ pre-commit run --all-files        # the hooks; run by hand before EVERY commit (
 uvx --from "reuse[charset-normalizer]" reuse lint   # every file has a licence and a copyright notice
 ```
 
-**Do not run `pre-commit install` on the owner's Windows machine.** This clone's `.git/hooks` holds the convention
-kit's hooks (identity, commit message, and the pre-push secret gate) from the git template.
-`pre-commit install` renames them `*.legacy` and then fails to start them, `/bin/sh` not being
-found on Windows (verified 12 Oct 2026: the first commit was refused that way). `pre-commit
-uninstall` restores them. So the kit hooks run on commit and push, and the pre-commit checks
-are run by hand.
+**Do not run `pre-commit install` on the owner's Windows machine.** This clone's `.git/hooks` holds the
+convention kit's hooks (identity, commit message, and the pre-push secret gate) from the git template.
+`pre-commit install` renames them `*.legacy` and runs them itself, and it cannot start the kit's
+commit-msg hook, which begins `#!/bin/sh`: every commit is refused with "Executable `/bin/sh` not
+found" (verified 12 Oct 2026; the admin session measured that the other two, which begin
+`#!/usr/bin/env bash`, do run that way). `pre-commit uninstall` restores them. So the kit hooks run on
+commit and push, and the pre-commit checks are run by hand. A fix to the kit is proposed to the owner.
 
 The page's own checks (type check, lint, format, unit and browser tests, and the STL checks
 through scad-tools) are added with `page-skeleton` and `board-solid`, and listed here then.

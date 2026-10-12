@@ -44,9 +44,11 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 ## Open questions
 
-- **D15** How tiles line up at a seam: whole slots with a 40 mm step, every tile the same, or a
-  20 mm step with every other tile turned 180°. The figure is
-  [`figures/tile-seams.png`](figures/tile-seams.png).
+- **D15** How tiles line up at a seam, three options in
+  [`figures/tile-seams.png`](figures/tile-seams.png) (drawn by `scripts/figures/tile-seams.py`, which
+  checks every slot against the grid): (a) 40 mm steps, every tile the same, every slot whole;
+  (b) 20 mm steps one way, every other tile turned 180°; (c) 20 mm steps both ways with mirrored
+  neighbours and one slot column left out at every seam, as AU3D's boards and IKEA's own do.
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
 ## Inputs from outside this repository
