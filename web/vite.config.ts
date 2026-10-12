@@ -1,0 +1,21 @@
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  // The page builds the library from its source, so an edit there shows at once.
+  resolve: {
+    alias: {
+      'skadis-ultralight-generator': fileURLToPath(new URL('../packages/core/src/index.ts', import.meta.url)),
+    },
+  },
+  // Relative asset URLs: the same build works under a GitHub Pages /<repo>/ path.
+  base: './',
+  build: {
+    outDir: 'out/site', // every generated file lives under out/ (CLAUDE.md, output layout)
+    emptyOutDir: true,
+  },
+  test: {
+    include: ['test/**/*.test.ts'],
+    environment: 'node',
+  },
+});

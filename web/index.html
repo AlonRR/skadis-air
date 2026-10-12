@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SKÅDIS board generator</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        line-height: 1.4;
+        margin: 0 auto;
+        max-width: 44rem;
+        padding: 1rem;
+      }
+      .note {
+        color: #555;
+        font-size: 0.9rem;
+      }
+      [data-state='error'] {
+        color: #a40000;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>SKÅDIS board generator</h1>
+    <p>
+      3D-printable boards and connectors that fit IKEA's SKÅDIS pegboard system. Choose a board, see it in 3D and
+      download a file your printer can make. Everything runs in this page; nothing is sent to a server.
+    </p>
+    <p class="note" data-testid="engine-status" data-state="loading">Starting the geometry engine…</p>
+    <footer>
+      <p class="note" data-testid="output-statement">
+        The STL and other files this tool generates, and anything you print from them, are yours to use, change,
+        share or sell for any purpose, with no conditions from this project.
+      </p>
+      <p class="note">
+        SKÅDIS is IKEA's name for its pegboard system. This page is not made, endorsed or supported by IKEA.
+      </p>
+    </footer>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

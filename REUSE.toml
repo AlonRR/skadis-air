@@ -29,6 +29,8 @@ path = [
   ".gitignore",
   ".gitmodules",
   ".markdownlint-cli2.yaml",
+  ".oxlintrc.jsonc",
+  ".prettierrc.json",
   ".pre-commit-config.yaml",
   ".repo-status",
   ".yamllint.yaml",

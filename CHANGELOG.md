@@ -12,3 +12,5 @@ All notable changes to this project are recorded here. The format follows
   published boards and connectors, and a figure of the connector types.
 - Repository conventions: commit hooks, licences in the REUSE layout, the publish status.
 - A figure of how tiles keep the slot grid across a seam, and the ultralight board's measurements.
+- The page's skeleton: the geometry library and the page as one npm workspace, the Manifold engine
+  started in the browser, and a browser test of the built page.

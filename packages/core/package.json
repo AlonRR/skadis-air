@@ -1,0 +1,35 @@
+{
+  "name": "skadis-ultralight-generator",
+  "version": "0.0.0",
+  "private": true,
+  "description": "3D-printable SKÅDIS-compatible boards and connectors: the geometry as a library for Node.js and browsers.",
+  "license": "MPL-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "manifold-3d": "3.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  }
+}

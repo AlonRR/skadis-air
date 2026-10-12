@@ -130,5 +130,20 @@ which pre-commit cannot start on Windows, so every commit was refused; the kit f
 226de1d, `#!/usr/bin/env sh`), and `.githooks/commit-msg` here is that copy. Either way works now: the shim,
 or the kit hooks alone with `pre-commit run --all-files` by hand before every commit.
 
-The page's own checks (type check, lint, format, unit and browser tests, and the STL checks
-through scad-tools) are added with `page-skeleton` and `board-solid`, and listed here then.
+The library (`packages/core`, the npm package `skadis-ultralight-generator`) and the page (`web/`) are one
+npm workspace. After `npm ci` at the repo root:
+
+```bash
+npm run typecheck --workspaces    # tsc over both: sources, tests and configs
+npm run lint                      # oxlint, with type-checked rules (.oxlintrc.jsonc)
+npm run format:check              # Prettier over the TypeScript; `npm run format` fixes it
+npm test --workspaces             # unit tests (Vitest), in Node
+npm run build -w skadis-ultralight-generator-web         # the static site, into web/out/site
+npm run test:browser -w skadis-ultralight-generator-web  # the built page in Chromium (Playwright)
+```
+
+The page's tests use the library's source (an alias in `web/vite.config.ts`), so the two cannot drift
+apart. `npx playwright install chromium` fetches the browser the browser test expects; a machine that
+already has a Chromium can point at it with `PW_CHROMIUM_PATH=<path to chrome.exe>` instead.
+
+The STL checks through scad-tools are added with `board-solid`.

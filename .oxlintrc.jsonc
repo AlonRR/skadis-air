@@ -1,0 +1,72 @@
+// The linter's rules, copied from parametric-window-sealer (C32). oxlint, with its type-checked rules run on the same
+// TypeScript compiler the packages build with. Run by `npm run lint` at the repository root,
+// and in CI. A rule switched off says why beside it.
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import", "vitest"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
+  },
+  "rules": {
+    "eslint/eqeqeq": "error",
+    "eslint/no-var": "error",
+    "eslint/prefer-const": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/prefer-nullish-coalescing": "error",
+    "typescript/no-unsafe-argument": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unsafe-call": "error",
+    "typescript/no-unsafe-member-access": "error",
+    "typescript/no-unsafe-return": "error",
+    "vitest/no-focused-tests": "error",
+    // Vitest's expect takes a message as its second argument.
+    "vitest/valid-expect": ["error", { "maxArgs": 2 }],
+
+    // toSorted() needs ES2023's library, and the packages target ES2022; every sort here is of
+    // an array made for it.
+    "unicorn/no-array-sort": "off",
+    // Copying each item with a spread keeps the lists immutable; they hold tens of items.
+    "oxc/no-map-spread": "off",
+    // A cast says "trust me" to the type checker: the sources narrow with checks instead, and an
+    // exception says why beside it (code-params-page, #95).
+    "typescript/no-unsafe-type-assertion": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/test/**", "**/e2e/**"],
+      "rules": {
+        // Each test asserts a result's `ok` before narrowing it with `if`, so an expect inside
+        // the `if` cannot be skipped unseen (checked on all 25 when the rule was added).
+        "vitest/no-conditional-expect": "off",
+        // A helper sits beside the tests that use it.
+        "unicorn/consistent-function-scoping": "off",
+        // A test takes its steps in order on purpose.
+        "eslint/no-await-in-loop": "off",
+        // Tests walk JSON and tool output as it comes back, and cast what they made themselves.
+        "typescript/no-unsafe-type-assertion": "off",
+        "typescript/no-explicit-any": "off",
+        "typescript/no-non-null-assertion": "off",
+        "typescript/no-unsafe-argument": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-return": "off"
+      }
+    },
+    {
+      // Plain JavaScript (the packages' dist checks) has no types to check against.
+      "files": ["**/*.mjs", "**/*.js"],
+      "rules": {
+        "typescript/prefer-nullish-coalescing": "off",
+        "typescript/no-unsafe-argument": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-return": "off"
+      }
+    }
+  ]
+}

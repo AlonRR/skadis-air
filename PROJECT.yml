@@ -5,6 +5,6 @@ projects:
   - name:     SKÅDIS board generator
     kind:     build
     state:    active
-    next:     "page-skeleton: the npm workspace with Manifold loaded and a browser test"
+    next:     "board-solid: the solid board in 40 mm steps, with geometry tests and the STL checks"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-12

@@ -40,6 +40,18 @@ pre-commit run --all-files
 `--recursive` fetches `scad-tools`, whose STL checks judge every part the page makes. The commit
 hooks check the commit's identity and message form; [`CLAUDE.md`](CLAUDE.md) lists the rules.
 
+The geometry is a library in `packages/core`, and the page lives in `web/`. They are one npm workspace
+and need Node.js 22.12 or later:
+
+```bash
+npm ci                                                  # at the repo root
+npm run lint && npm run format:check                    # oxlint and Prettier
+npm test --workspaces                                   # unit tests
+npm run dev -w skadis-ultralight-generator-web          # the page, reloading as you edit
+npm run build -w skadis-ultralight-generator-web        # the static site, into web/out/site
+npm run test:browser -w skadis-ultralight-generator-web # the built page in Chromium
+```
+
 ## Licence
 
 **Your generated files are yours.** The STL and other files this tool generates, and anything
