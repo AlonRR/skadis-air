@@ -71,10 +71,16 @@ outside this tree; do not vendor them in. The ones that bite most often here:
 
 ## Git
 
-- **Gitea first (D7).** The remote is `gitea`, the owner's self-hosted forge.
-  A branch per backlog item, named `<type>/<backlog-key>`, fast-forwarded into `main` once its
-  checks pass locally, then pushed. GitHub, its CI and Pages come only when the owner decides;
-  **never push to a public remote** and never change visibility.
+- **Gitea first (D7), and GitHub kept in step (A77).** A branch per backlog item, named
+  `<type>/<backlog-key>`, fast-forwarded into `main` once its checks pass locally, then pushed.
+  The remote `gitea` has two push URLs: the owner's self-hosted forge, and the private GitHub
+  repository `AlonRR/skadis_ultralight_generator`, so one `git push gitea main` (and each tag) updates
+  both. That is the owner's standing approval, 13 Oct 2026: "keep the repo in sync with github".
+  After each push, confirm `main` is the same on both with `git ls-remote`.
+  - **Never force-push to GitHub.** A history rewrite there is the owner's call, and a rewritten
+    commit stays fetchable by its SHA until GitHub removes it.
+  - GitHub's CI and Pages are still the owner's to switch on (D7); never change the repository's
+    visibility, and never push anywhere public.
 - **Identity: author AND committer are
   `Alon A. Rabinowitz <45129051+AlonRR@users.noreply.github.com>`.** Rebase and amend set the
   committer separately; check both with `git log --format='%an <%ae> | %cn <%ce>'`.
