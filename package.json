@@ -1,5 +1,5 @@
 {
-  "name": "skadis-ultralight-generator-repo",
+  "name": "skadis-air-repo",
   "private": true,
   "description": "The repository's npm workspace: the geometry library and the page",
   "license": "MPL-2.0",
@@ -11,7 +11,7 @@
     "lint": "oxlint --type-aware --deny-warnings",
     "format": "prettier --write \"**/*.{ts,mjs,js}\"",
     "format:check": "prettier --check \"**/*.{ts,mjs,js}\"",
-    "check:stl": "npm run build -w skadis-ultralight-generator && node scripts/checks/write-sample-boards.mjs && bash scripts/checks/stl-check.sh .check/boards/*.stl"
+    "check:stl": "npm run build -w skadis-air && node scripts/checks/write-sample-boards.mjs && bash scripts/checks/stl-check.sh .check/boards/*.stl"
   },
   "engines": {
     "node": ">=22.12.0"

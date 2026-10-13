@@ -1,5 +1,5 @@
 {
-  "name": "skadis-ultralight-generator-web",
+  "name": "skadis-air-web",
   "private": true,
   "version": "0.1.0",
   "description": "The page: choose a SKÅDIS board, see it in 3D, download it",
@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "manifold-3d": "3.5.4",
-    "skadis-ultralight-generator": "0.1.0",
+    "skadis-air": "0.1.0",
     "three": "0.186.1"
   },
   "devDependencies": {

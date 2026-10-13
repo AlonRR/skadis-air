@@ -22,7 +22,7 @@ export function toStl(mesh: MeshData, name: string): Uint8Array {
   const bytes = new Uint8Array(84 + 50 * count);
   const view = new DataView(bytes.buffer);
   // A binary STL whose header starts with "solid" is misread as text by some readers.
-  bytes.set(new TextEncoder().encode(`SKADIS board generator: ${name}`).slice(0, 80));
+  bytes.set(new TextEncoder().encode(`Skadis Air: ${name}`).slice(0, 80));
   view.setUint32(80, count, true);
   const p = mesh.positions;
   for (let t = 0; t < count; t++) {

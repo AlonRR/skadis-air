@@ -5,7 +5,7 @@
 import { BufferAttribute, BufferGeometry, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh } from 'three';
 import { MeshPhongMaterial, type Object3D } from 'three';
 import type { Manifold } from 'manifold-3d';
-import { meshOf } from 'skadis-ultralight-generator';
+import { meshOf } from 'skadis-air';
 
 // Shared by every board drawn; never disposed.
 // Flat shading: a board is flat faces, and normals averaged across a face and its edges streaked the

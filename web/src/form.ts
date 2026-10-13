@@ -1,7 +1,7 @@
 // The page's form for a board type, built from the settings the type declares (backlog item registry):
 // a number box for each number, the four side toggles round a drawing of the board (D46), and the fine
 // settings folded under "Advanced" (D48). Nothing here names a board type or a setting.
-import type { AnyBoardType, NumberSetting, Problem, SidesSetting } from 'skadis-ultralight-generator';
+import type { AnyBoardType, NumberSetting, Problem, SidesSetting } from 'skadis-air';
 
 type Side = 'left' | 'right' | 'bottom' | 'top';
 const SIDES: readonly Side[] = ['top', 'left', 'right', 'bottom'];

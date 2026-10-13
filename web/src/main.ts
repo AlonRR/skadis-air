@@ -13,7 +13,7 @@ import {
   loadEngine,
   readValues,
   type AnyBoardType,
-} from 'skadis-ultralight-generator';
+} from 'skadis-air';
 import { renderForm, type Form } from './form.js';
 import { downloadStl } from './download.js';
 import { mountPreview } from './preview.js';

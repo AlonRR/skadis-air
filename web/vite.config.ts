@@ -5,7 +5,7 @@ export default defineConfig({
   // The page builds the library from its source, so an edit there shows at once.
   resolve: {
     alias: {
-      'skadis-ultralight-generator': fileURLToPath(new URL('../packages/core/src/index.ts', import.meta.url)),
+      'skadis-air': fileURLToPath(new URL('../packages/core/src/index.ts', import.meta.url)),
     },
   },
   // Relative asset URLs: the same build works under a GitHub Pages /<repo>/ path.

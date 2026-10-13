@@ -2,7 +2,7 @@
 // named for its type, size and closed sides (C52), lying as it prints: face down (D66). Whatever is generated is the user's (D8).
 // saveFile is parametric-window-sealer's web/src/download-dialog.ts function (C32).
 import type { Manifold } from 'manifold-3d';
-import { meshOf, printPose, toStl } from 'skadis-ultralight-generator';
+import { meshOf, printPose, toStl } from 'skadis-air';
 
 function saveFile(name: string, bytes: Uint8Array, type: string): void {
   const blob = new Blob([new Uint8Array(bytes)], { type });

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 //
 // Writes a set of sample boards as STL into .check/boards/, for scripts/checks/stl-check.sh to judge.
-// Reads the library's build, so run `npm run build -w skadis-ultralight-generator` first;
+// Reads the library's build, so run `npm run build -w skadis-air` first;
 // `npm run check:stl` at the repo root does both, then the check.
 //
 //   node scripts/checks/write-sample-boards.mjs

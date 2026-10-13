@@ -1,4 +1,4 @@
-// skadis-ultralight-generator: the geometry behind the page, as a library.
+// skadis-air: the geometry behind the page, as a library.
 
 export * from './board-solid.js';
 export * from './engine.js';

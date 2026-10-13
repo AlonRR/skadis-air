@@ -1,4 +1,6 @@
-# skadis-ultralight-generator (the library)
+# skadis-air (the library)
+
+The library behind Skådis Air.
 
 The geometry behind the page, as a library for Node.js and browsers, built on
 [Manifold](https://github.com/elalish/manifold). Not published to the npm registry.
@@ -7,6 +9,6 @@ For now it starts the geometry engine and builds a check part whose volume is kn
 the boards and connectors arrive with their items in [`docs/backlog.md`](../../docs/backlog.md).
 
 ```bash
-npm test -w skadis-ultralight-generator        # unit tests, in Node
-npm run build -w skadis-ultralight-generator   # into dist/
+npm test -w skadis-air        # unit tests, in Node
+npm run build -w skadis-air   # into dist/
 ```

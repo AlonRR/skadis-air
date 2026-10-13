@@ -19,7 +19,7 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "paths": {
-      "skadis-ultralight-generator": [
+      "skadis-air": [
         "../packages/core/src/index.ts"
       ]
     }

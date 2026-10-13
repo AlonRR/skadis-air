@@ -1,6 +1,6 @@
 // The printer bed on the page (backlog item printer-default): the safe default, 200 x 200 mm (D61), or a
 // custom size. printer-presets will add the makers' printers to the same list.
-import { DEFAULT_BED, type Bed } from 'skadis-ultralight-generator';
+import { DEFAULT_BED, type Bed } from 'skadis-air';
 
 const MIN_MM = 50;
 const MAX_MM = 1000;
