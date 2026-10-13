@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 12 Oct 2026. Phase: **building** (plan approved, A19). **`v0.1.0` is released** (tag on Gitea, 12 Oct 2026): every P0 row of the backlog is done. The page makes a solid board, shows it in 3D and downloads it as STL; nothing is test-printed yet. D64: the P1 rows go on in order; `fit-coupon` is done (on the page as a board type), next is `mounting`. The evidence for the board types and
+Last updated: 13 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79; the packages are renamed, the repositories wait for A80), and Gitea and the private GitHub copy are kept in step (A77). **Next: `mounting`** (D73 to D75 decided; D76, the screw size, open). Nothing is test-printed yet.
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
