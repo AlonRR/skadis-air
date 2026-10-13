@@ -58,4 +58,5 @@ that path. None needs the path rebuilt.
 | `offline-file` | The page as one file that works offline (about 0.7 MB with Manifold, inferred by the reference) | P2 | S | `download-stl` | D2 | | | None |
 | `extending-doc` | **Started 12 Oct 2026** with board types and settings. `docs/extending.md`: where a new board type, option or connector goes, and which test fails if a step is missed | P2 | S | `registry` | D6 | | | None |
 | `preview-colour` | The preview's colour as a setting, for the filament the user prints in | P2 | S | `preview-3d` | D56 | | | None |
-| `pages-deploy` | The site built for GitHub Pages; live only when the owner publishes | P3 | S | `download-stl` | D7 | | | The owner's decision (D7) |
+| `listings` | Printables and MakerWorld listings, "Skådis Air: …" with the search words in the title, ready-made STL sets in common sizes, the fit coupon, photos of real prints, a link to the page (D79, D81) | P2 | M | `pages-deploy`, first test prints | D81 | yes | | Photos need real prints; the page must be public first |
+| `pages-deploy` | The site built for GitHub Pages; live only when the owner publishes | P2 | S | `download-stl` | D7 | | | The owner's decision (D7) |

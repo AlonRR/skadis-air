@@ -59,6 +59,11 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D66 | **Boards print face down**: the front on the bed, the back up, since some designs put standoffs on the back (replacing choice C58). A board is built and previewed as it hangs, front toward the viewer, and the download turns it over about the vertical axis, as a person turns it over to lay it on the bed; so a side chosen as left on the page is at the far x of the STL seen from above, and on the left again once it hangs | 12 Oct 2026 |
 | D67 | **The fit coupon is four 40 mm tiles in a row**, 160 × 40 mm, each slot at its own clearance (0, 0.1, 0.2 and 0.3 mm unless set), told apart by 1 to 4 dots in the front face | 12 Oct 2026 |
 | D68 | **The coupon's left and right sides are open, its top and bottom closed.** Found when building it: on one row the only grid points on its edges are its corners, and a corner keeps its slot only when both its sides are open, so the open sides cut no half slots and only leave the corners square; testing that two coupons' halves meet needs a second row (D69) | 12 Oct 2026 |
+| D73 | **Screw holes go in the corner tiles, 10 mm in from both edges**, between the corner and the first slot, clear of the slots whether the sides are open or closed | 13 Oct 2026 |
+| D74 | **Screw heads are countersunk by default**, the front kept flat; a round head is the other choice | 13 Oct 2026 |
+| D75 | **Standoffs on the back are an option, 20 mm tall by default** (IKEA's distance from the wall), printed on top as boards print face down (D66) | 13 Oct 2026 |
+| D79 | **The project is named Skådis Air, `skadis-air`**: light boards, mostly air, and a light, quick page; the listings' titles carry the words people search for ("IKEA Skadis pegboard generator", "parametric", "lightweight", "tileable", "connector") | 13 Oct 2026 |
+| D81 | **Printables and MakerWorld listings are planned** (`listings`, P2), after the first test prints, with ready-made STL sets, the coupon, photos and a link to the page; `pages-deploy` moves from P3 to P2 to go with them, as a listing needs the page public | 13 Oct 2026 |
 | A77 | **The repository is kept in step with a private GitHub copy**, `AlonRR/skadis_ultralight_generator`: "keep the repo in sync with github". The owner creates it and makes the first push; from then on every push to `gitea` goes to both (`CLAUDE.md`, Git). CI and Pages stay the owner's decision (D7) | 13 Oct 2026 |
 | A35 | **The history is rewritten to drop the bytecode file**: the last three commits replayed without it, signed, with their authors, committers and dates; force-pushed to Gitea with a lease on 12 Oct 2026. Gitea still serves the old commits by their full SHA until it prunes them | 12 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
@@ -66,6 +71,8 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 ## Open questions
 
 - **D69** A second row on the fit coupon, so two coupons pushed together test that the half slots meet into a whole slot, or one row and that test left to `tiling`.
+- **D76** The screw size: 4 mm (a 4.5 mm hole, a 9 mm countersink), the starting value until answered, or 3.5 mm.
+- **A80** Rename the repositories on Gitea and GitHub to `skadis-air`.
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
 ## Inputs from outside this repository
