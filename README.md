@@ -75,6 +75,11 @@ The repository itself:
 - Code, including the code that defines the boards' and connectors' shapes, and the scripts,
   hooks, tests and tool configuration: [MPL-2.0](LICENSES/MPL-2.0.txt)
 - The documentation and figures: [CERN-OHL-S-2.0](LICENSES/CERN-OHL-S-2.0.txt)
+- The page's fonts, subsets of FiraCode Nerd Font from the shared design system the page is styled
+  with: [OFL-1.1](LICENSES/OFL-1.1.txt), with glyphs under [CC-BY-4.0](LICENSES/CC-BY-4.0.txt) and
+  [MIT](LICENSES/MIT.txt); their authors and upstream licence texts are in
+  [`web/public/design-system/fonts/licenses/`](web/public/design-system/fonts/licenses/README.md),
+  which the published page serves beside the fonts.
 
 Which licence covers which file is recorded in [`REUSE.toml`](REUSE.toml)
 ([REUSE](https://reuse.software) layout).

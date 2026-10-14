@@ -8,9 +8,15 @@ import { AmbientLight, Box3, Color, DirectionalLight, PerspectiveCamera, Scene, 
 import type { Group } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { Manifold } from 'manifold-3d';
-import { boardScene, disposeScene } from './preview-scene.js';
+import { boardScene, disposeScene, paintBoards } from './preview-scene.js';
 
-const BACKGROUND = 0xf4f4f4;
+// The colours are the design system's tokens (D111): the stage follows the theme (D113), while the board
+// and its edges are a material, the same in both. The typed values stand in only for a stylesheet that
+// has not loaded, so the preview still draws.
+const token = (name: string, fallback: string): string => {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return value === '' ? fallback : value;
+};
 
 export interface Preview {
   /** Draws the board, or empties the preview when there is none; `framing` decides when to frame again. */
@@ -44,11 +50,17 @@ export function mountPreview(container: HTMLElement): Preview {
   // change makes its cost negligible (inferred, as in the reference).
   const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(BACKGROUND);
   container.prepend(renderer.domElement);
 
   const scene = new Scene();
-  scene.background = new Color(BACKGROUND);
+  const background = new Color();
+  const paintStage = () => {
+    background.setStyle(token('--surface', '#f8fafb'));
+    renderer.setClearColor(background);
+    scene.background = background;
+  };
+  paintStage();
+  paintBoards(token('--model-board', '#c9cdd1'), token('--model-board-outline', '#4a525a'));
   scene.add(new AmbientLight(0xffffff, 0.75));
   const sun = new DirectionalLight(0xffffff, 1.3);
   sun.position.set(-0.4, 0.6, 1);
@@ -64,6 +76,11 @@ export function mountPreview(container: HTMLElement): Preview {
     container.dataset['geometries'] = String(renderer.info.memory.geometries);
   };
   controls.addEventListener('change', draw);
+  // The theme is an attribute on the page, whoever sets it: the system setting or, later, a toggle (C117).
+  new MutationObserver(() => {
+    paintStage();
+    draw();
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   const resize = () => {
     const width = container.clientWidth || 640;

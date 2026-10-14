@@ -1,7 +1,8 @@
 // The preview's scene (backlog item preview-3d), with three.js, after parametric-window-sealer's
 // web/src/preview-scene.ts (C32). It draws the same solid the user downloads, built by the same code,
 // as it hangs (D55): its front, the face printed on top (C58), toward the viewer, x across and y up.
-// The board is a fixed light grey (D56), with its sharp edges outlined.
+// The board is light grey (D56), with its sharp edges outlined; preview.ts paints both from the design
+// system's tokens (D111).
 import { BufferAttribute, BufferGeometry, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh } from 'three';
 import { MeshPhongMaterial, type Object3D } from 'three';
 import type { Manifold } from 'manifold-3d';
@@ -15,6 +16,12 @@ const OUTLINE = new LineBasicMaterial({ color: 0x4a525a });
 // Edges are outlined where faces meet at 30 degrees or more: the board's outline and the slots'
 // rims, not the facets of their round ends.
 const OUTLINE_ANGLE_DEGREES = 30;
+
+/** Paints the boards, those drawn and those to come, in two CSS colours: the board and its edges. */
+export function paintBoards(board: string, outline: string): void {
+  BOARD.color.setStyle(board);
+  OUTLINE.color.setStyle(outline);
+}
 
 /** The board as a mesh and its outline. The solid is only read: it stays the caller's to free. */
 export function boardScene(solid: Manifold): Group {

@@ -49,13 +49,19 @@ repos:
       # forbid-submodules is left out on purpose: this repo has one submodule, scad-tools,
       # for its STL checks (C31), at the RELATIVE address ../scad-tools.git, which names no host.
       # The hook exists because a submodule publishes its URL; a relative one publishes none.
+      # The shared design system's files are kept byte for byte as its tag holds them (C119), as
+      # LICENSES/ is: no fixer or style checker touches them. The secret scans still read them.
       - id: end-of-file-fixer
+        exclude: ^web/public/design-system/(tokens\.css|components/|fonts/)
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
+        exclude: ^web/public/design-system/(tokens\.css|components/|fonts/)
       - id: mixed-line-ending
         args: [--fix=lf]
+        exclude: ^web/public/design-system/(tokens\.css|components/|fonts/)
       - id: fix-byte-order-marker
-        exclude: \.(ps1|psm1|psd1)$   # PowerShell 5.1 reads a BOM-less file as the ANSI code page
+        # PowerShell 5.1 reads a BOM-less file as the ANSI code page
+        exclude: \.(ps1|psm1|psd1)$|^web/public/design-system/(tokens\.css|components/|fonts/)
       - id: check-yaml
       - id: check-toml
       - id: check-json
@@ -82,6 +88,8 @@ repos:
     hooks:
       - id: editorconfig-checker
         alias: ec
+        # byte for byte from the design system (C119)
+        exclude: ^web/public/design-system/(tokens\.css|components/|fonts/)
 
   # ---------------------------------------------------------------------------
   # The two house hooks, copied into .githooks/ from repo-secret-scan's hooks/.
@@ -154,6 +162,8 @@ repos:
     rev: v0.19.0
     hooks:
       - id: markdownlint-cli2
+        # byte for byte from the design system (C119)
+        exclude: ^web/public/design-system/(tokens\.css|components/|fonts/)
 
   # yaml
   - repo: https://github.com/adrienverge/yamllint

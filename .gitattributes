@@ -1,2 +1,9 @@
 * text=auto eol=lf
 *.png binary
+
+# The shared design system's files, kept byte for byte as its tag holds them (C119): some are
+# committed there with CRLF, one licence text with a byte-order mark. Copied by
+# scripts/design-system/copy-design-system.sh; web/public/design-system/README.md is this repo's own.
+web/public/design-system/tokens.css -text
+web/public/design-system/components/** -text
+web/public/design-system/fonts/** -text

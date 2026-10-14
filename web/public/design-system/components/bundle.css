@@ -1,0 +1,95 @@
+/* Printable-parts design system: component styles, all values from tokens. The fonts load once, through tokens.css. */
+.ws-text{font:var(--text-body);color:var(--ink);background:var(--surface);max-width:var(--measure);margin:0 auto;padding:var(--space-6)}
+.ws-fieldset{border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised);margin:0 0 var(--space-4);padding:var(--space-3) var(--space-4) var(--space-4);min-width:0}
+.ws-fieldset legend{font-weight:600;padding:0 var(--space-1)}
+.ws-fieldset--choices{border-color:var(--choice)}
+.ws-label{display:block;margin-top:var(--space-3);font:var(--text-body)}
+.ws-input{display:block;min-height:var(--control-h);font:inherit;color:var(--ink);background:var(--surface-raised);border:1px solid var(--border-strong);border-radius:var(--radius-sm);padding:var(--field-pad-y) var(--field-pad-x);margin-top:var(--space-1);width:100%;box-sizing:border-box}
+.ws-input[aria-invalid=true]{border-color:var(--error);outline:var(--ring) solid var(--error)}
+.ws-input:disabled{opacity:var(--opacity-disabled)}
+.ws-input:focus-visible,.ws-btn:focus-visible,.ws-piece:focus-visible,.ws-summary:focus-visible,.ws-step:focus-visible,.ws-tile:focus-visible,.ws-rail__btn:focus-visible{outline:var(--ring) solid var(--action);outline-offset:var(--ring)}
+.ws-note{color:var(--ink-muted);font:var(--text-note);margin:var(--space-1) 0 0}
+.ws-error{color:var(--error);display:block;font:var(--text-note);min-height:1.2em}
+.ws-caps{font:var(--text-label-caps);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted)}
+.ws-btn{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;font:inherit;min-height:var(--control-h);padding:0 var(--space-4);color:var(--ink);background:var(--surface-raised);border:1px solid var(--border-strong);border-radius:var(--radius-sm);cursor:pointer}
+.ws-btn:hover{background:var(--action-tint)}
+.ws-btn--primary{background:var(--action);color:var(--on-action);border-color:var(--action);font-weight:600}
+.ws-btn--primary:hover{background:var(--action);filter:brightness(.92)}
+.ws-btn:disabled{opacity:var(--opacity-disabled);cursor:not-allowed}
+.ws-btn--quiet{border-color:transparent;background:transparent}
+/* At least control-h tall (a touch target on touch screens), text centred; padding, not display, keeps the marker */
+.ws-summary{cursor:pointer;font-weight:600;padding-block:calc((var(--control-h) - 1lh) / 2)}
+.ws-details{margin:0 0 var(--space-4)}
+.ws-map{display:grid;gap:var(--ring);margin:var(--space-2) 0}
+.ws-piece{font:inherit;min-width:var(--tap);min-height:var(--control-h);padding:var(--space-1);color:var(--ink);background:var(--surface-raised);border:1px solid var(--border-strong);border-radius:var(--radius-sm);cursor:pointer}
+.ws-piece[aria-pressed=true]{outline:var(--ring) solid var(--action);background:var(--action-tint)}
+.ws-piece[data-own=yes]{font-weight:bold}
+.ws-dialog{border:1px solid var(--border);border-radius:var(--radius-md);max-width:min(var(--dialog-w),92vw);color:var(--ink);background:var(--surface-raised);padding:var(--space-5)}
+.ws-dialog menu{display:flex;gap:var(--space-3);justify-content:flex-end;margin:var(--space-5) 0 0;padding:0}
+.ws-notice{border:1px solid var(--border-strong);border-radius:var(--radius-md);background:var(--surface-raised);padding:var(--space-3) var(--space-4);margin:var(--space-3) 0}
+.ws-notice--error{border-color:var(--error)}
+.ws-notice strong{display:block}
+/* Gallery: a visual picker, a grid of tiles */
+.ws-gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-2);margin:var(--space-2) 0}
+.ws-tile{font:inherit;display:grid;gap:var(--space-1);justify-items:center;padding:var(--space-2);color:var(--ink);background:var(--surface-raised);border:1px solid var(--border-strong);border-radius:var(--radius-sm);cursor:pointer;font:var(--text-label-caps)}
+.ws-tile[aria-pressed=true]{outline:var(--ring) solid var(--action);background:var(--action-tint)}
+.ws-tile svg{width:100%;height:auto;display:block}
+/* Workbench: header, step rail, sidebar, stage, status bar */
+.ws-workbench{display:grid;grid-template-columns:1fr;grid-template-rows:var(--header-h) 45vh 1fr;min-height:100vh;font-family:var(--font-ui);font:var(--text-body);color:var(--ink);background:var(--surface)}
+.ws-header{grid-column:1/-1;display:flex;align-items:center;gap:var(--space-3);height:var(--header-h);padding:0 var(--space-4);background:var(--surface-raised);border-bottom:1px solid var(--divider)}
+/* One row on every screen: on a narrow one the toolbar scrolls sideways, so no button is cut off */
+.ws-header{overflow-x:auto;white-space:nowrap}
+.ws-header .ws-btn{padding:0 var(--space-3)}
+.ws-header__name{font:var(--text-step)}
+.ws-header__spacer{flex:1}
+.ws-stage{position:sticky;top:0;display:flex;flex-direction:column;min-width:0;background:var(--surface)}
+.ws-stage__view{flex:1;display:grid;place-items:center;min-height:0;background:var(--surface)}
+.ws-status{display:flex;align-items:center;gap:var(--space-4);justify-content:space-between;height:var(--status-h);padding:0 var(--space-4);border-top:1px solid var(--divider);background:var(--surface-raised);font:var(--text-label-caps);color:var(--ink-muted)}
+.ws-plan{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-4);justify-content:space-between;padding:var(--space-3) var(--space-4);border-top:1px solid var(--divider);background:var(--surface-raised)}
+.ws-side{display:flex;min-width:0;background:var(--surface-raised);border-left:1px solid var(--divider);overflow:auto}
+.ws-rail{display:flex;flex-direction:column;gap:var(--space-1);width:var(--rail-w);padding:var(--space-2);border-right:1px solid var(--divider);flex:none}
+.ws-rail__btn{font:inherit;height:var(--control-h);color:var(--ink-muted);background:transparent;border:1px solid transparent;border-radius:var(--radius-sm);cursor:pointer}
+.ws-rail__btn[aria-current=step]{background:var(--action);color:var(--on-action);font-weight:600}
+.ws-rail__btn[data-done=yes]{color:var(--ink);border-color:var(--border-strong)}
+.ws-controls{flex:1;min-width:0;padding:var(--space-4)}
+.ws-controls h2{font:var(--text-step);margin:0 0 var(--space-3)}
+.ws-nav{display:flex;justify-content:space-between;gap:var(--space-3);margin-top:var(--space-4)}
+@media (min-width:56rem){
+ .ws-workbench{grid-template-columns:1fr var(--panel-width);grid-template-rows:var(--header-h) calc(100vh - var(--header-h))}
+ .ws-stage{position:static}
+ .ws-side{height:calc(100vh - var(--header-h))}
+ .ws-plan{flex-wrap:nowrap}
+}
+/* Choice: options that look like buttons; the chosen one is filled and ticked */
+.ws-choice{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:var(--space-2) 0 0}
+.ws-choice__opt{position:relative;display:inline-flex}
+.ws-choice__input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.ws-choice__face{box-sizing:border-box;display:inline-flex;align-items:center;min-height:var(--control-h);padding:0 var(--space-4);color:var(--ink);background:var(--surface-raised);border:1px solid var(--border-strong);border-radius:var(--radius-sm)}
+.ws-choice__input:hover + .ws-choice__face{background:var(--action-tint)}
+.ws-choice__input:checked + .ws-choice__face{background:var(--action);border-color:var(--action);color:var(--on-action);font-weight:600}
+.ws-choice__face::before{content:"";flex:none;box-sizing:border-box;width:var(--radio-size);height:var(--radio-size);margin:0 calc(var(--icon-gap) + var(--ring)) 0 var(--ring);border:var(--ring) solid var(--border-strong);border-radius:50%;background:transparent}
+.ws-choice__input:hover + .ws-choice__face::before{border-color:var(--action)}
+.ws-choice__input:checked + .ws-choice__face::before{border:calc(var(--ring) * 2) solid var(--action);background:var(--on-action);box-shadow:0 0 0 var(--ring) var(--on-action)}
+.ws-choice__input:focus-visible + .ws-choice__face{outline:var(--ring) solid var(--action);outline-offset:var(--ring)}
+.ws-choice__input:disabled + .ws-choice__face{opacity:var(--opacity-disabled)}
+/* Fira Code: ligatures on for text (so => and -> join), off for numbers and code; zero is slashed for numbers */
+.ws-text,.ws-workbench{font-variant-ligatures:contextual}
+.ws-input,.ws-status,code,.ws-num{font-variant-ligatures:none;font-feature-settings:"calt" 0,"zero" 1}
+/* The browser sets these in its own monospace; keep the one family */
+code,kbd,samp,pre{font-family:var(--font-ui)}
+/* Nerd Font icons: decoration beside a text label, always aria-hidden */
+.ws-ic{display:inline-block;margin-right:var(--icon-gap);font-style:normal;line-height:1}
+
+.ws-sides{display:grid;--sides-w:6rem;--sides-h:4.5rem;grid-template-columns:auto var(--sides-w) auto;grid-template-rows:auto var(--sides-h) auto;gap:var(--space-2);align-items:center;justify-items:center;width:max-content}
+.ws-sides__board{grid-area:2/2;width:100%;height:100%;background:var(--surface-sunken);border:1px dashed var(--border-strong);border-radius:var(--radius-sm)}
+.ws-sides__top{grid-area:1/2}.ws-sides__left{grid-area:2/1}.ws-sides__right{grid-area:2/3}.ws-sides__bottom{grid-area:3/2}
+.ws-sides__btn{display:inline-flex;align-items:center;min-height:var(--control-h);padding:0 var(--space-3);font:inherit;color:var(--ink);background:var(--surface-raised);border:1px solid var(--border-strong);border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap}
+.ws-sides__btn:hover{background:var(--action-tint)}
+.ws-sides__btn[aria-pressed="true"]{background:var(--action);border-color:var(--action);color:var(--on-action);font-weight:600}
+/* The tick is decoration: the empty text after "/" hides it from assistive tech, like aria-hidden */
+.ws-sides__btn[aria-pressed="true"]::before{content:"\eab2";content:"\eab2" / "";margin-right:var(--icon-gap)}
+.ws-sides__btn:focus-visible{outline:var(--ring) solid var(--action);outline-offset:var(--ring)}
+.ws-warning{color:var(--warning)}
+
+/* Touch screens: controls grow to the minimum touch target */
+@media (pointer:coarse){:root{--control-h:var(--tap)}}

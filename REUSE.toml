@@ -4,6 +4,10 @@
 #   CERN-OHL-S-2.0  the documentation and the figures
 #   MPL-2.0         code: the page, the geometry library that defines the boards' and
 #                   connectors' shapes, and scripts, hooks, tests and tool configuration
+#   web/public/design-system/fonts/
+#                   the shared design system's FiraCode Nerd Font subsets: OFL-1.1, with Codicons
+#                   (CC-BY-4.0) and Powerline (MIT) glyphs, as the design system licenses them; the
+#                   upstream texts and credits travel with them in fonts/licenses/
 # Files the tool generates are not part of this repository; they are the user's to do with
 # as they wish, as the README says.
 #
@@ -44,6 +48,20 @@ SPDX-License-Identifier = "MPL-2.0"
 
 # Documentation inside the code folders stays under the documentation licence.
 [[annotations]]
-path = ["packages/**/README.md"]
+path = ["packages/**/README.md", "web/**/README.md"]
 SPDX-FileCopyrightText = "2026 Alon A. Rabinowitz"
 SPDX-License-Identifier = "CERN-OHL-S-2.0"
+
+# The design system's fonts, copied unchanged from its tag v0.1.0 with this annotation
+# (web/public/design-system/README.md).
+[[annotations]]
+path = ["web/public/design-system/fonts/*.woff2", "web/public/design-system/fonts/licenses/*.txt"]
+SPDX-FileCopyrightText = [
+  "2014-2021 The Fira Code Project Authors",
+  "2014 Ryan L McIntyre",
+  "Microsoft Corporation",
+  "2024 Fonticons, Inc.",
+  "2013 Kim Silkebækken and other contributors",
+  "2016 Ryan L McIntyre",
+]
+SPDX-License-Identifier = "OFL-1.1 AND CC-BY-4.0 AND MIT"

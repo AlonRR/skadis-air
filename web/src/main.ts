@@ -19,6 +19,9 @@ import { renderForm, type Form } from './form.js';
 import { downloadStl } from './download.js';
 import { mountPreview } from './preview.js';
 import { mountPrinter } from './printer.js';
+import { followSystemTheme } from './theme.js';
+
+followSystemTheme();
 
 const engineStatus = document.querySelector<HTMLElement>('[data-testid="engine-status"]');
 const boardStatus = document.querySelector<HTMLElement>('[data-testid="board-status"]');

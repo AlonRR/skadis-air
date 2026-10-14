@@ -6,11 +6,16 @@ import { expect, test, type Page } from '@playwright/test';
 
 const preview = (page: Page) => page.getByTestId('preview');
 
-// The share of the canvas that is not background (#f4f4f4), and the box round what is drawn.
+// The share of the canvas that is not background, and the box round what is drawn. The background is the
+// design system's --surface, which the theme sets (D113); a page without it measures nothing (share -1).
 const drawn = (page: Page) =>
   page.evaluate(() => {
     const canvas = document.querySelector<HTMLCanvasElement>('[data-testid="preview"] canvas');
-    if (!canvas) return { share: -1, width: 0, height: 0 };
+    const surface = /^#(..)(..)(..)$/.exec(
+      getComputedStyle(document.documentElement).getPropertyValue('--surface').trim(),
+    );
+    if (!canvas || !surface) return { share: -1, width: 0, height: 0 };
+    const [r, g, b] = surface.slice(1).map((h) => parseInt(h, 16)) as [number, number, number];
     const copy = document.createElement('canvas');
     copy.width = canvas.width;
     copy.height = canvas.height;
@@ -21,7 +26,7 @@ const drawn = (page: Page) =>
     let count = 0;
     let [minX, minY, maxX, maxY] = [copy.width, copy.height, -1, -1];
     for (let i = 0; i < data.length; i += 4) {
-      const off = Math.abs(data[i]! - 244) + Math.abs(data[i + 1]! - 244) + Math.abs(data[i + 2]! - 244);
+      const off = Math.abs(data[i]! - r) + Math.abs(data[i + 1]! - g) + Math.abs(data[i + 2]! - b);
       if (off <= 24) continue;
       count += 1;
       const p = i / 4;

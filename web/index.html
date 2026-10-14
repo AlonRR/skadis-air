@@ -4,24 +4,59 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Skådis Air: SKÅDIS pegboard generator</title>
+    <script>
+      // The theme follows the system setting (D113). Set here, before anything is drawn, so a dark
+      // screen never flashes light; src/theme.ts keeps it in step while the page is open (C117).
+      document.documentElement.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    </script>
+    <!-- The shared design system (D111): its tokens first, then its components; web/public/design-system/README.md -->
+    <link rel="stylesheet" href="/design-system/tokens.css" />
+    <link rel="stylesheet" href="/design-system/components/bundle.css" />
     <style>
+      /* Every colour and font is a design-system token; the layout is the page's own until workbench. */
+      :root {
+        color-scheme: light;
+      }
+      :root[data-theme='dark'] {
+        color-scheme: dark; /* the browser's own controls, scroll bars and number spinners turn dark too */
+      }
       body {
-        font-family: system-ui, sans-serif;
-        line-height: 1.4;
+        background: var(--surface);
+        color: var(--ink);
+        font: var(--text-body);
+        font-variant-ligatures: contextual;
         margin: 0 auto;
         max-width: 44rem;
         padding: 1rem;
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+      }
+      select {
+        max-width: 100%; /* a list is as wide as its longest option, wider than a phone in this font (C118) */
+      }
+      fieldset {
+        min-width: 0; /* a fieldset otherwise grows to its widest content, past the screen's edge */
+      }
+      input {
+        /* numbers without ligatures and with a slashed zero, as the design system's fields */
+        font-variant-ligatures: none;
+        font-feature-settings:
+          'calt' 0,
+          'zero' 1;
       }
       .tagline {
         font-size: 1.1rem;
         margin-top: -0.5rem;
       }
       .note {
-        color: #555;
-        font-size: 0.9rem;
+        color: var(--ink-muted);
+        font: var(--text-note);
       }
       [data-state='error'] {
-        color: #a40000;
+        color: var(--error);
       }
       label {
         display: block;
@@ -35,20 +70,20 @@
         margin-left: 0.5rem;
       }
       .count {
-        color: #555;
+        color: var(--ink-muted);
         margin-left: 0.5rem;
       }
       .help {
-        color: #555;
-        font-size: 0.85rem;
+        color: var(--ink-muted);
+        font: var(--text-note);
         margin: 0.2rem 0 0;
       }
       .error {
-        color: #a40000;
+        color: var(--error);
         margin: 0.2rem 0 0;
       }
       .warning {
-        color: #8a5a00;
+        color: var(--warning);
         margin: 0.2rem 0 0;
       }
       .error:empty,
@@ -56,13 +91,13 @@
         display: none;
       }
       fieldset.printer {
-        border: 1px solid #c8c8c8;
-        border-radius: 0.4rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
         margin-top: 1rem;
       }
       fieldset.sides {
-        border: 1px solid #c8c8c8;
-        border-radius: 0.4rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
         margin-top: 0.8rem;
       }
       .sides-grid {
@@ -88,8 +123,8 @@
       .board-drawing {
         grid-area: board;
         aspect-ratio: 1;
-        background: #e4e4e0;
-        border: 2px dashed #888;
+        background: var(--surface-sunken);
+        border: 2px dashed var(--border-strong);
       }
       .side[aria-pressed='true'] {
         font-weight: 600;
@@ -109,15 +144,15 @@
         padding: 0.4rem 1rem;
       }
       .preview canvas {
-        border: 1px solid #ddd;
-        border-radius: 0.4rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
         display: block;
         max-width: 100%;
         touch-action: none;
       }
       [data-state='invalid'],
       [data-state='problem'] {
-        color: #a40000;
+        color: var(--error);
       }
     </style>
   </head>
