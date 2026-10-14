@@ -83,6 +83,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 - **D69** A second row on the fit coupon, so two coupons pushed together test that the half slots meet into a whole slot, or one row and that test left to `tiling`.
 - **D103** Going public: (a) after the fit coupon is printed and its clearance confirmed (recommended), or (b) now. Either way the agent sets `.repo-status` to `ready` with its stale blockers cleared and adds a Pages workflow; making the repository public and switching Pages on are the owner's.
+- **D105** Gitea also picks up `.github/workflows/checks.yml` and queues a run for every push, which no runner has started (run 681, 14 Oct 2026; parametric-window-sealer's last Gitea runs ended cancelled): (a) switch Actions off for this repository on Gitea, so GitHub is the one CI (recommended); (b) leave it, for the day a runner takes it, when it will need the same two variables.
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
 ## Inputs from outside this repository
