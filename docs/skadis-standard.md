@@ -57,3 +57,7 @@ Measured on a real board with calipers (T17): slot width and height, board thick
 first slot's distance from each edge, the corner holes' positions and diameter, the spacer's
 length, and the gap between two boards hung by IKEA's instructions. A printed fit coupon then
 settles the clearance a printed slot needs.
+
+![What to measure on a SKÅDIS board and on the printed test parts, each with a letter](figures/measure-board.png)
+
+Each measurement has a letter, a to j on the board and a, b, k and l on the printed parts, so the answers can come back as "a 5.20, b 15.15". `scripts/figures/measure-board.py` draws the figure, working its "about" values out from the figures on this page.
