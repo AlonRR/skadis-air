@@ -75,14 +75,14 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D94 | **The standoff is the size of the built-in standoffs**: 20 mm tall unless set (D75), 3 to 40 mm, 10 mm across for a 4 mm screw (C83); the 2- and 4-board versions are that outline stretched over their holes | 14 Oct 2026 |
 | D97 | **The 2- and 4-board standoffs cross the seam with a tunnel**: next to the board they are cut away along the slot column, so a hook in any slot of it has room behind the board, and they are joined only on the wall side | 14 Oct 2026 |
 | T98 | **The room a hook takes comes from Printables**, as the owner has no hook: measured from a replica of IKEA's hook (model 107818), its back tab sits up to 6 mm behind the board and reaches 8.25 mm below its slot ([`skadis-standard.md`](skadis-standard.md)); `<<CONFIRM>>` until a real hook is measured | 14 Oct 2026 |
+| A102 | **CI on GitHub**: the convention kit's workflow (every pre-commit hook, the identity of every pushed commit, a full-history secret scan) and a job for the npm workspace's checks and the browser test, `.github/workflows/checks.yml`; its two repository variables set with `gh`; the STL check stays local | 14 Oct 2026 |
+| D104 | **`pre-commit install`**: the hooks run on every commit, the kit's own hooks kept and run first | 14 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
 ## Open questions
 
 - **D69** A second row on the fit coupon, so two coupons pushed together test that the half slots meet into a whole slot, or one row and that test left to `tiling`.
-- **A102** CI: a GitHub Actions workflow from the convention kit's template (every pre-commit hook, the identity of every pushed commit, a full-history secret scan) and a job for the type check, lint, formatting, the unit and browser tests and the build; it needs two repository variables, the expected commit name and address. The STL check stays local, as it needs PrusaSlicer.
 - **D103** Going public: (a) after the fit coupon is printed and its clearance confirmed (recommended), or (b) now. Either way the agent sets `.repo-status` to `ready` with its stale blockers cleared and adds a Pages workflow; making the repository public and switching Pages on are the owner's.
-- **D104** The pre-commit hooks: (a) `pre-commit install`, so they run on every commit beside the kit's hooks (recommended), or (b) keep running them by hand before each commit.
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
 ## Inputs from outside this repository

@@ -52,6 +52,7 @@ that path. None needs the path rebuilt.
 | `conn-slot-clip` | Connector 3: a bar behind the seam with a peg in a slot of each board, for 2 boards, or a cross for 4 (D13) | P1 | M | `tiling` | D13 | yes | yes | Peg fit in a 5 mm slot |
 | `conn-angle` | Connector 4: boards at an angle (90°, 135°), inside or outside, joining 2 boards, or 4 where two meet on each side (D13) | P1 | M | `mounting` | D13 | yes | | None significant |
 | `conn-desk-clamp` | Connector 5: holds 1 board, or the seam of 2, upright on a desk edge of a given thickness (D13) | P1 | M | `mounting` | D13 | yes | | Clamp force in printed plastic |
+| `ci` | **Done 14 Oct 2026** (A102). CI on GitHub: the kit's workflow and the npm workspace's checks with the browser test; `tests/test-workflow.sh` holds it to the kit's first-run bugs | P1 | S | `page-skeleton` | A102 | | | None |
 | `printer-presets` | The printer list, from the reference's verified bed sizes | P1 | S | `printer-default` | D4 | | yes | None |
 | `download-3mf-zip` | 3MF, and every tile and connector of a wall in one zip | P1 | M | `download-stl` | D4 | | | None: the reference writes 3MF (C32) |
 | `outline-shapes` | Outlines other than a rectangle: hexagon, triangle, round | P2 | M | `registry` | D11 | | | Where the slot grid sits in a non-rectangular outline |

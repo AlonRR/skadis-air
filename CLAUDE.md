@@ -128,15 +128,21 @@ printed from them may be used, changed, shared or sold for any purpose, with no 
 ```bash
 bash tests/test-hooks.sh          # the kit's controls for both hooks, end to end through git
 bash tests/test-yamllint.sh       # .yamllint.yaml passes this repo's YAML, refuses broken YAML
+bash tests/test-workflow.sh       # the CI workflow against the kit's first-run bugs and actionlint, with controls
 pre-commit run --all-files        # the hooks; run by hand before EVERY commit (see below)
 uvx --from "reuse[charset-normalizer]" reuse lint   # every file has a licence and a copyright notice
 ```
 
 **`pre-commit install` and the kit hooks.** `pre-commit install` renames the kit hooks the git template put in
-`.git/hooks` to `*.legacy` and runs them itself. Until 12 Oct 2026 the kit's commit-msg hook began `#!/bin/sh`,
-which pre-commit cannot start on Windows, so every commit was refused; the kit fixed it that day (its commit
-226de1d, `#!/usr/bin/env sh`), and `.githooks/commit-msg` here is that copy. Either way works now: the shim,
-or the kit hooks alone with `pre-commit run --all-files` by hand before every commit.
+`.git/hooks` to `*.legacy` and runs them itself, before its own. It is installed in the owner's clone (D104, 14 Oct
+2026), so every commit runs the hooks; still run `pre-commit run --all-files` by hand before a commit that touches
+many files, as the hooks see only what is staged. The kit's commit-msg hook begins `#!/usr/bin/env sh` since its
+commit 226de1d (12 Oct 2026); before that pre-commit could not start it on Windows and every commit was refused.
+
+**CI** (A102, 14 Oct 2026): `.github/workflows/checks.yml` runs every pre-commit hook, the identity of every pushed
+commit, a full-history secret scan, and the npm workspace's checks with the browser test, on each push to GitHub.
+It reads the repository variables `EXPECT_EMAIL` and `EXPECT_NAME`. A red run is a problem to fix, not a gate that
+held: a direct push to `main` is not stopped by it. `npm run check:stl` stays local.
 
 The library (`packages/core`, the npm package `skadis-air`) and the page (`web/`) are one
 npm workspace. After `npm ci` at the repo root:

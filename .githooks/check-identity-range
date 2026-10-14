@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Check the identity RECORDED in every commit of a range - the CI half of the identity rule.
+#
+#   check-identity-range <rev-list arguments...>      e.g.  BEFORE..HEAD   or   HEAD
+#
+# WHY. The pre-commit hook checks the identity git is ABOUT to write, on the machine making
+# the commit. In CI that machine is the runner: it has no expected identity, so the hook
+# refused every run, and configuring one would compare the runner with itself, which can
+# never fail. What CI can check is what the push CARRIES - the author and committer written
+# into each commit. Found running this kit's workflow in a new repo, 5 Oct 2026.
+#
+# ONE RULE, ONE PLACE. The comparison is the pre-commit hook's own: each commit's recorded
+# identity is handed to it through GIT_AUTHOR_* / GIT_COMMITTER_*, which is what `git var`
+# inside the hook reports. Case-insensitive address, exact name, fail closed when
+# hooks.expectEmail / hooks.expectName are unset - all inherited, nothing re-implemented.
+#
+# Exit 0: every commit in the range matches. 1: at least one does not, or nothing to
+# compare against. 2: the range does not resolve - an error, never a pass.
+#
+# trap '' PIPE and no `set -e`, as in both hooks: a closed output pipe must not be able to
+# kill the shell before it reaches its exit status.
+trap '' PIPE
+set -uo pipefail
+HOOK="$(cd "$(dirname "$0")" && pwd)/pre-commit"
+
+say() { { printf '%s\n' "$@"; } >&2 2> /dev/null || true; }
+
+if [ $# -eq 0 ]; then
+  say "usage: check-identity-range <rev-list arguments...>"
+  exit 2
+fi
+if [ ! -f "$HOOK" ]; then
+  say "check-identity-range: the pre-commit hook is not next to this script ($HOOK)"
+  exit 2
+fi
+if ! commits=$(git rev-list "$@" 2> /dev/null); then
+  say "check-identity-range: the range does not resolve: $*"
+  exit 2
+fi
+# Fail closed ONCE, up front, rather than once per commit.
+if [ -z "$(git config --get hooks.expectEmail 2> /dev/null)" ] ||
+  [ -z "$(git config --get hooks.expectName 2> /dev/null)" ]; then
+  say "REFUSING: no expected identity is configured (hooks.expectEmail, hooks.expectName)." \
+    "In CI, set them from repository variables before running this."
+  exit 1
+fi
+
+n=0
+bad=0
+for c in $commits; do
+  n=$((n + 1))
+  IFS=$'\t' read -r an ae cn ce < <(git log -1 --format='%an%x09%ae%x09%cn%x09%ce' "$c")
+  if ! out=$(GIT_AUTHOR_NAME="$an" GIT_AUTHOR_EMAIL="$ae" \
+    GIT_COMMITTER_NAME="$cn" GIT_COMMITTER_EMAIL="$ce" bash "$HOOK" 2>&1); then
+    bad=$((bad + 1))
+    say "$(git log -1 --format='%h %s' "$c")" "$(printf '%s\n' "$out" | grep '^REFUSING' | sed 's/^/    /')"
+  fi
+done
+say "check-identity-range: $n commit(s) checked, $bad with the wrong identity"
+[ "$bad" -eq 0 ]
