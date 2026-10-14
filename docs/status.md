@@ -80,6 +80,9 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 ## Open questions
 
 - **D69** A second row on the fit coupon, so two coupons pushed together test that the half slots meet into a whole slot, or one row and that test left to `tiling`.
+- **A102** CI: a GitHub Actions workflow from the convention kit's template (every pre-commit hook, the identity of every pushed commit, a full-history secret scan) and a job for the type check, lint, formatting, the unit and browser tests and the build; it needs two repository variables, the expected commit name and address. The STL check stays local, as it needs PrusaSlicer.
+- **D103** Going public: (a) after the fit coupon is printed and its clearance confirmed (recommended), or (b) now. Either way the agent sets `.repo-status` to `ready` with its stale blockers cleared and adds a Pages workflow; making the repository public and switching Pages on are the owner's.
+- **D104** The pre-commit hooks: (a) `pre-commit install`, so they run on every commit beside the kit's hooks (recommended), or (b) keep running them by hand before each commit.
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
 ## Inputs from outside this repository
