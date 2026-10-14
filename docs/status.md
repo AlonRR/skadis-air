@@ -86,9 +86,18 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 - **D105** Gitea also picks up `.github/workflows/checks.yml` and queues a run for every push, which no runner has started (run 681, 14 Oct 2026; parametric-window-sealer's last Gitea runs ended cancelled): (a) switch Actions off for this repository on Gitea, so GitHub is the one CI (recommended); (b) leave it, for the day a runner takes it, when it will need the same two variables.
 - **T109** The test print (started 14 Oct 2026 at the owner's request: PrusaLink job 274, PETG Basic NPETG087-ZX, 2 h 38 min): when it is done, try each coupon slot (1 to 4 dots: 0, 0.1, 0.2, 0.3 mm of clearance) and say which fits best; push the seam pair together and say whether the seam slot works like the others and whether the edges meet flush.
 - **Q110** What the slots are tried with, as the owner has no IKEA hook: (a) an IKEA SKÅDIS accessory he has; (b) calipers, each printed slot's width beside a slot of his real board (T17), the agent then picking the clearance whose print matches (recommended if there is no accessory); (c) the replica of IKEA's hook (Printables 107818, public domain) printed next.
+- **D111** Adopting the shared design system (`AlonRR/printable-parts-design-system`, tag `v0.1.0`) by the plan its session wrote from this repository at `f463830` (see *Inputs from outside this repository*), in four parts, each a backlog row and a branch: `design-system-base` (S: its fonts, colours and a dark theme; the layout and the tests unchanged), `design-system-controls` (M: buttons for every choice, the board type among them, and the side toggles, "Advanced" and the warnings in its style), `workbench` (M: a header with a theme toggle, the preview filling the stage, the download in a bar below it, the form in a sidebar, a phone layout), and `steps` (M, later, when the form grows). When: (a) parts 1 to 3 next, before `board-lightened` (recommended: they need no print and no measurement, so they go ahead while T109 and Q110 are open; the page looks finished before D103; and the plan's count of the tests it changes is still true); (b) after `board-lightened`; (c) after going public (D103). The owner's answers there (its D10 to D13, 14 Oct 2026, relayed) take IDs here when the work starts.
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
 ## Inputs from outside this repository
 
 - The owner's unfinished plate connector in his workshop repository (commit b68a17a) is not
   used (Q18).
+- The design-system adoption plan (D111): `docs/adoption-skadis-air.md` in
+  `AlonRR/printable-parts-design-system`, at `0bc6d62` on its `main`; the files to copy are at
+  its tag `v0.1.0`, commit `aa3188e` (verified with `git ls-remote` and the GitHub API,
+  14 Oct 2026). Its sessions do not push to this repository. Two findings from its own checks,
+  for the browser tests here: a full-page screenshot of a page wider than the phone viewport
+  turns touch emulation off for later pages in the same context (use a fresh page, and take the
+  screenshot last); and load every font face and wait for a layout before checking fonts, as
+  `document.fonts.ready` alone raced once in CI.
