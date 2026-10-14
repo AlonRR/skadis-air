@@ -3,8 +3,10 @@
 # SPDX-License-Identifier: MPL-2.0
 #
 # Prove scripts/checks/stl-check.sh discriminates: a closed cube must pass it, and the same cube
-# with one face missing, or with a facet whose corners are two of one point, must fail it. A check
-# that passes everything looks exactly like one that found nothing wrong.
+# with one face missing, or with a facet whose corners are two of one point, must fail it. Two
+# cubes apart are two parts: they fail unless a <name>.parts file beside the STL says 2, and fail
+# again when it says another count (D69, C107). A check that passes everything looks exactly like
+# one that found nothing wrong.
 #
 #   bash tests/test-stl-check.sh
 #
@@ -41,6 +43,11 @@ def write(name, tris):
 write("closed.stl", [tuple(v[i] for i in f) for f in faces])
 write("open.stl", [tuple(v[i] for i in f) for f in faces[:-2]])          # the left face missing
 write("degenerate.stl", [tuple(v[i] for i in f) for f in faces] + [(v[0], v[1], v[1])])
+apart = [tuple((p[0] + 20, p[1], p[2]) for p in t) for t in [tuple(v[i] for i in f) for f in faces]]
+for name in ("two.stl", "two-declared.stl", "two-miscounted.stl"):
+    write(name, [tuple(v[i] for i in f) for f in faces] + apart)
+(out / "two-declared.parts").write_text("2")
+(out / "two-miscounted.parts").write_text("3")
 PY
 
 pass=0
@@ -61,6 +68,9 @@ echo "stl-check.sh:"
 expect 0 closed.stl "a closed cube passes"
 expect 1 open.stl "a cube with a face missing fails"
 expect 1 degenerate.stl "a cube with a facet whose corners are two of one point fails"
+expect 1 two.stl "two cubes apart, with nothing to say so, fail as two parts"
+expect 0 two-declared.stl "two cubes apart pass when two-declared.parts says 2"
+expect 1 two-miscounted.stl "two cubes apart fail when two-miscounted.parts says 3"
 echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

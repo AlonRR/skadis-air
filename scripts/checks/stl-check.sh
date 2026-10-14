@@ -49,15 +49,27 @@ for stl in "$@"; do
     echo "  !! not manifold"
     fail=1
   }
+  # One part, unless a <name>.parts file beside the STL says how many (a test pair, D69, C107).
+  want=1
+  if [ -f "${stl%.stl}.parts" ]; then
+    want=$(tr -d ' \r\n' < "${stl%.stl}.parts")
+    case "$want" in
+      '' | *[!0-9]* | 0)
+        echo "  !! ${stl%.stl}.parts must hold a whole number of parts, 1 or more"
+        fail=1
+        want=1
+        ;;
+    esac
+  fi
   parts=$(printf '%s\n' "$info" | awk -F= '/number_of_parts/ {gsub(/ /,"",$2); print $2}')
-  [ "${parts:-0}" = "1" ] || {
-    echo "  !! the STL is ${parts:-no} parts, expected 1"
+  [ "${parts:-0}" = "$want" ] || {
+    echo "  !! the STL is ${parts:-no} parts, expected $want"
     fail=1
   }
   rep=$(printf '%s\n' "$info" | grep -E "^(degenerate_facets|edges_fixed|facets_removed|facets_added|facets_reversed|backwards_edges) =" | tr -s ' ' | paste -sd ' ' - || true)
   [ -z "$rep" ] || echo "  ~~ the slicer repaired the mesh as it loaded it: $rep"
 
-  if mesh=$(uv run -q "$root/scad-tools/scripts/stl-mesh.py" --bodies 1 "$stl" 2>&1); then
+  if mesh=$(uv run -q "$root/scad-tools/scripts/stl-mesh.py" --bodies "$want" "$stl" 2>&1); then
     echo "  mesh: ${mesh##*: }"
   else
     echo "  !! mesh: ${mesh##*: }"

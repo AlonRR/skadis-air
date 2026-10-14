@@ -13,6 +13,8 @@ All notable changes to this project are recorded here. The format follows
 - Screw holes in the solid board, one in each corner, countersunk (the default) or for a round head,
   for 3 to 5 mm screws; and standoffs on the back as an option, 20 mm tall unless set, hollow for the
   screw, so the board stands off the wall and hooks have room.
+- A seam-test pair beside the fit coupon: two small tiles that push together into one slot across a
+  seam, to check how tiles join before printing a tiled wall.
 - Continuous integration on GitHub: every commit hook, the identity of every pushed commit, a
   full-history secret scan, and the type check, lint, formatting, unit and browser tests.
 - The first connector: a standoff, a hollow spacer between boards and the wall at their corner screw

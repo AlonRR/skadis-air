@@ -80,6 +80,14 @@ function contract(type: AnyBoardType) {
     }
   });
 
+  it('makes as many separate parts as it declares, one unless it says more (C107)', () => {
+    const built = buildBoard(engine, type, defaultValues(type.settings));
+    if (!built.ok) throw new Error(built.problem);
+    const parts = built.solid.decompose();
+    made.push(built.solid, ...parts);
+    expect(parts).toHaveLength(type.parts ?? 1);
+  });
+
   it('goes to the printer on the bed, from the origin', () => {
     const built = buildBoard(engine, type, defaultValues(type.settings));
     if (!built.ok) throw new Error(built.problem);
@@ -275,5 +283,31 @@ describe('the standoff connector type (D91 to D94)', () => {
     expect(name({})).toBe('skadis-standoff-1-board-20mm.stl');
     expect(name({ heightMm: 25, screwMm: 3.5 })).toBe('skadis-standoff-1-board-25mm-screw-3.5mm.stl');
     expect(name({ boards: '4' })).toBe('skadis-standoff-4-boards-20mm.stl');
+  });
+});
+
+describe('the seam-test pair type (D69)', () => {
+  const seam = boardType('seam-test');
+
+  it('is listed with the boards, right after the fit coupon it is printed with', () => {
+    const ids = BOARD_TYPES.map((t) => t.id);
+    expect(ids.indexOf('seam-test')).toBe(ids.indexOf('fit-coupon') + 1);
+    expect(groupOf(seam)).toBe('board');
+  });
+
+  it('builds two tiles, at the clearance asked for', () => {
+    const built = buildBoard(engine, seam, { ...defaultValues(seam.settings), slotClearanceMm: 0.3 });
+    if (!built.ok) throw new Error(built.problem);
+    made.push(built.solid);
+    const parts = built.solid.decompose();
+    made.push(...parts);
+    expect(parts).toHaveLength(2);
+  });
+
+  it('names its file with its thickness and its clearance', () => {
+    const name = (given: Record<string, number>) =>
+      boardFileName(seam, { ...defaultValues(seam.settings), ...given }, 'stl');
+    expect(name({})).toBe('skadis-seam-test-5mm-0.2.stl');
+    expect(name({ slotClearanceMm: 0.15, thicknessMm: 4.5 })).toBe('skadis-seam-test-4.5mm-0.15.stl');
   });
 });

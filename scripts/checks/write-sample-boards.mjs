@@ -68,6 +68,8 @@ for (const { name, type, values } of samples) {
   const board = built.solid;
   const printed = printedPart(type, board); // as the page downloads it: a board face down (D66)
   writeFileSync(join(out, `${name}.stl`), toStl(meshOf(printed), name));
+  // stl-check.sh expects one part unless told otherwise (C107)
+  if ((type.parts ?? 1) !== 1) writeFileSync(join(out, `${name}.parts`), String(type.parts));
   printed.delete();
   console.log(`${name}.stl  volume ${board.volume().toFixed(1)} mm3  genus ${board.genus()}`);
   board.delete();

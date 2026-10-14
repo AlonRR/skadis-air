@@ -15,6 +15,7 @@ export interface BoardType<S extends readonly Setting[]> {
   name: string; // as the page lists it
   group?: Group; // a board unless set
   prints?: 'face-down' | 'as-built'; // how it goes on the bed: turned over (D66) unless set (C101)
+  parts?: number; // the separate parts in one file: 1 unless set, as for a test pair (C107)
   description?: string;
   settings: S;
   // Methods, not function properties, so that a type with its own settings is still a board type.

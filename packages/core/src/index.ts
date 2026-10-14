@@ -12,3 +12,4 @@ export * from './print-pose.js';
 export * from './fit-coupon.js';
 export * from './mounting.js';
 export * from './standoff.js';
+export * from './seam-test.js';
