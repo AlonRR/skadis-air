@@ -2,6 +2,7 @@
 // the form, D45 to D48, and that a change to any control rebuilds the board.
 import { expect, test, type Page } from '@playwright/test';
 import { BOARD_TYPES } from '../../packages/core/src/board-types/index.js';
+import { choose, chosen } from './design-system.js';
 
 async function ready(page: Page) {
   await page.goto('./');
@@ -15,9 +16,9 @@ test('lists the board types that are built, in the order of the registry, openin
   page,
 }) => {
   await ready(page);
-  const options = page.getByTestId('board-type').locator('option');
+  const options = page.getByTestId('board-type').locator('.ws-choice__face');
   await expect(options).toHaveText(BOARD_TYPES.map((t) => t.name));
-  await expect(page.getByTestId('board-type')).toHaveValue(BOARD_TYPES[0]?.id ?? '');
+  await expect(chosen(page, 'boardType')).toHaveValue(BOARD_TYPES[0]?.id ?? '');
 });
 
 test('shows size, thickness and sides on the form, and folds the fine settings under Advanced (D48)', async ({
@@ -28,7 +29,7 @@ test('shows size, thickness and sides on the form, and folds the fine settings u
     await expect(page.locator(`input[name="${name}"]`)).toBeVisible();
   const advanced = page.getByTestId('advanced');
   await expect(advanced).not.toHaveAttribute('open', /.*/);
-  for (const name of ['screwHead', 'standoffs']) await expect(page.locator(`select[name="${name}"]`)).toBeVisible();
+  for (const name of ['screwHead', 'standoffs']) await expect(chosen(page, name)).toBeVisible();
   for (const name of ['slotClearanceMm', 'slotChamferMm', 'cornerRadiusMm', 'screwMm', 'standoffHeightMm']) {
     await expect(advanced.locator(`input[name="${name}"]`)).toBeHidden();
   }
@@ -91,12 +92,11 @@ test('offers screw holes and standoffs, and names the file for what differs from
   page,
 }) => {
   await ready(page);
-  const holes = page.locator('select[name="screwHead"]');
-  await expect(holes).toHaveValue('countersunk'); // D74
-  await expect(page.locator('select[name="standoffs"]')).toHaveValue('none'); // D75: an option
+  await expect(chosen(page, 'screwHead')).toHaveValue('countersunk'); // D74
+  await expect(chosen(page, 'standoffs')).toHaveValue('none'); // D75: an option
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-file-name', 'skadis-solid-160x160.stl');
-  await holes.selectOption('round');
-  await page.locator('select[name="standoffs"]').selectOption('back');
+  await choose(page, 'screwHead', 'round');
+  await choose(page, 'standoffs', 'back');
   const status = page.getByTestId('board-status');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-round-head-standoffs-20mm.stl');
   await expect(status).toContainText('160 × 160 × 25 mm'); // 5 mm of board, 20 mm of standoff behind it
@@ -109,22 +109,24 @@ test('says a countersink too deep for a thin board cannot be made, and makes it 
   await page.locator('input[name="thicknessMm"]').fill('3');
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'problem');
   await expect(page.getByTestId('board-status')).toContainText('round head');
-  await page.locator('select[name="screwHead"]').selectOption('round');
+  await choose(page, 'screwHead', 'round');
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready');
 });
 
-test('lists the boards, then the connectors under their own heading (D91)', async ({ page }) => {
+test('lists the boards, then the connectors under their own heading, as buttons (D91, D112)', async ({ page }) => {
   await ready(page);
-  const groups = page.getByTestId('board-type').locator('optgroup');
+  const types = page.getByTestId('board-type');
+  await expect(types.locator('.ws-caps')).toHaveText(['Boards', 'Connectors']);
+  const groups = types.getByRole('radiogroup');
   await expect(groups).toHaveCount(2);
-  await expect(groups.nth(0)).toHaveAttribute('label', 'Boards');
-  await expect(groups.nth(1)).toHaveAttribute('label', 'Connectors');
-  await expect(groups.nth(1).locator('option[value="standoff"]')).toHaveText('Standoff');
+  await expect(groups.nth(0)).toHaveAttribute('aria-label', 'Boards');
+  await expect(groups.nth(1)).toHaveAttribute('aria-label', 'Connectors');
+  await expect(groups.nth(1).getByRole('radio', { name: 'Standoff' })).toHaveValue('standoff');
 });
 
 test('makes a standoff from the same form, preview and download as a board (D91 to D94)', async ({ page }) => {
   await ready(page);
-  await page.getByTestId('board-type').selectOption('standoff');
+  await choose(page, 'boardType', 'standoff');
   const status = page.getByTestId('board-status');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-1-board-20mm.stl');
   await expect(status).toContainText('Connector ready: 10 × 10 × 20 mm');
@@ -138,12 +140,12 @@ test('makes the standoff for 2 or 4 boards, and says when it is too short for it
   page,
 }) => {
   await ready(page);
-  await page.getByTestId('board-type').selectOption('standoff');
+  await choose(page, 'boardType', 'standoff');
   const status = page.getByTestId('board-status');
-  await page.locator('select[name="boards"]').selectOption('4');
+  await choose(page, 'boards', '4');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-4-boards-20mm.stl');
   await expect(status).toContainText('30 × 30 × 20 mm');
-  await page.locator('select[name="boards"]').selectOption('2');
+  await choose(page, 'boards', '2');
   await page.locator('input[name="heightMm"]').fill('10');
   await expect(status).toHaveAttribute('data-state', 'problem');
   await expect(status).toContainText('12 mm');

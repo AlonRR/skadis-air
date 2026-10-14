@@ -30,22 +30,8 @@
         padding: 1rem;
       }
       input,
-      select,
       button {
         font: inherit;
-      }
-      select {
-        max-width: 100%; /* a list is as wide as its longest option, wider than a phone in this font (C118) */
-      }
-      fieldset {
-        min-width: 0; /* a fieldset otherwise grows to its widest content, past the screen's edge */
-      }
-      input {
-        /* numbers without ligatures and with a slashed zero, as the design system's fields */
-        font-variant-ligatures: none;
-        font-feature-settings:
-          'calt' 0,
-          'zero' 1;
       }
       .tagline {
         font-size: 1.1rem;
@@ -58,90 +44,20 @@
       [data-state='error'] {
         color: var(--error);
       }
-      label {
-        display: block;
-        margin-top: 0.6rem;
+      .ws-notice:empty {
+        display: none; /* a warning's place, kept beside its control, shows only when it holds one */
       }
-      input[type='number'] {
-        margin-left: 0.5rem;
-        width: 6rem;
-      }
-      .field select {
-        margin-left: 0.5rem;
-      }
-      .count {
-        color: var(--ink-muted);
-        margin-left: 0.5rem;
-      }
-      .help {
-        color: var(--ink-muted);
-        font: var(--text-note);
-        margin: 0.2rem 0 0;
-      }
-      .error {
-        color: var(--error);
-        margin: 0.2rem 0 0;
-      }
-      .warning {
+      .ws-notice strong {
         color: var(--warning);
-        margin: 0.2rem 0 0;
       }
-      .error:empty,
-      .warning:empty {
-        display: none;
+      .ws-input[type='number'] {
+        max-width: 12rem;
       }
-      fieldset.printer {
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        margin-top: 1rem;
+      .ws-sides {
+        margin-top: var(--space-2);
       }
-      fieldset.sides {
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        margin-top: 0.8rem;
-      }
-      .sides-grid {
-        display: grid;
-        gap: 0.3rem;
-        grid-template-areas: '. top .' 'left board right' '. bottom .';
-        grid-template-columns: auto 6rem auto;
-        justify-content: start;
-        align-items: center;
-      }
-      .side-top {
-        grid-area: top;
-      }
-      .side-left {
-        grid-area: left;
-      }
-      .side-right {
-        grid-area: right;
-      }
-      .side-bottom {
-        grid-area: bottom;
-      }
-      .board-drawing {
-        grid-area: board;
-        aspect-ratio: 1;
-        background: var(--surface-sunken);
-        border: 2px dashed var(--border-strong);
-      }
-      .side[aria-pressed='true'] {
-        font-weight: 600;
-      }
-      .side {
-        white-space: nowrap;
-      }
-      .side-top,
-      .side-bottom {
-        justify-self: center;
-      }
-      details {
-        margin-top: 1rem;
-      }
-      button.download {
-        font-size: 1rem;
-        padding: 0.4rem 1rem;
+      .ws-choice + .ws-caps {
+        margin-top: var(--space-3); /* "Connectors" under the boards' buttons */
       }
       .preview canvas {
         border: 1px solid var(--border);
@@ -164,41 +80,70 @@
       download a file your printer can make. Everything runs in this page; nothing is sent to a server.
     </p>
     <p class="note" data-testid="engine-status" data-state="loading">Starting the geometry engine…</p>
-    <form data-testid="board" onsubmit="return false">
-      <label>
-        Board or connector
-        <select data-testid="board-type"></select>
-      </label>
+    <form data-testid="board" onsubmit="return false;">
+      <!-- Buttons under "Boards" and "Connectors", written by main.ts from the list of types (D91, D112) -->
+      <fieldset class="ws-fieldset ws-fieldset--choices" data-testid="board-type">
+        <legend>Board or connector</legend>
+      </fieldset>
       <div data-testid="board-form"></div>
-      <fieldset class="printer" data-testid="printer">
+      <fieldset class="ws-fieldset" data-testid="printer">
         <legend>Printer</legend>
-        <label>
-          Printer bed
-          <select data-testid="printer-bed">
-            <option value="default" selected>Safe default: 200 × 200 mm, most printers</option>
-            <option value="custom">Custom</option>
-          </select>
-        </label>
-        <div data-testid="custom-bed" hidden>
-          <label>Bed width (mm) <input type="number" name="bedXMm" min="50" max="1000" step="1" value="200" /></label>
-          <label>Bed depth (mm) <input type="number" name="bedYMm" min="50" max="1000" step="1" value="200" /></label>
+        <div class="ws-label">Printer bed</div>
+        <div class="ws-choice" role="radiogroup" aria-label="Printer bed" data-testid="printer-bed">
+          <label class="ws-choice__opt">
+            <input class="ws-choice__input" type="radio" name="printerBed" value="default" checked />
+            <span class="ws-choice__face">Safe default: 200 × 200 mm</span>
+          </label>
+          <label class="ws-choice__opt">
+            <input class="ws-choice__input" type="radio" name="printerBed" value="custom" />
+            <span class="ws-choice__face">Custom</span>
+          </label>
         </div>
-        <p class="error" data-testid="bed-error"></p>
+        <p class="ws-note">Most printers take a board of 200 × 200 mm.</p>
+        <div data-testid="custom-bed" hidden>
+          <label class="ws-label">
+            Bed width (mm)
+            <input
+              class="ws-input"
+              type="number"
+              name="bedXMm"
+              min="50"
+              max="1000"
+              step="1"
+              value="200"
+              autocomplete="off"
+            />
+          </label>
+          <label class="ws-label">
+            Bed depth (mm)
+            <input
+              class="ws-input"
+              type="number"
+              name="bedYMm"
+              min="50"
+              max="1000"
+              step="1"
+              value="200"
+              autocomplete="off"
+            />
+          </label>
+        </div>
+        <span class="ws-error" data-testid="bed-error"></span>
       </fieldset>
     </form>
     <p data-testid="board-status" data-state="building">Making the board…</p>
-    <p class="warning" data-testid="bed-warning"></p>
+    <div class="ws-notice" data-testid="bed-warning" aria-live="polite"></div>
     <section class="preview" data-testid="preview" data-state="loading">
       <p class="note" data-testid="preview-message"></p>
-      <button type="button" data-testid="preview-reset">Reset view</button>
+      <button type="button" class="ws-btn" data-testid="preview-reset">Reset view</button>
     </section>
     <p>
-      <button type="button" class="download" data-testid="download-stl" disabled>Download STL</button>
+      <button type="button" class="ws-btn ws-btn--primary" data-testid="download-stl" disabled>Download STL</button>
     </p>
     <footer>
       <p class="note" data-testid="output-statement">
-        The STL and other files this tool generates, and anything you print from them, are yours to use, change,
-        share or sell for any purpose, with no conditions from this project.
+        The STL and other files this tool generates, and anything you print from them, are yours to use, change, share
+        or sell for any purpose, with no conditions from this project.
       </p>
       <p class="note">
         SKÅDIS is IKEA's name for its pegboard system. This page is not made, endorsed or supported by IKEA.

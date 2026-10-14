@@ -1,11 +1,12 @@
 // The fit coupon on the page (backlog item fit-coupon; D67): chosen from the board-type list, with its own
 // settings, previewed and downloaded like a board.
 import { expect, test } from '@playwright/test';
+import { choose } from './design-system.js';
 
 test('the fit coupon is chosen from the list, shows its own settings, and downloads', async ({ page }) => {
   await page.goto('./');
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
-  await page.getByTestId('board-type').selectOption('fit-coupon');
+  await choose(page, 'boardType', 'fit-coupon');
   for (const name of ['clearanceFromMm', 'clearanceStepMm', 'thicknessMm']) {
     await expect(page.locator(`input[name="${name}"]`)).toBeVisible();
   }
@@ -30,7 +31,7 @@ test('the fit coupon is chosen from the list, shows its own settings, and downlo
 test('the seam-test pair is chosen from the list beside the coupon, and downloads (D69)', async ({ page }) => {
   await page.goto('./');
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
-  await page.getByTestId('board-type').selectOption('seam-test');
+  await choose(page, 'boardType', 'seam-test');
   for (const name of ['slotClearanceMm', 'thicknessMm'])
     await expect(page.locator(`input[name="${name}"]`)).toBeVisible();
   const status = page.getByTestId('board-status');

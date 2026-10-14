@@ -1,7 +1,7 @@
 // What the browser tests read to hold the page to the shared design system (D111), after its own
 // scripts/check-previews.py: the fonts Chromium really drew with, the page's width on a phone, and
 // the theme's colours. Not a test file itself: the specs import it.
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 /** The one family the design system draws every glyph in. */
 export const UI_FONT = 'FiraCode Nerd Font';
@@ -80,3 +80,10 @@ export const previewBackground = (page: Page): Promise<number[]> =>
     ctx.drawImage(canvas, 0, 0);
     return Array.from(ctx.getImageData(2, 2, 1, 1).data.subarray(0, 3));
   });
+
+/** Chooses an option of a Choice by its value, as a click on its button does. */
+export const choose = (page: Page, name: string, value: string): Promise<void> =>
+  page.locator(`input[name="${name}"][value="${value}"]`).check();
+
+/** The option chosen in a Choice, to read its value. */
+export const chosen = (page: Page, name: string): Locator => page.locator(`input[name="${name}"]:checked`);

@@ -2,7 +2,7 @@
 // tokens and fonts loaded, the theme the system asks for, and a page that fits a phone. Each check has
 // a control that must fail it, as the design system's own scripts/check-previews.py has.
 import { expect, test, type Page } from '@playwright/test';
-import { fontFallbacks, previewBackground, rgb, settle, sidewaysScroll, token } from './design-system.js';
+import { choose, fontFallbacks, previewBackground, rgb, settle, sidewaysScroll, token } from './design-system.js';
 
 const near = (got: number[], want: number[]) =>
   got.length === 3 && want.length === 3 && got.every((v, i) => Math.abs(v - (want[i] ?? -99)) <= 2);
@@ -71,6 +71,46 @@ test.describe('the fonts', () => {
 test.describe('on a phone, 375 px wide, with a touch screen', () => {
   test.use({ viewport: { width: 375, height: 800 }, hasTouch: true, isMobile: true });
 
+  // Every control a finger presses, measured on what is drawn: a choice by its button face, since its
+  // radio input is invisible on top of it. Advanced is opened, so its fields are measured too.
+  const shortControls = (page: Page) =>
+    page.evaluate(() => {
+      document.querySelector<HTMLDetailsElement>('[data-testid="advanced"]')?.setAttribute('open', '');
+      const all = [
+        ...document.querySelectorAll<HTMLElement>(
+          'input:not([type="radio"]), select, button, summary, .ws-choice__face',
+        ),
+      ].filter((e) => e.getClientRects().length > 0);
+      const short = all
+        .filter((e) => e.getBoundingClientRect().height < 43.5)
+        .map(
+          (e) =>
+            `${e.localName} "${(e.textContent ?? '').trim() || e.getAttribute('name')}" ${e.getBoundingClientRect().height.toFixed(1)} px`,
+        );
+      return { measured: all.length, short };
+    });
+
+  test('every control is at least 44 px tall', async ({ page }) => {
+    await page.goto('./');
+    await ready(page);
+    await settle(page);
+    const { measured, short } = await shortControls(page);
+    expect(measured).toBeGreaterThan(15);
+    expect(short).toEqual([]);
+  });
+
+  test('a button 30 px tall is caught (the control for the touch check)', async ({ page }) => {
+    await page.goto('./');
+    await ready(page);
+    await page.evaluate(() => {
+      const small = document.createElement('button');
+      small.textContent = 'Small';
+      small.style.cssText = 'height: 30px; min-height: 0';
+      document.body.append(small);
+    });
+    expect((await shortControls(page)).short.some((s) => s.startsWith('button "Small"'))).toBe(true);
+  });
+
   test('the page does not scroll sideways', async ({ page }) => {
     await page.goto('./');
     await ready(page);
@@ -90,4 +130,25 @@ test.describe('on a phone, 375 px wide, with a touch screen', () => {
     });
     expect(await sidewaysScroll(page)).toBeGreaterThan(0);
   });
+});
+
+// The chosen option of a choice, and a closed side, are filled with the action colour; the rest are not.
+test('the chosen option and a closed side are filled, the others are not', async ({ page }) => {
+  await page.goto('./');
+  await ready(page);
+  const action = await token(page, '--action');
+  expect(action).toHaveLength(3);
+  const fill = (selector: string) =>
+    page
+      .locator(selector)
+      .first()
+      .evaluate((e) => getComputedStyle(e).backgroundColor);
+  expect(rgb(await fill('input[name="boardType"]:checked + .ws-choice__face'))).toEqual(action);
+  expect(rgb(await fill('input[name="boardType"]:not(:checked) + .ws-choice__face'))).not.toEqual(action);
+  await choose(page, 'screwHead', 'round');
+  expect(rgb(await fill('input[name="screwHead"]:checked + .ws-choice__face'))).toEqual(action);
+  expect(rgb(await fill('[data-side="left"]'))).not.toEqual(action); // open
+  await page.locator('[data-side="left"]').click();
+  await expect(page.locator('[data-side="left"]')).toHaveAttribute('aria-pressed', 'true');
+  expect(rgb(await fill('[data-side="left"]'))).toEqual(action); // closed
 });

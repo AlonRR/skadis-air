@@ -26,6 +26,9 @@ All notable changes to this project are recorded here. The format follows
 
 - The page takes the look of the shared design system for printable-part tools: its fonts and
   colours, and a dark theme that follows your system setting, the 3D preview included.
+- Every choice on the page is a row of buttons instead of a list: the board or connector, under
+  "Boards" and "Connectors", the screw holes, the standoffs and the printer bed. Each side of a board is
+  a button that is ticked when the side is closed, and a warning shows in a box beside what it concerns.
 - The STL lies as boards are printed: face down, the back up, turned over from the way the page shows
   the board, so its sides keep their places once it hangs.
 

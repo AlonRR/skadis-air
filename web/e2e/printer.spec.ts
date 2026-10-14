@@ -1,6 +1,7 @@
 // The printer bed (backlog item printer-default): 200 x 200 mm unless set (D61), and a board larger
 // than the bed is warned about but still offered for download (D62).
 import { expect, test, type Page } from '@playwright/test';
+import { choose, chosen } from './design-system.js';
 
 async function ready(page: Page) {
   await page.goto('./');
@@ -9,8 +10,10 @@ async function ready(page: Page) {
 
 test('starts on the safe default bed, 200 x 200 mm, which the starting board fits', async ({ page }) => {
   await ready(page);
-  await expect(page.getByTestId('printer-bed')).toHaveValue('default');
-  await expect(page.getByTestId('printer-bed').locator('option:checked')).toContainText('200 × 200 mm');
+  await expect(chosen(page, 'printerBed')).toHaveValue('default');
+  await expect(page.getByTestId('printer-bed').locator('input:checked + .ws-choice__face')).toContainText(
+    '200 × 200 mm',
+  );
   await expect(page.getByTestId('bed-warning')).toBeEmpty();
 });
 
@@ -27,7 +30,7 @@ test('takes a custom bed, and the warning goes once the board fits it', async ({
   await page.locator('input[name="widthMm"]').fill('240');
   await page.locator('input[name="heightMm"]').fill('200');
   await expect(page.getByTestId('bed-warning')).not.toBeEmpty();
-  await page.getByTestId('printer-bed').selectOption('custom');
+  await choose(page, 'printerBed', 'custom');
   await page.locator('input[name="bedXMm"]').fill('250');
   await page.locator('input[name="bedYMm"]').fill('210');
   await expect(page.getByTestId('bed-warning')).toBeEmpty();
@@ -35,7 +38,7 @@ test('takes a custom bed, and the warning goes once the board fits it', async ({
 
 test('says so when the custom bed is not a size it can use', async ({ page }) => {
   await ready(page);
-  await page.getByTestId('printer-bed').selectOption('custom');
+  await choose(page, 'printerBed', 'custom');
   await page.locator('input[name="bedXMm"]').fill('20');
   await expect(page.getByTestId('bed-error')).toContainText('50');
 });

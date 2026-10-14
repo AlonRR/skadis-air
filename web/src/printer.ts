@@ -1,5 +1,5 @@
 // The printer bed on the page (backlog item printer-default): the safe default, 200 x 200 mm (D61), or a
-// custom size. printer-presets will add the makers' printers to the same list.
+// custom size, as the design system's Choice buttons (D111). printer-presets will add the makers' printers.
 import { DEFAULT_BED, type Bed } from 'skadis-air';
 
 const MIN_MM = 50;
@@ -11,12 +11,12 @@ export interface PrinterChoice {
 }
 
 export function mountPrinter(box: HTMLElement, changed: () => void): PrinterChoice {
-  const list = box.querySelector<HTMLSelectElement>('[data-testid="printer-bed"]');
+  const list = box.querySelector<HTMLElement>('[data-testid="printer-bed"]');
   const custom = box.querySelector<HTMLElement>('[data-testid="custom-bed"]');
   const x = box.querySelector<HTMLInputElement>('input[name="bedXMm"]');
   const y = box.querySelector<HTMLInputElement>('input[name="bedYMm"]');
   const error = box.querySelector<HTMLElement>('[data-testid="bed-error"]');
-  const isCustom = () => list?.value === 'custom';
+  const isCustom = () => list?.querySelector<HTMLInputElement>('input:checked')?.value === 'custom';
   const showCustom = () => {
     if (custom) custom.hidden = !isCustom();
   };

@@ -15,7 +15,7 @@ import {
   readValues,
   type AnyBoardType,
 } from 'skadis-air';
-import { renderForm, type Form } from './form.js';
+import { choiceGroup, chosenIn, renderForm, type Form } from './form.js';
 import { downloadStl } from './download.js';
 import { mountPreview } from './preview.js';
 import { mountPrinter } from './printer.js';
@@ -25,7 +25,7 @@ followSystemTheme();
 
 const engineStatus = document.querySelector<HTMLElement>('[data-testid="engine-status"]');
 const boardStatus = document.querySelector<HTMLElement>('[data-testid="board-status"]');
-const typeList = document.querySelector<HTMLSelectElement>('[data-testid="board-type"]');
+const typeList = document.querySelector<HTMLElement>('[data-testid="board-type"]');
 const formBox = document.querySelector<HTMLElement>('[data-testid="board-form"]');
 const previewBox = document.querySelector<HTMLElement>('[data-testid="preview"]');
 const preview = previewBox ? mountPreview(previewBox) : null;
@@ -80,12 +80,18 @@ function warnAboutBed(widthMm: number, heightMm: number): void {
   if (bedWarning === null || printer === null) return;
   const chosen = printer.bed();
   const fits = !chosen.ok || fitsBed(widthMm, heightMm, chosen.bed);
-  bedWarning.textContent =
-    fits || !chosen.ok
-      ? ''
-      : `This board is ${Math.round(widthMm)} × ${Math.round(heightMm)} mm; it does not fit the ` +
-        `${chosen.bed.xMm} × ${chosen.bed.yMm} mm bed. It can still be downloaded; splitting a board into ` +
-        'tiles that fit comes later.';
+  if (fits || !chosen.ok) {
+    bedWarning.replaceChildren();
+    return;
+  }
+  const headline = document.createElement('strong'); // the design system's Notice (C120)
+  headline.textContent = 'Larger than the bed';
+  bedWarning.replaceChildren(
+    headline,
+    `This board is ${Math.round(widthMm)} × ${Math.round(heightMm)} mm; it does not fit the ` +
+      `${chosen.bed.xMm} × ${chosen.bed.yMm} mm bed. It can still be downloaded; splitting a board into ` +
+      'tiles that fit comes later.',
+  );
 }
 
 function show(type: AnyBoardType): void {
@@ -120,24 +126,24 @@ async function start(): Promise<void> {
     return;
   }
   if (typeList === null) return;
-  // A heading wherever the group changes (D91); the list keeps each group together, boards first.
+  // Buttons under a heading wherever the group changes (D91, D112); the list keeps each group together,
+  // boards first. Every button is one choice: the same name in both groups.
   const headings = { board: 'Boards', connector: 'Connectors' } as const;
-  const groups: HTMLOptGroupElement[] = [];
-  for (const t of BOARD_TYPES) {
-    let group = groups.at(-1);
-    if (group?.label !== headings[groupOf(t)]) {
-      group = document.createElement('optgroup');
-      group.label = headings[groupOf(t)];
-      groups.push(group);
-    }
-    const option = document.createElement('option');
-    option.value = t.id;
-    option.textContent = t.name;
-    group.append(option);
-  }
-  typeList.replaceChildren(...groups);
-  typeList.addEventListener('change', () => show(boardType(typeList.value)));
   const first = BOARD_TYPES[0];
+  const runs: { heading: string; types: AnyBoardType[] }[] = [];
+  for (const t of BOARD_TYPES) {
+    const heading = headings[groupOf(t)];
+    if (runs.at(-1)?.heading !== heading) runs.push({ heading, types: [] });
+    runs.at(-1)?.types.push(t);
+  }
+  for (const { heading, types } of runs) {
+    const caption = document.createElement('div');
+    caption.className = 'ws-caps';
+    caption.textContent = heading;
+    const options = types.map((t) => ({ value: t.id, label: t.name }));
+    typeList.append(caption, choiceGroup('boardType', heading, options, first?.id ?? ''));
+  }
+  typeList.addEventListener('change', () => show(boardType(chosenIn(typeList))));
   if (first !== undefined) show(first);
 }
 
