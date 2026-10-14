@@ -36,7 +36,7 @@ A type built on the solid board passes `makeSolidBoard` a third argument instead
 clearance per slot (`clearanceOf`), more to cut away (`extraCutters`), as the fit coupon does, and
 more to add before anything is cut (`extraSolids`).
 
-**Mounting** (screw holes and standoffs, D73 to D75) is two lines in such a type, as the solid board
+**Mounting** (screw holes and standoffs, D73 to D75) is three edits in such a type, as the solid board
 has it (C87): `...MOUNTING_SETTINGS` at the end of its `defineSettings([...])`, and
 `mountingCuts(mountingOf(values), params)` as the third argument to `makeSolidBoard`, with
 `mountingLabel(values)` at the end of its `label`. The contract test then holds the new settings to
