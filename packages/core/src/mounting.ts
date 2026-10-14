@@ -15,7 +15,7 @@ export type ScrewHead = 'countersunk' | 'round' | 'none';
 
 export interface MountingParams {
   screwHead: ScrewHead; // D74
-  screwMm: number; // the screw's diameter (D76: 4 mm until answered)
+  screwMm: number; // the screw's diameter, 4 mm unless set (D76)
   standoffHeightMm: number; // how far the standoffs stand behind the board; 0 for none (D75)
 }
 

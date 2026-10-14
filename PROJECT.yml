@@ -2,9 +2,9 @@
 # schema version: set by `ledger migrate` or `ledger init` -- do not edit by hand
 schema: 1
 projects:
-  - name:     SKÅDIS board generator
+  - name:     Skådis Air
     kind:     build
     state:    active
-    next:     "mounting: screw holes, integrated standoffs and IKEA-compatible corner holes"
+    next:     "conn-standoff: a standoff connector for 1, 2 or 4 boards"
     trackers: [docs/status.md, docs/backlog.md]
-    review:   2026-10-12
+    review:   2026-10-14

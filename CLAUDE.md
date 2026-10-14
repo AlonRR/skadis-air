@@ -74,8 +74,9 @@ outside this tree; do not vendor them in. The ones that bite most often here:
 - **Gitea first (D7), and GitHub kept in step (A77).** A branch per backlog item, named
   `<type>/<backlog-key>`, fast-forwarded into `main` once its checks pass locally, then pushed.
   The remote `gitea` has two push URLs: the owner's self-hosted forge, and the private GitHub
-  repository `AlonRR/skadis_ultralight_generator`, so one `git push gitea main` (and each tag) updates
-  both. That is the owner's standing approval, 13 Oct 2026: "keep the repo in sync with github".
+  repository `AlonRR/skadis-air` (renamed from `skadis_ultralight_generator`, A80), so one
+  `git push gitea main` (and each tag) updates both. That is the owner's standing approval,
+  13 Oct 2026: "keep the repo in sync with github".
   After each push, confirm `main` is the same on both with `git ls-remote`.
   - **Never force-push to GitHub.** A history rewrite there is the owner's call, and a rewritten
     commit stays fetchable by its SHA until GitHub removes it.

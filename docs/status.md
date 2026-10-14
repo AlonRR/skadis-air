@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 14 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79; the packages are renamed, the repositories wait for A80), Gitea and the private GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes, countersunk or round, and optional standoffs on the back (D73 to D75; the picks made while building it are C82 to C87, and the screw size, D76, is still open at 4 mm). Keyhole heads and IKEA's corner holes moved to `mounting-ikea`, which waits on T17. **Next: `conn-standoff`.** Nothing is test-printed yet. The evidence for the board types and
+Last updated: 14 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the private GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The GitHub repository is renamed `AlonRR/skadis-air` (A80); the Gitea one waits on the owner (T89), and the local folder is renamed between sessions. Keyhole heads and IKEA's corner holes are in `mounting-ikea`, which waits on T17. **Next: `conn-standoff`.** Nothing is test-printed yet. The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
@@ -66,14 +66,15 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D81 | **Printables and MakerWorld listings are planned** (`listings`, P2), after the first test prints, with ready-made STL sets, the coupon, photos and a link to the page; `pages-deploy` moves from P3 to P2 to go with them, as a listing needs the page public | 13 Oct 2026 |
 | A77 | **The repository is kept in step with a private GitHub copy**, `AlonRR/skadis_ultralight_generator`: "keep the repo in sync with github". The owner creates it and makes the first push; from then on every push to `gitea` goes to both (`CLAUDE.md`, Git). CI and Pages stay the owner's decision (D7) | 13 Oct 2026 |
 | A35 | **The history is rewritten to drop the bytecode file**: the last three commits replayed without it, signed, with their authors, committers and dates; force-pushed to Gitea with a lease on 12 Oct 2026. Gitea still serves the old commits by their full SHA until it prunes them | 12 Oct 2026 |
+| D76 | **Screws are 4 mm by default**: a 4.5 mm hole and a 90 degree countersink 9 mm across; the screw size stays a setting, 3 to 5 mm | 14 Oct 2026 |
+| D88 | **The mounting's visible picks are kept** as built: the standoff 10 mm across for a 4 mm screw (C83), file names that add only the mounting that differs from the start (C85), and "None" as a third screw-hole choice, holes made unless it is chosen (C86) | 14 Oct 2026 |
+| A80 | **The repositories are renamed `skadis-air`.** GitHub's became `AlonRR/skadis-air` the same day (it redirects the old name); Gitea's is the owner's step, T89, as its page would not open in the browser the agent drives; the local folder is renamed between sessions, and the project memory and the message-bus address move with it | 14 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
 ## Open questions
 
 - **D69** A second row on the fit coupon, so two coupons pushed together test that the half slots meet into a whole slot, or one row and that test left to `tiling`.
-- **D76** The screw size: 4 mm (a 4.5 mm hole, a 9 mm countersink), the starting value until answered, or 3.5 mm.
-- **D88** The mounting's visible picks, built 14 Oct 2026 and logged in [`choices.md`](choices.md): the standoff 10 mm across (C83), the file-name endings (C85), and "None" as a third screw-hole choice with holes made unless it is chosen, so the board the page opens on now has four countersunk holes (C86). Recommended: keep them; or name any to change.
-- **A80** Rename the repositories on Gitea and GitHub to `skadis-air`.
+- **T89** Rename the Gitea repository to `skadis-air`: its Settings, Repository Name, then Update Settings. The agent then points the clone at the new name and checks both remotes.
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
 ## Inputs from outside this repository
