@@ -84,6 +84,8 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 - **D103** Going public: (a) after the fit coupon and the seam-test pair (D69) are printed and the clearance confirmed (recommended), or (b) now. Either way the agent sets `.repo-status` to `ready` with its stale blockers cleared and adds a Pages workflow; making the repository public and switching Pages on are the owner's.
 - **D105** Gitea also picks up `.github/workflows/checks.yml` and queues a run for every push, which no runner has started (run 681, 14 Oct 2026; parametric-window-sealer's last Gitea runs ended cancelled): (a) switch Actions off for this repository on Gitea, so GitHub is the one CI (recommended); (b) leave it, for the day a runner takes it, when it will need the same two variables.
+- **T109** The test print (started 14 Oct 2026 at the owner's request: PrusaLink job 274, PETG Basic NPETG087-ZX, 2 h 38 min): when it is done, try each coupon slot (1 to 4 dots: 0, 0.1, 0.2, 0.3 mm of clearance) and say which fits best; push the seam pair together and say whether the seam slot works like the others and whether the edges meet flush.
+- **Q110** What the slots are tried with, as the owner has no IKEA hook: (a) an IKEA SKÅDIS accessory he has; (b) calipers, each printed slot's width beside a slot of his real board (T17), the agent then picking the clearance whose print matches (recommended if there is no accessory); (c) the replica of IKEA's hook (Printables 107818, public domain) printed next.
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
 ## Inputs from outside this repository

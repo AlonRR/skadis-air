@@ -169,3 +169,15 @@ bash tests/test-stl-check.sh      # the check's controls: an open cube and a deg
 
 Both need PrusaSlicer (`PSLICER`) and uv; the slicer profiles are scad-check.sh's defaults, overridable
 with `PRINTER`, `PRINT_PROFILE` and `FILAMENT`.
+
+## The test print
+
+`npm run test-plate` writes the fit coupon and the seam-test pair as one plate, `.check/test-print/skadis-coupon-seam.stl`,
+and checks it; `node scripts/test-print/write-test-plate.mjs slotClearanceMm=0.3` reprints the pair at another
+clearance. Slice it with the filament that is **loaded**, which only the owner knows: ask, never assume the STL
+check's ASA. One STL, because PrusaSlicer's command line slices each input file on its own (two files and one `-o`
+left only the second, and `--merge` wrote nothing, 14 Oct 2026). The owner's printer is driven by the 3d-printing
+repository's `scripts/mk3s-resume/upload_resume.py` (uploads, never starts, never overwrites) and then
+`start_print.py` (starts only the same-size file on an idle printer, and reads the job back); both read the address
+and key from PrusaSlicer's physical-printer profile and print neither. Starting a print is the owner's request each
+time.

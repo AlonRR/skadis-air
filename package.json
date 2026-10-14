@@ -11,7 +11,8 @@
     "lint": "oxlint --type-aware --deny-warnings",
     "format": "prettier --write \"**/*.{ts,mjs,js}\"",
     "format:check": "prettier --check \"**/*.{ts,mjs,js}\"",
-    "check:stl": "npm run build -w skadis-air && node scripts/checks/write-sample-boards.mjs && bash scripts/checks/stl-check.sh .check/boards/*.stl"
+    "check:stl": "npm run build -w skadis-air && node scripts/checks/write-sample-boards.mjs && bash scripts/checks/stl-check.sh .check/boards/*.stl",
+    "test-plate": "npm run build -w skadis-air && node scripts/test-print/write-test-plate.mjs && bash scripts/checks/stl-check.sh .check/test-print/skadis-coupon-seam.stl"
   },
   "engines": {
     "node": ">=22.12.0"
