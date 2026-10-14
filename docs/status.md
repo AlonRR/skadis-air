@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 14 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the private GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The repositories are renamed `skadis-air` on Gitea and GitHub (A80, T89); the local folder is renamed between sessions. Keyhole heads and IKEA's corner holes are in `mounting-ikea`, which waits on T17. **`conn-standoff` is started** (D91 to D94): the 1-board spacer is on the page under "Connectors"; the 2- and 4-board spacers wait on D97 and T98, as a one-piece spacer must bridge a slot column at the seam. Nothing is test-printed yet. The evidence for the board types and
+Last updated: 14 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the private GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The repositories are renamed `skadis-air` on Gitea and GitHub (A80, T89); the local folder is renamed between sessions. Keyhole heads and IKEA's corner holes are in `mounting-ikea`, which waits on T17. **`conn-standoff` is done** (D91 to D94, D97): a standoff for 1, 2 or 4 boards under "Connectors", the shared ones with a tunnel for hooks, sized from a replica of IKEA's hook on Printables (T98). **Next: `board-lightened`.** Nothing is test-printed yet. The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
@@ -73,13 +73,13 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D92 | **The standoff comes for 1 board (a round spacer, one hole), 2 boards (one spacer, two holes 20 mm apart, the corner holes either side of a seam) and 4 boards (four holes on a 20 mm square)**, solid only, as a part this small has nothing to lighten | 14 Oct 2026 |
 | D93 | **The standoff is screwed**: hollow, the screw through the board and the spacer into the wall, at the board's screw size (D76) | 14 Oct 2026 |
 | D94 | **The standoff is the size of the built-in standoffs**: 20 mm tall unless set (D75), 3 to 40 mm, 10 mm across for a 4 mm screw (C83); the 2- and 4-board versions are that outline stretched over their holes | 14 Oct 2026 |
+| D97 | **The 2- and 4-board standoffs cross the seam with a tunnel**: next to the board they are cut away along the slot column, so a hook in any slot of it has room behind the board, and they are joined only on the wall side | 14 Oct 2026 |
+| T98 | **The room a hook takes comes from Printables**, as the owner has no hook: measured from a replica of IKEA's hook (model 107818), its back tab sits up to 6 mm behind the board and reaches 8.25 mm below its slot ([`skadis-standard.md`](skadis-standard.md)); `<<CONFIRM>>` until a real hook is measured | 14 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
 ## Open questions
 
 - **D69** A second row on the fit coupon, so two coupons pushed together test that the half slots meet into a whole slot, or one row and that test left to `tiling`.
-- **D97** How a 2- or 4-board spacer crosses the seam, where a slot column runs between its holes: (a) a tunnel next to the board, the bridge only on the wall side, so a hook in any slot of the column hangs through (recommended); (b) a notch round the slot at the meeting corner, the bridge on the far side of the holes, which blocks that corner's half slot where the outer edge is open; (c) no shared spacers, a 1-board spacer at each corner.
-- **T98** Measure one IKEA hook hung in the board: how far its back part sits behind the board's back face, and how far it reaches below the bottom of its slot. It sets the tunnel (D97 a) or the notch (D97 b).
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
 ## Inputs from outside this repository

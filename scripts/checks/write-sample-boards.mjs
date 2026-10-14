@@ -16,7 +16,7 @@ import {
   defaultValues,
   loadEngine,
   meshOf,
-  printPose,
+  printedPart,
   toStl,
 } from '../../packages/core/dist/index.js';
 
@@ -54,7 +54,9 @@ const samples = [
     type: solid,
     values: { ...solidAt(80, 80, closed), screwMm: 5, cornerRadiusMm: 20, standoffs: 'back' },
   },
-  { name: 'standoff-40mm-screw-5', type: boardType('standoff'), values: { heightMm: 40, screwMm: 5 } },
+  { name: 'standoff-1-40mm-screw-5', type: boardType('standoff'), values: { boards: '1', heightMm: 40, screwMm: 5 } },
+  { name: 'standoff-2-12mm-screw-3', type: boardType('standoff'), values: { boards: '2', heightMm: 12, screwMm: 3 } },
+  { name: 'standoff-4-20mm-screw-5', type: boardType('standoff'), values: { boards: '4', heightMm: 20, screwMm: 5 } },
 ];
 
 rmSync(out, { recursive: true, force: true }); // never judge a file a previous run left behind
@@ -64,7 +66,7 @@ for (const { name, type, values } of samples) {
   const built = buildBoard(engine, type, values);
   if (!built.ok) throw new Error(`${name}: ${built.problem}`);
   const board = built.solid;
-  const printed = printPose(board); // as the page downloads it: face down (D66)
+  const printed = printedPart(type, board); // as the page downloads it: a board face down (D66)
   writeFileSync(join(out, `${name}.stl`), toStl(meshOf(printed), name));
   printed.delete();
   console.log(`${name}.stl  volume ${board.volume().toFixed(1)} mm3  genus ${board.genus()}`);

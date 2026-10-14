@@ -28,7 +28,10 @@ A board type is one file and one line in a list (D11, the extension-registry pra
 **A connector is a board type with `group: 'connector'`** (D91, C95), added the same way, after the
 boards in the list: the page lists it under "Connectors". The standoff (`standoff.ts`) was the first.
 A part a screw goes through takes the shared `SCREW_SIZE_SETTING` from `mounting.ts` rather than its
-own, so the hole and the screw cannot drift apart from the board's.
+own, so the hole and the screw cannot drift apart from the board's. A type is turned over to print,
+face down (D66), unless it says `prints: 'as-built'` (C101), as the standoff does; the contract test
+checks that every type's printed part sits on the bed. Whatever stands behind a board is tested
+against `test/slot-zone.ts`: the room round each slot, and the room a hook takes below it.
 
 Nothing else. The page lists the type, builds its form, checks its values, rebuilds it on every
 change and names its file, and `npm run check:stl` checks it at its starting values. **Proved

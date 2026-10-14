@@ -4,6 +4,7 @@
 // file names are derived from that (the extension-registry practice).
 import type { Manifold } from 'manifold-3d';
 import type { Engine } from '../engine.js';
+import { placeOnBed, printPose } from '../print-pose.js';
 import type { Setting, Values } from '../settings.js';
 
 /** Where the page lists a type (D91): with the boards, or under "Connectors". */
@@ -13,6 +14,7 @@ export interface BoardType<S extends readonly Setting[]> {
   id: string; // lower-case words joined by hyphens; part of every file name
   name: string; // as the page lists it
   group?: Group; // a board unless set
+  prints?: 'face-down' | 'as-built'; // how it goes on the bed: turned over (D66) unless set (C101)
   description?: string;
   settings: S;
   // Methods, not function properties, so that a type with its own settings is still a board type.
@@ -32,6 +34,11 @@ export function defineBoardType<const S extends readonly Setting[]>(type: BoardT
 }
 
 export type Built = { ok: true; solid: Manifold } | { ok: false; problem: string };
+
+/** The part as it goes to the printer: turned over, face down (D66), or as built for a type that says so. */
+export function printedPart(type: { prints?: 'face-down' | 'as-built' }, solid: Manifold): Manifold {
+  return type.prints === 'as-built' ? placeOnBed(solid) : printPose(solid);
+}
 
 /** Builds any board type; a combination of values it cannot make comes back as a problem, not a throw. */
 export function buildBoard<S extends readonly Setting[]>(engine: Engine, type: BoardType<S>, values: Values<S>): Built {

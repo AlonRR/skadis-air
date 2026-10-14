@@ -6,7 +6,7 @@ import type { Manifold } from 'manifold-3d';
 import { afterAll, describe, expect, it } from 'vitest';
 import { makeSolidBoard, solidBoardParams } from '../src/board-solid.js';
 import { loadEngine } from '../src/engine.js';
-import { printPose } from '../src/print-pose.js';
+import { placeOnBed, printPose } from '../src/print-pose.js';
 import { ALL_OPEN } from '../src/slots.js';
 
 const engine = await loadEngine();
@@ -61,5 +61,18 @@ describe('printPose', () => {
     // the step, on the left and on top as built, is on the right and at the bottom once turned over
     const lowRight = keep(turned.intersect(keep(engine.Manifold.cube([40, 40, 2]).translate([40, 0, 0])))).volume();
     expect(lowRight).toBeCloseTo(40 * 40 * 2, 6);
+  });
+});
+
+describe('placeOnBed', () => {
+  it('sets a part that prints as it is built at the origin, unturned (C101)', () => {
+    const plate = keep(engine.Manifold.cube([80, 40, 5]).translate([-40, -20, -10]));
+    const step = keep(engine.Manifold.cube([40, 40, 2]).translate([-40, -20, -5]));
+    const placed = keep(placeOnBed(keep(plate.add(step))));
+    expect(placed.boundingBox().min.map((v) => Math.round(v * 1e6) / 1e6)).toEqual([0, 0, 0]);
+    expect(placed.boundingBox().max[2]).toBeCloseTo(7, 9);
+    // the step stays on the left and on top
+    const highLeft = keep(placed.intersect(keep(engine.Manifold.cube([40, 40, 2]).translate([0, 0, 5])))).volume();
+    expect(highLeft).toBeCloseTo(40 * 40 * 2, 6);
   });
 });

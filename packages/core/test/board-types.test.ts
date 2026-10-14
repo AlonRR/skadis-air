@@ -10,6 +10,7 @@ import {
   buildBoard,
   defineBoardType,
   groupOf,
+  printedPart,
   type AnyBoardType,
 } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
@@ -77,6 +78,14 @@ function contract(type: AnyBoardType) {
       expect(built.solid.isEmpty()).toBe(false);
       expect(built.solid.volume()).toBeGreaterThan(0);
     }
+  });
+
+  it('goes to the printer on the bed, from the origin', () => {
+    const built = buildBoard(engine, type, defaultValues(type.settings));
+    if (!built.ok) throw new Error(built.problem);
+    const printed = printedPart(type, built.solid);
+    made.push(built.solid, printed);
+    expect(printed.boundingBox().min.map((v) => Math.round(v * 1e6) / 1e6)).toEqual([0, 0, 0]);
   });
 
   it('is in the group of boards or of connectors (D91)', () => {
@@ -219,11 +228,11 @@ describe('the standoff connector type (D91 to D94)', () => {
 
   it('is a connector, 20 mm tall for a 4 mm screw unless set', () => {
     expect(groupOf(standoff)).toBe('connector');
-    expect(defaultValues(standoff.settings)).toEqual({ heightMm: 20, screwMm: 4 });
+    expect(defaultValues(standoff.settings)).toEqual({ boards: '1', heightMm: 20, screwMm: 4 });
   });
 
   it('builds the spacer its values describe', () => {
-    const built = buildBoard(engine, standoff, { heightMm: 25, screwMm: 4 });
+    const built = buildBoard(engine, standoff, { boards: '1', heightMm: 25, screwMm: 4 });
     expect(built.ok).toBe(true);
     if (!built.ok) return;
     made.push(built.solid);
@@ -236,10 +245,35 @@ describe('the standoff connector type (D91 to D94)', () => {
     expect(screw(standoff)).toBe(screw(boardType('solid')));
   });
 
+  it('comes for 2 and 4 boards (D92), and prints as built, wall face down, so its tunnel needs no bridging', () => {
+    for (const [boards, genus] of [
+      ['2', 2],
+      ['4', 4],
+    ] as const) {
+      const built = buildBoard(engine, standoff, { boards, heightMm: 20, screwMm: 4 });
+      if (!built.ok) throw new Error(built.problem);
+      const printed = printedPart(standoff, built.solid);
+      made.push(built.solid, printed);
+      expect(built.solid.genus()).toBe(genus);
+      // the tunnel is in the top 8 mm as it prints: less plastic there than at the bed
+      const [low, high] = [printed.slice(1), printed.slice(19)];
+      expect(high.area()).toBeLessThan(low.area() - 50);
+      low.delete();
+      high.delete();
+    }
+  });
+
+  it('says a shared standoff too short for its tunnel is a problem', () => {
+    const built = buildBoard(engine, standoff, { boards: '2', heightMm: 10, screwMm: 4 });
+    expect(built.ok).toBe(false);
+    if (!built.ok) expect(built.problem).toContain('12 mm');
+  });
+
   it('names its file with the boards it serves, its height, and a screw other than 4 mm', () => {
-    const name = (given: Record<string, number>) =>
+    const name = (given: Record<string, number | string>) =>
       boardFileName(standoff, { ...defaultValues(standoff.settings), ...given }, 'stl');
     expect(name({})).toBe('skadis-standoff-1-board-20mm.stl');
     expect(name({ heightMm: 25, screwMm: 3.5 })).toBe('skadis-standoff-1-board-25mm-screw-3.5mm.stl');
+    expect(name({ boards: '4' })).toBe('skadis-standoff-4-boards-20mm.stl');
   });
 });

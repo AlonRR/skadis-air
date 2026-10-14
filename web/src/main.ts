@@ -34,6 +34,7 @@ const printer = printerBox ? mountPrinter(printerBox, () => current?.()) : null;
 
 const engine = () => loadEngine(wasmUrl);
 let board: Manifold | undefined; // the board as last built; freed when the next one replaces it
+let boardOf: AnyBoardType | undefined; // the type it was built from, which says how it prints
 
 function setStatus(state: 'building' | 'ready' | 'invalid' | 'problem', text: string, fileName = ''): void {
   if (downloadButton !== null) downloadButton.disabled = state !== 'ready'; // only a board that exists
@@ -62,6 +63,7 @@ async function rebuild(type: AnyBoardType, form: Form): Promise<void> {
     return;
   }
   board = built.solid;
+  boardOf = type;
   const box = board.boundingBox();
   const size = [0, 1, 2].map((k) => Math.round(((box.max[k] ?? 0) - (box.min[k] ?? 0)) * 10) / 10).join(' × ');
   const fileName = boardFileName(type, read.values, 'stl');
@@ -97,7 +99,7 @@ function show(type: AnyBoardType): void {
 
 downloadButton?.addEventListener('click', () => {
   const fileName = boardStatus?.dataset['fileName'] ?? '';
-  if (board !== undefined && fileName !== '') downloadStl(board, fileName);
+  if (board !== undefined && boardOf !== undefined && fileName !== '') downloadStl(boardOf, board, fileName);
 });
 
 async function start(): Promise<void> {

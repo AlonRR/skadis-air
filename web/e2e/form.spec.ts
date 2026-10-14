@@ -133,3 +133,18 @@ test('makes a standoff from the same form, preview and download as a board (D91 
   await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-1-board-25mm.stl');
   await expect(page.getByRole('button', { name: 'Download STL' })).toBeEnabled();
 });
+
+test('makes the standoff for 2 or 4 boards, and says when it is too short for its tunnel (D92, D97)', async ({
+  page,
+}) => {
+  await ready(page);
+  await page.getByTestId('board-type').selectOption('standoff');
+  const status = page.getByTestId('board-status');
+  await page.locator('select[name="boards"]').selectOption('4');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-4-boards-20mm.stl');
+  await expect(status).toContainText('30 × 30 × 20 mm');
+  await page.locator('select[name="boards"]').selectOption('2');
+  await page.locator('input[name="heightMm"]').fill('10');
+  await expect(status).toHaveAttribute('data-state', 'problem');
+  await expect(status).toContainText('12 mm');
+});

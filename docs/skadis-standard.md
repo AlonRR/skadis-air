@@ -41,6 +41,7 @@ specification or a person's measurement; **code** a value in an existing generat
 | Distance from the wall | 20 mm; the standoffs' starting height (D75) | 6d6178 ("roughly 20mm away from the wall") | community | `<<CONFIRM>>` |
 | IKEA's scheme | one steel rail at the top whose bent tabs hold the two upper corners, two loose spacers at the lower corners, four thumb screws through round holes near the corners | IKEA AA-1891323-4 | IKEA | settled |
 | IKEA's corner holes | position and diameter **not published** | — | — | needs a measurement (T17) |
+| Room an IKEA hook takes behind the board | its back tab, 4.5 mm wide, sits up to 6 mm behind the back face and reaches 8.25 mm below the bottom end of its slot, where the hook rests; a second peg reaches about 2 mm through the slot 40 mm below | measured on 14 Oct 2026 from the STL of [IKEA Skadis Hook, "IKEA part number: 203.208.02"](https://www.printables.com/model/107818) (Macmade, public domain), a replica of IKEA's hook; the popular printed [IKEA Skadis Hook](https://www.printables.com/model/129018) (Fabber) takes less, 4.5 mm behind and 5 mm below | community, measured | `<<CONFIRM>>`: no real hook measured |
 | Gap between IKEA boards hung by the instructions | 5 mm, both stacked and side by side, which puts the slot grid 5 mm off across the seam | from IKEA's rail spacing (565 mm for 560 mm boards) and wall-screw spacing (200 / 400 / 600 mm) | inferred | `<<CONFIRM>>` |
 
 ## IKEA's connectors

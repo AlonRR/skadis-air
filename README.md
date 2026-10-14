@@ -14,8 +14,8 @@ in `web/` makes a solid board of 40 mm tiles: you set its size, its thickness an
 (half slots, to join a neighbour) or closed, give it screw holes in its corners (countersunk or for a
 round head) and standoffs on the back, see it in 3D, and download it as an STL that lies as it
 prints. It warns when the board is larger than your printer's bed. It also makes a small coupon to
-test the slots' fit first, and a standoff, the first connector, to hold a board off the wall at its
-screws. The SKÅDIS dimensions it uses come from published sources and are still to be checked
+test the slots' fit first, and a standoff, the first connector, to hold one board off the wall at a
+corner screw, or two or four where their corners meet. The SKÅDIS dimensions it uses come from published sources and are still to be checked
 against a real board.
 
 What it will make:

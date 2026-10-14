@@ -13,8 +13,10 @@ All notable changes to this project are recorded here. The format follows
 - Screw holes in the solid board, one in each corner, countersunk (the default) or for a round head,
   for 3 to 5 mm screws; and standoffs on the back as an option, 20 mm tall unless set, hollow for the
   screw, so the board stands off the wall and hooks have room.
-- The first connector: a standoff, a hollow spacer between a board and the wall at a corner screw hole,
-  20 mm tall unless set. Connectors are listed under their own heading, below the boards.
+- The first connector: a standoff, a hollow spacer between boards and the wall at their corner screw
+  holes, 20 mm tall unless set, for 1 board, or for 2 or 4 where their corners meet; the shared ones
+  leave a tunnel along the seam, so hooks fit behind them. Connectors are listed under their own
+  heading, below the boards.
 
 ### Changed
 

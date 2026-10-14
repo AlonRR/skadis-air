@@ -13,3 +13,9 @@ export function printPose(solid: Manifold): Manifold {
   turned.delete();
   return placed;
 }
+
+/** A part that prints as it is built (C101): set at the origin, not turned. */
+export function placeOnBed(solid: Manifold): Manifold {
+  const { min } = solid.boundingBox();
+  return solid.translate([-min[0], -min[1], -min[2]]);
+}

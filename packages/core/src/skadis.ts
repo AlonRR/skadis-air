@@ -15,3 +15,9 @@ export const BOARD_THICKNESS_MM = 5;
 export const TILE_MM = GRID_PITCH_MM;
 /** How far IKEA's spacers hold a board off the wall, mm. <<CONFIRM>> 6d6178 ("roughly 20mm"). */
 export const WALL_DISTANCE_MM = 20;
+/** How far an IKEA hook's back tab sits behind the board, mm. <<CONFIRM>> measured from Printables 107818. */
+export const HOOK_DEPTH_MM = 6;
+/** How far that tab reaches below the bottom end of the slot the hook rests in, mm. <<CONFIRM>> as above. */
+export const HOOK_DROP_MM = 8.25;
+/** How wide that tab is, mm. <<CONFIRM>> as above. */
+export const HOOK_WIDTH_MM = 4.5;
