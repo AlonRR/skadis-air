@@ -82,6 +82,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D112 | **The board type is chosen with buttons**, under "Boards" and "Connectors", keeping D91; a gallery of drawings waits until every type has one. (Relayed: the owner's answer in the design-system repository, its D10) | 14 Oct 2026 |
 | D113 | **A dark theme that follows the system setting, with a toggle in the header.** (Relayed: its D11) | 14 Oct 2026 |
 | D114 | **The introduction stays on the page, in the sidebar**; a welcome dialog is a feature of its own. (Relayed: its D12) | 14 Oct 2026 |
+| D123 | **The part always fits the stage**: framed to fill the design system's `--stage-fit` (0.85) of the stage's limiting side whenever the part or its size changes; when the stage changes size, the view keeps the user's angle and pulls back only as far as the whole part needs to fit again; zooming out stops when the part spans `--stage-min-fill` (0.25) of the stage's shorter side; panning cannot take the part off the stage; "Reset view" returns to the first view. Both ratios are read from the tokens, copied from the design system's tag `v0.2.0`. (Relayed: the owner's answer in the design-system repository, its D15) | 14 Oct 2026 |
 | D115 | **One sidebar form first**; the numbered steps (Board, Size and sides, Mounting, Printer) come when the form grows. (Relayed: its D13) | 14 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 

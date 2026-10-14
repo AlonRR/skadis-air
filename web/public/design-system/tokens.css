@@ -59,6 +59,8 @@
   --ring: 2px; /* Width of focus outlines, selected outlines and the white ring round a chosen radio. The radio's offsets are derived from it. */
   --dialog-w: 32rem; /* Maximum width of a dialog (limited to 92% of the screen). */
   --opacity-disabled: 0.55; /* Opacity of a disabled control. */
+  --stage-fit: 0.85; /* How much of the stage the part fills when it is framed: its outline spans this share of the stage's limiting side (D15). */
+  --stage-min-fill: 0.25; /* Zooming out stops when the part's outline spans this share of the stage's shorter side, so it never shrinks to a dot (D15). */
   --breakpoint-wide: 56rem; /* Screen width at which the sidebar sits beside the stage. A media query cannot read a variable, so the stylesheet repeats it; scripts/build-tokens.py checks the two match. */
   --radius-sm: 8px; /* Buttons, inputs, selects, gallery tiles and notices: softly rounded. */
   --radius-md: 14px; /* Fieldset groups, dialogs, the sidebar's inner cards and the stage frame. */
