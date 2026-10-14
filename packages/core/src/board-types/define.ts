@@ -6,9 +6,13 @@ import type { Manifold } from 'manifold-3d';
 import type { Engine } from '../engine.js';
 import type { Setting, Values } from '../settings.js';
 
+/** Where the page lists a type (D91): with the boards, or under "Connectors". */
+export type Group = 'board' | 'connector';
+
 export interface BoardType<S extends readonly Setting[]> {
   id: string; // lower-case words joined by hyphens; part of every file name
   name: string; // as the page lists it
+  group?: Group; // a board unless set
   description?: string;
   settings: S;
   // Methods, not function properties, so that a type with its own settings is still a board type.
@@ -17,6 +21,10 @@ export interface BoardType<S extends readonly Setting[]> {
 }
 
 export type AnyBoardType = BoardType<readonly Setting[]>;
+
+export function groupOf(type: { group?: Group }): Group {
+  return type.group ?? 'board';
+}
 
 /** Keeps a type's literal setting keys, so its build and label are typed from its own declaration. */
 export function defineBoardType<const S extends readonly Setting[]>(type: BoardType<S>): BoardType<S> {

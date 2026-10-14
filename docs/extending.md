@@ -25,6 +25,11 @@ A board type is one file and one line in a list (D11, the extension-registry pra
 2. **The line**: add it to `BOARD_TYPES` in `packages/core/src/board-types/index.ts`, in the order
    the page should list it. The page opens on the first.
 
+**A connector is a board type with `group: 'connector'`** (D91, C95), added the same way, after the
+boards in the list: the page lists it under "Connectors". The standoff (`standoff.ts`) was the first.
+A part a screw goes through takes the shared `SCREW_SIZE_SETTING` from `mounting.ts` rather than its
+own, so the hole and the screw cannot drift apart from the board's.
+
 Nothing else. The page lists the type, builds its form, checks its values, rebuilds it on every
 change and names its file, and `npm run check:stl` checks it at its starting values. **Proved
 12 Oct 2026** by a trial type added and removed again: the type check, the contract test (which
@@ -48,6 +53,7 @@ What fails if a step is missed:
 | --- | --- |
 | A starting value outside its range, a key used twice, a build that makes nothing | `packages/core/test/board-types.test.ts`: the contract every listed type is held to |
 | The id not in lower-case words, two types with one id | the same contract |
+| A connector listed among the boards, or a group other than board or connector | the same contract, and the list's order test beside it |
 | A choice whose starting value is not one of its options, or an option listed twice | the same contract |
 | The line in `BOARD_TYPES` | the type is simply not on the page; `web/e2e/form.spec.ts` lists what is |
 | A build or label written against settings it does not declare | the type check |

@@ -31,7 +31,8 @@ const solidAt = (widthMm, heightMm, sides) => ({ ...defaultValues(solid.settings
 // Every listed type at its starting values, so a new type is checked without touching this file; the
 // solid board with one of each kind of edge: open all round, closed all round with rounded corners,
 // both on one board, and the largest a 250 x 210 mm bed takes (240 x 200 mm); and its mounting
-// (D73 to D75): standoffs with each head, the largest screw at the largest corner radius.
+// (D73 to D75): standoffs with each head, the largest screw at the largest corner radius; and the
+// standoff connector at the largest screw and its tallest.
 const samples = [
   ...BOARD_TYPES.map((type) => ({ name: `${type.id}-default`, type, values: defaultValues(type.settings) })),
   { name: 'solid-1x1-open', type: solid, values: solidAt(40, 40, open) },
@@ -53,6 +54,7 @@ const samples = [
     type: solid,
     values: { ...solidAt(80, 80, closed), screwMm: 5, cornerRadiusMm: 20, standoffs: 'back' },
   },
+  { name: 'standoff-40mm-screw-5', type: boardType('standoff'), values: { heightMm: 40, screwMm: 5 } },
 ];
 
 rmSync(out, { recursive: true, force: true }); // never judge a file a previous run left behind

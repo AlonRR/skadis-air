@@ -10,6 +10,7 @@ import {
   buildBoard,
   buildCheckPart,
   fitsBed,
+  groupOf,
   loadEngine,
   readValues,
   type AnyBoardType,
@@ -50,12 +51,13 @@ async function rebuild(type: AnyBoardType, form: Form): Promise<void> {
     preview?.show(null, '');
     return;
   }
-  setStatus('building', 'Making the board…');
+  const what = groupOf(type) === 'connector' ? 'connector' : 'board';
+  setStatus('building', `Making the ${what}…`);
   const built = buildBoard(await engine(), type, read.values);
   board?.delete();
   board = undefined;
   if (!built.ok) {
-    setStatus('problem', `This board cannot be made: ${built.problem}`);
+    setStatus('problem', `This ${what} cannot be made: ${built.problem}`);
     preview?.show(null, '');
     return;
   }
@@ -64,7 +66,7 @@ async function rebuild(type: AnyBoardType, form: Form): Promise<void> {
   const size = [0, 1, 2].map((k) => Math.round(((box.max[k] ?? 0) - (box.min[k] ?? 0)) * 10) / 10).join(' × ');
   const fileName = boardFileName(type, read.values, 'stl');
   warnAboutBed(box.max[0] ?? 0, box.max[1] ?? 0);
-  setStatus('ready', `Board ready: ${size} mm, ${fileName}`, fileName);
+  setStatus('ready', `${what === 'board' ? 'Board' : 'Connector'} ready: ${size} mm, ${fileName}`, fileName);
   preview?.show(board, `${type.id} ${size}`); // framed again only when the type or size changes
 }
 
@@ -113,14 +115,22 @@ async function start(): Promise<void> {
     return;
   }
   if (typeList === null) return;
-  typeList.replaceChildren(
-    ...BOARD_TYPES.map((t) => {
-      const option = document.createElement('option');
-      option.value = t.id;
-      option.textContent = t.name;
-      return option;
-    }),
-  );
+  // A heading wherever the group changes (D91); the list keeps each group together, boards first.
+  const headings = { board: 'Boards', connector: 'Connectors' } as const;
+  const groups: HTMLOptGroupElement[] = [];
+  for (const t of BOARD_TYPES) {
+    let group = groups.at(-1);
+    if (group?.label !== headings[groupOf(t)]) {
+      group = document.createElement('optgroup');
+      group.label = headings[groupOf(t)];
+      groups.push(group);
+    }
+    const option = document.createElement('option');
+    option.value = t.id;
+    option.textContent = t.name;
+    group.append(option);
+  }
+  typeList.replaceChildren(...groups);
   typeList.addEventListener('change', () => show(boardType(typeList.value)));
   const first = BOARD_TYPES[0];
   if (first !== undefined) show(first);

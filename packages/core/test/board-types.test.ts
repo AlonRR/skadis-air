@@ -9,6 +9,7 @@ import {
   boardType,
   buildBoard,
   defineBoardType,
+  groupOf,
   type AnyBoardType,
 } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
@@ -78,6 +79,10 @@ function contract(type: AnyBoardType) {
     }
   });
 
+  it('is in the group of boards or of connectors (D91)', () => {
+    expect(['board', 'connector']).toContain(groupOf(type));
+  });
+
   it('names its file after its id and its starting values', () => {
     const name = boardFileName(type, defaultValues(type.settings), 'stl');
     expect(name).toMatch(new RegExp(`^skadis-${type.id}-.+\\.stl$`));
@@ -88,6 +93,12 @@ describe('every listed board type', () => {
   it('has a unique id', () => {
     const ids = BOARD_TYPES.map((t) => t.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('keeps each group together, the boards before the connectors, so the page lists them in order (D91)', () => {
+    const groups = BOARD_TYPES.map(groupOf);
+    expect(groups).toEqual([...groups].sort((a, b) => (a === b ? 0 : a === 'board' ? -1 : 1)));
+    expect(groups).toContain('connector');
   });
   for (const type of BOARD_TYPES) {
     describe(`board type ${type.id}`, () => {
@@ -200,5 +211,35 @@ describe('the solid board type', () => {
     expect(name({ screwHead: 'round', standoffs: 'back' })).toBe('skadis-solid-160x160-round-head-standoffs-20mm.stl');
     expect(name({ screwHead: 'none', screwMm: 3.5 })).toBe('skadis-solid-160x160-no-holes.stl');
     expect(name({ screwMm: 3.5, standoffHeightMm: 25 })).toBe('skadis-solid-160x160-screw-3.5mm.stl');
+  });
+});
+
+describe('the standoff connector type (D91 to D94)', () => {
+  const standoff = boardType('standoff');
+
+  it('is a connector, 20 mm tall for a 4 mm screw unless set', () => {
+    expect(groupOf(standoff)).toBe('connector');
+    expect(defaultValues(standoff.settings)).toEqual({ heightMm: 20, screwMm: 4 });
+  });
+
+  it('builds the spacer its values describe', () => {
+    const built = buildBoard(engine, standoff, { heightMm: 25, screwMm: 4 });
+    expect(built.ok).toBe(true);
+    if (!built.ok) return;
+    made.push(built.solid);
+    expect(built.solid.boundingBox().max[2]).toBeCloseTo(25, 9);
+    expect(built.solid.genus()).toBe(1);
+  });
+
+  it('shares its screw size setting with the board, so the two cannot drift apart', () => {
+    const screw = (type: AnyBoardType) => type.settings.find((s) => s.key === 'screwMm');
+    expect(screw(standoff)).toBe(screw(boardType('solid')));
+  });
+
+  it('names its file with the boards it serves, its height, and a screw other than 4 mm', () => {
+    const name = (given: Record<string, number>) =>
+      boardFileName(standoff, { ...defaultValues(standoff.settings), ...given }, 'stl');
+    expect(name({})).toBe('skadis-standoff-1-board-20mm.stl');
+    expect(name({ heightMm: 25, screwMm: 3.5 })).toBe('skadis-standoff-1-board-25mm-screw-3.5mm.stl');
   });
 });

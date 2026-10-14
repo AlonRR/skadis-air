@@ -6,10 +6,10 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { makeSolidBoard, solidBoardParams, type SolidBoardParams } from '../src/board-solid.js';
 import { loadEngine } from '../src/engine.js';
 import { mountingCuts, mountingParams, type MountingParams } from '../src/mounting.js';
-import { stadium } from '../src/rings.js';
-import { ALL_OPEN, type Sides, slotPlaces } from '../src/slots.js';
+import { ALL_OPEN, type Sides } from '../src/slots.js';
 import { meshOf } from '../src/stl.js';
 import { degenerateFacets } from './facets.js';
+import { slotClearZone } from './slot-zone.js';
 
 const engine = await loadEngine();
 const made: (Manifold | CrossSection)[] = [];
@@ -153,21 +153,14 @@ describe('standoffs on the back (D75)', () => {
   });
 
   it('keep 2 mm clear of every slot behind the board, so a hook fits, at the smallest and largest screws', () => {
-    // Each slot's outline grown by its 1 mm chamfer and 2 mm more, run 30 mm back from the board
-    const clearZone = (columns: number, rows: number, sides: Sides, margin: number) =>
-      keep(
-        new engine.CrossSection(
-          slotPlaces(columns, rows, sides).map((s) => stadium(s.xMm, s.yMm, 5.2, 15.2, 1 + margin)),
-          'NonZero',
-        ),
-      );
     for (const sides of [ALL_OPEN, CLOSED]) {
       for (const screwMm of [3, 5]) {
         const board = mounted({ columns: 2, rows: 2, sides }, { screwMm, standoffHeightMm: 30 });
-        const zone = keep(keep(clearZone(2, 2, sides, 2).extrude(30)).translate([0, 0, -30.01]));
+        // each slot's outline grown by its 1 mm chamfer and 2 mm more, run 30 mm back from the board
+        const zone = slotClearZone(engine, { columns: 2, rows: 2, sides }, 2, 30, keep);
         expect(keep(board.intersect(zone)).volume()).toBe(0);
         // the control: a 4 mm margin reaches the standoffs, so the check can see one near a slot
-        const wide = keep(keep(clearZone(2, 2, sides, 4).extrude(30)).translate([0, 0, -30.01]));
+        const wide = slotClearZone(engine, { columns: 2, rows: 2, sides }, 4, 30, keep);
         expect(keep(board.intersect(wide)).volume()).toBeGreaterThan(0);
       }
     }

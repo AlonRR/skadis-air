@@ -8,7 +8,7 @@ import type { Manifold } from 'manifold-3d';
 import type { BoardCuts, SolidBoardParams } from './board-solid.js';
 import type { Engine } from './engine.js';
 import { circle, ringedSolid } from './rings.js';
-import { defineSettings, type Values } from './settings.js';
+import { defineSettings, type NumberSetting, type Values } from './settings.js';
 import { TILE_MM, WALL_DISTANCE_MM } from './skadis.js';
 
 export type ScrewHead = 'countersunk' | 'round' | 'none';
@@ -94,6 +94,20 @@ export function mountingCuts(
   return cuts;
 }
 
+/** The screw's size, one setting shared by every part a screw goes through, so they cannot drift apart. */
+export const SCREW_SIZE_SETTING = {
+  kind: 'number',
+  key: 'screwMm',
+  label: 'Screw size',
+  unit: 'mm',
+  default: MOUNTING_DEFAULTS.screwMm,
+  min: 3,
+  max: 5,
+  step: 0.5,
+  help: "The screw's diameter. The hole is 0.5 mm wider; a countersink is twice the screw plus 1 mm across.",
+  advanced: true,
+} as const satisfies NumberSetting;
+
 /** The mounting's settings, as a board type lists them after its own (D48: the fine ones under Advanced). */
 export const MOUNTING_SETTINGS = defineSettings([
   {
@@ -119,18 +133,7 @@ export const MOUNTING_SETTINGS = defineSettings([
     default: 'none',
     help: 'Posts on the back at the corners, round the screws, that hold the board off the wall so hooks have room.',
   },
-  {
-    kind: 'number',
-    key: 'screwMm',
-    label: 'Screw size',
-    unit: 'mm',
-    default: MOUNTING_DEFAULTS.screwMm,
-    min: 3,
-    max: 5,
-    step: 0.5,
-    help: "The screw's diameter. The hole is 0.5 mm wider; a countersink is twice the screw plus 1 mm across.",
-    advanced: true,
-  },
+  SCREW_SIZE_SETTING,
   {
     kind: 'number',
     key: 'standoffHeightMm',

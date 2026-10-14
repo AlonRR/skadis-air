@@ -112,3 +112,24 @@ test('says a countersink too deep for a thin board cannot be made, and makes it 
   await page.locator('select[name="screwHead"]').selectOption('round');
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready');
 });
+
+test('lists the boards, then the connectors under their own heading (D91)', async ({ page }) => {
+  await ready(page);
+  const groups = page.getByTestId('board-type').locator('optgroup');
+  await expect(groups).toHaveCount(2);
+  await expect(groups.nth(0)).toHaveAttribute('label', 'Boards');
+  await expect(groups.nth(1)).toHaveAttribute('label', 'Connectors');
+  await expect(groups.nth(1).locator('option[value="standoff"]')).toHaveText('Standoff');
+});
+
+test('makes a standoff from the same form, preview and download as a board (D91 to D94)', async ({ page }) => {
+  await ready(page);
+  await page.getByTestId('board-type').selectOption('standoff');
+  const status = page.getByTestId('board-status');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-1-board-20mm.stl');
+  await expect(status).toContainText('Connector ready: 10 × 10 × 20 mm');
+  await expect(page.locator('[data-side="left"]')).toHaveCount(0); // a spacer has no sides
+  await page.locator('input[name="heightMm"]').fill('25');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-1-board-25mm.stl');
+  await expect(page.getByRole('button', { name: 'Download STL' })).toBeEnabled();
+});

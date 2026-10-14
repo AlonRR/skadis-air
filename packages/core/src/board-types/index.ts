@@ -3,8 +3,10 @@
 import type { AnyBoardType } from './define.js';
 import { FIT_COUPON } from './fit-coupon.js';
 import { SOLID } from './solid.js';
+import { STANDOFF } from './standoff.js';
 
-export const BOARD_TYPES: readonly AnyBoardType[] = [SOLID, FIT_COUPON];
+// The boards first, then the connectors (D91): the page starts a new heading where the group changes.
+export const BOARD_TYPES: readonly AnyBoardType[] = [SOLID, FIT_COUPON, STANDOFF];
 
 export function boardType(id: string): AnyBoardType {
   const type = BOARD_TYPES.find((t) => t.id === id);
@@ -15,3 +17,4 @@ export function boardType(id: string): AnyBoardType {
 export * from './define.js';
 export { FIT_COUPON } from './fit-coupon.js';
 export { SOLID } from './solid.js';
+export { STANDOFF } from './standoff.js';
