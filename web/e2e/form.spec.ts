@@ -99,7 +99,7 @@ test('offers screw holes and standoffs, and names the file for what differs from
   await choose(page, 'standoffs', 'back');
   const status = page.getByTestId('board-status');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-round-head-standoffs-20mm.stl');
-  await expect(status).toContainText('160 × 160 × 25 mm'); // 5 mm of board, 20 mm of standoff behind it
+  await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 25 mm'); // 5 mm of board, 20 mm of standoff
 });
 
 test('says a countersink too deep for a thin board cannot be made, and makes it with a round head', async ({
@@ -129,7 +129,8 @@ test('makes a standoff from the same form, preview and download as a board (D91 
   await choose(page, 'boardType', 'standoff');
   const status = page.getByTestId('board-status');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-1-board-20mm.stl');
-  await expect(status).toContainText('Connector ready: 10 × 10 × 20 mm');
+  await expect(status).toContainText('Connector ready');
+  await expect(page.getByTestId('board-size')).toHaveText('10 × 10 × 20 mm');
   await expect(page.locator('[data-side="left"]')).toHaveCount(0); // a spacer has no sides
   await page.locator('input[name="heightMm"]').fill('25');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-1-board-25mm.stl');
@@ -144,7 +145,7 @@ test('makes the standoff for 2 or 4 boards, and says when it is too short for it
   const status = page.getByTestId('board-status');
   await choose(page, 'boards', '4');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-4-boards-20mm.stl');
-  await expect(status).toContainText('30 × 30 × 20 mm');
+  await expect(page.getByTestId('board-size')).toHaveText('30 × 30 × 20 mm');
   await choose(page, 'boards', '2');
   await page.locator('input[name="heightMm"]').fill('10');
   await expect(status).toHaveAttribute('data-state', 'problem');

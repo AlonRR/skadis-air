@@ -19,16 +19,18 @@ import { choiceGroup, chosenIn, renderForm, type Form } from './form.js';
 import { downloadStl } from './download.js';
 import { mountPreview } from './preview.js';
 import { mountPrinter } from './printer.js';
-import { followSystemTheme } from './theme.js';
+import { mountTheme } from './theme.js';
 
-followSystemTheme();
+mountTheme(document.querySelector<HTMLButtonElement>('[data-testid="theme-toggle"]'));
 
 const engineStatus = document.querySelector<HTMLElement>('[data-testid="engine-status"]');
 const boardStatus = document.querySelector<HTMLElement>('[data-testid="board-status"]');
 const typeList = document.querySelector<HTMLElement>('[data-testid="board-type"]');
 const formBox = document.querySelector<HTMLElement>('[data-testid="board-form"]');
 const previewBox = document.querySelector<HTMLElement>('[data-testid="preview"]');
-const preview = previewBox ? mountPreview(previewBox) : null;
+const resetButton = document.querySelector<HTMLButtonElement>('[data-testid="preview-reset"]');
+const preview = previewBox ? mountPreview(previewBox, resetButton) : null;
+const sizeLine = document.querySelector<HTMLElement>('[data-testid="board-size"]'); // in the status bar
 const downloadButton = document.querySelector<HTMLButtonElement>('[data-testid="download-stl"]');
 const printerBox = document.querySelector<HTMLElement>('[data-testid="printer"]');
 const bedWarning = document.querySelector<HTMLElement>('[data-testid="bed-warning"]');
@@ -39,8 +41,9 @@ const engine = () => loadEngine(wasmUrl);
 let board: Manifold | undefined; // the board as last built; freed when the next one replaces it
 let boardOf: AnyBoardType | undefined; // the type it was built from, which says how it prints
 
-function setStatus(state: 'building' | 'ready' | 'invalid' | 'problem', text: string, fileName = ''): void {
+function setStatus(state: 'building' | 'ready' | 'invalid' | 'problem', text: string, fileName = '', size = ''): void {
   if (downloadButton !== null) downloadButton.disabled = state !== 'ready'; // only a board that exists
+  if (sizeLine !== null) sizeLine.textContent = size === '' ? '' : `${size} mm`;
   if (boardStatus === null) return;
   boardStatus.dataset['state'] = state;
   boardStatus.dataset['fileName'] = fileName;
@@ -71,7 +74,7 @@ async function rebuild(type: AnyBoardType, form: Form): Promise<void> {
   const size = [0, 1, 2].map((k) => Math.round(((box.max[k] ?? 0) - (box.min[k] ?? 0)) * 10) / 10).join(' × ');
   const fileName = boardFileName(type, read.values, 'stl');
   warnAboutBed(box.max[0] ?? 0, box.max[1] ?? 0);
-  setStatus('ready', `${what === 'board' ? 'Board' : 'Connector'} ready: ${size} mm, ${fileName}`, fileName);
+  setStatus('ready', `${what === 'board' ? 'Board' : 'Connector'} ready: ${fileName}`, fileName, size);
   preview?.show(board, `${type.id} ${size}`); // framed again only when the type or size changes
 }
 

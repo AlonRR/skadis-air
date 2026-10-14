@@ -87,3 +87,31 @@ export const choose = (page: Page, name: string, value: string): Promise<void> =
 
 /** The option chosen in a Choice, to read its value. */
 export const chosen = (page: Page, name: string): Locator => page.locator(`input[name="${name}"]:checked`);
+
+/**
+ * Where the preview drew the part, in the canvas's own pixels: the box round every pixel that is not
+ * the stage's background (--surface), with the canvas's size. `found` is false when nothing is drawn.
+ */
+export const drawnBox = (page: Page) =>
+  page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>('[data-testid="preview"] canvas');
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
+    const surface = /^#(..)(..)(..)$/.exec(hex);
+    const empty = { found: false, minX: 0, minY: 0, maxX: 0, maxY: 0, W: 0, H: 0 };
+    if (canvas === null || surface === null) return empty;
+    const [r, g, b] = surface.slice(1).map((h) => parseInt(h, 16)) as [number, number, number];
+    const copy = document.createElement('canvas');
+    [copy.width, copy.height] = [canvas.width, canvas.height];
+    const ctx = copy.getContext('2d');
+    if (ctx === null) return empty;
+    ctx.drawImage(canvas, 0, 0);
+    const { data } = ctx.getImageData(0, 0, copy.width, copy.height);
+    let [minX, minY, maxX, maxY] = [copy.width, copy.height, -1, -1];
+    for (let i = 0; i < data.length; i += 4) {
+      if (Math.abs(data[i]! - r) + Math.abs(data[i + 1]! - g) + Math.abs(data[i + 2]! - b) <= 24) continue;
+      const p = i / 4;
+      const [x, y] = [p % copy.width, Math.floor(p / copy.width)];
+      [minX, minY, maxX, maxY] = [Math.min(minX, x), Math.min(minY, y), Math.max(maxX, x), Math.max(maxY, y)];
+    }
+    return { found: maxX >= 0, minX, minY, maxX, maxY, W: copy.width, H: copy.height };
+  });

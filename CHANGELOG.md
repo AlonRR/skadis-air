@@ -29,6 +29,10 @@ All notable changes to this project are recorded here. The format follows
 - Every choice on the page is a row of buttons instead of a list: the board or connector, under
   "Boards" and "Connectors", the screw holes, the standoffs and the printer bed. Each side of a board is
   a button that is ticked when the side is closed, and a warning shows in a box beside what it concerns.
+- The page is laid out as a workbench: the 3D view fills the screen beside the settings, or sits above
+  them on a phone, with the download and "Reset view" just under it; a header holds a dark theme switch,
+  which the page remembers. The board always fits the view: framed to fill most of it, pulled back if the
+  window shrinks, and never zoomed out to a dot.
 - The STL lies as boards are printed: face down, the back up, turned over from the way the page shows
   the board, so its sides keep their places once it hangs.
 

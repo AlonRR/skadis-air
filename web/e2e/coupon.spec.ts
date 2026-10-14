@@ -36,7 +36,8 @@ test('the seam-test pair is chosen from the list beside the coupon, and download
     await expect(page.locator(`input[name="${name}"]`)).toBeVisible();
   const status = page.getByTestId('board-status');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-seam-test-5mm-0.2.stl');
-  await expect(status).toContainText('Board ready: 90 × 80 × 5 mm'); // two 40 x 80 tiles, 10 mm apart
+  await expect(status).toContainText('Board ready');
+  await expect(page.getByTestId('board-size')).toHaveText('90 × 80 × 5 mm'); // two 40 x 80 tiles, 10 mm apart
   await page.locator('input[name="slotClearanceMm"]').fill('0.3');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-seam-test-5mm-0.3.stl');
   const [download] = await Promise.all([

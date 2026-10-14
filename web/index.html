@@ -5,43 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Skådis Air: SKÅDIS pegboard generator</title>
     <script>
-      // The theme follows the system setting (D113). Set here, before anything is drawn, so a dark
-      // screen never flashes light; src/theme.ts keeps it in step while the page is open (C117).
-      document.documentElement.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      // The theme (D113): the one chosen with the header's toggle, remembered in this browser, or else the
+      // system setting. Set here, before anything is drawn, so a dark screen never flashes light;
+      // src/theme.ts keeps it in step while the page is open (C117, C124).
+      (() => {
+        let chosen = null;
+        try {
+          chosen = localStorage.getItem('skadis-air-theme');
+        } catch {}
+        const system = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = chosen === 'light' || chosen === 'dark' ? chosen : system;
+      })();
     </script>
     <!-- The shared design system (D111): its tokens first, then its components; web/public/design-system/README.md -->
     <link rel="stylesheet" href="/design-system/tokens.css" />
     <link rel="stylesheet" href="/design-system/components/bundle.css" />
     <style>
-      /* Every colour and font is a design-system token; the layout is the page's own until workbench. */
+      /* The design system's workbench (D111); what is here is only what this page adds to it. */
       :root {
         color-scheme: light;
       }
       :root[data-theme='dark'] {
         color-scheme: dark; /* the browser's own controls, scroll bars and number spinners turn dark too */
       }
+      html,
+      body {
+        margin: 0;
+      }
       body {
         background: var(--surface);
         color: var(--ink);
         font: var(--text-body);
-        font-variant-ligatures: contextual;
-        margin: 0 auto;
-        max-width: 44rem;
-        padding: 1rem;
       }
       input,
       button {
         font: inherit;
       }
+      .ws-header__name {
+        margin: 0;
+      }
+      .ws-controls > :first-child {
+        margin-top: 0;
+      }
       .tagline {
-        font-size: 1.1rem;
-        margin-top: -0.5rem;
+        font: var(--text-legend);
       }
       .note {
         color: var(--ink-muted);
         font: var(--text-note);
       }
-      [data-state='error'] {
+      [data-state='error'],
+      [data-state='invalid'],
+      [data-state='problem'] {
         color: var(--error);
       }
       .ws-notice:empty {
@@ -59,96 +74,155 @@
       .ws-choice + .ws-caps {
         margin-top: var(--space-3); /* "Connectors" under the boards' buttons */
       }
-      .preview canvas {
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
+      /* The stage: the canvas fills it and never sizes it, so a resize cannot feed back into itself */
+      .ws-stage__view {
+        position: relative;
+        overflow: hidden;
+      }
+      .ws-stage__view canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
         display: block;
-        max-width: 100%;
         touch-action: none;
       }
-      [data-state='invalid'],
-      [data-state='problem'] {
-        color: var(--error);
+      .preview-message {
+        position: absolute;
+        inset: 50% var(--space-4) auto;
+        transform: translateY(-50%);
+        margin: 0;
+        text-align: center;
+        color: var(--ink-muted);
+      }
+      .preview-message:empty {
+        display: none;
+      }
+      .plan-line {
+        flex: 1 1 12rem;
+        overflow-wrap: anywhere; /* a long file name wraps rather than widening a phone's page */
+      }
+      .plan-actions {
+        display: flex;
+        gap: var(--space-2);
+      }
+      .hint-touch {
+        display: none;
+      }
+      @media (pointer: coarse) {
+        .hint-fine {
+          display: none;
+        }
+        .hint-touch {
+          display: inline;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Skådis Air</h1>
-    <p class="tagline">Every SKÅDIS board: light to print, quick in your browser.</p>
-    <p>
-      3D-printable boards and connectors that fit IKEA's SKÅDIS pegboard system. Choose a board, see it in 3D and
-      download a file your printer can make. Everything runs in this page; nothing is sent to a server.
-    </p>
-    <p class="note" data-testid="engine-status" data-state="loading">Starting the geometry engine…</p>
-    <form data-testid="board" onsubmit="return false;">
-      <!-- Buttons under "Boards" and "Connectors", written by main.ts from the list of types (D91, D112) -->
-      <fieldset class="ws-fieldset ws-fieldset--choices" data-testid="board-type">
-        <legend>Board or connector</legend>
-      </fieldset>
-      <div data-testid="board-form"></div>
-      <fieldset class="ws-fieldset" data-testid="printer">
-        <legend>Printer</legend>
-        <div class="ws-label">Printer bed</div>
-        <div class="ws-choice" role="radiogroup" aria-label="Printer bed" data-testid="printer-bed">
-          <label class="ws-choice__opt">
-            <input class="ws-choice__input" type="radio" name="printerBed" value="default" checked />
-            <span class="ws-choice__face">Safe default: 200 × 200 mm</span>
-          </label>
-          <label class="ws-choice__opt">
-            <input class="ws-choice__input" type="radio" name="printerBed" value="custom" />
-            <span class="ws-choice__face">Custom</span>
-          </label>
+    <div class="ws-workbench">
+      <header class="ws-header">
+        <h1 class="ws-header__name">Skådis Air</h1>
+        <span class="ws-header__spacer"></span>
+        <button class="ws-btn" type="button" data-testid="theme-toggle" aria-pressed="false">
+          <span class="ws-ic" aria-hidden="true">&#xeac6;</span>Dark theme
+        </button>
+      </header>
+      <section class="ws-stage" aria-label="The board in 3D">
+        <div class="ws-stage__view" data-testid="preview" data-state="loading">
+          <p class="preview-message" data-testid="preview-message"></p>
         </div>
-        <p class="ws-note">Most printers take a board of 200 × 200 mm.</p>
-        <div data-testid="custom-bed" hidden>
-          <label class="ws-label">
-            Bed width (mm)
-            <input
-              class="ws-input"
-              type="number"
-              name="bedXMm"
-              min="50"
-              max="1000"
-              step="1"
-              value="200"
-              autocomplete="off"
-            />
-          </label>
-          <label class="ws-label">
-            Bed depth (mm)
-            <input
-              class="ws-input"
-              type="number"
-              name="bedYMm"
-              min="50"
-              max="1000"
-              step="1"
-              value="200"
-              autocomplete="off"
-            />
-          </label>
+        <div class="ws-plan">
+          <span class="plan-line" data-testid="board-status" data-state="building">Making the board…</span>
+          <span class="plan-actions">
+            <button type="button" class="ws-btn" data-testid="preview-reset">
+              <span class="ws-ic" aria-hidden="true">&#xeb37;</span>Reset view
+            </button>
+            <button type="button" class="ws-btn ws-btn--primary" data-testid="download-stl" disabled>
+              <span class="ws-ic" aria-hidden="true">&#xeac2;</span>Download STL
+            </button>
+          </span>
         </div>
-        <span class="ws-error" data-testid="bed-error"></span>
-      </fieldset>
-    </form>
-    <p data-testid="board-status" data-state="building">Making the board…</p>
-    <div class="ws-notice" data-testid="bed-warning" aria-live="polite"></div>
-    <section class="preview" data-testid="preview" data-state="loading">
-      <p class="note" data-testid="preview-message"></p>
-      <button type="button" class="ws-btn" data-testid="preview-reset">Reset view</button>
-    </section>
-    <p>
-      <button type="button" class="ws-btn ws-btn--primary" data-testid="download-stl" disabled>Download STL</button>
-    </p>
-    <footer>
-      <p class="note" data-testid="output-statement">
-        The STL and other files this tool generates, and anything you print from them, are yours to use, change, share
-        or sell for any purpose, with no conditions from this project.
-      </p>
-      <p class="note">
-        SKÅDIS is IKEA's name for its pegboard system. This page is not made, endorsed or supported by IKEA.
-      </p>
-    </footer>
+        <div class="ws-status">
+          <span data-testid="board-size"></span>
+          <span
+            ><span class="hint-fine">Drag: turn · Wheel or pinch: zoom</span
+            ><span class="hint-touch">Drag: turn · Pinch: zoom</span></span
+          >
+        </div>
+      </section>
+      <aside class="ws-side">
+        <div class="ws-controls">
+          <p class="tagline">Every SKÅDIS board: light to print, quick in your browser.</p>
+          <p class="note">
+            3D-printable boards and connectors that fit IKEA's SKÅDIS pegboard system. Choose a board, see it in 3D and
+            download a file your printer can make. Everything runs in this page; nothing is sent to a server.
+          </p>
+          <p class="note" data-testid="engine-status" data-state="loading">Starting the geometry engine…</p>
+          <form data-testid="board" onsubmit="return false;">
+            <!-- Buttons under "Boards" and "Connectors", written by main.ts from the list of types (D91, D112) -->
+            <fieldset class="ws-fieldset ws-fieldset--choices" data-testid="board-type">
+              <legend>Board or connector</legend>
+            </fieldset>
+            <div data-testid="board-form"></div>
+            <div class="ws-notice" data-testid="bed-warning" aria-live="polite"></div>
+            <fieldset class="ws-fieldset" data-testid="printer">
+              <legend>Printer</legend>
+              <div class="ws-label">Printer bed</div>
+              <div class="ws-choice" role="radiogroup" aria-label="Printer bed" data-testid="printer-bed">
+                <label class="ws-choice__opt">
+                  <input class="ws-choice__input" type="radio" name="printerBed" value="default" checked />
+                  <span class="ws-choice__face">Safe default: 200 × 200 mm</span>
+                </label>
+                <label class="ws-choice__opt">
+                  <input class="ws-choice__input" type="radio" name="printerBed" value="custom" />
+                  <span class="ws-choice__face">Custom</span>
+                </label>
+              </div>
+              <p class="ws-note">Most printers take a board of 200 × 200 mm.</p>
+              <div data-testid="custom-bed" hidden>
+                <label class="ws-label">
+                  Bed width (mm)
+                  <input
+                    class="ws-input"
+                    type="number"
+                    name="bedXMm"
+                    min="50"
+                    max="1000"
+                    step="1"
+                    value="200"
+                    autocomplete="off"
+                  />
+                </label>
+                <label class="ws-label">
+                  Bed depth (mm)
+                  <input
+                    class="ws-input"
+                    type="number"
+                    name="bedYMm"
+                    min="50"
+                    max="1000"
+                    step="1"
+                    value="200"
+                    autocomplete="off"
+                  />
+                </label>
+              </div>
+              <span class="ws-error" data-testid="bed-error"></span>
+            </fieldset>
+          </form>
+          <footer>
+            <p class="note" data-testid="output-statement">
+              The STL and other files this tool generates, and anything you print from them, are yours to use, change,
+              share or sell for any purpose, with no conditions from this project.
+            </p>
+            <p class="note">
+              SKÅDIS is IKEA's name for its pegboard system. This page is not made, endorsed or supported by IKEA.
+            </p>
+          </footer>
+        </div>
+      </aside>
+    </div>
     <script type="module" src="./src/main.ts"></script>
   </body>
 </html>
