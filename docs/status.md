@@ -72,6 +72,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 - **D69** A second row on the fit coupon, so two coupons pushed together test that the half slots meet into a whole slot, or one row and that test left to `tiling`.
 - **D76** The screw size: 4 mm (a 4.5 mm hole, a 9 mm countersink), the starting value until answered, or 3.5 mm.
+- **D88** The mounting's visible picks, built 14 Oct 2026 and logged in [`choices.md`](choices.md): the standoff 10 mm across (C83), the file-name endings (C85), and "None" as a third screw-hole choice with holes made unless it is chosen, so the board the page opens on now has four countersunk holes (C86). Recommended: keep them; or name any to change.
 - **A80** Rename the repositories on Gitea and GitHub to `skadis-air`.
 - **T17** The owner's caliper measurements of his board (not blocking: sources first, Q3).
 
