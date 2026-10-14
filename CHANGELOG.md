@@ -10,6 +10,9 @@ All notable changes to this project are recorded here. The format follows
 
 - A fit test coupon, chosen on the page like a board: four slots at four clearances, told apart by
   dots, to find the clearance that fits your printer before printing a whole board.
+- Screw holes in the solid board, one in each corner, countersunk (the default) or for a round head,
+  for 3 to 5 mm screws; and standoffs on the back as an option, 20 mm tall unless set, hollow for the
+  screw, so the board stands off the wall and hooks have room.
 
 ### Changed
 

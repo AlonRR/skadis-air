@@ -13,3 +13,5 @@ export const BOARD_THICKNESS_MM = 5;
 
 /** The smallest tile and the step between sizes (D15): one grid pitch. */
 export const TILE_MM = GRID_PITCH_MM;
+/** How far IKEA's spacers hold a board off the wall, mm. <<CONFIRM>> 6d6178 ("roughly 20mm"). */
+export const WALL_DISTANCE_MM = 20;

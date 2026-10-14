@@ -14,10 +14,11 @@ A board type is one file and one line in a list (D11, the extension-registry pra
 1. **The file**, `packages/core/src/board-types/<id>.ts`, calls `defineBoardType` with:
    - `id`: lower-case words joined by hyphens; it starts every file name, `skadis-<id>-…`;
    - `name`: as the page lists it;
-   - `settings`: from `defineSettings([...])`, each a `number` or a `sides` setting. A number has
-     its unit, starting value, range and step; `onStep` when the value must be on the steps (a
-     board's size), `count` to show it as a count beside the box (`= 6 tiles`), `warnOutside` for a
-     range it allows but warns about, `advanced` to fold it under "Advanced" (D48), and `help`;
+   - `settings`: from `defineSettings([...])`, each a `number`, a `sides` or a `choice` setting. A
+     number has its unit, starting value, range and step; `onStep` when the value must be on the steps
+     (a board's size), `count` to show it as a count beside the box (`= 6 tiles`), `warnOutside` for
+     a range it allows but warns about, `advanced` to fold it under "Advanced" (D48), and `help`. A
+     choice has its `options`, each a value and a label, and its starting value, one of them (C82);
    - `build(engine, values)`: the solid, from values typed by the settings above. A combination it
      cannot make throws a `RangeError`, which the page shows as a problem instead of a board;
    - `label(values)`: the rest of the file name.
@@ -32,7 +33,14 @@ edit the trial needed was a test that had named the listed types, now reading th
 The fit coupon (`fit-coupon.ts`) was then the first real type added this way.
 
 A type built on the solid board passes `makeSolidBoard` a third argument instead of copying it: a
-clearance per slot (`clearanceOf`) and more to cut away (`extraCutters`), as the fit coupon does.
+clearance per slot (`clearanceOf`), more to cut away (`extraCutters`), as the fit coupon does, and
+more to add before anything is cut (`extraSolids`).
+
+**Mounting** (screw holes and standoffs, D73 to D75) is two lines in such a type, as the solid board
+has it (C87): `...MOUNTING_SETTINGS` at the end of its `defineSettings([...])`, and
+`mountingCuts(mountingOf(values), params)` as the third argument to `makeSolidBoard`, with
+`mountingLabel(values)` at the end of its `label`. The contract test then holds the new settings to
+the same rules, and `packages/core/test/mounting.test.ts` covers the shapes.
 
 What fails if a step is missed:
 
@@ -40,6 +48,7 @@ What fails if a step is missed:
 | --- | --- |
 | A starting value outside its range, a key used twice, a build that makes nothing | `packages/core/test/board-types.test.ts`: the contract every listed type is held to |
 | The id not in lower-case words, two types with one id | the same contract |
+| A choice whose starting value is not one of its options, or an option listed twice | the same contract |
 | The line in `BOARD_TYPES` | the type is simply not on the page; `web/e2e/form.spec.ts` lists what is |
 | A build or label written against settings it does not declare | the type check |
 
@@ -56,7 +65,9 @@ same calls, which shows the generic code names no board.
 
 ## A new kind of setting
 
-A setting that is neither a number nor the four sides (a choice from a list, say) needs three
-places: its interface beside `NumberSetting` in `packages/core/src/settings.ts`, its reading in
-`readValues` there, and its control in `web/src/form.ts`. `packages/core/test/settings.test.ts`
-declares its own settings and is where its reading is tested.
+A setting that is none of a number, the four sides or a choice needs three places: its interface
+beside `NumberSetting` in `packages/core/src/settings.ts` (and its value's type in `ValueOf` there),
+its reading in `readValues` there, and its control in `fieldFor` in `web/src/form.ts`.
+`packages/core/test/settings.test.ts` declares its own settings and is where its reading is tested.
+**The choice kind was added this way on 14 Oct 2026** (C82): those three places, a rule for it in the
+contract test (its starting value is one of its options), and a browser test of its control.

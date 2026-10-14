@@ -1,7 +1,10 @@
 // The solid board (backlog item board-solid; D11): a plate of 40 mm tiles with the SKÅDIS slots
-// cut through it. It lies as it prints: its face on the bed at z = 0, x across, y up the wall.
-import type { CrossSection, Manifold, Vec2, Vec3 } from 'manifold-3d';
+// cut through it. It is built as it hangs (C42): x across, y up the wall, its back at z = 0 and its
+// front toward +z; printPose turns it over to print face down (D66).
+import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import type { Engine } from './engine.js';
+import { arc, CIRCLE_SEGMENTS, ringedSolid, stadium } from './rings.js';
+export { CIRCLE_SEGMENTS } from './rings.js';
 import { BOARD_THICKNESS_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import { ALL_OPEN, type Side, type Sides, type SlotPlace, slotPlaces } from './slots.js';
 
@@ -49,26 +52,6 @@ export function solidBoardParams(
   return p;
 }
 
-/** Segments in a full circle, for the board's rounded corners and the slots' round ends. */
-export const CIRCLE_SEGMENTS = 64;
-
-function arc(cx: number, cy: number, r: number, from: number, to: number, segments: number): Vec2[] {
-  const points: Vec2[] = [];
-  for (let k = 0; k <= segments; k++) {
-    const a = from + ((to - from) * k) / segments;
-    points.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
-  }
-  return points;
-}
-
-/** A slot's outline, counter-clockwise: a stadium w wide and h tall at (x, y), grown by `grow` all round. */
-function stadium(x: number, y: number, w: number, h: number, grow = 0): Vec2[] {
-  const r = w / 2 + grow;
-  const straight = (h - w) / 2;
-  const half = CIRCLE_SEGMENTS / 2;
-  return [...arc(x, y + straight, r, 0, Math.PI, half), ...arc(x, y - straight, r, Math.PI, 2 * Math.PI, half)];
-}
-
 /** The board's outline, counter-clockwise, with a rounded corner wherever both of its sides are closed. */
 function outline(width: number, height: number, sides: Sides, radius: number): Vec2[] {
   const quarter = CIRCLE_SEGMENTS / 4;
@@ -86,11 +69,9 @@ function outline(width: number, height: number, sides: Sides, radius: number): V
 }
 
 /**
- * One slot's cutter as a single closed mesh: rings of the slot's outline stacked through the plate,
- * grown by c + 1 a millimetre beyond each face and exact at depth c, so the 45 degree chamfers and
- * the straight wall between them are one solid. Built as cones and a prism joined by a union, the
- * three met exactly along the outline at depth c, and the cut left near-duplicate corners there:
- * 440 degenerate facets in a 40 x 40 tile, found by scad-tools' stl-mesh.py (12 Oct 2026).
+ * One slot's cutter as a single closed mesh (ringedSolid): rings of the slot's outline stacked through
+ * the plate, grown by c + 1 a millimetre beyond each face and exact at depth c, so the 45 degree
+ * chamfers and the straight wall between them are one solid.
  */
 function slotCutter(engine: Engine, x: number, y: number, w: number, h: number, t: number, c: number): Manifold {
   const levels: [number, number][] =
@@ -105,22 +86,7 @@ function slotCutter(engine: Engine, x: number, y: number, w: number, h: number, 
           [-1, 0],
           [t + 1, 0],
         ];
-  const rings = levels.map(([z, grow]) => stadium(x, y, w, h, grow).map(([px, py]): Vec3 => [px, py, z]));
-  const n = rings[0]?.length ?? 0;
-  const positions = new Float32Array(rings.flat(2));
-  const triangles: number[] = [];
-  const at = (level: number, i: number) => level * n + (i % n);
-  for (let i = 1; i < n - 1; i++) triangles.push(at(0, 0), at(0, i + 1), at(0, i)); // bottom cap, facing down
-  for (let level = 0; level < rings.length - 1; level++) {
-    for (let i = 0; i < n; i++) {
-      triangles.push(at(level, i), at(level, i + 1), at(level + 1, i + 1));
-      triangles.push(at(level, i), at(level + 1, i + 1), at(level + 1, i));
-    }
-  }
-  const top = rings.length - 1;
-  for (let i = 1; i < n - 1; i++) triangles.push(at(top, 0), at(top, i), at(top, i + 1)); // top cap, facing up
-  const mesh = new engine.Mesh({ numProp: 3, vertProperties: positions, triVerts: new Uint32Array(triangles) });
-  return new engine.Manifold(mesh);
+  return ringedSolid(engine, (grow) => stadium(x, y, w, h, grow), levels);
 }
 
 /** Remembers an object so it can be freed once the board is made. */
@@ -129,10 +95,11 @@ function keep<T>(m: T, into: T[]): T {
   return m;
 }
 
-/** What a part built on the solid board may change: a slot's own clearance, and more to cut away. */
+/** What a part built on the solid board may change: a slot's own clearance, more to cut away, more to add. */
 export interface BoardCuts {
   clearanceOf?: (slot: SlotPlace) => number; // in place of slotClearanceMm, slot by slot (the fit coupon)
-  extraCutters?: (engine: Engine) => Manifold[]; // cut away with the slots; freed here (the coupon's dots)
+  extraCutters?: (engine: Engine) => Manifold[]; // cut away with the slots; freed here (the coupon's dots, screw holes)
+  extraSolids?: (engine: Engine) => Manifold[]; // added to the plate before anything is cut; freed here (standoffs)
 }
 
 export function makeSolidBoard(engine: Engine, params: SolidBoardParams, cuts: BoardCuts = {}): Manifold {
@@ -143,7 +110,10 @@ export function makeSolidBoard(engine: Engine, params: SolidBoardParams, cuts: B
   const solids: Manifold[] = [];
 
   const face = keep(new CrossSection([outline(width, height, p.sides, p.cornerRadiusMm)], 'Positive'), sections);
+  // What is added goes on before the cuts, so a screw hole runs on through a standoff.
+  const added = (cuts.extraSolids?.(engine) ?? []).map((m) => keep(m, solids));
   const plate = keep(face.extrude(t), solids);
+  const body = added.length > 0 ? keep(Manifold.union([plate, ...added]), solids) : plate;
 
   // Every slot is cut whole; at an edge the cut runs past the plate, which leaves the half or quarter.
   const cutters = slotPlaces(p.columns, p.rows, p.sides).map((slot) => {
@@ -154,7 +124,7 @@ export function makeSolidBoard(engine: Engine, params: SolidBoardParams, cuts: B
   });
   for (const extra of cuts.extraCutters?.(engine) ?? []) cutters.push(keep(extra, solids));
   const cut = keep(Manifold.union(cutters), solids);
-  const board = plate.subtract(cut);
+  const board = body.subtract(cut);
   // WebAssembly memory is not garbage-collected: free every intermediate object.
   for (const m of solids) m.delete();
   for (const s of sections) s.delete();

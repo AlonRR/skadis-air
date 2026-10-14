@@ -1,5 +1,7 @@
-// The solid board as a board type (D11): its settings, as the page shows them, and its build.
+// The solid board as a board type (D11): its settings, as the page shows them, and its build, with the
+// mounting (D73 to D75) after its own settings.
 import { makeSolidBoard, solidBoardParams, SOLID_BOARD_DEFAULTS } from '../board-solid.js';
+import { MOUNTING_SETTINGS, mountingCuts, mountingLabel, mountingOf } from '../mounting.js';
 import { TILE_MM } from '../skadis.js';
 import { defineSettings } from '../settings.js';
 import { ALL_OPEN } from '../slots.js';
@@ -69,22 +71,22 @@ export const SOLID = defineBoardType({
       help: 'Where both sides at a corner are closed; open corners stay square, to fit a neighbour.',
       advanced: true,
     },
+    ...MOUNTING_SETTINGS,
   ]),
-  build: (engine, v) =>
-    makeSolidBoard(
-      engine,
-      solidBoardParams({
-        columns: v.widthMm / TILE_MM,
-        rows: v.heightMm / TILE_MM,
-        thicknessMm: v.thicknessMm,
-        sides: v.sides,
-        slotClearanceMm: v.slotClearanceMm,
-        slotChamferMm: v.slotChamferMm,
-        cornerRadiusMm: v.cornerRadiusMm,
-      }),
-    ),
+  build: (engine, v) => {
+    const params = solidBoardParams({
+      columns: v.widthMm / TILE_MM,
+      rows: v.heightMm / TILE_MM,
+      thicknessMm: v.thicknessMm,
+      sides: v.sides,
+      slotClearanceMm: v.slotClearanceMm,
+      slotChamferMm: v.slotChamferMm,
+      cornerRadiusMm: v.cornerRadiusMm,
+    });
+    return makeSolidBoard(engine, params, mountingCuts(mountingOf(v), params));
+  },
   label: (v) => {
     const closed = (['left', 'right', 'bottom', 'top'] as const).filter((side) => v.sides[side] === 'closed');
-    return `${v.widthMm}x${v.heightMm}${closed.length > 0 ? `-closed-${closed.join('-')}` : ''}`;
+    return `${v.widthMm}x${v.heightMm}${closed.length > 0 ? `-closed-${closed.join('-')}` : ''}${mountingLabel(v)}`;
   },
 });

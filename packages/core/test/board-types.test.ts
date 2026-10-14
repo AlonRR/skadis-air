@@ -51,9 +51,14 @@ function contract(type: AnyBoardType) {
     const keys = type.settings.map((s) => s.key);
     expect(new Set(keys).size).toBe(keys.length);
     for (const s of type.settings) {
-      if (s.kind !== 'number') continue;
-      expect(s.default).toBeGreaterThanOrEqual(s.min);
-      expect(s.default).toBeLessThanOrEqual(s.max);
+      if (s.kind === 'number') {
+        expect(s.default).toBeGreaterThanOrEqual(s.min);
+        expect(s.default).toBeLessThanOrEqual(s.max);
+      } else if (s.kind === 'choice') {
+        const values = s.options.map((o) => o.value);
+        expect(new Set(values).size).toBe(values.length);
+        expect(values).toContain(s.default);
+      }
     }
   });
 
@@ -128,12 +133,45 @@ describe('the solid board type', () => {
     expect(box.max[0]).toBeCloseTo(120, 9);
     expect(box.max[1]).toBeCloseTo(80, 9);
     expect(box.max[2]).toBeCloseTo(4.5, 9);
-    expect(built.solid.genus()).toBe(3 * 2 + 2 * 1); // its whole slots
+    expect(built.solid.genus()).toBe(3 * 2 + 2 * 1 + 4); // its whole slots, and a screw hole at each corner (D73)
+  });
+
+  it('takes the mounting: countersunk holes unless set, a round head or none, and standoffs as an option (D73 to D75)', () => {
+    const v = defaultValues(solid.settings);
+    expect([v.screwHead, v.screwMm, v.standoffs, v.standoffHeightMm]).toEqual(['countersunk', 4, 'none', 20]);
+    const genus = (values: typeof v) => {
+      const built = buildBoard(engine, solid, values);
+      if (!built.ok) throw new Error(built.problem);
+      made.push(built.solid);
+      return built.solid.genus();
+    };
+    const slots = genus({ ...v, screwHead: 'none' });
+    expect(genus(v)).toBe(slots + 4);
+    expect(genus({ ...v, screwHead: 'round' })).toBe(slots + 4);
+    const built = buildBoard(engine, solid, { ...v, standoffs: 'back' });
+    expect(built.ok && built.solid.boundingBox().min[2]).toBeCloseTo(-20, 9);
+    if (built.ok) made.push(built.solid);
+  });
+
+  it('says a countersink too deep for a thin board is a problem, and suggests a round head', () => {
+    const v = defaultValues(solid.settings);
+    const built = buildBoard(engine, solid, { ...v, thicknessMm: 3 });
+    expect(built.ok).toBe(false);
+    if (!built.ok) expect(built.problem).toContain('round head');
+    const round = buildBoard(engine, solid, { ...v, thicknessMm: 3, screwHead: 'round' });
+    expect(round.ok).toBe(true);
+    if (round.ok) made.push(round.solid);
   });
 
   it('puts the fine settings under Advanced, and the size, thickness and sides on the main form (D48)', () => {
     const advanced = solid.settings.filter((s) => s.advanced).map((s) => s.key);
-    expect(advanced.sort()).toEqual(['cornerRadiusMm', 'slotChamferMm', 'slotClearanceMm']);
+    expect(advanced.sort()).toEqual([
+      'cornerRadiusMm',
+      'screwMm',
+      'slotChamferMm',
+      'slotClearanceMm',
+      'standoffHeightMm',
+    ]);
   });
 
   it('warns about a thickness outside 4 to 5.5 mm, the range IKEA hooks accept (C43)', () => {
@@ -154,5 +192,13 @@ describe('the solid board type', () => {
     expect(boardFileName(solid, { ...v, widthMm: 240, heightMm: 200 }, 'stl')).toBe('skadis-solid-240x200.stl');
     const closed = { ...v, sides: { left: 'closed', right: 'open', bottom: 'closed', top: 'open' } as const };
     expect(boardFileName(solid, closed, 'stl')).toBe('skadis-solid-160x160-closed-left-bottom.stl');
+  });
+
+  it('adds to the name only the mounting that differs from the starting one (C85)', () => {
+    const v = defaultValues(solid.settings);
+    const name = (given: Record<string, string | number>) => boardFileName(solid, { ...v, ...given }, 'stl');
+    expect(name({ screwHead: 'round', standoffs: 'back' })).toBe('skadis-solid-160x160-round-head-standoffs-20mm.stl');
+    expect(name({ screwHead: 'none', screwMm: 3.5 })).toBe('skadis-solid-160x160-no-holes.stl');
+    expect(name({ screwMm: 3.5, standoffHeightMm: 25 })).toBe('skadis-solid-160x160-screw-3.5mm.stl');
   });
 });

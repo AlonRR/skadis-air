@@ -28,7 +28,8 @@ test('shows size, thickness and sides on the form, and folds the fine settings u
     await expect(page.locator(`input[name="${name}"]`)).toBeVisible();
   const advanced = page.getByTestId('advanced');
   await expect(advanced).not.toHaveAttribute('open', /.*/);
-  for (const name of ['slotClearanceMm', 'slotChamferMm', 'cornerRadiusMm']) {
+  for (const name of ['screwHead', 'standoffs']) await expect(page.locator(`select[name="${name}"]`)).toBeVisible();
+  for (const name of ['slotClearanceMm', 'slotChamferMm', 'cornerRadiusMm', 'screwMm', 'standoffHeightMm']) {
     await expect(advanced.locator(`input[name="${name}"]`)).toBeHidden();
   }
   await advanced.locator('summary').click();
@@ -84,4 +85,30 @@ test('says so when a combination cannot be made, instead of building it', async 
   await page.locator('input[name="slotChamferMm"]').fill('1.5');
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'problem');
   await expect(page.getByTestId('board-status')).toContainText('thicker');
+});
+
+test('offers screw holes and standoffs, and names the file for what differs from the start (D73 to D75)', async ({
+  page,
+}) => {
+  await ready(page);
+  const holes = page.locator('select[name="screwHead"]');
+  await expect(holes).toHaveValue('countersunk'); // D74
+  await expect(page.locator('select[name="standoffs"]')).toHaveValue('none'); // D75: an option
+  await expect(page.getByTestId('board-status')).toHaveAttribute('data-file-name', 'skadis-solid-160x160.stl');
+  await holes.selectOption('round');
+  await page.locator('select[name="standoffs"]').selectOption('back');
+  const status = page.getByTestId('board-status');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-round-head-standoffs-20mm.stl');
+  await expect(status).toContainText('160 × 160 × 25 mm'); // 5 mm of board, 20 mm of standoff behind it
+});
+
+test('says a countersink too deep for a thin board cannot be made, and makes it with a round head', async ({
+  page,
+}) => {
+  await ready(page);
+  await page.locator('input[name="thicknessMm"]').fill('3');
+  await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'problem');
+  await expect(page.getByTestId('board-status')).toContainText('round head');
+  await page.locator('select[name="screwHead"]').selectOption('round');
+  await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready');
 });

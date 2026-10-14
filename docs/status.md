@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 13 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79; the packages are renamed, the repositories wait for A80), and Gitea and the private GitHub copy are kept in step (A77). **Next: `mounting`** (D73 to D75 decided; D76, the screw size, open). Nothing is test-printed yet.
+Last updated: 14 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79; the packages are renamed, the repositories wait for A80), Gitea and the private GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes, countersunk or round, and optional standoffs on the back (D73 to D75; the picks made while building it are C82 to C87, and the screw size, D76, is still open at 4 mm). Keyhole heads and IKEA's corner holes moved to `mounting-ikea`, which waits on T17. **Next: `conn-standoff`.** Nothing is test-printed yet. The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the

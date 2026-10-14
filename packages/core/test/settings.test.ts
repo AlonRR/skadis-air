@@ -32,6 +32,16 @@ const SETTINGS = defineSettings([
     label: 'Sides',
     default: { left: 'open', right: 'open', bottom: 'open', top: 'open' },
   },
+  {
+    kind: 'choice',
+    key: 'head',
+    label: 'Screw head',
+    options: [
+      { value: 'countersunk', label: 'Countersunk' },
+      { value: 'round', label: 'Round head' },
+    ],
+    default: 'countersunk',
+  },
 ]);
 
 describe('defaultValues', () => {
@@ -40,6 +50,7 @@ describe('defaultValues', () => {
       widthMm: 80,
       thicknessMm: 5,
       sides: { left: 'open', right: 'open', bottom: 'open', top: 'open' },
+      head: 'countersunk',
     });
   });
 });
@@ -53,6 +64,7 @@ describe('readValues', () => {
         widthMm: 240,
         thicknessMm: 4.5,
         sides: { left: 'closed', right: 'open', bottom: 'open', top: 'open' },
+        head: 'countersunk',
       });
     }
   });
@@ -87,5 +99,25 @@ describe('readValues', () => {
   it('refuses a side that is neither open nor closed', () => {
     const read = readValues(SETTINGS, { sides: { left: 'ajar' } });
     expect(read.ok).toBe(false);
+  });
+
+  it('reads a choice by its value, and an empty one as the starting value', () => {
+    const read = readValues(SETTINGS, { head: 'round' });
+    expect(read.ok && read.values.head).toBe('round');
+    // typed from the declaration: only the values it lists
+    const head: 'countersunk' | 'round' | undefined = read.ok ? read.values.head : undefined;
+    expect(head).toBe('round');
+    expect(readValues(SETTINGS, { head: '' }).ok && readValues(SETTINGS, { head: '' })).toMatchObject({
+      values: { head: 'countersunk' },
+    });
+  });
+
+  it('refuses a choice it does not list, saying which setting', () => {
+    const read = readValues(SETTINGS, { head: 'hex' });
+    expect(read.ok).toBe(false);
+    if (!read.ok) {
+      expect(read.errors.map((e) => e.key)).toEqual(['head']);
+      expect(read.errors[0]?.message).toContain('Countersunk');
+    }
   });
 });

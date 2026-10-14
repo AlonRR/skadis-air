@@ -1,7 +1,8 @@
 // The page's form for a board type, built from the settings the type declares (backlog item registry):
-// a number box for each number, the four side toggles round a drawing of the board (D46), and the fine
-// settings folded under "Advanced" (D48). Nothing here names a board type or a setting.
-import type { AnyBoardType, NumberSetting, Problem, SidesSetting } from 'skadis-air';
+// a number box for each number, a list for each choice, the four side toggles round a drawing of the
+// board (D46), and the fine settings folded under "Advanced" (D48). Nothing here names a board type or
+// a setting.
+import type { AnyBoardType, ChoiceSetting, NumberSetting, Problem, Setting, SidesSetting } from 'skadis-air';
 
 type Side = 'left' | 'right' | 'bottom' | 'top';
 const SIDES: readonly Side[] = ['top', 'left', 'right', 'bottom'];
@@ -81,6 +82,30 @@ function sidesField(s: SidesSetting, changed: () => void): { field: HTMLElement;
   return { field, read: () => ({ ...state }) };
 }
 
+function choiceField(s: ChoiceSetting, changed: () => void): { field: HTMLElement; read: () => string } {
+  const field = element('div', { class: 'field' });
+  const label = element('label');
+  label.append(s.label);
+  const select = element('select', { name: s.key });
+  for (const option of s.options) {
+    const o = element('option', { value: option.value }, option.label);
+    o.selected = option.value === s.default;
+    select.append(o);
+  }
+  label.append(select);
+  field.append(label);
+  if (s.help !== undefined) field.append(element('p', { class: 'help' }, s.help));
+  field.append(element('p', { class: 'error', 'data-testid': `error-${s.key}` }));
+  select.addEventListener('change', changed);
+  return { field, read: () => select.value };
+}
+
+function fieldFor(s: Setting, changed: () => void): { field: HTMLElement; read: () => unknown } {
+  if (s.kind === 'number') return numberField(s, changed);
+  if (s.kind === 'choice') return choiceField(s, changed);
+  return sidesField(s, changed);
+}
+
 /** Writes a problem into the line kept for it beside its control. */
 function put(container: HTMLElement, kind: 'error' | 'warning', problem: Problem): void {
   const at = container.querySelector<HTMLElement>(`[data-testid="${kind}-${problem.key}"]`);
@@ -95,7 +120,7 @@ export function renderForm(container: HTMLElement, type: AnyBoardType, changed: 
   advanced.append(element('summary', {}, 'Advanced'));
   const readers = new Map<string, () => unknown>();
   for (const s of type.settings) {
-    const { field, read } = s.kind === 'number' ? numberField(s, changed) : sidesField(s, changed);
+    const { field, read } = fieldFor(s, changed);
     (s.advanced ? advanced : main).append(field);
     readers.set(s.key, read);
   }

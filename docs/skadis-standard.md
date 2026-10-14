@@ -38,7 +38,7 @@ specification or a person's measurement; **code** a value in an existing generat
 
 | Value | Figure | Source | Label | Status |
 |---|---|---|---|---|
-| Distance from the wall | 20 mm | 6d6178 ("roughly 20mm away from the wall") | community | `<<CONFIRM>>` |
+| Distance from the wall | 20 mm; the standoffs' starting height (D75) | 6d6178 ("roughly 20mm away from the wall") | community | `<<CONFIRM>>` |
 | IKEA's scheme | one steel rail at the top whose bent tabs hold the two upper corners, two loose spacers at the lower corners, four thumb screws through round holes near the corners | IKEA AA-1891323-4 | IKEA | settled |
 | IKEA's corner holes | position and diameter **not published** | — | — | needs a measurement (T17) |
 | Gap between IKEA boards hung by the instructions | 5 mm, both stacked and side by side, which puts the slot grid 5 mm off across the seam | from IKEA's rail spacing (565 mm for 560 mm boards) and wall-screw spacing (200 / 400 / 600 mm) | inferred | `<<CONFIRM>>` |

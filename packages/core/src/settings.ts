@@ -28,14 +28,28 @@ export interface SidesSetting {
   advanced?: boolean;
 }
 
-export type Setting = NumberSetting | SidesSetting;
+export interface ChoiceSetting {
+  kind: 'choice';
+  key: string;
+  label: string;
+  options: readonly { value: string; label: string }[]; // in the order the page lists them
+  default: string; // one of the options' values
+  help?: string;
+  advanced?: boolean;
+}
+
+export type Setting = NumberSetting | SidesSetting | ChoiceSetting;
 
 /** Keeps the settings' literal keys, so a board type's values are typed from its declaration. */
 export function defineSettings<const S extends readonly Setting[]>(settings: S): S {
   return settings;
 }
 
-type ValueOf<S extends Setting> = S extends NumberSetting ? number : Sides;
+type ValueOf<S extends Setting> = S extends NumberSetting
+  ? number
+  : S extends ChoiceSetting
+    ? S['options'][number]['value']
+    : Sides;
 export type Values<S extends readonly Setting[]> = { [K in S[number] as K['key']]: ValueOf<K> };
 
 export interface Problem {
@@ -47,7 +61,7 @@ export type ReadResult<S extends readonly Setting[]> =
   { ok: true; values: Values<S>; warnings: Problem[] } | { ok: false; errors: Problem[]; warnings: Problem[] };
 
 export function defaultValues<const S extends readonly Setting[]>(settings: S): Values<S> {
-  const values: Record<string, number | Sides> = {};
+  const values: Record<string, number | string | Sides> = {};
   for (const s of settings) values[s.key] = s.kind === 'sides' ? { ...s.default } : s.default;
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- built key by key from the declaration
   return values as Values<S>;
@@ -93,6 +107,14 @@ function readSides(s: SidesSetting, given: unknown, errors: Problem[]): Sides {
   return sides;
 }
 
+function readChoice(s: ChoiceSetting, given: unknown, errors: Problem[]): string {
+  if (given === undefined || given === '') return s.default;
+  const option = s.options.find((o) => o.value === given);
+  if (option !== undefined) return option.value;
+  errors.push({ key: s.key, message: `${s.label} must be one of: ${s.options.map((o) => o.label).join(', ')}` });
+  return s.default;
+}
+
 /** Reads every setting from what was given, as text or numbers; anything missing takes its starting value. */
 export function readValues<const S extends readonly Setting[]>(
   settings: S,
@@ -100,10 +122,11 @@ export function readValues<const S extends readonly Setting[]>(
 ): ReadResult<S> {
   const errors: Problem[] = [];
   const warnings: Problem[] = [];
-  const values: Record<string, number | Sides> = {};
+  const values: Record<string, number | string | Sides> = {};
   for (const s of settings) {
-    values[s.key] =
-      s.kind === 'number' ? readNumber(s, given[s.key], errors, warnings) : readSides(s, given[s.key], errors);
+    if (s.kind === 'number') values[s.key] = readNumber(s, given[s.key], errors, warnings);
+    else if (s.kind === 'choice') values[s.key] = readChoice(s, given[s.key], errors);
+    else values[s.key] = readSides(s, given[s.key], errors);
   }
   if (errors.length > 0) return { ok: false, errors, warnings };
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- built key by key from the declaration

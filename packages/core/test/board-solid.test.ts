@@ -6,21 +6,8 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { makeSolidBoard, solidBoardParams, type SolidBoardParams } from '../src/board-solid.js';
 import { loadEngine } from '../src/engine.js';
 import { ALL_OPEN, type Sides, slotPlaces, slotsWorth } from '../src/slots.js';
-import { type MeshData, meshOf } from '../src/stl.js';
-
-// A facet is degenerate when two of its corners are one point as 32-bit floats, which is how a
-// slicer reads an STL: PrusaSlicer removes such facets as it loads the file (scad-tools' stl-mesh.py).
-function degenerateFacets(mesh: MeshData): number {
-  let count = 0;
-  for (let t = 0; t < mesh.triangles.length / 3; t++) {
-    const corners = [0, 1, 2].map((k) => {
-      const v = (mesh.triangles[t * 3 + k] ?? 0) * 3;
-      return [0, 1, 2].map((d) => Math.fround(mesh.positions[v + d] ?? 0)).join(',');
-    });
-    if (new Set(corners).size < 3) count++;
-  }
-  return count;
-}
+import { meshOf } from '../src/stl.js';
+import { degenerateFacets } from './facets.js';
 
 const engine = await loadEngine();
 const made: (Manifold | CrossSection)[] = [];

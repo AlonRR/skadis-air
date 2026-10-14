@@ -28,9 +28,10 @@ const closed = { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed
 const solid = boardType('solid');
 const solidAt = (widthMm, heightMm, sides) => ({ ...defaultValues(solid.settings), widthMm, heightMm, sides });
 
-// Every listed type at its starting values, so a new type is checked without touching this file; and
-// the solid board with one of each kind of edge: open all round, closed all round with rounded corners,
-// both on one board, and the largest a 250 x 210 mm bed takes (240 x 200 mm).
+// Every listed type at its starting values, so a new type is checked without touching this file; the
+// solid board with one of each kind of edge: open all round, closed all round with rounded corners,
+// both on one board, and the largest a 250 x 210 mm bed takes (240 x 200 mm); and its mounting
+// (D73 to D75): standoffs with each head, the largest screw at the largest corner radius.
 const samples = [
   ...BOARD_TYPES.map((type) => ({ name: `${type.id}-default`, type, values: defaultValues(type.settings) })),
   { name: 'solid-1x1-open', type: solid, values: solidAt(40, 40, open) },
@@ -42,6 +43,16 @@ const samples = [
   },
   { name: 'solid-3x2-closed', type: solid, values: solidAt(120, 80, closed) },
   { name: 'solid-6x5-open', type: solid, values: solidAt(240, 200, open) },
+  {
+    name: 'solid-2x2-round-standoffs',
+    type: solid,
+    values: { ...solidAt(80, 80, open), screwHead: 'round', standoffs: 'back' },
+  },
+  {
+    name: 'solid-2x2-closed-countersunk-standoffs',
+    type: solid,
+    values: { ...solidAt(80, 80, closed), screwMm: 5, cornerRadiusMm: 20, standoffs: 'back' },
+  },
 ];
 
 rmSync(out, { recursive: true, force: true }); // never judge a file a previous run left behind
