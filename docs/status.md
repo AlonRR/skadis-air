@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 15 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The repositories are renamed `skadis-air` on Gitea and GitHub (A80, T89); the local folder is renamed between sessions. Keyhole heads and corner holes kept as an option (D130) are in `mounting-ikea`; IKEA's own board has none, its spacer held through a peg slot by a screw with a nub (T17). **`conn-standoff` is done** (D91 to D94, D97): a standoff for 1, 2 or 4 boards under "Connectors", the shared ones with a tunnel for hooks, sized from a replica of IKEA's hook on Printables (T98). A **seam-test pair** (D69) prints with the fit coupon, to test how tiles join. The first test print (the coupon and the pair) and a real board are measured (T109, T17, 15 Oct 2026): the sources' SKÅDIS numbers hold, a slot drawn at 0.2 mm prints at the wide end of the board's slot width and about 0.3 mm shorter than its slot, and the grid holds across the seam, so the default clearance stays 0.2 mm (D129). **The repository is public on GitHub** (D103, T132, 15 Oct 2026), and pushes keep it in step with Gitea (D134); Pages is on, and a workflow publishes the page there after each green checks run on `main` (T132); the first deployment was checked live (15 Oct 2026), and the page has a tab icon (D137). The page has the shared design system's fonts, colours and dark theme (`design-system-base`, D111, D113) and its controls, every choice as buttons (`design-system-controls`, D112), and is its workbench: the board in a stage it always fits, beside the form or above it on a phone, with a theme toggle (`workbench`, D123). **`board-lightened` is done with full-depth members** (D141 to D145, 15 Oct 2026): about 41 % of the solid board's plastic, measured; whether the I-beam the owner asked about goes here or to the skeleton board waits on D146 and D147, and the test print is T151. The evidence for the board types and
+Last updated: 15 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The repositories are renamed `skadis-air` on Gitea and GitHub (A80, T89); the local folder is renamed between sessions. Keyhole heads and corner holes kept as an option (D130) are in `mounting-ikea`; IKEA's own board has none, its spacer held through a peg slot by a screw with a nub (T17). **`conn-standoff` is done** (D91 to D94, D97): a standoff for 1, 2 or 4 boards under "Connectors", the shared ones with a tunnel for hooks, sized from a replica of IKEA's hook on Printables (T98). A **seam-test pair** (D69) prints with the fit coupon, to test how tiles join. The first test print (the coupon and the pair) and a real board are measured (T109, T17, 15 Oct 2026): the sources' SKÅDIS numbers hold, a slot drawn at 0.2 mm prints at the wide end of the board's slot width and about 0.3 mm shorter than its slot, and the grid holds across the seam, so the default clearance stays 0.2 mm (D129). **The repository is public on GitHub** (D103, T132, 15 Oct 2026), and pushes keep it in step with Gitea (D134); Pages is on, and a workflow publishes the page there after each green checks run on `main` (T132); the first deployment was checked live (15 Oct 2026), and the page has a tab icon (D137). The page has the shared design system's fonts, colours and dark theme (`design-system-base`, D111, D113) and its controls, every choice as buttons (`design-system-controls`, D112), and is its workbench: the board in a stage it always fits, beside the form or above it on a phone, with a theme toggle (`workbench`, D123). **`board-lightened` is done with full-depth members** (D141 to D145, 15 Oct 2026): about 41 % of the solid board's plastic, measured; the I-beam the owner asked about goes to the skeleton board, on the same lattice (D146, D147), and the test print is T151. **Next: the design system's v0.3.0 (D153), then `mounting-ikea` (D152), then `board-skeleton`.** The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
@@ -105,55 +105,17 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D143 | **Its sizes: a 3 mm rim round each slot, measured from the slot's edge at the face (outside its chamfer), and 3 mm webs**; no tongue | 15 Oct 2026 |
 | D144 | **A 3 mm band along every edge, open or closed, and a pad round each screw hole and standoff**, the countersink plus the rim (13 mm across for a 4 mm screw), stay solid | 15 Oct 2026 |
 | D145 | **The rim and web widths are settings under "Advanced", refused below 1.2 mm and warned below 2 mm**; no pattern control until a second pattern exists | 15 Oct 2026 |
+| D146 | **Two board types on one lattice**: "Lightened", its members full depth, and "Skeleton", the same lattice with I-beam members, so D11's three boards stay; Azat's board, which Q12 chose for the skeleton, is that lattice with I-beams (measured, [research](research/2026-10-12-ultralight-measured.md)) | 15 Oct 2026 |
+| D147 | **The skeleton's I-beam**: as wide as the rim and web (3 mm, D143) at both faces for 0.6 mm, then a 45 degree taper, so it prints face down with no supports, to a core 1.2 mm wide; the rims and the edge band take the same profile, the screw pads stay full depth; the core width is a setting under "Advanced", refused below 0.8 mm and warned below 1.2 mm | 15 Oct 2026 |
+| D152 | **Next: `mounting-ikea`**, after the design system's v0.3.0 (D153); then `board-skeleton` | 15 Oct 2026 |
+| D153 | **The design system's v0.3.0 is adopted now** (backlog `design-system-v030`): its rules replace the page's local copies; a warning is outlined in the warning colour as well as headed in it, and the buttons under the 3D view wrap to the right on a narrow screen | 15 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
 ## Open questions
 
-`board-lightened` and the I-beam, asked on 15 Oct 2026. Azat's ultralight board, measured again
-([`research/2026-10-12-ultralight-measured.md`](research/2026-10-12-ultralight-measured.md), *The I-beam*), is
-pattern B exactly: a rim round every slot, diagonal webs to the four nearest slots, and no tongue; every one of its
-members, rims, webs and edges, is an I-beam, 2.8 mm wide at both faces and 0.8 mm through the middle
-([figure](figures/ibeam-profile.png)).
+`board-lightened` was planned and built on 15 Oct 2026 (D141 to D147; C148 to C150; the backlog row has the result,
+and commit 6dbdd41 its measurements). Waiting on the owner:
 
-- **D146** That lattice with I-beam members is the board Q12 chose for the skeleton type, so the lightened and the
-  skeleton boards need telling apart: (a) two types on one lattice: "Lightened", its members full depth (about
-  36 % of a solid board's plastic, inferred), and "Skeleton", the same lattice with I-beam members (about 22 to
-  25 %, inferred), built next from the same code, keeping D11's three boards; (b) one type, "Lightened", with a
-  choice of full-depth or I-beam members, and no skeleton type; (c) the lightened board takes the I-beam now and
-  the skeleton is left to be redefined. Recommended: (a). The full-depth lattice is needed by (a) and (b), and is
-  being built now.
-- **D147** The I-beam, for whichever type takes it: as wide as the rim and web (3 mm, D143) at both faces, for
-  0.6 mm at each, then a 45 degree taper, so it prints face down with no supports, to a core 1.2 mm wide (three
-  lines of a 0.4 mm nozzle; Azat's is 0.8 mm, two lines, and its users report sagging, though at 10 % infill); the
-  rims and the edge band take the same profile; the screw pads stay full depth. The core width is a setting under
-  "Advanced", refused below 0.8 mm and warned below 1.2 mm. Recommended: these.
-
-**The plan** (the rest logged as choices):
-
-- The library: `packages/core/src/lightened.ts` draws what stays solid (the edge band, the rims, the
-  webs and the screw pads) as one 2D shape, and cuts the face less that shape as one pocket cutter, through
-  `BoardCuts.extraCutters`, with the mounting's own cuts.
-- The board type: `board-types/lightened.ts`, "Lightened", and one line in the list. It takes the solid board's
-  settings (size, thickness, sides, clearance, chamfer, corner radius, mounting) and adds its own; its file is
-  `skadis-lightened-160x160.stl`, with the rim and web only when they differ from the start (as C85).
-- Tests first, each with a control that must fail: the board is one body; the narrowest web is at least the
-  minimum; no pocket comes within the rim of a slot or into a screw pad; less plastic than the solid board of the
-  same size; the contract test over every type; and the page builds and downloads it in the browser.
-- `npm run check:stl` on its samples, and `docs/extending.md` kept true: one file and one line.
-- Then a test print, the owner's: one lightened tile, with a real IKEA hook hung in it.
-
-Built on 15 Oct 2026 with full-depth members as planned (C148 to C150): 176 library tests, the browser
-test, and the STL check on three lightened samples. A 160 x 160 mm board is 46 867 mm³ against the solid
-board's 114 551 (41 %; the sketch's 36 % left out the slots' chamfers and the rounded pocket corners), and
-a 400 x 400 mm board builds in 260 ms in Node.
-
-- **D153** The shared design system's v0.3.0 is out (tag `abbe841` on `937f5c3`, checked): it carries the rules
-  this page added in its own CSS, so most of that CSS can go (backlog `design-system-v030`). What changes on the
-  page, as its session relays it: a warning (a board larger than the bed, a thickness outside 4 to 5.5 mm, a thin
-  rim or web) is outlined in the warning colour as well as headed in it; and under the 3D view, "Reset view" and
-  "Download STL" wrap to the right, below the sentence, when the screen is too narrow for both on one line. The
-  rest looks as it does now, which screenshots before and after would show. (a) adopt it now, before D152's
-  item: small, and the page stays on the shared rules; (b) after D152's item; (c) not yet. Recommended: (a).
 - **T151** Print a lightened board and hang an IKEA hook in it: an 80 x 80 mm one at its starting values
   is enough (`skadis-lightened-80x80.stl` from the page), in the filament you choose. Then say whether the
   rims and webs held, whether the hook sat straight in its slot, and what it weighs.
