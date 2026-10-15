@@ -147,6 +147,13 @@ test, and the STL check on three lightened samples. A 160 x 160 mm board is 46 8
 board's 114 551 (41 %; the sketch's 36 % left out the slots' chamfers and the rounded pocket corners), and
 a 400 x 400 mm board builds in 260 ms in Node.
 
+- **D153** The shared design system's v0.3.0 is out (tag `abbe841` on `937f5c3`, checked): it carries the rules
+  this page added in its own CSS, so most of that CSS can go (backlog `design-system-v030`). What changes on the
+  page, as its session relays it: a warning (a board larger than the bed, a thickness outside 4 to 5.5 mm, a thin
+  rim or web) is outlined in the warning colour as well as headed in it; and under the 3D view, "Reset view" and
+  "Download STL" wrap to the right, below the sentence, when the screen is too narrow for both on one line. The
+  rest looks as it does now, which screenshots before and after would show. (a) adopt it now, before D152's
+  item: small, and the page stays on the shared rules; (b) after D152's item; (c) not yet. Recommended: (a).
 - **T151** Print a lightened board and hang an IKEA hook in it: an 80 x 80 mm one at its starting values
   is enough (`skadis-lightened-80x80.stl` from the page), in the filament you choose. Then say whether the
   rims and webs held, whether the hook sat straight in its slot, and what it weighs.
