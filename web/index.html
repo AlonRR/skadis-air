@@ -98,7 +98,9 @@
                   <span class="ws-choice__face">Custom</span>
                 </label>
               </div>
-              <p class="ws-note">Most printers take a board of 200 × 200 mm.</p>
+              <!-- A maker's models, written by printer.ts when a maker is chosen (D170) -->
+              <div data-testid="printer-model" hidden></div>
+              <p class="ws-note" data-testid="bed-note">Most printers take a board of 200 × 200 mm.</p>
               <div data-testid="custom-bed" hidden>
                 <label class="ws-label">
                   Bed width (mm)

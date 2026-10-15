@@ -15,3 +15,4 @@ export * from './standoff.js';
 export * from './seam-test.js';
 export * from './lightened.js';
 export * from './skeleton.js';
+export * from './printers.js';

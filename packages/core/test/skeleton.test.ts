@@ -2,7 +2,7 @@
 // member an I-beam, full width at both faces for 0.6 mm, then narrowing at 45 degrees towards a 1.2 mm core.
 // Each claim is measured on sections of the built solid; each has a control that must fail.
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { makeSolidBoard, solidBoardParams, type SolidBoardParams } from '../src/board-solid.js';
 import { loadEngine } from '../src/engine.js';
 import { LATTICE_DEFAULTS, makeLightenedBoard } from '../src/lightened.js';
@@ -17,6 +17,9 @@ import {
 } from '../src/skeleton.js';
 import { meshOf } from '../src/stl.js';
 import { degenerateFacets } from './facets.js';
+
+// Every test here builds whole boards, about 1 s each, and on a busy machine three of them passed 5 s.
+vi.setConfig({ testTimeout: 30_000 });
 
 const engine = await loadEngine();
 const made: (Manifold | CrossSection)[] = [];

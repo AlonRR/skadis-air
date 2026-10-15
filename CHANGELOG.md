@@ -20,6 +20,9 @@ All notable changes to this project are recorded here. The format follows
 - The page is published at <https://alonrr.github.io/skadis-air/>, rebuilt from every change that passes
   the checks.
 - A tab icon: five slots of a SKÅDIS board in the page's blue, lighter when your system is set to dark.
+- Printers to choose from: under "Printer bed", a button for each of seven makers, then its models, 30 printers
+  in all, each bed from its maker's website (`docs/printer-beds.md`). The page remembers the printer, or a custom
+  bed, in your browser.
 - The page answers while a board is made: every build runs in the background, and a change made while a large
   board is being made replaces it.
 - A skeleton board, listed after the lightened one: the same lattice with every rim and web an I-beam, full width
