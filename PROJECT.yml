@@ -5,6 +5,6 @@ projects:
   - name:     Skådis Air
     kind:     build
     state:    active
-    next:     "design-system-v030: the design system's v0.3.0; then mounting-ikea, board-skeleton"
+    next:     "mounting-ikea: keyhole heads and the corner-slot test; then board-skeleton"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-15

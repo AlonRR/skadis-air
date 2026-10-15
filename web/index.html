@@ -23,32 +23,7 @@
     <link rel="stylesheet" href="/design-system/tokens.css" />
     <link rel="stylesheet" href="/design-system/components/bundle.css" />
     <style>
-      /* The design system's workbench (D111); what is here is only what this page adds to it. */
-      :root {
-        color-scheme: light;
-      }
-      :root[data-theme='dark'] {
-        color-scheme: dark; /* the browser's own controls, scroll bars and number spinners turn dark too */
-      }
-      html,
-      body {
-        margin: 0;
-      }
-      body {
-        background: var(--surface);
-        color: var(--ink);
-        font: var(--text-body);
-      }
-      input,
-      button {
-        font: inherit;
-      }
-      .ws-header__name {
-        margin: 0;
-      }
-      .ws-controls > :first-child {
-        margin-top: 0;
-      }
+      /* What this page adds to the design system's workbench (D111); its v0.3.0 holds the rest (D153). */
       .tagline {
         font: var(--text-legend);
       }
@@ -61,67 +36,9 @@
       [data-state='problem'] {
         color: var(--error);
       }
-      .ws-notice:empty {
-        display: none; /* a warning's place, kept beside its control, shows only when it holds one */
-      }
-      .ws-notice strong {
-        color: var(--warning);
-      }
-      .ws-input[type='number'] {
-        max-width: 12rem;
-      }
-      .ws-sides {
-        margin-top: var(--space-2);
-      }
-      .ws-choice + .ws-caps {
-        margin-top: var(--space-3); /* "Connectors" under the boards' buttons */
-      }
-      /* The stage: the canvas fills it and never sizes it, so a resize cannot feed back into itself */
-      .ws-stage__view {
-        position: relative;
-        overflow: hidden;
-      }
-      .ws-stage__view canvas {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        display: block;
-        touch-action: none;
-      }
-      .preview-message {
-        position: absolute;
-        inset: 50% var(--space-4) auto;
-        transform: translateY(-50%);
-        margin: 0;
-        text-align: center;
-        color: var(--ink-muted);
-      }
-      .preview-message:empty {
-        display: none;
-      }
-      .plan-line {
-        flex: 1 1 12rem;
-        overflow-wrap: anywhere; /* a long file name wraps rather than widening a phone's page */
-      }
-      .plan-actions {
-        display: flex;
-        gap: var(--space-2);
-      }
-      .hint-touch {
-        display: none;
-      }
-      @media (pointer: coarse) {
-        .hint-fine {
-          display: none;
-        }
-        .hint-touch {
-          display: inline;
-        }
-      }
     </style>
   </head>
-  <body>
+  <body class="ws-page">
     <div class="ws-workbench">
       <header class="ws-header">
         <h1 class="ws-header__name">Skådis Air</h1>
@@ -132,11 +49,11 @@
       </header>
       <section class="ws-stage" aria-label="The board in 3D">
         <div class="ws-stage__view" data-testid="preview" data-state="loading">
-          <p class="preview-message" data-testid="preview-message"></p>
+          <p class="ws-stage__message" data-testid="preview-message"></p>
         </div>
         <div class="ws-plan">
-          <span class="plan-line" data-testid="board-status" data-state="building">Making the board…</span>
-          <span class="plan-actions">
+          <span class="ws-plan__line" data-testid="board-status" data-state="building">Making the board…</span>
+          <span class="ws-plan__actions">
             <button type="button" class="ws-btn" data-testid="preview-reset">
               <span class="ws-ic" aria-hidden="true">&#xeb37;</span>Reset view
             </button>
@@ -148,8 +65,8 @@
         <div class="ws-status">
           <span data-testid="board-size"></span>
           <span
-            ><span class="hint-fine">Drag: turn · Wheel or pinch: zoom</span
-            ><span class="hint-touch">Drag: turn · Pinch: zoom</span></span
+            ><span class="ws-hint-fine">Drag: turn · Wheel or pinch: zoom</span
+            ><span class="ws-hint-touch">Drag: turn · Pinch: zoom</span></span
           >
         </div>
       </section>
@@ -167,7 +84,7 @@
               <legend>Board or connector</legend>
             </fieldset>
             <div data-testid="board-form"></div>
-            <div class="ws-notice" data-testid="bed-warning" aria-live="polite"></div>
+            <div class="ws-notice ws-notice--warning" data-testid="bed-warning" aria-live="polite"></div>
             <fieldset class="ws-fieldset" data-testid="printer">
               <legend>Printer</legend>
               <div class="ws-label">Printer bed</div>

@@ -31,6 +31,11 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- The page takes the design system's v0.3.0, which holds the rules the page had added itself. A warning is
+  now outlined in the warning colour as well as headed in it; on a phone the buttons under the 3D view sit
+  on the right under the status line, and on a 320 px screen they wrap instead of making the page scroll
+  sideways.
+
 - The page takes the look of the shared design system for printable-part tools: its fonts and
   colours, and a dark theme that follows your system setting, the 3D preview included.
 - Every choice on the page is a row of buttons instead of a list: the board or connector, under

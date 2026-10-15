@@ -132,6 +132,53 @@ test.describe('on a phone, 375 px wide, with a touch screen', () => {
   });
 });
 
+// The narrowest phones in use are 320 px wide. Before the design system's v0.3.0 the buttons under the 3D view
+// stayed on one line there and pushed the page 7 px wider than the screen (measured 15 Oct 2026, D153).
+test.describe('on a phone 320 px wide', () => {
+  test.use({ viewport: { width: 320, height: 700 }, hasTouch: true, isMobile: true });
+
+  test('the page does not scroll sideways, the buttons under the 3D view wrapping instead', async ({ page }) => {
+    await page.goto('./');
+    await ready(page);
+    await settle(page);
+    expect(await sidewaysScroll(page)).toBe(0);
+    const download = await page.getByRole('button', { name: 'Download STL' }).boundingBox();
+    expect(download !== null && download.x + download.width).toBeLessThanOrEqual(320);
+  });
+});
+
+// A warning is the design system's warning Notice (D153): outlined and headed in the warning colour, in either
+// theme. Before v0.3.0 only its headline took the colour.
+test.describe('a warning', () => {
+  for (const scheme of ['light', 'dark'] as const) {
+    test(`is outlined and headed in the warning colour, ${scheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.goto('./');
+      await ready(page);
+      await page.locator('input[name="thicknessMm"]').fill('6');
+      const notice = page.getByTestId('warning-thicknessMm');
+      await expect(notice).not.toBeEmpty();
+      const warning = await token(page, '--warning');
+      const drawn = await notice.evaluate((el) => ({
+        border: getComputedStyle(el).borderTopColor,
+        headline: getComputedStyle(el.querySelector('strong') ?? el).color,
+      }));
+      expect(near(rgb(drawn.headline), warning)).toBe(true);
+      expect(near(rgb(drawn.border), warning)).toBe(true);
+    });
+  }
+
+  test('an empty notice takes no room (the control: a filled one does)', async ({ page }) => {
+    await page.goto('./');
+    await ready(page);
+    const notice = page.getByTestId('warning-thicknessMm');
+    expect(await notice.evaluate((el) => el.getBoundingClientRect().height)).toBe(0);
+    await page.locator('input[name="thicknessMm"]').fill('6');
+    await expect(notice).not.toBeEmpty();
+    expect(await notice.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThan(20);
+  });
+});
+
 // The chosen option of a choice, and a closed side, are filled with the action colour; the rest are not.
 test('the chosen option and a closed side are filled, the others are not', async ({ page }) => {
   await page.goto('./');

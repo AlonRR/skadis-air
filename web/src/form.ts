@@ -55,7 +55,7 @@ export const chosenIn = (group: ParentNode): string =>
 // which does not and is a Notice (C120).
 const errorLine = (key: string) => element('span', { class: 'ws-error', 'data-testid': `error-${key}` });
 const warningBox = (key: string) =>
-  element('div', { class: 'ws-notice', 'data-testid': `warning-${key}`, 'aria-live': 'polite' });
+  element('div', { class: 'ws-notice ws-notice--warning', 'data-testid': `warning-${key}`, 'aria-live': 'polite' });
 const note = (text: string) => element('p', { class: 'ws-note' }, text);
 
 function numberField(s: NumberSetting, changed: () => void): { field: HTMLElement; read: () => string } {
