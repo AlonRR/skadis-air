@@ -100,6 +100,7 @@ export interface BoardCuts {
   clearanceOf?: (slot: SlotPlace) => number; // in place of slotClearanceMm, slot by slot (the fit coupon)
   extraCutters?: (engine: Engine) => Manifold[]; // cut away with the slots; freed here (the coupon's dots, screw holes)
   extraSolids?: (engine: Engine) => Manifold[]; // added to the plate before anything is cut; freed here (standoffs)
+  within?: (engine: Engine) => Manifold; // the plate is kept only inside this, before the rest; freed here (the skeleton)
 }
 
 export function makeSolidBoard(engine: Engine, params: SolidBoardParams, cuts: BoardCuts = {}): Manifold {
@@ -112,7 +113,8 @@ export function makeSolidBoard(engine: Engine, params: SolidBoardParams, cuts: B
   const face = keep(new CrossSection([boardOutline(width, height, p.sides, p.cornerRadiusMm)], 'Positive'), sections);
   // What is added goes on before the cuts, so a screw hole runs on through a standoff.
   const added = (cuts.extraSolids?.(engine) ?? []).map((m) => keep(m, solids));
-  const plate = keep(face.extrude(t), solids);
+  const whole = keep(face.extrude(t), solids);
+  const plate = cuts.within ? keep(whole.intersect(keep(cuts.within(engine), solids)), solids) : whole;
   const body = added.length > 0 ? keep(Manifold.union([plate, ...added]), solids) : plate;
 
   // Every slot is cut whole; at an edge the cut runs past the plate, which leaves the half or quarter.

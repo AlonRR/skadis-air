@@ -4,11 +4,12 @@ import type { AnyBoardType } from './define.js';
 import { FIT_COUPON } from './fit-coupon.js';
 import { LIGHTENED } from './lightened.js';
 import { SEAM_TEST } from './seam-test.js';
+import { SKELETON } from './skeleton.js';
 import { SOLID } from './solid.js';
 import { STANDOFF } from './standoff.js';
 
 // The boards first, then the connectors (D91): the page starts a new heading where the group changes.
-export const BOARD_TYPES: readonly AnyBoardType[] = [SOLID, LIGHTENED, FIT_COUPON, SEAM_TEST, STANDOFF];
+export const BOARD_TYPES: readonly AnyBoardType[] = [SOLID, LIGHTENED, SKELETON, FIT_COUPON, SEAM_TEST, STANDOFF];
 
 export function boardType(id: string): AnyBoardType {
   const type = BOARD_TYPES.find((t) => t.id === id);
@@ -20,5 +21,6 @@ export * from './define.js';
 export { FIT_COUPON } from './fit-coupon.js';
 export { LIGHTENED } from './lightened.js';
 export { SEAM_TEST } from './seam-test.js';
+export { SKELETON } from './skeleton.js';
 export { SOLID } from './solid.js';
 export { STANDOFF } from './standoff.js';

@@ -11,6 +11,7 @@ import {
   defineBoardType,
   groupOf,
   LIGHTENED,
+  SKELETON,
   printedPart,
   SOLID,
   type AnyBoardType,
@@ -304,6 +305,56 @@ describe('the lightened board type (D141 to D145)', () => {
     expect(name({ rimMm: 2.5, webMm: 4 })).toBe('skadis-lightened-160x160-rim-2.5mm-web-4mm.stl');
     expect(name({ widthMm: 240, webMm: 2, screwHead: 'round' })).toBe(
       'skadis-lightened-240x160-web-2mm-round-head.stl',
+    );
+  });
+});
+
+describe('the skeleton board type (D146, D147, D161)', () => {
+  const [skeleton, lightened] = [SKELETON, LIGHTENED];
+
+  it('is listed with the boards, right after the lightened board', () => {
+    const ids = BOARD_TYPES.map((t) => t.id);
+    expect(ids.indexOf('skeleton')).toBe(ids.indexOf('lightened') + 1);
+    expect(groupOf(skeleton)).toBe('board');
+  });
+
+  it("takes the lightened board's settings, at the same starting values, and a 1.2 mm core after the web", () => {
+    const keys = skeleton.settings.map((s) => s.key);
+    expect(keys.filter((k) => k !== 'coreMm')).toEqual(lightened.settings.map((s) => s.key));
+    expect(keys.indexOf('coreMm')).toBe(keys.indexOf('webMm') + 1);
+    const { coreMm, ...rest } = defaultValues(skeleton.settings);
+    expect(coreMm).toBe(1.2);
+    expect(rest).toEqual(defaultValues(lightened.settings));
+  });
+
+  it('puts the core under Advanced, refused under 0.8 mm and warned under 1.2 mm (D147)', () => {
+    expect(boardType('skeleton').settings.find((s) => s.key === 'coreMm')?.advanced).toBe(true);
+    expect(readValues(skeleton.settings, { coreMm: '0.7' }).ok).toBe(false);
+    expect(readValues(skeleton.settings, { coreMm: '1' }).warnings.map((w) => w.key)).toEqual(['coreMm']);
+    expect(readValues(skeleton.settings, { coreMm: '1.2' }).warnings).toEqual([]);
+    const wide = buildBoard(engine, skeleton, { ...defaultValues(skeleton.settings), coreMm: 3.5 });
+    expect(wide.ok).toBe(false);
+    if (!wide.ok) expect(wide.problem).toContain('core');
+  });
+
+  it('builds a board of the size asked for, with less plastic than the lightened board of the same values', () => {
+    const v = { ...defaultValues(skeleton.settings), widthMm: 120, heightMm: 80 };
+    const bones = buildBoard(engine, skeleton, v);
+    const { coreMm: _core, ...lightValues } = v;
+    const light = buildBoard(engine, lightened, lightValues);
+    if (!bones.ok || !light.ok) throw new Error('both should build');
+    made.push(bones.solid, light.solid);
+    const box = bones.solid.boundingBox();
+    expect([box.max[0], box.max[1], box.max[2]].map((n) => Math.round(n * 1e6) / 1e6)).toEqual([120, 80, 5]);
+    expect(bones.solid.volume()).toBeLessThan(0.9 * light.solid.volume());
+  });
+
+  it('names its file as the lightened board does, adding the core only when it differs from 1.2 mm', () => {
+    const v = defaultValues(skeleton.settings);
+    const name = (given: Record<string, string | number>) => boardFileName(skeleton, { ...v, ...given }, 'stl');
+    expect(name({})).toBe('skadis-skeleton-160x160.stl');
+    expect(name({ coreMm: 1.5, webMm: 4, screwHead: 'keyhole' })).toBe(
+      'skadis-skeleton-160x160-web-4mm-core-1.5mm-keyholes.stl',
     );
   });
 });

@@ -16,7 +16,8 @@ in `web/` makes a solid board of 40 mm tiles: you set its size, its thickness an
 (half slots, to join a neighbour) or closed, give it screw holes in its corners (countersunk or for a
 round head, or keyholes at the top so it lifts off its screws) and standoffs on the back, see it in 3D, and download it as an STL that lies as it
 prints. A lightened board is the same with open pockets cut between the slots: a rim round each slot,
-joined to its neighbours by diagonal webs, in about 41 % of the plastic. It warns when the board is larger than your printer's bed. It also makes a small coupon to
+joined to its neighbours by diagonal webs, in about 41 % of the plastic; a skeleton board makes every rim and web
+of that lattice an I-beam, thin through the middle, in about 32 %. It warns when the board is larger than your printer's bed. It also makes a small coupon to
 test the slots' fit first, a pair of tiles to test how two tiles meet, and a standoff, the first connector, to hold one board off the wall at a
 corner screw, or two or four where their corners meet. The SKÅDIS dimensions it uses come from published sources, checked against a real board
 with calipers, and a printed coupon set the slots' clearance ([`docs/skadis-standard.md`](docs/skadis-standard.md)).

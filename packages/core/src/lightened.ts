@@ -41,6 +41,18 @@ export function latticeParams(given: Partial<LatticeParams>): LatticeParams {
   return l;
 }
 
+/** How wide each kind of member is at one depth: the pockets are the face less these. */
+export interface Members {
+  rimGrowMm: number; // how far the rim reaches out from the slot's drawn edge
+  webMm: number;
+  bandMm: number; // the band along every edge
+}
+
+/** The lightened board's members, the same all through it (D143, D144). */
+export function latticeMembers(board: SolidBoardParams, lattice: LatticeParams): Members {
+  return { rimGrowMm: board.slotChamferMm + lattice.rimMm, webMm: lattice.webMm, bandMm: EDGE_BAND_MM };
+}
+
 /** A bar `width` wide from one point to another, its ends square: one web. */
 function bar([x0, y0]: Vec2, [x1, y1]: Vec2, width: number): Vec2[] {
   const length = Math.hypot(x1 - x0, y1 - y0);
@@ -60,7 +72,7 @@ function bar([x0, y0]: Vec2, [x1, y1]: Vec2, width: number): Vec2[] {
 export function pocketShape(
   engine: Engine,
   board: SolidBoardParams,
-  lattice: LatticeParams,
+  members: Members,
   pads: readonly Vec2[][],
 ): CrossSection {
   const { CrossSection } = engine;
@@ -75,7 +87,7 @@ export function pocketShape(
 
   const contours: Vec2[][] = [];
   for (const s of slotPlaces(board.columns, board.rows, board.sides)) {
-    contours.push(stadium(s.xMm, s.yMm, w, h, board.slotChamferMm + lattice.rimMm));
+    contours.push(stadium(s.xMm, s.yMm, w, h, members.rimGrowMm));
   }
   // Every tile's X, corner to corner through its centre, also where a closed side leaves out the corner's
   // slot: there the web runs into the edge band.
@@ -88,14 +100,14 @@ export function pocketShape(
         [1, 1],
         [-1, 1],
       ] as const) {
-        contours.push(bar(centre, [centre[0] + dx * half, centre[1] + dy * half], lattice.webMm));
+        contours.push(bar(centre, [centre[0] + dx * half, centre[1] + dy * half], members.webMm));
       }
     }
   }
   contours.push(...pads);
   const kept = keep(new CrossSection(contours, 'NonZero'));
   const face = keep(new CrossSection([boardOutline(width, height, board.sides, board.cornerRadiusMm)], 'Positive'));
-  const inner = keep(face.offset(-EDGE_BAND_MM, 'Round'));
+  const inner = keep(face.offset(-members.bandMm, 'Round'));
   const pockets = keep(inner.subtract(kept));
   // Round the pockets' corners: shrink, then grow back by the same amount, which also drops any sliver
   // of pocket too narrow to print.
@@ -108,7 +120,7 @@ export function pocketShape(
 export function latticeCuts(board: SolidBoardParams, lattice: LatticeParams, pads: readonly Vec2[][]): BoardCuts {
   return {
     extraCutters: (engine: Engine): Manifold[] => {
-      const pockets = pocketShape(engine, board, lattice, pads);
+      const pockets = pocketShape(engine, board, latticeMembers(board, lattice), pads);
       const prism = pockets.extrude(board.thicknessMm + 2);
       const cutter = prism.translate([0, 0, -1]);
       pockets.delete();
@@ -121,8 +133,10 @@ export function latticeCuts(board: SolidBoardParams, lattice: LatticeParams, pad
 /** Two parts' cuts as one: everything each cuts away or adds. */
 export function bothCuts(a: BoardCuts, b: BoardCuts): BoardCuts {
   const clearanceOf = a.clearanceOf ?? b.clearanceOf;
+  const within = a.within ?? b.within;
   return {
     ...(clearanceOf === undefined ? {} : { clearanceOf }),
+    ...(within === undefined ? {} : { within }),
     extraCutters: (engine) => [...(a.extraCutters?.(engine) ?? []), ...(b.extraCutters?.(engine) ?? [])],
     extraSolids: (engine) => [...(a.extraSolids?.(engine) ?? []), ...(b.extraSolids?.(engine) ?? [])],
   };

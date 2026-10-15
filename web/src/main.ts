@@ -60,7 +60,10 @@ async function rebuild(type: AnyBoardType, form: Form): Promise<void> {
   }
   const what = groupOf(type) === 'connector' ? 'connector' : 'board';
   setStatus('building', `Making the ${what}…`);
-  const built = buildBoard(await engine(), type, read.values);
+  const ready = await engine();
+  // Let the page show "Making…" before the build holds it: a large skeleton board takes seconds (C164).
+  await new Promise<void>((done) => requestAnimationFrame(() => setTimeout(done, 0)));
+  const built = buildBoard(ready, type, read.values);
   board?.delete();
   board = undefined;
   if (!built.ok) {

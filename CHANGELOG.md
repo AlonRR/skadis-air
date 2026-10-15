@@ -20,6 +20,10 @@ All notable changes to this project are recorded here. The format follows
 - The page is published at <https://alonrr.github.io/skadis-air/>, rebuilt from every change that passes
   the checks.
 - A tab icon: five slots of a SKÅDIS board in the page's blue, lighter when your system is set to dark.
+- A skeleton board, listed after the lightened one: the same lattice with every rim and web an I-beam, full width
+  at both faces and narrowing at 45 degrees to a 1.2 mm core through the middle, so it prints face down with no
+  face overhanging more than 45 degrees. A 160 x 160 mm board takes about 32 % of the solid board's plastic. The
+  core can be set under "Advanced", from 0.8 mm, with a warning under 1.2 mm.
 - Keyholes, a choice among the screw holes: in the top two corners, so a board drops onto two pan-head screws
   and lifts off them, the head sunk in a channel from the front; countersunk lock screws at the bottom as an
   option under "Advanced". Standoffs are not offered with them.
