@@ -10,6 +10,8 @@ export default defineConfig({
   },
   // Relative asset URLs: the same build works under a GitHub Pages /<repo>/ path.
   base: './',
+  // The build worker (D166) imports the library and the engine as modules.
+  worker: { format: 'es' },
   build: {
     outDir: 'out/site', // every generated file lives under out/ (CLAUDE.md, output layout)
     emptyOutDir: true,

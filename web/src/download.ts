@@ -1,10 +1,9 @@
 // The download (backlog item download-stl; D60): the board the page last built, as a binary STL
 // named for its type, size and closed sides (C52), lying as it prints: face down (D66). Whatever is generated is the user's (D8).
+// The build worker writes the file (build-worker.ts); this hands it to the browser.
 // saveFile is parametric-window-sealer's web/src/download-dialog.ts function (C32).
-import type { Manifold } from 'manifold-3d';
-import { meshOf, printedPart, toStl, type AnyBoardType } from 'skadis-air';
 
-function saveFile(name: string, bytes: Uint8Array, type: string): void {
+export function saveFile(name: string, bytes: Uint8Array, type: string): void {
   const blob = new Blob([new Uint8Array(bytes)], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -15,15 +14,4 @@ function saveFile(name: string, bytes: Uint8Array, type: string): void {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
-}
-
-/** The part as it prints: a board face down (D66), turned over from the way the page shows it; a part
- * that says so, as built (C101). */
-export function downloadStl(type: AnyBoardType, board: Manifold, fileName: string): void {
-  const printed = printedPart(type, board);
-  try {
-    saveFile(fileName, toStl(meshOf(printed), fileName.replace(/\.stl$/, '')), 'model/stl');
-  } finally {
-    printed.delete();
-  }
 }

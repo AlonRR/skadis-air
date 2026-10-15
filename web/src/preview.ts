@@ -10,7 +10,7 @@
 import { AmbientLight, Box3, Color, DirectionalLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import type { Group } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import type { Manifold } from 'manifold-3d';
+import type { MeshData } from 'skadis-air';
 import { distanceToFit, zoomOutLimit, type View } from './framing.js';
 import { boardScene, disposeScene, paintBoards } from './preview-scene.js';
 
@@ -34,7 +34,7 @@ const REFIT_SHARE = 0.95;
 
 export interface Preview {
   /** Draws the board, or empties the preview when there is none; `framing` decides when to frame again. */
-  show(board: Manifold | null, framing: string): void;
+  show(board: MeshData | null, framing: string): void;
 }
 
 function webglAvailable(): boolean {
@@ -157,13 +157,13 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
   say('Preparing the preview…');
 
   return {
-    show(solid, framing) {
+    show(mesh, framing) {
       if (board) {
         disposeScene(board);
         scene.remove(board);
         board = null;
       }
-      if (!solid) {
+      if (!mesh) {
         container.dataset['state'] = 'waiting';
         container.dataset['triangles'] = '0';
         say('Correct the settings marked in the form to see the preview.');
@@ -172,7 +172,7 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
         return;
       }
       try {
-        board = boardScene(solid);
+        board = boardScene(mesh);
       } catch (error) {
         container.dataset['state'] = 'error';
         say(`The preview could not be drawn: ${String(error)}`);

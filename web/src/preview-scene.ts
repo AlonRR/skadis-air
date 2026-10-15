@@ -5,8 +5,7 @@
 // system's tokens (D111).
 import { BufferAttribute, BufferGeometry, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh } from 'three';
 import { MeshPhongMaterial, type Object3D } from 'three';
-import type { Manifold } from 'manifold-3d';
-import { meshOf } from 'skadis-air';
+import type { MeshData } from 'skadis-air';
 
 // Shared by every board drawn; never disposed.
 // Flat shading: a board is flat faces, and normals averaged across a face and its edges streaked the
@@ -23,9 +22,8 @@ export function paintBoards(board: string, outline: string): void {
   OUTLINE.color.setStyle(outline);
 }
 
-/** The board as a mesh and its outline. The solid is only read: it stays the caller's to free. */
-export function boardScene(solid: Manifold): Group {
-  const { positions, triangles } = meshOf(solid);
+/** The board as a mesh and its outline, from the triangles the build sent. */
+export function boardScene({ positions, triangles }: MeshData): Group {
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new BufferAttribute(positions, 3));
   geometry.setIndex(new BufferAttribute(triangles, 1));

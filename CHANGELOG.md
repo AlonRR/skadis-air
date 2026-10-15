@@ -20,6 +20,8 @@ All notable changes to this project are recorded here. The format follows
 - The page is published at <https://alonrr.github.io/skadis-air/>, rebuilt from every change that passes
   the checks.
 - A tab icon: five slots of a SKÅDIS board in the page's blue, lighter when your system is set to dark.
+- The page answers while a board is made: every build runs in the background, and a change made while a large
+  board is being made replaces it.
 - A skeleton board, listed after the lightened one: the same lattice with every rim and web an I-beam, full width
   at both faces and narrowing at 45 degrees to a 1.2 mm core through the middle, so it prints face down with no
   face overhanging more than 45 degrees. A 160 x 160 mm board takes about 32 % of the solid board's plastic. The
