@@ -100,10 +100,10 @@ From the IKEA assembly PDF AA-1891323-4 (verified, IKEA, drawings read page by p
 
 - **Parts per board:** one steel wall rail (part numbers 153300/153303 for 36x56, 153301/153304 for 56x56, 153302/153305 for 76x56), **4 slotted thumb screws** (153311/153312), **2 cylindrical spacers** (152741/153307). Wall screws are not included.
 - **Step 1-2:** the rail is screwed to the wall with 2 screws. Wall-screw spacing X = **200 mm** (36x56), **400 mm** (56x56), **600 mm** (76x56).
-- **Step 3:** the 2 spacers are screwed onto the back of the board at the **two lower corners**, using a thumb screw through a dedicated round mounting hole in the board.
+- **Step 3:** the 2 spacers are screwed onto the back of the board at the **two lower corners**, using a thumb screw through a dedicated round mounting hole in the board. (Corrected 15 Oct 2026: the owner's board has no such hole; IKEA's spacer is held through a peg slot by a screw with a nub. See `skadis-standard.md`.)
 - **Step 4:** the board's two **upper corners** are screwed to the rail's two bent-out end tabs (the tabs are the upper standoffs).
 - **Stacking (info panel, page 7):** rails for vertically stacked boards are **565 mm** apart; for boards side by side, the gap between the inner wall-screw holes of adjacent rails is **165 mm**.
-- **Mounting holes:** the overview drawing shows 4 round holes, one near each corner, placed in the slot field (they appear in place of a slot position). (inferred from the drawing; no dimension given.)
+- **Mounting holes:** the overview drawing shows 4 round holes, one near each corner, placed in the slot field (they appear in place of a slot position). (inferred from the drawing; no dimension given.) (Corrected 15 Oct 2026: there are none; see step 3.)
 
 So IKEA's scheme is **one top rail with integral standoff tabs + two loose bottom spacers**, not four identical corner standoffs. Many printed "wall mount" designs replace exactly these parts.
 

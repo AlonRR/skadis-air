@@ -42,8 +42,8 @@ specification or a person's measurement; **code** a value in an existing generat
 | Value | Figure | Source | Label | Status |
 |---|---|---|---|---|
 | Distance from the wall | 20 mm; the standoffs' starting height (D75) | 6d6178 ("roughly 20mm away from the wall") | community | measured (T17): IKEA's spacer is 19.89 mm long |
-| IKEA's scheme | one steel rail at the top whose bent tabs hold the two upper corners, two loose spacers at the lower corners, four thumb screws through round holes near the corners | IKEA AA-1891323-4 | IKEA | settled |
-| IKEA's corner holes | **none on the owner's board**; IKEA's assembly drawings, as the survey read them, screw each lower spacer on through a round hole near the corner (its section 1.5) | the owner's calipers (T17, 15 Oct 2026); IKEA AA-1891323-4, step 3 | measured; IKEA | the two disagree; unresolved (D130) |
+| IKEA's scheme | one steel rail at the top whose bent tabs hold the two upper corners, two loose spacers at the lower corners, and four thumb screws; a spacer is held through a peg slot by a screw with a nub | IKEA AA-1891323-4; the owner, 15 Oct 2026 | IKEA; the owner | settled |
+| IKEA's corner holes | **none**: the owner's board has no corner hole, and IKEA's spacer is held through a peg slot by a screw with a nub; the survey had read the drawings as a round hole near each lower corner (its section 1.5) | the owner (T17, 15 Oct 2026); IKEA AA-1891323-4, step 3 | measured; the owner | settled; corner holes stay a printed board's option (D130) |
 | Room an IKEA hook takes behind the board | its back tab, 4.5 mm wide, sits up to 6 mm behind the back face and reaches 8.25 mm below the bottom end of its slot, where the hook rests; a second peg reaches about 2 mm through the slot 40 mm below | measured on 14 Oct 2026 from the STL of [IKEA Skadis Hook, "IKEA part number: 203.208.02"](https://www.printables.com/model/107818) (Macmade, public domain), a replica of IKEA's hook; the popular printed [IKEA Skadis Hook](https://www.printables.com/model/129018) (Fabber) takes less, 4.5 mm behind and 5 mm below | community, measured | `<<CONFIRM>>`: no real hook measured |
 | Gap between IKEA boards hung by the instructions | 5 mm, both stacked and side by side, which puts the slot grid 5 mm off across the seam | from IKEA's rail spacing (565 mm for 560 mm boards) and wall-screw spacing (200 / 400 / 600 mm) | inferred | `<<CONFIRM>>` |
 
@@ -106,4 +106,5 @@ What they show:
   difference within the measurements' error, and l with a printed slot's width puts the slots either
   side 40 mm apart, so the grid holds across the seam (D69; inferred).
 
-D129 decides the default clearance from these.
+From these the default clearance stays 0.2 mm (D129, 15 Oct 2026): as wide as the owner prefers, and about 0.3 mm
+short of the board's slot in length.
