@@ -1,0 +1,24 @@
+This repository is licensed under two licences, chosen by the kind of work:
+
+  Code: packages/, web/, scripts/, tests/, the git hooks and the tools' configuration
+      Mozilla Public License 2.0 (MPL-2.0)
+      Full text: LICENSES/MPL-2.0.txt
+
+  Everything else: docs/, the README and the figures
+      CERN Open Hardware Licence Version 2 - Strongly Reciprocal (CERN-OHL-S-2.0)
+      Full text: LICENSES/CERN-OHL-S-2.0.txt
+
+The design system's fonts in web/public/design-system/fonts/ keep their own licences,
+OFL-1.1 with CC-BY-4.0 and MIT glyphs; their texts are in LICENSES/ and beside the fonts.
+
+Every file states its own licence, following the REUSE specification
+(https://reuse.software/): an SPDX-License-Identifier header in the file, or
+an entry in REUSE.toml for files that cannot carry one.
+
+The files the tool generates are not part of this repository. The STL and other
+files it makes, and anything printed from them, are yours to use, change, share or
+sell for any purpose, with no conditions from this project.
+
+See the "Licence" section of README.md.
+
+Copyright 2026 Alon A. Rabinowitz
