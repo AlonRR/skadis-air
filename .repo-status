@@ -1,10 +1,17 @@
 # .repo-status -- the publish decision, where tooling can read it.
 # Template: publish-status.example in repo-secret-scan. One of: never | maybe | not-yet | ready | public.
 
-publish: not-yet
-reason:  meant to be public so people can make their boards from a web page
-review:  2026-10-12
-blockers:
-  - nothing is built yet
-  - the survey in docs/research names other designers' published models; to be reviewed before publishing
-  - a Python bytecode file with a machine path was rewritten out of history on 12 Oct 2026 (A35), but Gitea serves the old commit bf9164146aa1c0d6291fd762416064d82edc2597 by its full SHA until the forge prunes unreferenced objects
+publish: ready
+reason:  meant to be public so people can make their boards from a web page; the owner said go public (D103, 15 Oct 2026)
+review:  2026-10-15
+
+# The blockers of 12 Oct 2026, and what cleared each on 15 Oct 2026:
+# - "nothing is built yet": v0.1.0 was released on 12 Oct 2026, and the page has grown since (CHANGELOG.md).
+# - the survey in docs/research names other designers' published models: it was read in full for anything
+#   that must not be published on 12 Oct 2026 (docs/backlog.md, row skadis-standard), and names designers
+#   only as the credited authors of the published models it cites.
+# - the commit rewritten out of history on 12 Oct 2026 (A35) was never on GitHub: a fetch of its full SHA
+#   from GitHub is refused ("not our ref"), while the same fetch of a commit GitHub has succeeds. The
+#   Gitea copy stays private.
+# And a full-history scan with repo-secret-scan: 43 of 43 commits, 120 of 120 pattern self-tests, no
+# binary documents, every hit a test fixture or the public noreply identity.

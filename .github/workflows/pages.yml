@@ -1,0 +1,61 @@
+# .github/workflows/pages.yml
+#
+# Publishes the page on GitHub Pages (D103, 15 Oct 2026), at https://alonrr.github.io/skadis-air/.
+#
+# It deploys only a commit the checks workflow passed: it runs when a `checks` run on main ends,
+# and only if that run succeeded, then builds that same commit (C135). A manual run deploys main
+# as it is.
+#
+# Skipped while the repository is private: Pages needs it public and switched on (Settings ->
+# Pages -> Source: GitHub Actions), both the owner's, and a skipped run is not a red one (C135).
+# Gitea has its Actions off for this repository (D105), so this runs on GitHub alone.
+#
+# tests/test-workflow.sh holds this file to actionlint and to the rules above, with controls.
+name: pages
+
+on:
+  workflow_run:
+    workflows: [checks]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false   # never stop a deployment halfway
+
+jobs:
+  deploy:
+    if: >-
+      ${{ !github.event.repository.private &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write      # to deploy to Pages
+      id-token: write   # to prove the deployment comes from this workflow
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}   # the commit the checks passed
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install the locked dependencies
+        run: npm ci
+      - name: Build the page
+        run: npm run build -w skadis-air-web
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: web/out/site
+      - id: deployment
+        uses: actions/deploy-pages@v5

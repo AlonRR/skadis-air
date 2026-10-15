@@ -5,6 +5,6 @@ projects:
   - name:     Skådis Air
     kind:     build
     state:    active
-    next:     "conn-standoff: a standoff connector for 1, 2 or 4 boards"
+    next:     "board-lightened: the lightened board"
     trackers: [docs/status.md, docs/backlog.md]
-    review:   2026-10-14
+    review:   2026-10-15

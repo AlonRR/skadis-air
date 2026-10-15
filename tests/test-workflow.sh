@@ -14,29 +14,35 @@
 #      carry the version in their names. And `curl` without -f saved the 404 page.
 #   3. pre-commit was installed with pip; the house rule is uv.
 # and 4, this repo's: the npm workspace's checks and the browser test run in CI.
+# And .github/workflows/pages.yml (D103, 15 Oct 2026), to actionlint and to 5, its rules: it is
+# skipped while the repository is private, deploys only a commit the checks passed, builds that
+# commit, and may deploy to Pages but never write to the repository (C135).
 #
 # The controls: the same checks run against copies of the workflow, each with one of those
 # bugs put back, and each copy must FAIL. A check that cannot fail is not a check.
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REAL="$HERE/.github/workflows/checks.yml"
+PAGES="$HERE/.github/workflows/pages.yml"
 BASE="$HERE/.pre-commit-config.yaml"
+
+# The helpers below read the caller's `wf` and count into its `failed`.
+check() { # check <label> <command...>
+  label=$1
+  shift
+  if "$@" > /dev/null 2>&1; then
+    printf '    ok    %s\n' "$label"
+  else
+    printf '    FAIL  %s\n' "$label"
+    failed=$((failed + 1))
+  fi
+}
+absent() { ! grep -qE "$1" "$wf"; }
+present() { grep -qE "$1" "$wf"; }
 
 # checks <workflow> - prints one line per check, returns the number that failed
 checks() {
   local wf=$1 failed=0 label
-  check() { # check <label> <command...>
-    label=$1
-    shift
-    if "$@" > /dev/null 2>&1; then
-      printf '    ok    %s\n' "$label"
-    else
-      printf '    FAIL  %s\n' "$label"
-      failed=$((failed + 1))
-    fi
-  }
-  absent() { ! grep -qE "$1" "$wf"; }
-  present() { grep -qE "$1" "$wf"; }
   # Command lines only: a comment explaining why -f matters mentions curl without it.
   curl_lines() { grep -vE '^[[:space:]]*#' "$wf" | grep -E '(^|[[:space:]])curl[[:space:]]'; }
   every_curl_fails() { curl_lines > /dev/null && ! curl_lines | grep -vqE 'curl[[:space:]]+-[a-zA-Z]*f'; }
@@ -64,24 +70,44 @@ checks() {
   return "$failed"
 }
 
-echo "the workflow:"
+# pages_checks <workflow> - the same for the Pages workflow
+pages_checks() {
+  local wf=$1 failed=0 label
+  check "actionlint passes" uvx --from actionlint-py actionlint "$wf"
+  check "5. skipped while the repository is private" present '!github\.event\.repository\.private'
+  check "5. it runs when a checks run on main ends" present 'workflows:[[:space:]]*\[checks\]'
+  check "5. ... and deploys only if that run succeeded" present "workflow_run\.conclusion == 'success'"
+  check "5. it builds the commit the checks passed" present 'ref:[[:space:]]+\$\{\{ github\.event\.workflow_run\.head_sha'
+  check "5. the locked dependencies are installed (npm ci)" present 'run:[[:space:]]+npm ci$'
+  check "5. it builds the page" present 'run:[[:space:]]+npm run build -w skadis-air-web$'
+  check "5. it uploads the built site" present 'path:[[:space:]]+web/out/site$'
+  check "5. it cannot write to the repository" absent 'contents:[[:space:]]*write'
+  check "5. it may deploy to Pages" present 'pages:[[:space:]]*write'
+  check "5. ... with the token that proves where it ran" present 'id-token:[[:space:]]*write'
+  return "$failed"
+}
+
+echo "the checks workflow:"
 out="$(checks "$REAL")"
 printf '%s\n' "$out"
-pass=$(grep -c '^    ok ' <<< "$out")
-fail=$(grep -c '^    FAIL ' <<< "$out")
+echo "the pages workflow:"
+pages_out="$(pages_checks "$PAGES")"
+printf '%s\n' "$pages_out"
+pass=$(printf '%s\n%s\n' "$out" "$pages_out" | grep -c '^    ok ')
+fail=$(printf '%s\n%s\n' "$out" "$pages_out" | grep -c '^    FAIL ')
 controls=0
 refused=0
 
 # The controls: one bug put back per copy; the checks must fail on each.
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-control() { # control <label> <sed expression>
+control() { # control <label> <workflow> <checks function> <sed expression>
   local copy="$tmp/control.yml"
-  sed -e "$2" "$REAL" > "$copy"
+  sed -e "$4" "$2" > "$copy"
   controls=$((controls + 1))
-  if cmp -s "$copy" "$REAL"; then
+  if cmp -s "$copy" "$2"; then
     printf '    FAIL  control "%s" changed nothing in the workflow\n' "$1"
-  elif checks "$copy" > /dev/null; then
+  elif "$3" "$copy" > /dev/null; then
     printf '    FAIL  control "%s": the checks passed a broken workflow\n' "$1"
   else
     printf '    ok    control "%s": refused\n' "$1"
@@ -89,11 +115,16 @@ control() { # control <label> <sed expression>
   fi
 }
 echo "the controls, each a broken copy that must be refused:"
-control "the identity hook not skipped" '/SKIP: house-identity/d'
-control "an unversioned betterleaks download" 's|releases/download/v\${BETTERLEAKS_VERSION}|releases/latest/download|'
-control "curl without -f" 's/curl -fsSLO/curl -sSLO/'
-control "pre-commit through pip" 's|run: uvx pre-commit@4.6.2 run|run: pip install pre-commit \&\& pre-commit run|'
-control "no browser test" '/run: npm run test:browser -w skadis-air-web/d'
+control "the identity hook not skipped" "$REAL" checks '/SKIP: house-identity/d'
+control "an unversioned betterleaks download" "$REAL" checks 's|releases/download/v\${BETTERLEAKS_VERSION}|releases/latest/download|'
+control "curl without -f" "$REAL" checks 's/curl -fsSLO/curl -sSLO/'
+control "pre-commit through pip" "$REAL" checks 's|run: uvx pre-commit@4.6.2 run|run: pip install pre-commit \&\& pre-commit run|'
+control "no browser test" "$REAL" checks '/run: npm run test:browser -w skadis-air-web/d'
+control "pages deployed while private" "$PAGES" pages_checks 's/!github\.event\.repository\.private &&//'
+control "pages deployed after failed checks" "$PAGES" pages_checks "s/ || github.event.workflow_run.conclusion == 'success'//"
+control "pages built from main, not the checked commit" "$PAGES" pages_checks '/workflow_run\.head_sha/d'
+control "pages may write to the repository" "$PAGES" pages_checks 's/contents: read$/contents: write/'
+control "pages uploads the wrong folder" "$PAGES" pages_checks 's|path: web/out/site|path: web/out|'
 
 printf '\n%s checks passed, %s failed; %s of %s controls refused\n' "$pass" "$fail" "$refused" "$controls"
 [ "$fail" -eq 0 ] && [ "$pass" -gt 0 ] && [ "$refused" -eq "$controls" ]
