@@ -124,6 +124,21 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 `board-lightened` and `mounting-ikea` were planned and built on 15 Oct 2026 (D141 to D147, D155 to D158; C148 to
 C150, C159, C160; the backlog rows have the results). Waiting on the owner:
 
+`printer-presets`, asked on 15 Oct 2026. Its list is the reference's `docs/printer-beds.md` (C25): 29 printers
+from 7 makers, each bed read from the maker's own site on 5 Oct 2026, from 180 x 180 mm (Prusa MINI+, Bambu Lab
+A1 mini) to 360 x 360 mm (Prusa XL+). The design system has no drop-down list; the page's choices are its
+Choice buttons.
+
+- **D170** How a printer is chosen under "Printer bed": (a) the two choices there now, then one button per
+  maker (Prusa, Bambu Lab, Creality, Anycubic, Elegoo, Sovol, Flashforge); choosing a maker shows a second row
+  of its models as buttons, at most nine; all in the Choice buttons the page has; (b) a third choice, "From the
+  list", showing a drop-down of every printer grouped by maker, which the design system would be asked to add;
+  (c) one drop-down for everything, the default and "Custom" in it. Recommended: (a).
+- **D171** The chosen printer, or a custom size, is remembered in this browser, as the theme is, so a returning
+  user's boards are checked against their own bed. Recommended: yes.
+- **D172** The list adds the Original Prusa i3 MK3S+, your printer, 250 x 210 mm, from Prusa's page for its
+  10th Anniversary Edition ("25x21x21 cm"; the MK3S+ page itself now leads to the MK4S). Recommended: yes.
+
 - **T151** Print a lightened board with keyholes and hang it: an 80 x 80 mm one is enough
   (`skadis-lightened-80x80-keyholes.stl` from the page, "Keyholes" under "Screw holes"), in the filament you
   choose. Hang it on two 4 mm pan-head screws and put an IKEA hook in it. Then say whether the rims and webs
