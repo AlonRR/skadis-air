@@ -120,6 +120,18 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 `board-lightened` and `mounting-ikea` were planned and built on 15 Oct 2026 (D141 to D147, D155 to D158; C148 to
 C150, C159, C160; the backlog rows have the results). Waiting on the owner:
 
+`board-skeleton`, asked on 15 Oct 2026. D147's I-beam fits the webs and the edge band, which narrow from both
+sides, 3 mm to 1.2 mm over 0.9 mm of depth. A rim narrows from one side only, from 4 mm out from the slot's
+wall at the face (3 mm outside its 1 mm chamfer) to 1.2 mm: at 45 degrees that takes 2.8 mm of depth after the
+0.6 mm at the face, and a 5 mm board has 2.5 mm from each face to its middle. The shares below are worked out
+from the board's sections at every 0.05 mm (inferred until the part is built); D146's 22 to 25 % came from
+Azat's thinner board and was too low.
+
+- **D161** The rims' taper: (a) every member at 45 degrees, so the rims stay 2.1 mm wide through the middle:
+  about 33 % of a solid board's plastic (the lightened board is 41 %); (b) the rims taper more steeply, about
+  65 degrees from the vertical, to reach 1.2 mm: about 30 %, but the back face, which prints last, then
+  overhangs more steeply than 45 degrees (Azat's rims taper at about 56). Recommended: (a).
+
 - **T151** Print a lightened board with keyholes and hang it: an 80 x 80 mm one is enough
   (`skadis-lightened-80x80-keyholes.stl` from the page, "Keyholes" under "Screw holes"), in the filament you
   choose. Hang it on two 4 mm pan-head screws and put an IKEA hook in it. Then say whether the rims and webs
