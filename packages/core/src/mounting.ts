@@ -44,12 +44,39 @@ export function mountingParams(given: Partial<MountingParams>): MountingParams {
 
 const nice = (n: number) => String(Math.round(n * 100) / 100);
 
+/** The four screw holes' centres on a board of this size: one in each corner tile (D73). */
+export function screwPlaces(board: Pick<SolidBoardParams, 'columns' | 'rows'>): readonly (readonly [number, number])[] {
+  const [width, height, i] = [TILE_MM * board.columns, TILE_MM * board.rows, SCREW_INSET_MM];
+  return [
+    [i, i],
+    [width - i, i],
+    [i, height - i],
+    [width - i, height - i],
+  ];
+}
+
+/** How far a pad that nothing may be cut from reaches past a screw's countersink, all round (D144; C83's margin). */
+export const PAD_MARGIN_MM = 2;
+
+/**
+ * The pads a lightened board keeps solid (D144), one round each screw hole or standoff: the countersink and
+ * 2 mm all round, 13 mm across for a 4 mm screw, which also covers the standoff. None where there is neither.
+ */
+export function screwPads(
+  m: MountingParams,
+  board: Pick<SolidBoardParams, 'columns' | 'rows'>,
+): { xMm: number; yMm: number; diameterMm: number }[] {
+  if (m.screwHead === 'none' && m.standoffHeightMm === 0) return [];
+  const diameterMm = screwHole(m.screwMm).countersinkMm + 2 * PAD_MARGIN_MM;
+  return screwPlaces(board).map(([xMm, yMm]) => ({ xMm, yMm, diameterMm }));
+}
+
 /** What the mounting adds to and cuts from a board of this size: BoardCuts for makeSolidBoard. */
 export function mountingCuts(
   m: MountingParams,
   board: Pick<SolidBoardParams, 'columns' | 'rows' | 'thicknessMm'>,
 ): BoardCuts {
-  const [width, height, t] = [TILE_MM * board.columns, TILE_MM * board.rows, board.thicknessMm];
+  const t = board.thicknessMm;
   const { holeMm, countersinkMm, standoffDiameterMm } = screwHole(m.screwMm);
   const depth = (countersinkMm - holeMm) / 2; // 45 degree walls
   if (m.screwHead === 'countersunk' && t - depth < MIN_PLAIN_HOLE_MM) {
@@ -58,13 +85,7 @@ export function mountingCuts(
         'thick; choose a round head or a smaller screw',
     );
   }
-  const i = SCREW_INSET_MM;
-  const places = [
-    [i, i],
-    [width - i, i],
-    [i, height - i],
-    [width - i, height - i],
-  ] as const;
+  const places = screwPlaces(board);
   const back = -m.standoffHeightMm - 1; // through the standoffs too, and a millimetre beyond
   const levels: [number, number][] =
     m.screwHead === 'countersunk'

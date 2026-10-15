@@ -44,7 +44,13 @@ The fit coupon (`fit-coupon.ts`) was then the first real type added this way.
 
 A type built on the solid board passes `makeSolidBoard` a third argument instead of copying it: a
 clearance per slot (`clearanceOf`), more to cut away (`extraCutters`), as the fit coupon does, and
-more to add before anything is cut (`extraSolids`).
+more to add before anything is cut (`extraSolids`). Two parts' cuts go together with `bothCuts`, as the
+lightened board joins its pockets to the mounting's holes (`lightened.ts`).
+
+**A board that takes all of the solid board's settings** lists `BOARD_SETTINGS` from
+`board-types/solid.ts`, then its own, then `MOUNTING_SETTINGS`, and builds from `boardParamsOf(values)`
+and names its file from `boardLabel(values)`, as the lightened board (`board-types/lightened.ts`) does;
+so a setting added to the solid board reaches it too, and its test checks it has every one of them.
 
 **Mounting** (screw holes and standoffs, D73 to D75) is three edits in such a type, as the solid board
 has it (C87): `...MOUNTING_SETTINGS` at the end of its `defineSettings([...])`, and

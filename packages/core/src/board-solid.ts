@@ -53,7 +53,7 @@ export function solidBoardParams(
 }
 
 /** The board's outline, counter-clockwise, with a rounded corner wherever both of its sides are closed. */
-function outline(width: number, height: number, sides: Sides, radius: number): Vec2[] {
+export function boardOutline(width: number, height: number, sides: Sides, radius: number): Vec2[] {
   const quarter = CIRCLE_SEGMENTS / 4;
   const corner = (x: number, y: number, a: Side, b: Side, cx: number, cy: number, from: number): Vec2[] =>
     radius > 0 && sides[a] === 'closed' && sides[b] === 'closed'
@@ -109,7 +109,7 @@ export function makeSolidBoard(engine: Engine, params: SolidBoardParams, cuts: B
   const sections: CrossSection[] = [];
   const solids: Manifold[] = [];
 
-  const face = keep(new CrossSection([outline(width, height, p.sides, p.cornerRadiusMm)], 'Positive'), sections);
+  const face = keep(new CrossSection([boardOutline(width, height, p.sides, p.cornerRadiusMm)], 'Positive'), sections);
   // What is added goes on before the cuts, so a screw hole runs on through a standoff.
   const added = (cuts.extraSolids?.(engine) ?? []).map((m) => keep(m, solids));
   const plate = keep(face.extrude(t), solids);

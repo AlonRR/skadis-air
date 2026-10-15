@@ -10,7 +10,9 @@ import {
   buildBoard,
   defineBoardType,
   groupOf,
+  LIGHTENED,
   printedPart,
+  SOLID,
   type AnyBoardType,
 } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
@@ -228,6 +230,60 @@ describe('the solid board type', () => {
     expect(name({ screwHead: 'round', standoffs: 'back' })).toBe('skadis-solid-160x160-round-head-standoffs-20mm.stl');
     expect(name({ screwHead: 'none', screwMm: 3.5 })).toBe('skadis-solid-160x160-no-holes.stl');
     expect(name({ screwMm: 3.5, standoffHeightMm: 25 })).toBe('skadis-solid-160x160-screw-3.5mm.stl');
+  });
+});
+
+describe('the lightened board type (D141 to D145)', () => {
+  const [lightened, solid] = [LIGHTENED, SOLID];
+
+  it('is listed with the boards, right after the solid board', () => {
+    const ids = BOARD_TYPES.map((t) => t.id);
+    expect(ids.indexOf('lightened')).toBe(ids.indexOf('solid') + 1);
+    expect(groupOf(lightened)).toBe('board');
+  });
+
+  it("takes every one of the solid board's settings, at the same starting values, and its own rim and web", () => {
+    const own = lightened.settings.map((s) => s.key);
+    const shared = own.filter((k) => k !== 'rimMm' && k !== 'webMm');
+    expect(shared).toEqual(solid.settings.map((s) => s.key));
+    const { rimMm, webMm, ...rest } = defaultValues(lightened.settings);
+    expect([rimMm, webMm]).toEqual([3, 3]); // D143
+    expect(rest).toEqual(defaultValues(solid.settings));
+  });
+
+  it('puts the rim and the web under Advanced, refused under 1.2 mm and warned under 2 mm (D145)', () => {
+    const advanced = boardType('lightened')
+      .settings.filter((s) => s.advanced)
+      .map((s) => s.key);
+    expect(advanced).toEqual(expect.arrayContaining(['rimMm', 'webMm']));
+    expect(readValues(lightened.settings, { rimMm: '1.1' }).ok).toBe(false);
+    expect(readValues(lightened.settings, { webMm: '1.1' }).ok).toBe(false);
+    const thin = readValues(lightened.settings, { rimMm: '1.5', webMm: '1.9' });
+    expect(thin.ok).toBe(true);
+    expect(thin.warnings.map((w) => w.key).sort()).toEqual(['rimMm', 'webMm']);
+    expect(readValues(lightened.settings, { rimMm: '2', webMm: '2' }).warnings).toEqual([]);
+  });
+
+  it('builds a board of the size asked for, with less plastic than the solid board of the same values', () => {
+    const v = { ...defaultValues(lightened.settings), widthMm: 120, heightMm: 80 };
+    const light = buildBoard(engine, lightened, v);
+    const { rimMm: _rim, webMm: _web, ...solidValues } = v;
+    const full = buildBoard(engine, solid, solidValues);
+    if (!light.ok || !full.ok) throw new Error('both should build');
+    made.push(light.solid, full.solid);
+    const box = light.solid.boundingBox();
+    expect([box.max[0], box.max[1], box.max[2]].map((n) => Math.round(n * 1e6) / 1e6)).toEqual([120, 80, 5]);
+    expect(light.solid.volume() / full.solid.volume()).toBeLessThan(0.5);
+  });
+
+  it('names its file as the solid board does, adding the rim and the web only when they differ from the start', () => {
+    const v = defaultValues(lightened.settings);
+    const name = (given: Record<string, string | number>) => boardFileName(lightened, { ...v, ...given }, 'stl');
+    expect(name({})).toBe('skadis-lightened-160x160.stl');
+    expect(name({ rimMm: 2.5, webMm: 4 })).toBe('skadis-lightened-160x160-rim-2.5mm-web-4mm.stl');
+    expect(name({ widthMm: 240, webMm: 2, screwHead: 'round' })).toBe(
+      'skadis-lightened-240x160-web-2mm-round-head.stl',
+    );
   });
 });
 

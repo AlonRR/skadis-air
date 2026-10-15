@@ -15,7 +15,8 @@ adjust and to print.
 in `web/` makes a solid board of 40 mm tiles: you set its size, its thickness and which sides are open
 (half slots, to join a neighbour) or closed, give it screw holes in its corners (countersunk or for a
 round head) and standoffs on the back, see it in 3D, and download it as an STL that lies as it
-prints. It warns when the board is larger than your printer's bed. It also makes a small coupon to
+prints. A lightened board is the same with open pockets cut between the slots: a rim round each slot,
+joined to its neighbours by diagonal webs, in about 41 % of the plastic. It warns when the board is larger than your printer's bed. It also makes a small coupon to
 test the slots' fit first, a pair of tiles to test how two tiles meet, and a standoff, the first connector, to hold one board off the wall at a
 corner screw, or two or four where their corners meet. The SKÅDIS dimensions it uses come from published sources, checked against a real board
 with calipers, and a printed coupon set the slots' clearance ([`docs/skadis-standard.md`](docs/skadis-standard.md)).
@@ -32,8 +33,8 @@ What it will make:
 
 Every decision is in [`docs/status.md`](docs/status.md), the work in order in
 [`docs/backlog.md`](docs/backlog.md), and the SKÅDIS dimensions, each with its source, in
-[`docs/skadis-standard.md`](docs/skadis-standard.md). None of those dimensions has been checked
-against a real board yet; until it has, each is marked as such.
+[`docs/skadis-standard.md`](docs/skadis-standard.md). The slot, the grid, the thickness and IKEA's
+spacer are measured on a real board; the rest are marked as still to be confirmed.
 
 The geometry is built in TypeScript on the [Manifold](https://github.com/elalish/manifold)
 library and runs in your browser; nothing is sent to a server.
