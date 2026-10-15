@@ -73,15 +73,16 @@ outside this tree; do not vendor them in. The ones that bite most often here:
 
 - **Gitea first (D7), and GitHub kept in step (A77).** A branch per backlog item, named
   `<type>/<backlog-key>`, fast-forwarded into `main` once its checks pass locally, then pushed.
-  The remote `gitea` has two push URLs: the owner's self-hosted forge, and the private GitHub
-  repository `AlonRR/skadis-air` (renamed from `skadis_ultralight_generator`, A80), so one
-  `git push gitea main` (and each tag) updates both. That is the owner's standing approval,
-  13 Oct 2026: "keep the repo in sync with github".
+  The remote `gitea` has two push URLs: the owner's self-hosted forge, and the GitHub
+  repository `AlonRR/skadis-air` (renamed from `skadis_ultralight_generator`, A80), public since
+  15 Oct 2026 (D103), so one `git push gitea main` (and each tag) updates both. That is the
+  owner's standing approval, 13 Oct 2026: "keep the repo in sync with github", and it holds for
+  the public repository too (D134, 15 Oct 2026); the secret gate checks every push.
   After each push, confirm `main` is the same on both with `git ls-remote`.
   - **Never force-push to GitHub.** A history rewrite there is the owner's call, and a rewritten
     commit stays fetchable by its SHA until GitHub removes it.
-  - GitHub's CI and Pages are still the owner's to switch on (D7); never change the repository's
-    visibility, and never push anywhere public.
+  - GitHub's settings are the owner's (D7): never change the repository's visibility, or switch
+    its Pages or Actions on or off, and never push anywhere else public.
 - **Identity: author AND committer are
   `Alon A. Rabinowitz <45129051+AlonRR@users.noreply.github.com>`.** Rebase and amend set the
   committer separately; check both with `git log --format='%an <%ae> | %cn <%ce>'`.
@@ -105,7 +106,8 @@ outside this tree; do not vendor them in. The ones that bite most often here:
 
 ## Design every change for public release
 
-The repo is private today and built as if public from commit 1.
+The repo is public on GitHub since 15 Oct 2026 (D103), its Gitea copy private, and was built as
+if public from commit 1.
 
 - **Never in the repo:** real hostnames, internal DNS names or private IPs (use `192.0.2.0/24`
   and `example.com`); WiFi names or passwords; MAC addresses; machine paths such as a Windows

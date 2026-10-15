@@ -1,8 +1,8 @@
 # .repo-status -- the publish decision, where tooling can read it.
 # Template: publish-status.example in repo-secret-scan. One of: never | maybe | not-yet | ready | public.
 
-publish: ready
-reason:  meant to be public so people can make their boards from a web page; the owner said go public (D103, 15 Oct 2026)
+publish: public
+reason:  public so people can make their boards from a web page; made public by the owner on 15 Oct 2026 (D103, T132)
 review:  2026-10-15
 
 # The blockers of 12 Oct 2026, and what cleared each on 15 Oct 2026:

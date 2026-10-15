@@ -7,16 +7,18 @@ you choose the kind of board, its size and how it mounts, and download files you
 make. The aim is one place for every kind of SKÅDIS board that people print today, each easy to
 adjust and to print.
 
+**Use it in your browser: <https://alonrr.github.io/skadis-air/>**
+
 ## Status
 
-**Version 0.1.0 and the work since: the solid board, on the page; not yet test printed.** The page
+**Version 0.1.0 and the work since: the solid board, on the page, and its slots test printed.** The page
 in `web/` makes a solid board of 40 mm tiles: you set its size, its thickness and which sides are open
 (half slots, to join a neighbour) or closed, give it screw holes in its corners (countersunk or for a
 round head) and standoffs on the back, see it in 3D, and download it as an STL that lies as it
 prints. It warns when the board is larger than your printer's bed. It also makes a small coupon to
 test the slots' fit first, a pair of tiles to test how two tiles meet, and a standoff, the first connector, to hold one board off the wall at a
-corner screw, or two or four where their corners meet. The SKÅDIS dimensions it uses come from published sources and are still to be checked
-against a real board.
+corner screw, or two or four where their corners meet. The SKÅDIS dimensions it uses come from published sources, checked against a real board
+with calipers, and a printed coupon set the slots' clearance ([`docs/skadis-standard.md`](docs/skadis-standard.md)).
 
 What it will make:
 
