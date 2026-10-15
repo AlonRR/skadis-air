@@ -5,6 +5,6 @@ projects:
   - name:     Skådis Air
     kind:     build
     state:    active
-    next:     "mounting-ikea: keyhole heads and the corner-slot test; then board-skeleton"
+    next:     "board-skeleton: the lattice with I-beam members (D146, D147)"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-15

@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 15 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The repositories are renamed `skadis-air` on Gitea and GitHub (A80, T89); the local folder is renamed between sessions. Keyhole heads and corner holes kept as an option (D130) are in `mounting-ikea`; IKEA's own board has none, its spacer held through a peg slot by a screw with a nub (T17). **`conn-standoff` is done** (D91 to D94, D97): a standoff for 1, 2 or 4 boards under "Connectors", the shared ones with a tunnel for hooks, sized from a replica of IKEA's hook on Printables (T98). A **seam-test pair** (D69) prints with the fit coupon, to test how tiles join. The first test print (the coupon and the pair) and a real board are measured (T109, T17, 15 Oct 2026): the sources' SKÅDIS numbers hold, a slot drawn at 0.2 mm prints at the wide end of the board's slot width and about 0.3 mm shorter than its slot, and the grid holds across the seam, so the default clearance stays 0.2 mm (D129). **The repository is public on GitHub** (D103, T132, 15 Oct 2026), and pushes keep it in step with Gitea (D134); Pages is on, and a workflow publishes the page there after each green checks run on `main` (T132); the first deployment was checked live (15 Oct 2026), and the page has a tab icon (D137). The page has the shared design system's fonts, colours and dark theme (`design-system-base`, D111, D113) and its controls, every choice as buttons (`design-system-controls`, D112), and is its workbench: the board in a stage it always fits, beside the form or above it on a phone, with a theme toggle (`workbench`, D123). **`board-lightened` is done with full-depth members** (D141 to D145, 15 Oct 2026): about 41 % of the solid board's plastic, measured; the I-beam the owner asked about goes to the skeleton board, on the same lattice (D146, D147), and the test print is T151. The design system's v0.3.0 is in (D153, 15 Oct 2026). **Next: `mounting-ikea` (D152), then `board-skeleton`.** The evidence for the board types and
+Last updated: 15 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The repositories are renamed `skadis-air` on Gitea and GitHub (A80, T89); the local folder is renamed between sessions. Keyhole heads and corner holes kept as an option (D130) are in `mounting-ikea`; IKEA's own board has none, its spacer held through a peg slot by a screw with a nub (T17). **`conn-standoff` is done** (D91 to D94, D97): a standoff for 1, 2 or 4 boards under "Connectors", the shared ones with a tunnel for hooks, sized from a replica of IKEA's hook on Printables (T98). A **seam-test pair** (D69) prints with the fit coupon, to test how tiles join. The first test print (the coupon and the pair) and a real board are measured (T109, T17, 15 Oct 2026): the sources' SKÅDIS numbers hold, a slot drawn at 0.2 mm prints at the wide end of the board's slot width and about 0.3 mm shorter than its slot, and the grid holds across the seam, so the default clearance stays 0.2 mm (D129). **The repository is public on GitHub** (D103, T132, 15 Oct 2026), and pushes keep it in step with Gitea (D134); Pages is on, and a workflow publishes the page there after each green checks run on `main` (T132); the first deployment was checked live (15 Oct 2026), and the page has a tab icon (D137). The page has the shared design system's fonts, colours and dark theme (`design-system-base`, D111, D113) and its controls, every choice as buttons (`design-system-controls`, D112), and is its workbench: the board in a stage it always fits, beside the form or above it on a phone, with a theme toggle (`workbench`, D123). **`board-lightened` is done with full-depth members** (D141 to D145, 15 Oct 2026): about 41 % of the solid board's plastic, measured; the I-beam the owner asked about goes to the skeleton board, on the same lattice (D146, D147), and the test print is T151. The design system's v0.3.0 is in (D153, 15 Oct 2026), and **`mounting-ikea` is done** (D155 to D158): keyholes in the top two corners, with lock screws at the bottom as an option. **Next: `board-skeleton`** (D146, D147). The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
@@ -109,43 +109,21 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D147 | **The skeleton's I-beam**: as wide as the rim and web (3 mm, D143) at both faces for 0.6 mm, then a 45 degree taper, so it prints face down with no supports, to a core 1.2 mm wide; the rims and the edge band take the same profile, the screw pads stay full depth; the core width is a setting under "Advanced", refused below 0.8 mm and warned below 1.2 mm | 15 Oct 2026 |
 | D152 | **Next: `mounting-ikea`**, after the design system's v0.3.0 (D153); then `board-skeleton` | 15 Oct 2026 |
 | D153 | **The design system's v0.3.0 is adopted now** (backlog `design-system-v030`): its rules replace the page's local copies; a warning is outlined in the warning colour as well as headed in it, and the buttons under the 3D view wrap to the right on a narrow screen | 15 Oct 2026 |
+| D155 | **A keyhole sinks the screw head in a channel from the front**, 3.5 mm deep for a 4 mm screw, below the face, with 1.5 mm of board behind it ([figure](figures/keyhole.png)) | 15 Oct 2026 |
+| D156 | **Keyholes go in the top two corners**, so the board lifts straight off its screws; **countersunk lock screws at the bottom two corners are an option** | 15 Oct 2026 |
+| D157 | **A keyhole's sizes follow the screw size**: the head twice the screw, the entry 1 mm wider, the slide as long as the entry, the slot the screw's hole, the channel the head's height and 0.3 mm (9, 9, 4.5 and 3.5 mm for a 4 mm screw); a board that would keep less than 1.2 mm behind the channel is refused, saying so | 15 Oct 2026 |
+| D158 | **Standoffs are refused with keyholes**, as a keyhole hangs the board flat on the wall; on the lightened board the whole keyhole and 2 mm round it stay solid | 15 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
 ## Open questions
 
-`board-lightened` was planned and built on 15 Oct 2026 (D141 to D147; C148 to C150; the backlog row has the result,
-and commit 6dbdd41 its measurements). Waiting on the owner:
+`board-lightened` and `mounting-ikea` were planned and built on 15 Oct 2026 (D141 to D147, D155 to D158; C148 to
+C150, C159, C160; the backlog rows have the results). Waiting on the owner:
 
-`mounting-ikea`'s keyholes, asked on 15 Oct 2026 and drawn in [`figures/keyhole.png`](figures/keyhole.png)
-(`scripts/figures/keyhole.py`). A keyhole lets a board drop onto two screws and lift off them: the head goes in
-through a round hole, and the board slides down until the screw rests at the top of a narrow slot. The screw
-is a 4 mm pan head, 8 mm across and 3.1 to 3.25 mm tall (ISO 7045, as vendors list it: Würth, Accu, Aspen
-Fasteners). In a 5 mm board a channel from the back for the head would leave almost nothing at the front, so
-the head sits at the front.
-
-- **D155** How the keyhole holds the head: (A) recessed: a 3.5 mm channel from the front, the head below the
-  face, 1.5 mm of board behind it; (B) through: the head stands 3.2 mm proud of the front, all 5 mm of board
-  behind it. Recommended: (A), so the front stays flat for hooks and IKEA's spacer; 1.5 mm of printed board
-  under a screw head carries a board of 50 to 120 g (inferred).
-- **D156** Where the keyholes go: (a) the top two corners only, and no holes at the bottom, so the board lifts
-  straight off; (b) the top two, and plain screw holes at the bottom for a screw that locks it in place. All four
-  cannot work in the corner tiles: a bottom keyhole's entry would fall off the board's edge. On the page,
-  "Screw holes" gains "Keyholes" beside Countersunk, Round head and None, and the file name adds `-keyholes`.
-  Recommended: (a).
-- **D157** The sizes, following the screw size setting: the head twice the screw (8 mm for 4 mm), the entry 1 mm
-  wider (9 mm), the slide as long as the entry (9 mm), the slot the screw's hole (4.5 mm, D76), the channel the
-  head's height and 0.3 mm (3.5 mm). A board too thin to leave 1.2 mm behind the channel (under 4.7 mm for a
-  4 mm screw) is refused with keyholes, saying so. Recommended: these.
-- **D158** Keyholes with the other options: standoffs are refused with keyholes, as a keyhole hangs the board's
-  back flat on the wall, saying "choose screw holes for standoffs"; on the lightened board the pad kept solid
-  covers the whole keyhole and 2 mm round it (D144). Recommended: these.
-
-The other half of the row needs no question: a test that every screw hole, countersink and keyhole keeps clear
-of the corner tile's slots, at every screw size and corner radius, so IKEA's spacer and rail still fit (D131).
-
-- **T151** Print a lightened board and hang an IKEA hook in it: an 80 x 80 mm one at its starting values
-  is enough (`skadis-lightened-80x80.stl` from the page), in the filament you choose. Then say whether the
-  rims and webs held, whether the hook sat straight in its slot, and what it weighs.
+- **T151** Print a lightened board with keyholes and hang it: an 80 x 80 mm one is enough
+  (`skadis-lightened-80x80-keyholes.stl` from the page, "Keyholes" under "Screw holes"), in the filament you
+  choose. Hang it on two 4 mm pan-head screws and put an IKEA hook in it. Then say whether the rims and webs
+  held, whether the heads went in and sat below the face, whether the hook sat straight, and what it weighs.
 
 ## Inputs from outside this repository
 

@@ -102,6 +102,22 @@ test('offers screw holes and standoffs, and names the file for what differs from
   await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 25 mm'); // 5 mm of board, 20 mm of standoff
 });
 
+test('offers keyholes, with lock screws under Advanced, and refuses them with standoffs (D155 to D158)', async ({
+  page,
+}) => {
+  await ready(page);
+  const status = page.getByTestId('board-status');
+  await choose(page, 'screwHead', 'keyhole');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-keyholes.stl');
+  await expect(status).toHaveAttribute('data-state', 'ready');
+  await page.getByTestId('advanced').locator('summary').click();
+  await choose(page, 'lockScrews', 'bottom');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-keyholes-lock-screws.stl');
+  await choose(page, 'standoffs', 'back');
+  await expect(status).toHaveAttribute('data-state', 'problem');
+  await expect(status).toContainText('choose screw holes for standoffs');
+});
+
 test('says a countersink too deep for a thin board cannot be made, and makes it with a round head', async ({
   page,
 }) => {

@@ -9,8 +9,8 @@
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { boardOutline, type BoardCuts, makeSolidBoard, type SolidBoardParams } from './board-solid.js';
 import type { Engine } from './engine.js';
-import { mountingCuts, type MountingParams, screwPads } from './mounting.js';
-import { circle, stadium } from './rings.js';
+import { mountingCuts, mountingPads, type MountingParams } from './mounting.js';
+import { stadium } from './rings.js';
 import { GRID_PITCH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import { slotPlaces } from './slots.js';
 
@@ -61,7 +61,7 @@ export function pocketShape(
   engine: Engine,
   board: SolidBoardParams,
   lattice: LatticeParams,
-  pads: readonly { xMm: number; yMm: number; diameterMm: number }[],
+  pads: readonly Vec2[][],
 ): CrossSection {
   const { CrossSection } = engine;
   const made: CrossSection[] = [];
@@ -92,7 +92,7 @@ export function pocketShape(
       }
     }
   }
-  for (const pad of pads) contours.push(circle(pad.xMm, pad.yMm, pad.diameterMm));
+  contours.push(...pads);
   const kept = keep(new CrossSection(contours, 'NonZero'));
   const face = keep(new CrossSection([boardOutline(width, height, board.sides, board.cornerRadiusMm)], 'Positive'));
   const inner = keep(face.offset(-EDGE_BAND_MM, 'Round'));
@@ -105,11 +105,7 @@ export function pocketShape(
 }
 
 /** What the lattice cuts from the solid board: its pockets, through the plate and a millimetre beyond each face. */
-export function latticeCuts(
-  board: SolidBoardParams,
-  lattice: LatticeParams,
-  pads: readonly { xMm: number; yMm: number; diameterMm: number }[],
-): BoardCuts {
+export function latticeCuts(board: SolidBoardParams, lattice: LatticeParams, pads: readonly Vec2[][]): BoardCuts {
   return {
     extraCutters: (engine: Engine): Manifold[] => {
       const pockets = pocketShape(engine, board, lattice, pads);
@@ -139,6 +135,6 @@ export function makeLightenedBoard(
   lattice: LatticeParams,
   mounting: MountingParams,
 ): Manifold {
-  const cuts = bothCuts(mountingCuts(mounting, board), latticeCuts(board, lattice, screwPads(mounting, board)));
+  const cuts = bothCuts(mountingCuts(mounting, board), latticeCuts(board, lattice, mountingPads(mounting, board)));
   return makeSolidBoard(engine, board, cuts);
 }

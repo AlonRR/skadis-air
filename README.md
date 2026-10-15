@@ -14,7 +14,7 @@ adjust and to print.
 **Version 0.1.0 and the work since: the solid board, on the page, and its slots test printed.** The page
 in `web/` makes a solid board of 40 mm tiles: you set its size, its thickness and which sides are open
 (half slots, to join a neighbour) or closed, give it screw holes in its corners (countersunk or for a
-round head) and standoffs on the back, see it in 3D, and download it as an STL that lies as it
+round head, or keyholes at the top so it lifts off its screws) and standoffs on the back, see it in 3D, and download it as an STL that lies as it
 prints. A lightened board is the same with open pockets cut between the slots: a rim round each slot,
 joined to its neighbours by diagonal webs, in about 41 % of the plastic. It warns when the board is larger than your printer's bed. It also makes a small coupon to
 test the slots' fit first, a pair of tiles to test how two tiles meet, and a standoff, the first connector, to hold one board off the wall at a

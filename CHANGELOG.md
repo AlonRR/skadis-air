@@ -20,6 +20,9 @@ All notable changes to this project are recorded here. The format follows
 - The page is published at <https://alonrr.github.io/skadis-air/>, rebuilt from every change that passes
   the checks.
 - A tab icon: five slots of a SKÅDIS board in the page's blue, lighter when your system is set to dark.
+- Keyholes, a choice among the screw holes: in the top two corners, so a board drops onto two pan-head screws
+  and lifts off them, the head sunk in a channel from the front; countersunk lock screws at the bottom as an
+  option under "Advanced". Standoffs are not offered with them.
 - A lightened board, listed after the solid one: open pockets cut through it between the slots, a 3 mm
   rim round each slot joined to its four nearest neighbours by 3 mm diagonal webs, a solid band along
   each edge and a pad round each screw. A 160 x 160 mm board takes about 41 % of the solid board's

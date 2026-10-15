@@ -35,7 +35,8 @@ const lightenedAt = (widthMm, heightMm, sides) => ({ ...defaultValues(lightened.
 // both on one board, and the largest a 250 x 210 mm bed takes (240 x 200 mm); and its mounting
 // (D73 to D75): standoffs with each head, the largest screw at the largest corner radius; the lightened
 // board (D141 to D145) closed all round with standoffs, and at its narrowest rim and webs on the largest
-// board; and the standoff connector at the largest screw and its tallest.
+// board; keyholes (D155 to D158) with lock screws on a closed solid board, and on the lightened board; and the
+// standoff connector at the largest screw and its tallest.
 const samples = [
   ...BOARD_TYPES.map((type) => ({ name: `${type.id}-default`, type, values: defaultValues(type.settings) })),
   { name: 'solid-1x1-open', type: solid, values: solidAt(40, 40, open) },
@@ -67,6 +68,12 @@ const samples = [
     type: lightened,
     values: { ...lightenedAt(240, 200, open), rimMm: 1.2, webMm: 1.2 },
   },
+  {
+    name: 'solid-2x2-closed-keyholes-lock-screws',
+    type: solid,
+    values: { ...solidAt(80, 80, closed), screwHead: 'keyhole', lockScrews: 'bottom' },
+  },
+  { name: 'lightened-4x4-keyholes', type: lightened, values: { ...lightenedAt(160, 160, open), screwHead: 'keyhole' } },
   { name: 'standoff-1-40mm-screw-5', type: boardType('standoff'), values: { boards: '1', heightMm: 40, screwMm: 5 } },
   { name: 'standoff-2-12mm-screw-3', type: boardType('standoff'), values: { boards: '2', heightMm: 12, screwMm: 3 } },
   { name: 'standoff-4-20mm-screw-5', type: boardType('standoff'), values: { boards: '4', heightMm: 20, screwMm: 5 } },

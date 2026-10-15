@@ -160,6 +160,19 @@ describe('makeLightenedBoard (D141 to D144)', () => {
     expect(uncovered(pads(13 - 0.02), midSlice(lightened({}, {}, none)), midSlice(solid({}, none)))).toBeGreaterThan(1);
   });
 
+  it('keeps the whole keyhole and 2 mm round it, and nothing at the bottom without lock screws (D158)', () => {
+    // a 4 mm screw's keyhole: 9 mm wide, its 9 mm slide down from the screw resting at (10, 150) and (150, 150)
+    const pads = (wide: number, long: number) => shape([10, 150].map((x) => stadium(x, 150 - 4.5, wide, long)));
+    const m = { screwHead: 'keyhole' } as const;
+    const [light, full] = [midSlice(lightened({}, {}, m)), midSlice(solid({}, m))];
+    expect(uncovered(pads(13 - 0.02, 22 - 0.02), light, full)).toBeLessThan(0.01);
+    expect(uncovered(pads(16, 25), light, full)).toBeGreaterThan(1); // control: wider is pocket in places
+    const bottom = shape([10, 150].map((x) => circle(x, 10, 13 - 0.02)));
+    expect(uncovered(bottom, light, full)).toBeGreaterThan(1);
+    const locked = { ...m, lockScrews: true };
+    expect(uncovered(bottom, midSlice(lightened({}, {}, locked)), midSlice(solid({}, locked)))).toBeLessThan(0.01);
+  });
+
   it('keeps the pad round a standoff with no screw hole, and the standoff whole', () => {
     const m = { screwHead: 'none', standoffHeightMm: 20 } as const;
     const pads = shape([10, 150].flatMap((x) => [10, 150].map((y) => circle(x, y, 13 - 0.02))));

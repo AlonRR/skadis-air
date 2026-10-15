@@ -197,6 +197,7 @@ describe('the solid board type', () => {
     const advanced = solid.settings.filter((s) => s.advanced).map((s) => s.key);
     expect(advanced.sort()).toEqual([
       'cornerRadiusMm',
+      'lockScrews',
       'screwMm',
       'slotChamferMm',
       'slotClearanceMm',
@@ -230,6 +231,26 @@ describe('the solid board type', () => {
     expect(name({ screwHead: 'round', standoffs: 'back' })).toBe('skadis-solid-160x160-round-head-standoffs-20mm.stl');
     expect(name({ screwHead: 'none', screwMm: 3.5 })).toBe('skadis-solid-160x160-no-holes.stl');
     expect(name({ screwMm: 3.5, standoffHeightMm: 25 })).toBe('skadis-solid-160x160-screw-3.5mm.stl');
+    expect(name({ screwHead: 'keyhole' })).toBe('skadis-solid-160x160-keyholes.stl');
+    expect(name({ screwHead: 'keyhole', lockScrews: 'bottom' })).toBe('skadis-solid-160x160-keyholes-lock-screws.stl');
+    expect(name({ lockScrews: 'bottom' })).toBe('skadis-solid-160x160.stl'); // lock screws go only with keyholes
+  });
+
+  it('offers keyholes, and says standoffs with keyholes are a problem (D156, D158)', () => {
+    const v = defaultValues(solid.settings);
+    const head = solid.settings.find((s) => s.key === 'screwHead');
+    expect(head?.kind === 'choice' && head.options.map((o) => o.label)).toEqual([
+      'Countersunk',
+      'Round head',
+      'Keyholes',
+      'None',
+    ]);
+    const keyholes = buildBoard(engine, solid, { ...v, screwHead: 'keyhole' });
+    expect(keyholes.ok).toBe(true);
+    if (keyholes.ok) made.push(keyholes.solid);
+    const both = buildBoard(engine, solid, { ...v, screwHead: 'keyhole', standoffs: 'back' });
+    expect(both.ok).toBe(false);
+    if (!both.ok) expect(both.problem).toContain('choose screw holes for standoffs');
   });
 });
 
