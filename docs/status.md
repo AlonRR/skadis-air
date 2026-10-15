@@ -128,6 +128,26 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 `board-lightened` and `mounting-ikea` were planned and built on 15 Oct 2026 (D141 to D147, D155 to D158; C148 to
 C150, C159, C160; the backlog rows have the results). Waiting on the owner:
 
+`tiling`, asked on 15 Oct 2026, drawn in [`figures/wall-split.png`](figures/wall-split.png)
+(`scripts/figures/wall-split.py`). D37 already says a wall is closed round its outer edge and open at its seams,
+and that the user sets the panel size in 40 mm tiles; D15 that panels are cut through slot centres, so tiles
+side by side make whole slots.
+
+- **D175** Where a wall is made: (a) on the boards themselves: "Panels: One board / Split into panels" on the
+  solid, lightened and skeleton boards; split, the width and height are the wall's, up to 1600 mm each way, and
+  every panel takes the board's own settings; (b) a new "Wall" entry in the list, with its own size and a choice
+  of board for its panels. Recommended: (a).
+- **D176** The panel size starts at the largest the chosen bed takes, and can be set smaller (D37). Where a wall is
+  not a whole number of panels: (A) full panels from the bottom left, the rest in the top row and the right
+  column, which can leave a 40 mm strip; (B) the panels as even as they can be, none larger than the panel size
+  (a 440 mm wall in 200 mm panels: 160 + 160 + 120). Recommended: (B).
+- **D177** Mounting in a wall: (a) each panel keeps the board's mounting in its own four corners, screw holes,
+  keyholes or standoffs, so a seam plate can later fix through them; (b) only the wall's four outer corners.
+  Recommended: (a).
+- **D178** What the page shows and gives: the whole wall in the preview, its panels side by side with their seams;
+  under it a print list, a line for each panel size with its count and its own download, one STL per size,
+  until `download-3mf-zip` puts them in one file. Recommended: these.
+
 - **T151** Print a lightened board with keyholes and hang it: an 80 x 80 mm one is enough
   (`skadis-lightened-80x80-keyholes.stl` from the page, "Keyholes" under "Screw holes"), in the filament you
   choose. Hang it on two 4 mm pan-head screws and put an IKEA hook in it. Then say whether the rims and webs
