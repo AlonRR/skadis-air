@@ -40,6 +40,33 @@ where bending stress is highest, at the faces.
 **Exactly the nominal 5 × 15 mm through the core, with no clearance added**, and chamfered at both
 faces: about 1 mm at one face and about 0.75 mm at the other.
 
+## The I-beam, measured (15 Oct 2026)
+
+Measured again for `board-lightened` (D142), from the same 120 × 120 mm STL: sections at 21 heights through
+the 5 mm board, and along each probe the width of the plastic it crosses (trimesh and shapely; the probes
+cross a diagonal web at its middle, the rim beside and above the centre slot, and the bottom edge at
+x = 60 mm, between two half slots). Distances are from the front face (z = −2.5 in the file).
+
+The layout, seen in the sections: **a rim round every slot, and webs along the diagonals from each slot to
+its four nearest neighbours, 28.3 mm away**; nothing along the 40 mm axes, and nothing below the slots for a
+hook's back tab. **Every member is the same I-beam**, the rims and the edges as well as the webs:
+
+| From the front face (mm) | 0 to 0.7 | 0.7 to 2.05 | 2.05 to 3.45 | 3.45 to 4.6 | 4.6 to 5 |
+|---|---|---|---|---|---|
+| Diagonal web, width (mm) | 2.80 | 2.80 to 0.80 | **0.80** | 0.80 to 2.80 | 2.80 |
+| Rim beside the slot, width (mm) | 2.8, less the slot's chamfer: 1.8 at the face | 2.5 to 0.80 | **0.80** | 0.80 to 2.5 | 2.5, less the chamfer |
+| Bottom edge, width (mm) | 2.80 | 2.80 to 0.80 | **0.80**, at the outer face | 0.80 to 2.80 | 2.80 |
+
+- **The taper** loses 0.35 mm of width per 0.2 mm of depth, about 41 degrees from the vertical, close to 45:
+  printed either face down, the face above overhangs no more than a 45 degree wall.
+- **The rim** runs 2.8 mm out from the slot's straight wall, 5.3 mm from the slot's centre line, at both
+  faces, so where the slot is chamfered the rim seen at the face is 1.8 mm.
+- **0.8 mm is two lines of a 0.4 mm nozzle**, so a slicer prints each core as two perimeters with no gap
+  between them (inferred).
+
+[`figures/ibeam-profile.png`](../figures/ibeam-profile.png) draws the web's profile beside a full-depth 3 mm
+web.
+
 ## What follows from it (inferred)
 
 - **Plastic**: a solid 5 mm board of the same size and slots is about 65 700 mm³ (worked out from
