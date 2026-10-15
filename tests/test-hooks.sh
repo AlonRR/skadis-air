@@ -139,8 +139,8 @@ git -C "$TMP/r" config user.name "$ID_NAME"
 ident 0 "expected address" "$ID_EMAIL"
 ident 0 "Gitea's lowercase   [OLD-BUG]" "12345678+someone@users.noreply.github.com"
 ident 1 "personal email" "someone.personal@example.com"
-ident 1 "git-invented user@hostname" "root@server.home.arpa" # secret-gate: allow -- a fixture the hook must refuse
-ident 1 "placeholder identity" "t@t.t"                       # secret-gate: allow -- a fixture the hook must refuse
+ident 1 "git-invented user@hostname" "root@server.internal.example" # a fixture the hook must refuse
+ident 1 "placeholder identity" "t@t.t"                              # secret-gate: allow -- a fixture the hook must refuse
 ident 1 "committer wrong, author right" "$ID_EMAIL" "someone.personal@example.com"
 
 # The name, with the address already correct. Every refused name below stands for one
