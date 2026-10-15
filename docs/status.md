@@ -116,6 +116,33 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 `board-lightened` was planned and built on 15 Oct 2026 (D141 to D147; C148 to C150; the backlog row has the result,
 and commit 6dbdd41 its measurements). Waiting on the owner:
 
+`mounting-ikea`'s keyholes, asked on 15 Oct 2026 and drawn in [`figures/keyhole.png`](figures/keyhole.png)
+(`scripts/figures/keyhole.py`). A keyhole lets a board drop onto two screws and lift off them: the head goes in
+through a round hole, and the board slides down until the screw rests at the top of a narrow slot. The screw
+is a 4 mm pan head, 8 mm across and 3.1 to 3.25 mm tall (ISO 7045, as vendors list it: Würth, Accu, Aspen
+Fasteners). In a 5 mm board a channel from the back for the head would leave almost nothing at the front, so
+the head sits at the front.
+
+- **D155** How the keyhole holds the head: (A) recessed: a 3.5 mm channel from the front, the head below the
+  face, 1.5 mm of board behind it; (B) through: the head stands 3.2 mm proud of the front, all 5 mm of board
+  behind it. Recommended: (A), so the front stays flat for hooks and IKEA's spacer; 1.5 mm of printed board
+  under a screw head carries a board of 50 to 120 g (inferred).
+- **D156** Where the keyholes go: (a) the top two corners only, and no holes at the bottom, so the board lifts
+  straight off; (b) the top two, and plain screw holes at the bottom for a screw that locks it in place. All four
+  cannot work in the corner tiles: a bottom keyhole's entry would fall off the board's edge. On the page,
+  "Screw holes" gains "Keyholes" beside Countersunk, Round head and None, and the file name adds `-keyholes`.
+  Recommended: (a).
+- **D157** The sizes, following the screw size setting: the head twice the screw (8 mm for 4 mm), the entry 1 mm
+  wider (9 mm), the slide as long as the entry (9 mm), the slot the screw's hole (4.5 mm, D76), the channel the
+  head's height and 0.3 mm (3.5 mm). A board too thin to leave 1.2 mm behind the channel (under 4.7 mm for a
+  4 mm screw) is refused with keyholes, saying so. Recommended: these.
+- **D158** Keyholes with the other options: standoffs are refused with keyholes, as a keyhole hangs the board's
+  back flat on the wall, saying "choose screw holes for standoffs"; on the lightened board the pad kept solid
+  covers the whole keyhole and 2 mm round it (D144). Recommended: these.
+
+The other half of the row needs no question: a test that every screw hole, countersink and keyhole keeps clear
+of the corner tile's slots, at every screw size and corner radius, so IKEA's spacer and rail still fit (D131).
+
 - **T151** Print a lightened board and hang an IKEA hook in it: an 80 x 80 mm one at its starting values
   is enough (`skadis-lightened-80x80.stl` from the page), in the filament you choose. Then say whether the
   rims and webs held, whether the hook sat straight in its slot, and what it weighs.
