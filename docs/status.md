@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 15 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The repositories are renamed `skadis-air` on Gitea and GitHub (A80, T89); the local folder is renamed between sessions. Keyhole heads and corner holes kept as an option (D130) are in `mounting-ikea`; IKEA's own board has none, its spacer held through a peg slot by a screw with a nub (T17). **`conn-standoff` is done** (D91 to D94, D97): a standoff for 1, 2 or 4 boards under "Connectors", the shared ones with a tunnel for hooks, sized from a replica of IKEA's hook on Printables (T98). A **seam-test pair** (D69) prints with the fit coupon, to test how tiles join. The first test print (the coupon and the pair) and a real board are measured (T109, T17, 15 Oct 2026): the sources' SKÅDIS numbers hold, a slot drawn at 0.2 mm prints at the wide end of the board's slot width and about 0.3 mm shorter than its slot, and the grid holds across the seam, so the default clearance stays 0.2 mm (D129). **The repository is public on GitHub** (D103, T132, 15 Oct 2026), and pushes keep it in step with Gitea (D134); Pages is on, and a workflow publishes the page there after each green checks run on `main` (T132); the first deployment was checked live (15 Oct 2026), and the page has a tab icon (D137). The page has the shared design system's fonts, colours and dark theme (`design-system-base`, D111, D113) and its controls, every choice as buttons (`design-system-controls`, D112), and is its workbench: the board in a stage it always fits, beside the form or above it on a phone, with a theme toggle (`workbench`, D123). **Next: `board-lightened`.** The evidence for the board types and
+Last updated: 15 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The repositories are renamed `skadis-air` on Gitea and GitHub (A80, T89); the local folder is renamed between sessions. Keyhole heads and corner holes kept as an option (D130) are in `mounting-ikea`; IKEA's own board has none, its spacer held through a peg slot by a screw with a nub (T17). **`conn-standoff` is done** (D91 to D94, D97): a standoff for 1, 2 or 4 boards under "Connectors", the shared ones with a tunnel for hooks, sized from a replica of IKEA's hook on Printables (T98). A **seam-test pair** (D69) prints with the fit coupon, to test how tiles join. The first test print (the coupon and the pair) and a real board are measured (T109, T17, 15 Oct 2026): the sources' SKÅDIS numbers hold, a slot drawn at 0.2 mm prints at the wide end of the board's slot width and about 0.3 mm shorter than its slot, and the grid holds across the seam, so the default clearance stays 0.2 mm (D129). **The repository is public on GitHub** (D103, T132, 15 Oct 2026), and pushes keep it in step with Gitea (D134); Pages is on, and a workflow publishes the page there after each green checks run on `main` (T132); the first deployment was checked live (15 Oct 2026), and the page has a tab icon (D137). The page has the shared design system's fonts, colours and dark theme (`design-system-base`, D111, D113) and its controls, every choice as buttons (`design-system-controls`, D112), and is its workbench: the board in a stage it always fits, beside the form or above it on a phone, with a theme toggle (`workbench`, D123). **Next: `board-lightened`**: its plan is below, and its design waits on D141 to D145 (15 Oct 2026). The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
@@ -104,7 +104,43 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 ## Open questions
 
-None open.
+`board-lightened`, asked on 15 Oct 2026. The three lattices are drawn in
+[`figures/lightened-patterns.png`](figures/lightened-patterns.png): a 160 x 160 mm board, open all round, from a 2D
+sketch, so the shares of plastic are (inferred) until the built part is measured.
+
+- **D141** How the pockets are cut: (a) through the board, an open lattice: the lightest, and it prints face down
+  (D66) with nothing to bridge; (b) from the back under a thin front skin, so the front looks like a solid board,
+  keeping more plastic; only a front skin works, as the back prints last and would bridge every pocket; (c) both, as
+  a setting. Recommended: (a) now, as `face-patterns` builds on it.
+- **D142** The first lattice: (A) webs along the slot grid's diagonals, each slot joined to its four nearest
+  neighbours 28.3 mm away, and a solid tongue below every slot for a hook, about 48 % of a solid board's plastic;
+  (B) the diagonal webs alone, about 36 %, but a hook's back tab, which rests on the back face up to 8.25 mm below
+  its slot (T98), would sit over a pocket; (C) the diagonals and the 40 mm axes, about 59 %. Each continues across a
+  seam, as its webs meet the edge at the half slots' rims. Recommended: (A).
+- **D143** The sizes, as starting values a test print settles: a 3 mm rim round each slot, measured from the slot's
+  edge at the face (outside its chamfer), so it is the wall you see; 3 mm webs; and the tongue reaching 10.25 mm
+  below each slot, the hook's 8.25 mm (T98, `<<CONFIRM>>`) plus C83's 2 mm margin, as wide as the slot and its
+  rims. Recommended: these.
+- **D144** What stays solid: a 3 mm band along every edge, open or closed, so two boards meet on a double band and a
+  seam stays flat for the seam plate and `edge-joins`; and a pad round each screw hole and standoff, the
+  countersink plus the rim (13 mm across for a 4 mm screw), so no pocket meets a screw seat. Recommended: both.
+- **D145** The settings and the minimum web check: the rim and web widths under "Advanced"; each refused below
+  1.2 mm, about three lines of a 0.4 mm nozzle, and warned below 2 mm ("thin webs can break, or let a hook twist; a
+  test print settles it"); no pattern control until a second pattern exists. Recommended: these.
+
+**The plan, once those are answered** (the rest logged as choices):
+
+- The library: `packages/core/src/lightened.ts` draws what stays solid (the edge band, the rims and tongues, the
+  webs and the screw pads) as one 2D shape, and cuts the face less that shape as one pocket cutter, through
+  `BoardCuts.extraCutters`, with the mounting's own cuts.
+- The board type: `board-types/lightened.ts`, "Lightened", and one line in the list. It takes the solid board's
+  settings (size, thickness, sides, clearance, chamfer, corner radius, mounting) and adds its own; its file is
+  `skadis-lightened-160x160.stl`, with the rim and web only when they differ from the start (as C85).
+- Tests first, each with a control that must fail: the board is one body; the narrowest web is at least the
+  minimum; no pocket comes within the rim of a slot or into a screw pad; less plastic than the solid board of the
+  same size; the contract test over every type; and the page builds and downloads it in the browser.
+- `npm run check:stl` on its samples, and `docs/extending.md` kept true: one file and one line.
+- Then a test print, the owner's: one lightened tile, with a real IKEA hook hung in it.
 
 ## Inputs from outside this repository
 

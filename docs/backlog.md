@@ -66,4 +66,4 @@ that path. None needs the path rebuilt.
 | `extending-doc` | **Started 12 Oct 2026** with board types and settings. `docs/extending.md`: where a new board type, option or connector goes, and which test fails if a step is missed | P2 | S | `registry` | D6 | | | None |
 | `preview-colour` | The preview's colour as a setting, for the filament the user prints in | P2 | S | `preview-3d` | D56 | | | None |
 | `listings` | Printables and MakerWorld listings, "Skådis Air: …" with the search words in the title, ready-made STL sets in common sizes, the fit coupon, photos of real prints, a link to the page (D79, D81) | P2 | M | `pages-deploy`, first test prints | D81 | yes | | Photos need real prints; the page must be public first |
-| `pages-deploy` | The site built for GitHub Pages; live only when the owner publishes | P2 | S | `download-stl` | D7 | | | The owner's decision (D7) |
+| `pages-deploy` | **Done 15 Oct 2026** (D103, T132; C135): the site published on GitHub Pages after each green checks run on `main`, at <https://alonrr.github.io/skadis-air/> | P2 | S | `download-stl` | D7, D103 | | | None |
