@@ -5,6 +5,6 @@ projects:
   - name:     Skådis Air
     kind:     build
     state:    active
-    next:     "the next P1 item, chosen by D167 (printer-presets recommended)"
+    next:     "build-worker (D166); then printer-presets, tiling, download-3mf-zip, conn-seam-plate (D167)"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-15
