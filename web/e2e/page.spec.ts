@@ -23,6 +23,22 @@ test('a page whose engine cannot load says so', async ({ page }) => {
   await expect(status).toContainText('could not start');
 });
 
+// The page names its icon (D137): without one the browser asks for /favicon.ico, and that 404 was
+// the one console error on the published page, 15 Oct 2026. The test reads the link and fetches
+// what it names. It cannot watch the browser's own request: no Playwright event shows it, any
+// route stops Chromium asking at all, and its console error races the board's "ready"
+// (measured 15 Oct 2026), so a console check passed while the icon was missing.
+test('the icon the page names is served as an SVG', async ({ page }) => {
+  await page.goto('./');
+  const link = page.locator('link[rel="icon"]');
+  await expect(link).toHaveCount(1);
+  const href = (await link.getAttribute('href')) ?? '';
+  expect(href).not.toBe('');
+  const icon = await page.request.get(new URL(href, page.url()).href);
+  expect(icon.status()).toBe(200);
+  expect(icon.headers()['content-type']).toContain('image/svg+xml');
+});
+
 // D8: shown on the page itself, not only in the repository.
 test("the page says the generated files are the user's", async ({ page }) => {
   await page.goto('./');

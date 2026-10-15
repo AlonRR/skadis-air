@@ -19,6 +19,7 @@ All notable changes to this project are recorded here. The format follows
   full-history secret scan, and the type check, lint, formatting, unit and browser tests.
 - The page is published at <https://alonrr.github.io/skadis-air/>, rebuilt from every change that passes
   the checks.
+- A tab icon: five slots of a SKÅDIS board in the page's blue, lighter when your system is set to dark.
 - The first connector: a standoff, a hollow spacer between boards and the wall at their corner screw
   holes, 20 mm tall unless set, for 1 board, or for 2 or 4 where their corners meet; the shared ones
   leave a tunnel along the seam, so hooks fit behind them. Connectors are listed under their own
