@@ -19,7 +19,7 @@ prints. A lightened board is the same with open pockets cut between the slots: a
 joined to its neighbours by diagonal webs, in about 41 % of the plastic; a skeleton board makes every rim and web
 of that lattice an I-beam, thin through the middle, in about 32 %. It warns when the board is larger than your printer's bed. It also makes a small coupon to
 test the slots' fit first, a pair of tiles to test how two tiles meet, and a standoff, the first connector, to hold one board off the wall at a
-corner screw, or two or four where their corners meet. The SKÅDIS dimensions it uses come from published sources, checked against a real board
+corner screw, or two or four where their corners meet, and a slot clip, which joins boards behind a seam by pegs in their slots. The SKÅDIS dimensions it uses come from published sources, checked against a real board
 with calipers, and a printed coupon set the slots' clearance ([`docs/skadis-standard.md`](docs/skadis-standard.md)).
 
 What it will make:
@@ -29,8 +29,9 @@ What it will make:
   - **solid**: a plain plate with the SKÅDIS slots;
   - **lightened**: pockets cut between the slots, with a rim kept round each slot;
   - **skeleton** (ultralight): rims round the slots tied by thin beams, mostly open.
-- **Connectors** of five kinds ([figure](docs/figures/connector-types.png)): a standoff, a seam
-  plate, a slot clip, an angle joiner and a desk clamp, for 1, 2 or 4 boards where that applies.
+- **Connectors** of four kinds ([figure](docs/figures/connector-types.png)): a standoff, a slot clip
+  ([figure](docs/figures/slot-clip.png)), an angle joiner and a desk clamp, for 1, 2 or 4 boards where that
+  applies. The seam plate in the first figure was dropped for the slot clip, which needs no screw holes.
 
 Every decision is in [`docs/status.md`](docs/status.md), the work in order in
 [`docs/backlog.md`](docs/backlog.md), and the SKÅDIS dimensions, each with its source, in

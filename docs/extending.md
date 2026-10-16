@@ -26,14 +26,14 @@ A board type is one file and one line in a list (D11, the extension-registry pra
    the page should list it. The page opens on the first.
 
 **A connector is a board type with `group: 'connector'`** (D91, C95), added the same way, after the
-boards in the list: the page lists it under "Connectors". The standoff (`standoff.ts`) was the first.
+boards in the list: the page lists it under "Connectors". The standoff (`standoff.ts`) was the first, the slot clip (`slot-clip.ts`) the second.
 A part a screw goes through takes the shared `SCREW_SIZE_SETTING` from `mounting.ts` rather than its
 own, so the hole and the screw cannot drift apart from the board's. A type is turned over to print,
 face down (D66), unless it says `prints: 'as-built'` (C101), as the standoff does; the contract test
 checks that every type's printed part sits on the bed. A type whose file holds more than one
 separate part, as the seam-test pair's two tiles do, says `parts: 2` (C107); the contract test
 holds every type to its count, and the STL check reads it from a file beside the sample. Whatever stands behind a board is tested
-against `test/slot-zone.ts`: the room round each slot, and the room a hook takes below it.
+against `test/slot-zone.ts`: the room round each slot, and the room a hook takes below it; a part with pegs in the boards' own slots, as the slot clip has, names those slots in the zones' `except`, so only they are left out.
 
 Nothing else. The page lists the type, builds its form, checks its values, rebuilds it on every
 change and names its file, and `npm run check:stl` checks it at its starting values. **Proved

@@ -416,6 +416,54 @@ describe('the standoff connector type (D91 to D94)', () => {
   });
 });
 
+describe('the slot clip connector type (D187 to D189, C191)', () => {
+  const slotClip = boardType('slot-clip');
+
+  it('is a connector, listed after the standoff, for 2 boards side by side and 20 mm deep unless set', () => {
+    expect(groupOf(slotClip)).toBe('connector');
+    const ids = BOARD_TYPES.map((t) => t.id);
+    expect(ids.indexOf('slot-clip')).toBe(ids.indexOf('standoff') + 1);
+    expect(defaultValues(slotClip.settings)).toEqual({ boards: '2', depthMm: 20, pegClearanceMm: 0.4 });
+  });
+
+  it('offers 2 boards side by side, 2 one above the other, and 4, and puts the peg clearance under Advanced', () => {
+    const boards = slotClip.settings.find((s) => s.key === 'boards');
+    expect(boards?.kind === 'choice' && boards.options.map((o) => o.value)).toEqual(['2', '2-stacked', '4']);
+    const advanced = slotClip.settings.filter((s) => s.kind === 'number' && s.advanced === true).map((s) => s.key);
+    expect(advanced).toEqual(['pegClearanceMm']);
+  });
+
+  it('builds the clip its values describe, and prints as built, wall face down, the pegs on top', () => {
+    const built = buildBoard(engine, slotClip, { boards: '4', depthMm: 25, pegClearanceMm: 0.4 });
+    if (!built.ok) throw new Error(built.problem);
+    const printed = printedPart(slotClip, built.solid);
+    made.push(built.solid, printed);
+    expect(built.solid.genus()).toBe(1);
+    expect(printed.boundingBox().max[2]).toBeCloseTo(27.5, 6);
+    // the bar is at the bed, only the pegs at the top
+    const [low, high] = [printed.slice(1), printed.slice(27)];
+    expect(high.area()).toBeLessThan(low.area() / 4);
+    low.delete();
+    high.delete();
+  });
+
+  it('says a clip too shallow for the hooks room and its bar is a problem', () => {
+    const built = buildBoard(engine, slotClip, { boards: '2', depthMm: 10, pegClearanceMm: 0.4 });
+    expect(built.ok).toBe(false);
+    if (!built.ok) expect(built.problem).toContain('12 mm');
+  });
+
+  it('names its file with the boards it joins, its depth, and a peg clearance other than 0.4 mm', () => {
+    const name = (given: Record<string, number | string>) =>
+      boardFileName(slotClip, { ...defaultValues(slotClip.settings), ...given }, 'stl');
+    expect(name({})).toBe('skadis-slot-clip-2-boards-20mm.stl');
+    expect(name({ boards: '2-stacked' })).toBe('skadis-slot-clip-2-boards-stacked-20mm.stl');
+    expect(name({ boards: '4', depthMm: 25, pegClearanceMm: 0.3 })).toBe(
+      'skadis-slot-clip-4-boards-25mm-clearance-0.3mm.stl',
+    );
+  });
+});
+
 describe('the seam-test pair type (D69)', () => {
   const seam = boardType('seam-test');
 

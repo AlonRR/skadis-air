@@ -20,6 +20,9 @@ All notable changes to this project are recorded here. The format follows
 - The page is published at <https://alonrr.github.io/skadis-air/>, rebuilt from every change that passes
   the checks.
 - A tab icon: five slots of a SKÅDIS board in the page's blue, lighter when your system is set to dark.
+- The slot clip, a connector that joins boards behind a seam by pegs in their slots, so it needs no screw holes:
+  for 2 boards side by side or one above the other, or 4 where their corners meet. It is as deep as the gap
+  behind the boards, so the wall holds it on, and leaves every other slot room for a hook.
 - 3MF as well as STL: a choice beside the download. A wall's print list also gives every panel in one file, a zip of
   STLs with the print list in it, or one 3MF with an object for each kind of panel named with how many to print.
 - Walls: "Split into panels" on a board makes its size a wall's, up to 1600 mm each way, cut into panels your

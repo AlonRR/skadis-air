@@ -21,7 +21,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path as MplPath
-from shapely.geometry import LineString, box
+from shapely.geometry import LineString, Point, box
 from shapely.ops import unary_union
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,6 +30,7 @@ INK, MUTED, PLASTIC, CLIP, WALL, SEAM = "#16222c", "#5a6773", "#c9cdd1", "#d9822
 SLOT_W, SLOT_H = 5.2, 15.2
 PEG_W, PEG_H = 4.8, 14.8  # the slot as the board cuts it (5 x 15 and 0.2 mm, D40) less a 0.4 mm peg clearance
 BAR = 10.0  # the bar's width behind the boards, as wide as a standoff (C83)
+POST = 20.0  # a round post behind each peg, where the clip meets the boards (C192)
 HOOK_ROOM = 8.0  # kept clear behind the boards between the pegs: a hook's 6 mm and 2 mm (C99)
 RECESS = 2.5  # the pegs stop this far short of the front face
 
@@ -69,7 +70,7 @@ def boards(ax, size, seams):
 def two(ax):
     boards(ax, 80, [((40, 0), (40, 80))])
     pegs = [(20, 20), (60, 20)]  # the nearest whole slot on each side of the seam, 40 mm apart
-    bar = LineString(pegs).buffer(BAR / 2, cap_style="round")
+    bar = unary_union([LineString(pegs).buffer(BAR / 2, cap_style="round"), *(Point(p).buffer(POST / 2) for p in pegs)])
     fill(ax, bar, CLIP, edge=CLIP, alpha=0.35, ls="--")
     for x, y in pegs:
         fill(ax, stadium(x, y, PEG_W, PEG_H), CLIP, edge=INK)
@@ -82,6 +83,7 @@ def four(ax):
     pegs = [(20, 20), (60, 20), (60, 60), (20, 60)]  # the four whole slots round the corner where they meet
     # a square ring through the four pegs: its sides cross no slot, so the slot where the four meet stays free
     ring = LineString([*pegs, pegs[0]]).buffer(BAR / 2, cap_style="round", join_style="round")
+    ring = unary_union([ring, *(Point(p).buffer(POST / 2) for p in pegs)])
     fill(ax, ring, CLIP, edge=CLIP, alpha=0.35, ls="--")
     for x, y in pegs:
         fill(ax, stadium(x, y, PEG_W, PEG_H), CLIP, edge=INK)
@@ -95,14 +97,14 @@ def section(ax):
     slots = unary_union([box(20 - SLOT_W / 2, 0, 20 + SLOT_W / 2, t), box(60 - SLOT_W / 2, 0, 60 + SLOT_W / 2, t)])
     for board in (box(-10, 0, 40, t), box(40, 0, 90, t)):  # the two boards, meeting at the seam, x = 40
         fill(ax, board.difference(slots), PLASTIC, lw=0.6)
-    posts = [box(x - BAR / 2, t, x + BAR / 2, t + HOOK_ROOM) for x in (20, 60)]
+    posts = [box(x - POST / 2, t, x + POST / 2, t + HOOK_ROOM) for x in (20, 60)]
     pegs = [box(x - PEG_W / 2, RECESS, x + PEG_W / 2, t + 0.1) for x in (20, 60)]
-    clip = unary_union([box(20 - BAR / 2, t + HOOK_ROOM, 60 + BAR / 2, t + gap), *posts, *pegs])
+    clip = unary_union([box(20 - POST / 2, t + HOOK_ROOM, 60 + POST / 2, t + gap), *posts, *pegs])
     fill(ax, clip, CLIP, lw=0.6)
     fill(ax, box(-10, t + gap, 90, t + gap + 2), WALL, edge="none")
     ax.annotate("wall", (-9, t + gap + 3), fontsize=7.5, color=MUTED)
-    ax.annotate("the gap the standoffs\nleave, 20 mm", (-9, t + 6), fontsize=7.5, color=MUTED)
-    ax.annotate("8 mm clear for\nhooks (C99)", (28, t + 1.6), fontsize=7.5, color=MUTED)
+    ax.annotate("the gap the\nstandoffs\nleave, 20 mm", (-9, t + 5), fontsize=7, color=MUTED)
+    ax.annotate("8 mm clear\nfor hooks\n(C99)", (31, t + 0.8), fontsize=6.5, color=MUTED)
     ax.annotate("pegs stop 2.5 mm\nshort of the front", (66.5, -4.6), fontsize=7.5, color=MUTED)
     ax.annotate("front", (-9, -3.2), fontsize=7.5, color=MUTED)
     ax.annotate("seam", (38.5, -3.2), fontsize=7.5, color=SEAM)
