@@ -135,6 +135,24 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 `board-lightened` and `mounting-ikea` were planned and built on 15 Oct 2026 (D141 to D147, D155 to D158; C148 to
 C150, C159, C160; the backlog rows have the results). Waiting on the owner:
 
+`conn-seam-plate`, asked on 16 Oct 2026. D13's figure draws a plate behind the seam, screwed through both
+boards' corner holes, as IKEA's 404.776.46 is (a 30 x 65 x 2 mm steel plate held by the boards' corner screws
+and spacers). A plate there meets three things already made: the 2- and 4-board standoffs (D92, D97) already
+join boards through those same holes, from behind; the boards' own standoffs (D75) stand where a plate would
+lie; and a board hung on keyholes lies flat on the wall (D158), which a plate behind it would lift.
+
+- **D185** What the seam plate is for: (a) holding boards to each other: a plate 4 mm thick with a hexagonal
+  pocket for an M4 nut under each corner hole, so short countersunk screws join the boards with no screw in
+  the wall there, and a wall hung on its top panels' keyholes holds together; refused with standoffs, which
+  stand where it lies; (b) lining boards up only, held by the same screws that go on into the wall or a
+  spacer, as IKEA's plate is; (c) none: the 2- and 4-board standoffs already join boards at their corners, so
+  the row is done by them, and `edge-joins` and the slot clip join panels without a plate. Recommended: (c),
+  as (a) and (b) each work only where nothing else holds the corner.
+- **D186** If (a) or (b): its shape, for 2 boards a strip 10 mm wide over the two holes 20 mm apart, for 4 a
+  square over the four, cut away round the slots it crosses so a hook still fits behind them, as the
+  standoff's tunnel does (D97); solid only, as a part this small has nothing to lighten (as D92).
+  Recommended: these.
+
 - **T151** Print a lightened board with keyholes and hang it: an 80 x 80 mm one is enough
   (`skadis-lightened-80x80-keyholes.stl` from the page, "Keyholes" under "Screw holes"), in the filament you
   choose. Hang it on two 4 mm pan-head screws and put an IKEA hook in it. Then say whether the rims and webs
