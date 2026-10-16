@@ -13,6 +13,9 @@ export default defineConfig({
   outputDir: 'out/playwright',
   reporter: 'list',
   forbidOnly: !!process.env.CI,
+  // A board is built in a worker, and on a busy machine a skeleton board took longer than the 5 s an assertion
+  // waits by default, failing two tests that pass alone (C220, 16 Oct 2026). A failing check still fails, later.
+  expect: { timeout: 15_000 },
   projects: [
     {
       name: 'chromium',
