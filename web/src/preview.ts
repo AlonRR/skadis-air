@@ -192,12 +192,16 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
 
   // The canvas fills the stage. A new size keeps the user's angle and pulls back only if the whole board
   // no longer fits.
-  const resize = () => {
+  // The stage's size as it is laid out now.
+  const measure = () => {
     size.width = container.clientWidth || 640;
     size.height = container.clientHeight || 384;
     renderer.setSize(size.width, size.height, false);
     camera.aspect = size.width / size.height;
     camera.updateProjectionMatrix();
+  };
+  const resize = () => {
+    measure();
     if (board) {
       const needed = distanceToFit(box, view(), REFIT_SHARE);
       if (camera.position.distanceTo(controls.target) < needed) standAt(needed);
@@ -321,6 +325,9 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
       container.dataset['triangles'] = String(board.userData['triangles'] ?? 0);
       container.dataset['panels'] = String(wall ? wall.panels() : 1);
       container.dataset['detailed'] = String(wall ? 0 : 1);
+      // Measured before framing: a wall's print list, shown just before it, has changed the stage's size before
+      // the observer above reports it, and a wall framed for the stage as it was sat at half the size (C217).
+      measure();
       // Keep the user's view while they edit; frame again only when the board's size changes.
       if (framing !== framedFor) {
         frame();

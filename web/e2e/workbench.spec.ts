@@ -114,6 +114,24 @@ test.describe('the layout', () => {
   });
 });
 
+// A wall's print list takes its share of the stage as the wall is drawn, so the wall is framed to the 3D view as
+// that leaves it, not as it was a moment before: on a tall screen it had been framed for the taller view and left at
+// half the size (C217).
+test.describe('a wall on a tall screen', () => {
+  test.use({ viewport: { width: 1280, height: 1300 } });
+
+  test('is framed to fill --stage-fit of the 3D view its print list leaves', async ({ page }) => {
+    await ready(page);
+    await page.locator('input[name="panels"][value="split"]').check({ force: true });
+    await page.locator('input[name="widthMm"]').fill('1200');
+    await page.locator('input[name="heightMm"]').fill('800');
+    await expect(page.getByTestId('board-status')).toContainText('Wall ready', { timeout: 60_000 });
+    await expect(page.getByTestId('print-list')).toBeVisible();
+    await expect.poll(async () => fill(await drawnBox(page)), { timeout: 10_000 }).toBeGreaterThan(0.75);
+    expect(fill(await drawnBox(page))).toBeLessThan(0.88);
+  });
+});
+
 test.describe('the theme toggle (D113)', () => {
   test('switches the theme, and the page remembers it over the system setting', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'light' });

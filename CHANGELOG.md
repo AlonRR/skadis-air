@@ -29,6 +29,8 @@ All notable changes to this project are recorded here. The format follows
   behind the boards, so the wall holds it on, and leaves every other slot room for a hook.
 - 3MF as well as STL: a choice beside the download. A wall's print list also gives every panel in one file, a zip of
   STLs with the print list in it, or one 3MF with an object for each kind of panel named with how many to print.
+- The files and pictures for the Printables page: `npm run printables` makes a ready set of boards and connectors
+  and checks each one; `scripts/printables/write-images.mjs` takes the pictures; `docs/printables.md` holds the text.
 - The 3D view's own controls: Zoom in, Zoom out and Front, Back and Top beside Reset view, in a "View..." menu on
   a phone; the arrow keys turn the view and + and - zoom it. The page follows the design system's v0.5.0, and the
   file's format, STL or 3MF, is now chosen in the form, under "Printer".
@@ -78,6 +80,10 @@ All notable changes to this project are recorded here. The format follows
   window shrinks, and never zoomed out to a dot.
 - The STL lies as boards are printed: face down, the back up, turned over from the way the page shows
   the board, so its sides keep their places once it hangs.
+
+### Fixed
+
+- A wall is framed to the 3D view its print list leaves: on a tall screen it had sat at half the size.
 
 ## [0.1.0] - 2026-10-12
 
