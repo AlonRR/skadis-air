@@ -5,6 +5,6 @@ projects:
   - name:     Skådis Air
     kind:     build
     state:    active
-    next:     "slot clip grip and fixing (D194, D195); walls past 1.6 m (D196, D197); then edge-joins"
+    next:     "clip-grip-fixing (D194, D195), wall-grid (D196), wall-detail (D197); then edge-joins"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-15
