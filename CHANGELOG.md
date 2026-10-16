@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-16
+
 ### Added
 
 - A fit test coupon, chosen on the page like a board: four slots at four clearances, told apart by
