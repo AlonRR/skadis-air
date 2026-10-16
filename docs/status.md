@@ -148,6 +148,9 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D212 | **Its files**: the solid, lightened and skeleton boards at 200 x 200 and 240 x 200 mm, the fit coupon, the standoff for 1, 2 and 4 boards, and the slot clip side by side, one above the other and for 4 boards, made by a script from the release; and **a link to the page** for any other size | 16 Oct 2026 |
 | Q213 | **The Printables files are CC0**, public domain, as the files the tool makes already are free of conditions | 16 Oct 2026 |
 | D214 | **The latest version is released before the upload** | 16 Oct 2026 |
+| D222 | **A comma in a number is a decimal point, unless it stands before three digits**, as in "40,000", which could as well be a thousands separator and is refused as unclear; every field is read by the one reader, the library's (the code review, 16 Oct 2026) | 16 Oct 2026 |
+| D223 | **A wall is at most 1 km each way**: a larger size is taken for a slip of the keys and refused | 16 Oct 2026 |
+| A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
 ## Open questions
@@ -168,6 +171,16 @@ drawn without slowing or crashing the page (16 Oct 2026), and answered D194 to D
 `clip-grip-fixing` was built on 16 Oct 2026 (D194, D195; C199), then `wall-grid` (C200) and `wall-detail` (D196,
 D197; C203 to C205) and `design-system-v050` (D202, D206, D207; C208, C209); the backlog rows have the results.
 Building next: the release and the Printables page (`printables-entry`, D211 to D214).
+
+`v0.2.0` was released and the Printables files and pictures made (16 Oct 2026); a code review then found 15
+faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`. The draft on Printables is
+made in the owner's browser, once it is connected again (T219).
+
+- **Q221** Which filament, and which print settings, the listing should name for the printed parts: its
+  `<<CONFIRM: the filament...>>` in [`printables.md`](printables.md).
+- **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
+  least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
+- **T219** Connect the browser extension again, so the draft can be made in your browser.
 
 - **T193** Print slot clips and two small boards to try their pegs: a clip with each grip ("Grip" under
   Advanced: ribs, then lip; `skadis-slot-clip-2-boards-20mm.stl` and `skadis-slot-clip-2-boards-20mm-lip.stl`)

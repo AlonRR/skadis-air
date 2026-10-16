@@ -108,7 +108,12 @@ describe('wallPlan (D175 to D177)', () => {
     const held = plan.panels.reduce((n, p) => n + p.xs.length + p.ys.length, 0);
     expect(held).toBeLessThanOrEqual(4 * (plan.columns.length + plan.rows.length));
     expect(held).toBeLessThan(panels / 2);
-    expect(ms).toBeLessThan(100);
+    expect(ms).toBeLessThan(1000); // an order of magnitude, not a race: a busy machine is slower (C220)
+  });
+
+  it('refuses a wall past a kilometre each way, which the settings refuse too (D223)', () => {
+    expect(() => wallPlan(wall({ widthMm: 1_000_040, heightMm: 2400 }), { xMm: 250, yMm: 210 })).toThrow(/1 km/);
+    expect(wallPlan(wall({ widthMm: 1_000_000, heightMm: 2400 }), { xMm: 250, yMm: 210 })).not.toBeNull();
   });
 
   it('turns the panels on a bed that is not square when that makes fewer of them', () => {

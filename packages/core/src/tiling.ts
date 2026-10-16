@@ -13,6 +13,8 @@ import type { Side, Sides } from './slots.js';
 
 /** The most tiles a panel has each way: the largest single board (C51). */
 export const MAX_PANEL_TILES = 10;
+/** The largest wall each way, mm: a kilometre, far past any real wall, so a slip of the keys is refused (D223). */
+export const MAX_WALL_MM = 1_000_000;
 
 /** A run of `n` tiles in as few parts as `most` allows, as even as they can be, the larger ones first (D176). */
 export function evenSplit(n: number, most: number): number[] {
@@ -59,6 +61,9 @@ const number = (v: unknown, fallback: number) => (typeof v === 'number' && Numbe
 export function wallPlan(values: Readonly<Record<string, unknown>>, bed: Bed): WallPlan | null {
   if (values['panels'] !== 'split') return null;
   const [columns, rows] = [number(values['widthMm'], TILE_MM) / TILE_MM, number(values['heightMm'], TILE_MM) / TILE_MM];
+  if (columns * TILE_MM > MAX_WALL_MM || rows * TILE_MM > MAX_WALL_MM) {
+    throw new RangeError('A wall is at most 1 km each way');
+  }
   const limit = {
     columns: Math.floor(number(values['panelWidthMm'], MAX_PANEL_TILES * TILE_MM) / TILE_MM),
     rows: Math.floor(number(values['panelHeightMm'], MAX_PANEL_TILES * TILE_MM) / TILE_MM),

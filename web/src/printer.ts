@@ -2,7 +2,7 @@
 // (D61), a custom size, or a printer from the list (docs/printer-beds.md), all as the design system's Choice
 // buttons (D111): a button for each maker after the two, and a maker's models as a second row (D170). The
 // choice, or the custom size, is remembered in this browser, as the theme is (D171).
-import { DEFAULT_BED, MAKERS, modelLabel, type Bed } from 'skadis-air';
+import { DEFAULT_BED, MAKERS, modelLabel, readTypedNumber, type Bed } from 'skadis-air';
 import { choiceGroup, chosenIn } from './form.js';
 
 const MIN_MM = 50;
@@ -55,8 +55,10 @@ export interface PrinterChoice {
 }
 
 /** A bed's size as typed, a comma read as a decimal point, as the design system's fields take it (D202). */
-const size = (input: HTMLInputElement | null): number =>
-  input === null ? Number.NaN : Number(input.value.trim().replace(',', '.'));
+const size = (input: HTMLInputElement | null): number => {
+  const typed = input === null ? null : readTypedNumber(input.value);
+  return typed?.ok ? typed.value : Number.NaN;
+};
 
 export function mountPrinter(box: HTMLElement, changed: () => void): PrinterChoice {
   const list = box.querySelector<HTMLElement>('[data-testid="printer-bed"]');

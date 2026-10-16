@@ -152,11 +152,13 @@ describe('the solid board type', () => {
     expect(off.ok).toBe(false);
   });
 
-  it('takes a wall of any size: its width and height have no upper limit (D196)', () => {
+  it('takes a wall up to a kilometre each way, refusing a size past it as a slip of the keys (D196, D223)', () => {
     const size = solid.settings.filter((s) => s.key === 'widthMm' || s.key === 'heightMm');
-    expect(size.map((s) => s.kind === 'number' && s.max)).toEqual([undefined, undefined]);
-    const read = readValues(solid.settings, { widthMm: '40000', heightMm: '3000', panels: 'split' });
+    expect(size.map((s) => s.kind === 'number' && s.max)).toEqual([1_000_000, 1_000_000]);
+    const read = readValues(solid.settings, { widthMm: '1000000', heightMm: '3000', panels: 'split' });
     expect(read.ok).toBe(true);
+    const past = readValues(solid.settings, { widthMm: '1000040', heightMm: '3000', panels: 'split' });
+    expect(past.ok).toBe(false);
     // one board is still at most 400 mm a side (C51): the panel size keeps its limit
     const panel = solid.settings.find((s) => s.key === 'panelWidthMm');
     expect(panel?.kind === 'number' && panel.max).toBe(400);

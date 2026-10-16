@@ -116,7 +116,8 @@ export function slotClipParams(given: Partial<SlotClipParams>): SlotClipParams {
     );
   }
   if (!(p.pegClearanceMm >= 0)) throw new RangeError('The peg clearance cannot be less than 0 mm');
-  if (!(pegSize(p.pegClearanceMm)[0] > 2 * PEG_CHAMFER_MM + SLIT_MM)) {
+  // the tip's chamfer on both sides, and the lip's slit between its halves; a ribbed peg has none
+  if (!(pegSize(p.pegClearanceMm)[0] > 2 * PEG_CHAMFER_MM + (p.grip === 'lip' ? SLIT_MM : 0))) {
     throw new RangeError('The peg clearance leaves no peg');
   }
   if (!(p.screwMm > 0)) throw new RangeError('The screw size must be more than 0 mm');
@@ -219,11 +220,8 @@ function lippedPeg(engine: Engine, [x, y]: [number, number], [w, h]: [number, nu
     [top, 0],
   ]);
   // from just below the pocket's floor, so the slit and the floor do not meet on one plane; the post fills it
-  const slit = Manifold.cube([SLIT_MM, h + 2, top - floor + 2]).translate([
-    x - SLIT_MM / 2,
-    y - h / 2 - 1,
-    floor - 0.2,
-  ]);
+  const block = Manifold.cube([SLIT_MM, h + 2, top - floor + 2]);
+  const slit = block.translate([x - SLIT_MM / 2, y - h / 2 - 1, floor - 0.2]);
   const halves = body.subtract(slit);
   // the lip, drawn as (outward from the peg's middle, up from the boards' back faces), then laid along the peg
   const half = w / 2;
@@ -238,15 +236,14 @@ function lippedPeg(engine: Engine, [x, y]: [number, number], [w, h]: [number, nu
   for (const side of [-1, 1]) {
     // mirrored for the left side, which turns the outline over: NonZero fills it either way round
     const drawn = new CrossSection([profile.map(([u, v]): Vec2 => [side * u, v])], 'NonZero');
-    const laid = drawn
-      .extrude(straight)
-      .rotate([90, 0, 0])
-      .translate([x, y + straight / 2, 0]);
+    const along = drawn.extrude(straight);
+    const turned = along.rotate([90, 0, 0]);
+    lips.push(turned.translate([x, y + straight / 2, 0]));
+    for (const m of [along, turned]) m.delete();
     drawn.delete();
-    lips.push(laid);
   }
   const part = Manifold.union([halves, ...lips]);
-  for (const m of [body, slit, halves, ...lips]) m.delete();
+  for (const m of [body, block, slit, halves, ...lips]) m.delete();
   return part;
 }
 
@@ -260,22 +257,25 @@ function keyholeCutter(engine: Engine, [cx, cy]: [number, number], screwMm: numb
     'NonZero',
   );
   const channel = new CrossSection([stadium(cx, cy, k.entryMm, rest - entry + k.entryMm)], 'Positive');
-  const low = lips.extrude(KEYHOLE_LIPS_MM + 1).translate([0, 0, -1]);
-  const high = channel.extrude(k.channelMm).translate([0, 0, KEYHOLE_LIPS_MM]);
+  const [back, front] = [lips.extrude(KEYHOLE_LIPS_MM + 1), channel.extrude(k.channelMm)];
+  const [low, high] = [back.translate([0, 0, -1]), front.translate([0, 0, KEYHOLE_LIPS_MM])];
   const cutter = Manifold.union(low, high);
-  for (const m of [low, high]) m.delete();
+  for (const m of [back, front, low, high]) m.delete();
   for (const c of [lips, channel]) c.delete();
   return cutter;
 }
 
-/** The countersunk hole for the screw, its countersink at the bar's board face (C199). */
+/** The countersunk hole for the screw, its countersink at the bar's board face (C199). Past that face it goes on
+ * 1 mm at the countersink's width, so the two do not meet on one plane, and no wider: the posts beside it stand
+ * there, and a wider cone had notched one. */
 function screwCutter(engine: Engine, [x, y]: [number, number], screwMm: number, bar: number): Manifold {
   const { holeMm, countersinkMm } = screwHole(screwMm);
   const sink = (countersinkMm - holeMm) / 2; // 45 degree walls
   return ringedSolid(engine, (grow) => circle(x, y, holeMm, grow), [
     [-1, 0],
     [bar - sink, 0],
-    [bar + 1, sink + 1],
+    [bar, sink],
+    [bar + 1, sink],
   ]);
 }
 
@@ -317,9 +317,10 @@ export function makeSlotClip(engine: Engine, params: SlotClipParams): Manifold {
     const pockets = keep(
       CrossSection.union(centres.map(([x, y]) => keep(new CrossSection([stadium(x, y, w, h, POCKET_GAP_MM)])))),
     );
-    const pocket = pockets.extrude(POCKET_DEPTH_MM + 1).translate([0, 0, p.depthMm - POCKET_DEPTH_MM]);
+    const deep = pockets.extrude(POCKET_DEPTH_MM + 1);
+    const pocket = deep.translate([0, 0, p.depthMm - POCKET_DEPTH_MM]);
     const hollowed = postSolid.subtract(pocket);
-    for (const m of [postSolid, pocket]) m.delete();
+    for (const m of [postSolid, deep, pocket]) m.delete();
     postSolid = hollowed;
   }
   solids.push(postSolid);

@@ -24,7 +24,7 @@ import {
 } from 'three';
 import type { Group } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import type { PanelLine, Placed } from './build-messages.js';
+import type { Placed, WallReply } from './build-messages.js';
 import { distanceToFit, zoomOutLimit, type View } from './framing.js';
 import { boardScene, disposeScene, paintBoards } from './preview-scene.js';
 import { wallView, type WallView } from './wall-scene.js';
@@ -58,10 +58,11 @@ const VIEWS: Record<string, Vector3> = {
 };
 
 export interface Preview {
-  /** Draws the board, or a wall's panels with its print list's lines, or empties the preview when there is
-   * none; `framing` decides when to frame again. */
-  show(board: readonly Placed[] | null, framing: string, wall?: readonly PanelLine[]): void;
-  /** Names the drawing for assistive technology: what is in it, in words ("The wall in 3D"). */
+  /** Draws the board, or a wall's panels with its print list's lines and its slots, or empties the preview when
+   * there is none; `framing` decides when to frame again. */
+  show(board: readonly Placed[] | null, framing: string, wall?: WallReply): void;
+  /** Names the drawing and the stage round it for assistive technology: what is in them, in words ("The wall in
+   * 3D"). */
   name(label: string): void;
 }
 
@@ -154,6 +155,7 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
     wall.update(camera, size.height);
     container.dataset['triangles'] = String(wall.triangles());
     container.dataset['detailed'] = String(wall.detailed());
+    container.dataset['standInBuilds'] = String(wall.standInBuilds());
   };
 
   // After each frame, how many geometries the graphics card holds: it must stay at two (the board
@@ -254,6 +256,8 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
   container.querySelector('[data-testid="zoom-in"]')?.addEventListener('click', () => zoom(1 / ZOOM_STEP));
   container.querySelector('[data-testid="zoom-out"]')?.addEventListener('click', () => zoom(ZOOM_STEP));
   canvas.addEventListener('keydown', (event) => {
+    // with Ctrl, Cmd or Alt the keys are the browser's own: Ctrl and - zooms the page, Alt and an arrow goes back
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
     const keys: Record<string, () => void> = {
       ArrowLeft: () => turn(-TURN_STEP, 0),
       ArrowRight: () => turn(TURN_STEP, 0),
@@ -273,7 +277,10 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
   views?.addEventListener('change', (event) => {
     const name = event.target instanceof HTMLInputElement ? event.target.value : '';
     const side = VIEWS[name];
-    if (!board || !side) return;
+    if (!board || !side) {
+      face(''); // nothing to face: the choice does not stay made
+      return;
+    }
     face(name);
     controls.target.copy(box.getCenter(new Vector3()));
     camera.position.copy(controls.target).add(side);
@@ -286,11 +293,13 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
   container.dataset['state'] = 'loading';
   say('Preparing the preview…');
 
+  const stage = container.closest('.ws-stage');
   return {
     name(label) {
       canvas.setAttribute('aria-label', label);
+      stage?.setAttribute('aria-label', label);
     },
-    show(mesh, framing, lines) {
+    show(mesh, framing, wallReply) {
       if (board) {
         if (wall) wall.dispose();
         else disposeScene(board);
@@ -307,8 +316,8 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
         return;
       }
       try {
-        if (lines && lines.length > 0) {
-          wall = wallView(mesh, lines, renderer.capabilities.getMaxAnisotropy());
+        if (wallReply && wallReply.panels.length > 0) {
+          wall = wallView(mesh, wallReply, renderer.capabilities.getMaxAnisotropy());
           board = wall.group;
         } else {
           board = boardScene(mesh);
@@ -328,17 +337,19 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
       // Measured before framing: a wall's print list, shown just before it, has changed the stage's size before
       // the observer above reports it, and a wall framed for the stage as it was sat at half the size (C217).
       measure();
-      // Keep the user's view while they edit; frame again only when the board's size changes.
+      container.dataset['state'] = 'ready';
+      say(''); // the status bar under the stage says how to turn and zoom it
+      // Keep the user's view while they edit; frame again only when the board's size changes. Either way the
+      // detail is chosen and the stage drawn once, by frame() or here.
       if (framing !== framedFor) {
         frame();
         framedFor = framing;
+      } else {
+        limitZoom();
+        fitDepth();
+        redetail();
+        draw();
       }
-      container.dataset['state'] = 'ready';
-      say(''); // the status bar under the stage says how to turn and zoom it
-      limitZoom();
-      fitDepth();
-      redetail();
-      draw();
     },
   };
 }

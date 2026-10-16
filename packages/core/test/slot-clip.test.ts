@@ -90,6 +90,12 @@ describe('slotClipParams: the starting values', () => {
     expect(() => slotClipParams({ fixing: 'nail' as SlotClipParams['fixing'] })).toThrow(RangeError);
   });
 
+  it('refuses a peg too narrow for its grip: the lip needs room for its slit, the ribs do not', () => {
+    // a 3.5 mm clearance leaves a 1.7 mm peg: enough for ribs and a chamfered tip, too little for the 1 mm slit
+    expect(slotClipParams({ pegClearanceMm: 3.5 }).pegClearanceMm).toBe(3.5);
+    expect(() => slotClipParams({ pegClearanceMm: 3.5, grip: 'lip' })).toThrow(/no peg/);
+  });
+
   it('refuses a screw whose countersink is wider than the gap between the seam and a post (C199)', () => {
     expect(slotClipParams({ fixing: 'screw', screwMm: 4 }).screwMm).toBe(4);
     expect(() => slotClipParams({ fixing: 'screw', screwMm: 4.5 })).toThrow(/smaller screw/);
@@ -305,6 +311,12 @@ describe('a screw through the clip (D195, C199)', () => {
     // at the bar's board face, 12 mm out, the countersink nearly 9 mm across
     const sink = only(outlines(keep(part.slice(11.9))), ([minX, maxX]) => maxX - minX < 10 && maxX - minX > 6);
     expect(sink[1] - sink[0]).toBeCloseTo(8.8, 1);
+  });
+
+  it("leaves the post beside it whole: the countersink stops at the bar's board face (the review, 16 Oct 2026)", () => {
+    // 0.1 mm under the post's foot-to-room step, where the cone had gone on 1 mm past the bar and notched the post
+    const at = (part: Manifold) => keep(part.slice(12.9)).area();
+    expect(at(clip({ fixing: 'screw' }))).toBeCloseTo(at(clip()), 2);
   });
 
   it('goes above the seam for boards one above the other, and on the ring right of the seam for 4 boards', () => {

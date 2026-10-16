@@ -92,20 +92,20 @@ function rebuild(type: AnyBoardType, form: Form): void {
     shown = id;
     const { min, max } = built;
     const size = [0, 1, 2].map((k) => Math.round(((max[k] ?? 0) - (min[k] ?? 0)) * 10) / 10).join(' × ');
-    if (built.panels) {
-      const count = built.panels.reduce((n, line) => n + line.count, 0);
+    if (built.wall) {
+      const count = built.wall.panels.reduce((n, line) => n + line.count, 0);
       warnAboutBed(0, 0); // every panel fits the bed it was cut for
-      setStatus('ready', `Wall ready: ${count} panels, ${built.panels.length} to download below.`, fileName, size);
+      setStatus('ready', `Wall ready: ${count} panels, ${built.wall.panels.length} to download below.`, fileName, size);
       const [wide, high] = [Math.round(max[0] - min[0]), Math.round(max[1] - min[1])];
       const wallName = `skadis-${type.id}-${wide}x${high}-wall`; // D183
-      showPanels(id, built.panels, wallName);
+      showPanels(id, built.wall.panels, wallName);
     } else {
       warnAboutBed(max[0], max[1]);
       setStatus('ready', `${what === 'board' ? 'Board' : 'Connector'} ready: ${fileName}`, fileName, size);
       showPanels(id, [], '');
     }
-    preview?.show(built.parts, `${type.id} ${size}`, built.panels); // framed again only when type or size changes
-    preview?.name(`The ${built.panels ? 'wall' : what} in 3D`);
+    preview?.show(built.parts, `${type.id} ${size}`, built.wall); // framed again only when type or size changes
+    preview?.name(`The ${built.wall ? 'wall' : what} in 3D`);
   });
   const bed = printer?.bed();
   ask({ kind: 'build', id, typeId: type.id, values: read.values, bed: bed?.ok ? bed.bed : { ...DEFAULT_BED } });

@@ -11,8 +11,15 @@
 /** A rectangle on the wall's face, mm: [left, bottom, right, top]. */
 export type Rect = [number, number, number, number];
 
+/** A slot as a wall's panels cut it, mm: the nominal and its clearance, and the chamfer round it (D40, D41). */
+export interface Slot {
+  widthMm: number;
+  heightMm: number;
+  chamferMm: number;
+}
+
 /** A wall's panels as a grid: where each column and row starts and how wide or tall it is, mm, left to right
- * and bottom to top, and which kind of panel is at a column and a row. */
+ * and bottom to top, which kind of panel is at a column and a row, and the slots they cut. */
 export interface WallGrid {
   xs: readonly number[];
   widths: readonly number[];
@@ -21,6 +28,7 @@ export interface WallGrid {
   kindAt: (column: number, row: number) => number;
   frontMm: number; // how far the panels' front faces stand out from the wall plane
   closed: { left: boolean; right: boolean; bottom: boolean; top: boolean };
+  slot: Slot; // its width decides whether it can be seen; it and its chamfer, how far the plain strips reach
 }
 
 /** The camera, in the wall's millimetres, and how many pixels a millimetre spans on screen 1 mm away from it:
@@ -46,13 +54,6 @@ export interface Detail {
   standIns: Rect[]; // the rest of the face, the slot pattern painted on
   plain: Rect[]; // the strips along closed outer edges, which have no slots
 }
-
-/** A slot's width as the board cuts it (5 mm and its 0.2 mm clearance), which decides whether it can be seen. */
-export const SLOT_MM = 5.2;
-/** How far in from a closed outer edge the slots that edge leaves out would have reached: half a slot and its
- * 1 mm chamfer, across a side and along the top or bottom. */
-export const PLAIN_SIDE_MM = 5.2 / 2 + 1;
-export const PLAIN_END_MM = 15.2 / 2 + 1;
 
 export const key = (column: number, row: number) => `${column},${row}`;
 
@@ -85,7 +86,7 @@ export function wallSize(grid: WallGrid): [number, number] {
 export function chooseDetail(grid: WallGrid, eye: Eye, options: DetailOptions): Detail {
   // Only panels within this distance can have slots wide enough, so only they are looked at: the columns and
   // rows the distance reaches, found by halving, however large the wall.
-  const reach = (SLOT_MM * eye.pixelsAtOneMm) / Math.min(options.showSlotPx, options.keepSlotPx);
+  const reach = (grid.slot.widthMm * eye.pixelsAtOneMm) / Math.min(options.showSlotPx, options.keepSlotPx);
   const depth = Math.abs(eye.z - grid.frontMm);
   const candidates: { column: number; row: number; distance: number }[] = [];
   if (depth < reach) {
@@ -100,7 +101,7 @@ export function chooseDetail(grid: WallGrid, eye: Eye, options: DetailOptions): 
         const dx = Math.max(rect[0] - eye.x, 0, eye.x - rect[2]);
         const dy = Math.max(rect[1] - eye.y, 0, eye.y - rect[3]);
         const distance = Math.hypot(dx, dy, depth);
-        const slotPx = (SLOT_MM * eye.pixelsAtOneMm) / Math.max(distance, 1e-6);
+        const slotPx = (grid.slot.widthMm * eye.pixelsAtOneMm) / Math.max(distance, 1e-6);
         const needed = options.shown.has(key(column, row)) ? options.keepSlotPx : options.showSlotPx;
         if (slotPx >= needed && options.inView(rect)) candidates.push({ column, row, distance });
       }
@@ -158,11 +159,15 @@ function coverRest(grid: WallGrid, full: readonly [number, number][]): { standIn
   }
   closeBand(height);
 
+  // how far in from a closed outer edge the slots it leaves out would have reached: half a slot and its chamfer,
+  // across a side and along the top or bottom
+  const { widthMm, heightMm, chamferMm } = grid.slot;
+  const [side, end] = [widthMm / 2 + chamferMm, heightMm / 2 + chamferMm];
   const inner: Rect = [
-    grid.closed.left ? PLAIN_SIDE_MM : 0,
-    grid.closed.bottom ? PLAIN_END_MM : 0,
-    width - (grid.closed.right ? PLAIN_SIDE_MM : 0),
-    height - (grid.closed.top ? PLAIN_END_MM : 0),
+    grid.closed.left ? side : 0,
+    grid.closed.bottom ? end : 0,
+    width - (grid.closed.right ? side : 0),
+    height - (grid.closed.top ? end : 0),
   ];
   const standIns: Rect[] = [];
   const plain: Rect[] = [];

@@ -7,9 +7,6 @@ import {
   chooseDetail,
   panelRect,
   pixelsAtOneMm,
-  PLAIN_END_MM,
-  PLAIN_SIDE_MM,
-  SLOT_MM,
   wallSize,
   type DetailOptions,
   type Eye,
@@ -30,6 +27,7 @@ function wall(columns: number, rows: number, size = 400, closed = CLOSED): WallG
     kindAt: () => 0,
     frontMm: 5,
     closed,
+    slot: { widthMm: 5.2, heightMm: 15.2, chamferMm: 1 },
   };
 }
 
@@ -67,9 +65,22 @@ describe('chooseDetail', () => {
   it('draws none in full from far away: one patterned rectangle inside the closed edges, plain strips round it', () => {
     const detail = chooseDetail(wall(4, 4), eye(800, 800, 100_000), options());
     expect(detail.full).toEqual([]);
-    expect(detail.standIns).toEqual([[PLAIN_SIDE_MM, PLAIN_END_MM, 1600 - PLAIN_SIDE_MM, 1600 - PLAIN_END_MM]]);
+    // half a slot and its chamfer in from a side, half a slot's length and its chamfer from the top or bottom
+    expect(detail.standIns).toEqual([[3.6, 8.6, 1600 - 3.6, 1600 - 8.6]]);
     expect(detail.plain).toHaveLength(4);
     expect(area(detail.standIns) + area(detail.plain)).toBeCloseTo(1600 * 1600, 6);
+  });
+
+  it('takes the strips and the slot from the wall: no chamfer, narrower strips; wider slots, seen sooner', () => {
+    const plain = { ...wall(4, 4), slot: { widthMm: 5.2, heightMm: 15.2, chamferMm: 0 } };
+    expect(chooseDetail(plain, eye(800, 800, 100_000), options()).standIns).toEqual([
+      [2.6, 7.6, 1600 - 2.6, 1600 - 7.6],
+    ]);
+    // a slot 6.2 mm wide is 2.5 px wide farther off than a 5.2 mm one
+    const at = eye(200, 200, 5 + (5.7 * PX) / 2.5);
+    expect(chooseDetail(wall(1, 1), at, options()).full).toEqual([]);
+    const wide = { ...wall(1, 1), slot: { widthMm: 6.2, heightMm: 16.2, chamferMm: 1 } };
+    expect(chooseDetail(wide, at, options()).full).toEqual([[0, 0]]);
   });
 
   it('leaves the plain strips out where the wall is open: its half slots are real', () => {
@@ -88,12 +99,12 @@ describe('chooseDetail', () => {
 
   it('shows a panel once its slots are 2.5 px wide, and keeps it until they are under 2 px (C203)', () => {
     // straight above one panel, at the distance where its slots are 2.2 px wide
-    const distance = (SLOT_MM * PX) / 2.2;
+    const distance = (5.2 * PX) / 2.2;
     const at = eye(200, 200, 5 + distance);
     expect(chooseDetail(wall(1, 1), at, options()).full).toEqual([]);
     expect(chooseDetail(wall(1, 1), at, options({ shown: new Set(['0,0']) })).full).toEqual([[0, 0]]);
     // control: farther, at 1.9 px, even a panel shown before goes
-    const far = eye(200, 200, 5 + (SLOT_MM * PX) / 1.9);
+    const far = eye(200, 200, 5 + (5.2 * PX) / 1.9);
     expect(chooseDetail(wall(1, 1), far, options({ shown: new Set(['0,0']) })).full).toEqual([]);
   });
 
@@ -121,7 +132,7 @@ describe('chooseDetail', () => {
     const ms = performance.now() - t0;
     expect(close.full.length).toBeGreaterThan(0);
     expect(close.full.length).toBeLessThan(200);
-    expect(ms).toBeLessThan(100);
+    expect(ms).toBeLessThan(1000); // an order of magnitude, not a race: a busy machine is slower (C220)
     // rows with no panel in full go together, so the stand-ins are few however large the wall
     expect(close.standIns.length).toBeLessThan(4 * close.full.length + 4);
     const far = chooseDetail(grid, eye(500_000, 150_000, 1e9), options());

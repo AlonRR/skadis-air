@@ -96,10 +96,11 @@ export function makeStandoff(engine: Engine, params: StandoffParams): Manifold {
 
   // The tunnels at the board face (D97): across the holes' line, and for 4 boards the other way too.
   const [w, d, h, span] = [TUNNEL_WIDTH_MM, TUNNEL_DEPTH_MM, p.heightMm, 4 * SCREW_INSET_MM];
-  const tunnels = [Manifold.cube([w, span, d + 1]).translate([-w / 2, -span / 2, h - d])];
-  if (p.boards === 4) tunnels.push(Manifold.cube([span, w, d + 1]).translate([-span / 2, -w / 2, h - d]));
+  const blocks = [Manifold.cube([w, span, d + 1])];
+  if (p.boards === 4) blocks.push(Manifold.cube([span, w, d + 1]));
+  const tunnels = blocks.map((b, k) => b.translate(k === 0 ? [-w / 2, -span / 2, h - d] : [-span / 2, -w / 2, h - d]));
   const cut = Manifold.union(tunnels);
   const part = body.subtract(cut);
-  for (const m of [...tunnels, cut, body]) m.delete();
+  for (const m of [...blocks, ...tunnels, cut, body]) m.delete();
   return part;
 }

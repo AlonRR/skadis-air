@@ -229,3 +229,22 @@ test('gives each field the keyboard its values need, and links its notes and its
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
   await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 4.5 mm');
 });
+
+// What a number field cannot read is an error, not the starting value in its place (D222): the browser hands an
+// unreadable number field over empty, which had read as the default.
+test('says a number field the browser cannot read is not a number, and refuses an unclear comma (D222)', async ({
+  page,
+}) => {
+  await ready(page);
+  await page.getByTestId('advanced').locator('summary').click();
+  const clearance = page.locator('input[name="slotClearanceMm"]'); // a number field: it can go below zero
+  await clearance.click();
+  await clearance.press('Control+a');
+  await page.keyboard.type('1e');
+  await expect(page.getByTestId('error-slotClearanceMm')).toContainText('must be a number');
+  await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'invalid');
+  await clearance.fill('0.2');
+  await page.locator('input[name="widthMm"]').fill('40,000');
+  await expect(page.getByTestId('error-widthMm')).toContainText('unclear');
+  await expect(page.getByTestId('count-widthMm')).toHaveText('');
+});

@@ -4,14 +4,14 @@
 import { makeSolidBoard, solidBoardParams, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from '../board-solid.js';
 import { MOUNTING_SETTINGS, mountingCuts, mountingLabel, mountingOf } from '../mounting.js';
 import { TILE_MM } from '../skadis.js';
-import { MAX_PANEL_TILES } from '../tiling.js';
+import { MAX_PANEL_TILES, MAX_WALL_MM } from '../tiling.js';
 import { defineSettings, type Values } from '../settings.js';
 import { ALL_OPEN } from '../slots.js';
 import { defineBoardType } from './define.js';
 
-// A board is up to 10 tiles a side; split into panels, a wall up to 40 (C51, D175).
-// A wall's size has no upper limit (D196); one board, or a panel of a wall, is at most 400 mm a side (C51).
-const SIZE = { unit: 'mm', min: TILE_MM, step: TILE_MM, onStep: true, count: 'tiles' } as const;
+// One board, or a panel of a wall, is at most 400 mm a side (C51); a wall is any size up to a kilometre each way
+// (D196), past which a size is taken for a slip of the keys (D223).
+const SIZE = { unit: 'mm', min: TILE_MM, max: MAX_WALL_MM, step: TILE_MM, onStep: true, count: 'tiles' } as const;
 const PANEL = { ...SIZE, max: MAX_PANEL_TILES * TILE_MM, default: MAX_PANEL_TILES * TILE_MM, advanced: true } as const;
 
 /** The solid board's own settings, before the mounting's: its size, thickness, sides and slots. */

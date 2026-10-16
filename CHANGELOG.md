@@ -6,6 +6,20 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- A size typed with a comma before three digits, such as "40,000", was read as 40 mm; it is now refused as
+  unclear, and every field reads a number the same way. A number field the browser cannot read says so, rather
+  than taking the starting value.
+- A wall is refused larger than 1 km each way, so a slip of the keys cannot hang the page.
+- Ctrl, Cmd or Alt with an arrow, + or - is left to the browser, rather than turning or zooming the 3D view.
+- A view chosen while nothing is drawn is no longer kept chosen, and the 3D view's stage is named as its
+  drawing is: the board, the wall or the connector.
+- The slot clip's screw countersink no longer notches the post beside it.
+- A slot clip with ribbed pegs is no longer refused at a peg clearance only the lip's slit needs room for.
+- A large wall's far panels are painted with the wall's own slot size and chamfer, and are not rebuilt on
+  every turn of the view.
+
 ## [0.2.0] - 2026-10-16
 
 ### Added

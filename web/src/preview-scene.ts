@@ -5,6 +5,7 @@
 // system's tokens (D111).
 import { BufferAttribute, BufferGeometry, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh } from 'three';
 import { DoubleSide, MeshPhongMaterial, type Object3D } from 'three';
+import { panelPlaces } from 'skadis-air';
 import type { Placed } from './build-messages.js';
 
 // Shared by every board drawn; never disposed.
@@ -32,8 +33,8 @@ export function paintBoards(board: string, outline: string): void {
   OUTLINE.color.setStyle(outline);
 }
 
-/** The board, or a wall's panels, as meshes and their outlines, from the triangles the build sent: each mesh
- * and its outline made once, and drawn at each of its places, so a wall costs its kinds of panel, not its size. */
+/** The board as a mesh and its outline, from the triangles the build sent, drawn at its place; each mesh and
+ * outline made once, however many places it has. A wall is drawn by wall-scene.ts, only as much as is seen. */
 export function boardScene(parts: readonly Placed[]): Group {
   const group = new Group();
   let triangles = 0;
@@ -43,7 +44,7 @@ export function boardScene(parts: readonly Placed[]): Group {
     geometry.setIndex(new BufferAttribute(indices, 1));
     geometry.computeVertexNormals();
     const edges = new EdgesGeometry(geometry, OUTLINE_ANGLE_DEGREES);
-    for (const [x, y] of xs.flatMap((px) => ys.map((py) => [px, py] as const))) {
+    for (const [x, y] of panelPlaces({ xs, ys })) {
       const mesh = new Mesh(geometry, BOARD);
       const outline = new LineSegments(edges, OUTLINE);
       mesh.position.set(x, y, 0);

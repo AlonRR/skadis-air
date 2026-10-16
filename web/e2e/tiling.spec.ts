@@ -107,6 +107,14 @@ test('makes a wall 20 m wide and draws it, only the panels the view needs in ful
   expect(panels).toBeGreaterThan(400);
   expect(await number('data-detailed')).toBeLessThan(panels);
   expect(await number('data-triangles')).toBeLessThan(5_000_000);
+  // a turn that leaves the same panels in full does not build the stand-ins again (the review)
+  const builds = await number('data-stand-in-builds');
+  expect(builds).toBeGreaterThan(0);
+  await preview.locator('canvas').focus();
+  await page.keyboard.press('ArrowLeft');
+  expect(await number('data-detailed')).toBe(0);
+  expect(await number('data-stand-in-builds')).toBe(builds);
+  await expect(page.locator('.ws-stage')).toHaveAttribute('aria-label', 'The wall in 3D');
   // zoomed in, the panels near the middle are drawn in full, still within the budget
   const canvas = await preview.locator('canvas').boundingBox();
   if (canvas === null) throw new Error('no canvas');
@@ -115,5 +123,7 @@ test('makes a wall 20 m wide and draws it, only the panels the view needs in ful
   await expect.poll(() => number('data-detailed'), { timeout: 10_000 }).toBeGreaterThan(0);
   expect(await number('data-detailed')).toBeLessThan(panels);
   expect(await number('data-triangles')).toBeLessThanOrEqual(5_000_000 + 10_000);
+  // control: a zoom that draws panels in full builds the stand-ins round them again
+  expect(await number('data-stand-in-builds')).toBeGreaterThan(builds);
   expect(errors).toEqual([]);
 });

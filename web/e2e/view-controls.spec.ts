@@ -29,6 +29,43 @@ test.describe('on a wide screen', () => {
     await expect(canvas).toHaveAttribute('aria-describedby', 'plan-line');
   });
 
+  test('leaves the browser its own shortcuts: Ctrl with - is not a zoom of the drawing (the review)', async ({
+    page,
+  }) => {
+    await ready(page);
+    const before = await distance(page);
+    await page.getByTestId('preview').locator('canvas').focus();
+    // each on its own: one after the other, a zoom out and a zoom in would cancel and hide the fault
+    await page.keyboard.press('Control+Minus');
+    expect(await distance(page)).toBe(before);
+    await page.keyboard.press('Control+Equal');
+    expect(await distance(page)).toBe(before);
+    // control: the same keys alone zoom it
+    await page.keyboard.press('Minus');
+    await expect.poll(() => distance(page)).toBeGreaterThan(before);
+  });
+
+  test('does not keep a view chosen while there is nothing to face (the review)', async ({ page }) => {
+    await ready(page);
+    await page.locator('input[name="widthMm"]').fill('250'); // off the 40 mm steps: no board
+    await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'invalid');
+    // a click, not check(): check() insists the choice stays made, which is the fault this looks for
+    const front = page.locator('input[name="view"][value="front"]');
+    await front.click();
+    await expect(front).not.toBeChecked();
+    await expect(page.getByTestId('preview')).toHaveAttribute('data-view', '');
+  });
+
+  test('names the stage as its drawing is named: the board, the connector (the review)', async ({ page }) => {
+    await ready(page);
+    const stage = page.locator('.ws-stage');
+    await expect(stage).toHaveAttribute('aria-label', 'The board in 3D');
+    await choose(page, 'boardType', 'standoff');
+    await expect(page.getByTestId('board-status')).toContainText('Connector ready');
+    await expect(stage).toHaveAttribute('aria-label', 'The connector in 3D');
+    await expect(page.getByTestId('preview').locator('canvas')).toHaveAttribute('aria-label', 'The connector in 3D');
+  });
+
   test('zooms in and out by the buttons, stopping where a pinch stops', async ({ page }) => {
     await ready(page);
     const start = await distance(page);

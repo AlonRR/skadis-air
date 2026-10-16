@@ -1,6 +1,7 @@
 // What the page and the build worker say to each other (backlog item build-worker; D166). The page asks for
 // the engine's check, for a build, and for the STL of the build it shows; the worker answers each, and keeps
 // the last part it built so the download is the part the preview showed.
+import type { Slot } from './wall-detail.js';
 
 export type Request =
   | { kind: 'check' }
@@ -31,6 +32,13 @@ export interface Placed {
 }
 
 /** One kind of a wall's panels, as the print list shows it (D178). */
+/** What a wall's reply adds to a board's: its print list's lines, and its slots as cut, which the preview's
+ * stand-ins are painted and edged with (the review, 16 Oct 2026). */
+export interface WallReply {
+  panels: PanelLine[];
+  slot: Slot;
+}
+
 export interface PanelLine {
   fileName: string;
   count: number;
@@ -49,7 +57,7 @@ export type Reply =
       parts: Placed[]; // the part as it hangs, for the preview: one, or each kind of a wall's panels
       min: [number, number, number]; // its box, mm, a wall's panels and all
       max: [number, number, number];
-      panels?: PanelLine[]; // a wall's panels, one line for each kind
+      wall?: WallReply; // a wall's panels, one line for each kind, and the slots they cut
     }
   | { kind: 'built'; id: number; ok: false; problem: string }
   | { kind: 'file'; id: number; ok: true; bytes: Uint8Array; type: string }

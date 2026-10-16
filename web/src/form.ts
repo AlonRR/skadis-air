@@ -2,6 +2,7 @@
 // in the shared design system's controls (D111): a Field for each number, Choice buttons for each choice,
 // the four side toggles round a drawing of the board (Sides, D46), and the fine settings folded under
 // "Advanced" (Disclosure, D48). Nothing here names a board type or a setting.
+import { readTypedNumber } from 'skadis-air';
 import type { AnyBoardType, ChoiceSetting, NumberSetting, Problem, Setting, SidesSetting } from 'skadis-air';
 
 type Side = 'left' | 'right' | 'bottom' | 'top';
@@ -91,7 +92,8 @@ function numberField(s: NumberSetting, changed: () => void): { field: HTMLElemen
     const count = element('p', { class: 'ws-note', id: idOf(s.key, 'count'), 'data-testid': `count-${s.key}` });
     described.push(count.id);
     const update = () => {
-      const n = Number(input.value.replace(',', '.')) / s.step;
+      const typed = readTypedNumber(input.value);
+      const n = typed.ok ? typed.value / s.step : Number.NaN;
       count.textContent = Number.isInteger(n) && n > 0 ? `= ${n} ${s.count}` : '';
     };
     update();
@@ -105,7 +107,9 @@ function numberField(s: NumberSetting, changed: () => void): { field: HTMLElemen
   field.append(errorLine(s.key), warningBox(s.key));
   input.setAttribute('aria-describedby', [...described, idOf(s.key, 'error')].join(' '));
   input.addEventListener('input', changed);
-  return { field, read: () => input.value };
+  // A number field the browser cannot read is handed over empty, which would read as the starting value; it is
+  // handed on as what it is, not a number (D222).
+  return { field, read: () => (input.validity.badInput ? 'not a number' : input.value) };
 }
 
 function sidesField(s: SidesSetting, changed: () => void): { field: HTMLElement; read: () => Record<Side, string> } {

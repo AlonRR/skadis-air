@@ -4,7 +4,9 @@
 // place chosen. The rest of the face is one mesh of flat rectangles at the panels' front faces, the slot
 // pattern of one 40 mm tile painted on and repeated, its pictures shrunk step by step for the distance
 // (mipmaps), so a far wall shows its slots as a fine grey rather than shimmering; the strips along closed outer
-// edges take the plain plate from the same picture, so the whole stand-in is one draw.
+// edges take the plain plate from the same picture, so the whole stand-in is one draw. The picture is of the
+// wall's own slots, as its clearance and chamfer cut them, and the stand-ins are built again only when the
+// panels drawn in full change: a turn that keeps them draws the same rectangles.
 import {
   BufferAttribute,
   BufferGeometry,
@@ -22,12 +24,12 @@ import {
   Frustum,
   type PerspectiveCamera,
 } from 'three';
-import type { PanelLine, Placed } from './build-messages.js';
+import { panelCount, TILE_MM } from 'skadis-air';
+import type { PanelLine, Placed, WallReply } from './build-messages.js';
 import { BOARD, OUTLINE, OUTLINE_ANGLE_DEGREES, STAND_IN } from './preview-scene.js';
-import { chooseDetail, key, pixelsAtOneMm, type Rect, type WallGrid } from './wall-detail.js';
+import { chooseDetail, key, pixelsAtOneMm, wallSize, type Rect, type Slot, type WallGrid } from './wall-detail.js';
 
-/** The tile the stand-ins repeat, mm, and how many pixels its picture has a side. */
-const TILE_MM = 40;
+/** How many pixels the picture of the tile the stand-ins repeat has a side. */
 const PICTURE_PX = 256;
 /** Where on the picture the plate is plain, for the strips along closed edges: 20 mm along, 2 mm up. */
 const PLAIN_UV: [number, number] = [0.5, 0.05];
@@ -36,15 +38,17 @@ const SHOW_SLOT_PX = 2.5;
 const KEEP_SLOT_PX = 2;
 export const TRIANGLE_BUDGET = 5_000_000;
 
-let picture: CanvasTexture | null = null;
+let picture: { of: string; texture: CanvasTexture } | null = null;
 
 /**
  * One 40 mm tile's slot pattern, as the tiles are cut (D15): a whole slot in the middle and a quarter of one at
- * each corner, each 5.2 x 15.2 mm, cut out, so what is behind shows through as through a real slot, in a grey ring
- * for its 1 mm chamfer, on a white plate the material's colour tints. Made once.
+ * each corner, each the wall's slot, cut out, so what is behind shows through as through a real slot, in a grey
+ * ring for its chamfer, on a white plate the material's colour tints. Made once for each size of slot.
  */
-function slotPicture(anisotropy: number): CanvasTexture {
-  if (picture) return picture;
+function slotPicture({ widthMm, heightMm, chamferMm }: Slot, anisotropy: number): CanvasTexture {
+  const of = `${widthMm} ${heightMm} ${chamferMm}`;
+  if (picture?.of === of) return picture.texture;
+  picture?.texture.dispose();
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = PICTURE_PX;
   const g = canvas.getContext('2d');
@@ -69,23 +73,29 @@ function slotPicture(anisotropy: number): CanvasTexture {
     [0, 40],
     [40, 40],
   ] as const) {
-    slot(x, y, 7.2, 17.2, '#8f959b'); // the chamfer, 1 mm all round
+    slot(x, y, widthMm + 2 * chamferMm, heightMm + 2 * chamferMm, '#8f959b'); // the chamfer, all round
     g.globalCompositeOperation = 'destination-out'; // the slot itself, through
-    slot(x, y, 5.2, 15.2, '#000000');
+    slot(x, y, widthMm, heightMm, '#000000');
     g.globalCompositeOperation = 'source-over';
   }
-  picture = new CanvasTexture(canvas);
-  picture.wrapS = picture.wrapT = RepeatWrapping;
-  picture.minFilter = LinearMipmapLinearFilter;
-  picture.anisotropy = anisotropy;
-  picture.colorSpace = SRGBColorSpace;
-  STAND_IN.map = picture;
+  const texture = new CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = RepeatWrapping;
+  texture.minFilter = LinearMipmapLinearFilter;
+  texture.anisotropy = anisotropy;
+  texture.colorSpace = SRGBColorSpace;
+  STAND_IN.map = texture;
   STAND_IN.needsUpdate = true;
-  return picture;
+  picture = { of, texture };
+  return texture;
 }
 
-/** The rectangles as one mesh at the front faces: the stand-ins with the pattern, the strips with plain plate. */
-function standInGeometry(standIns: readonly Rect[], plain: readonly Rect[], front: number): BufferGeometry {
+/**
+ * The rectangles as one mesh at the front faces: the stand-ins with the pattern, the strips with plain plate.
+ * Each stand-in's picture is counted from the corner of the tile it starts in, which the pattern repeats from,
+ * not from the wall's corner: a kilometre along, that would be 25 000 repeats, past what the graphics card's
+ * numbers hold finely.
+ */
+export function standInGeometry(standIns: readonly Rect[], plain: readonly Rect[], front: number): BufferGeometry {
   const rects = [...standIns, ...plain];
   const positions = new Float32Array(rects.length * 12);
   const uvs = new Float32Array(rects.length * 8);
@@ -93,9 +103,10 @@ function standInGeometry(standIns: readonly Rect[], plain: readonly Rect[], fron
   const index = new Uint32Array(rects.length * 6);
   rects.forEach(([x0, y0, x1, y1], k) => {
     positions.set([x0, y0, front, x1, y0, front, x1, y1, front, x0, y1, front], k * 12);
+    const [u0, v0] = [Math.floor(x0 / TILE_MM) * TILE_MM, Math.floor(y0 / TILE_MM) * TILE_MM];
     const uv =
       k < standIns.length
-        ? [x0, y0, x1, y0, x1, y1, x0, y1].map((v) => v / TILE_MM)
+        ? [x0 - u0, y0 - v0, x1 - u0, y0 - v0, x1 - u0, y1 - v0, x0 - u0, y1 - v0].map((v) => v / TILE_MM)
         : [...PLAIN_UV, ...PLAIN_UV, ...PLAIN_UV, ...PLAIN_UV];
     uvs.set(uv, k * 8);
     normals.set([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1], k * 12);
@@ -111,7 +122,7 @@ function standInGeometry(standIns: readonly Rect[], plain: readonly Rect[], fron
 }
 
 /** The wall's grid from its kinds of panel: where their columns and rows are, and which kind each pair is. */
-function gridOf(parts: readonly Placed[], lines: readonly PanelLine[], front: number): WallGrid {
+function gridOf(parts: readonly Placed[], lines: readonly PanelLine[], slot: Slot, front: number): WallGrid {
   const widths = new Map<number, number>();
   const heights = new Map<number, number>();
   const kindsAtX = new Map<number, number[]>();
@@ -141,6 +152,7 @@ function gridOf(parts: readonly Placed[], lines: readonly PanelLine[], front: nu
     },
     frontMm: front,
     closed: { left: closed('left'), right: closed('right'), bottom: closed('bottom'), top: closed('top') },
+    slot,
   };
 }
 
@@ -152,10 +164,11 @@ export interface WallView {
   triangles(): number;
   detailed(): number;
   panels(): number;
+  standInBuilds(): number; // how often the stand-ins have been built, for the browser test
   dispose(): void;
 }
 
-export function wallView(parts: readonly Placed[], lines: readonly PanelLine[], anisotropy: number): WallView {
+export function wallView(parts: readonly Placed[], wall: WallReply, anisotropy: number): WallView {
   const kinds = parts.map(({ positions, triangles }) => {
     const geometry = new BufferGeometry();
     geometry.setAttribute('position', new BufferAttribute(positions, 3));
@@ -171,17 +184,18 @@ export function wallView(parts: readonly Placed[], lines: readonly PanelLine[], 
     ],
     [Infinity, -Infinity],
   );
-  const grid = gridOf(parts, lines, high);
-  const [width, height] = [
-    (grid.xs.at(-1) ?? 0) + (grid.widths.at(-1) ?? 0),
-    (grid.ys.at(-1) ?? 0) + (grid.heights.at(-1) ?? 0),
-  ];
+  const grid = gridOf(parts, wall.panels, wall.slot, high);
+  const [width, height] = wallSize(grid);
   const group = new Group();
   const shown = new Map<string, Group>();
-  slotPicture(anisotropy);
+  slotPicture(wall.slot, anisotropy);
   const standIns = new Mesh(new BufferGeometry(), STAND_IN);
   group.add(standIns);
   let drawn = 0;
+  // the panels in full the stand-ins were last built round, as their keys in order, and how often they were
+  let builtRound: string | null = null;
+  let builds = 0;
+  let standInTriangles = 0;
   const frustum = new Frustum();
   const viewMatrix = new Matrix4();
   const corner = [new Vector3(), new Vector3()] as const;
@@ -232,13 +246,21 @@ export function wallView(parts: readonly Placed[], lines: readonly PanelLine[], 
         group.add(panel);
         shown.set(k, panel);
       }
-      standIns.geometry.dispose();
-      standIns.geometry = standInGeometry(detail.standIns, detail.plain, high);
-      drawn += 2 * (detail.standIns.length + detail.plain.length);
+      // the rest of the face, built again only when the panels in full are not those it was built round
+      const round = [...wanted].sort().join(' ');
+      if (round !== builtRound) {
+        standIns.geometry.dispose();
+        standIns.geometry = standInGeometry(detail.standIns, detail.plain, high);
+        standInTriangles = 2 * (detail.standIns.length + detail.plain.length);
+        builtRound = round;
+        builds += 1;
+      }
+      drawn += standInTriangles;
     },
     triangles: () => drawn,
     detailed: () => shown.size,
-    panels: () => parts.reduce((n, p) => n + p.xs.length * p.ys.length, 0),
+    panels: () => parts.reduce((n, p) => n + panelCount(p), 0),
+    standInBuilds: () => builds,
     dispose() {
       for (const { geometry, edges } of kinds) {
         geometry.dispose();

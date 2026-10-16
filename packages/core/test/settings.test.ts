@@ -1,7 +1,7 @@
 // The settings a board type declares, read from what the page or a caller hands in (backlog item
 // registry). The settings here are declared in this file alone: the reader must not know any board.
 import { describe, expect, it } from 'vitest';
-import { defineSettings, defaultValues, readValues } from '../src/settings.js';
+import { defineSettings, defaultValues, readTypedNumber, readValues } from '../src/settings.js';
 
 const SETTINGS = defineSettings([
   {
@@ -98,6 +98,23 @@ describe('readValues', () => {
   it('reads a comma as a decimal point, as some keyboards write one (the design system, v0.4.0)', () => {
     const read = readValues(SETTINGS, { thicknessMm: '4,5' });
     expect(read.ok && read.values.thicknessMm).toBe(4.5);
+  });
+
+  it('refuses a comma before three digits, which could be a thousands separator, saying so (D222)', () => {
+    // "40,000" had been read as 40: a 40 m wall quietly made a 40 mm board
+    const read = readValues(SETTINGS, { widthMm: '40,000' });
+    expect(read.ok).toBe(false);
+    if (!read.ok) expect(read.errors[0]?.message).toContain('unclear');
+    expect(readTypedNumber('1,500')).toEqual({ ok: false, why: 'unclear' });
+    // a comma that cannot be a thousands separator is a decimal point
+    expect(readTypedNumber('0,300')).toEqual({ ok: true, value: 0.3 });
+    expect(readTypedNumber(' 2,5 ')).toEqual({ ok: true, value: 2.5 });
+    expect(readTypedNumber('12345,678')).toEqual({ ok: true, value: 12345.678 });
+    expect(readTypedNumber('-1,5')).toEqual({ ok: true, value: -1.5 });
+    // and what is no number is not one
+    for (const text of ['1,000,000', '1,5,5', 'wide', '', '1e', '4,5mm']) {
+      expect(readTypedNumber(text)).toEqual({ ok: false, why: 'not a number' });
+    }
   });
 
   it('refuses text that is not a number', () => {

@@ -6,6 +6,9 @@ import wasmUrl from 'manifold-3d/manifold.wasm?url';
 import type { Manifold } from 'manifold-3d';
 import {
   MEDIA_TYPES,
+  SLOT_HEIGHT_MM,
+  SLOT_WIDTH_MM,
+  SOLID_BOARD_DEFAULTS,
   boardFileName,
   boardType,
   buildBoard,
@@ -22,6 +25,7 @@ import {
   type AnyBoardType,
 } from 'skadis-air';
 import { panelObjectName, panelText, type PanelLine, type Placed, type Reply, type Request } from './build-messages.js';
+import type { Slot } from './wall-detail.js';
 
 const engine = () => loadEngine(wasmUrl);
 // What the page shows: one board, or a wall's panel kinds, each as it is printed; freed when replaced.
@@ -30,6 +34,20 @@ let waiting: Extract<Request, { kind: 'build' }> | undefined; // the newest buil
 let scheduled = false;
 
 const reply = (message: Reply, transfer: Transferable[] = []) => postMessage(message, { transfer });
+
+/** A wall's slots as its panels cut them (D40, D41): its own clearance and chamfer, or the boards' defaults. */
+function slotOf(values: Readonly<Record<string, unknown>>): Slot {
+  const given = (key: 'slotClearanceMm' | 'slotChamferMm') => {
+    const v = values[key];
+    return typeof v === 'number' && Number.isFinite(v) ? v : SOLID_BOARD_DEFAULTS[key];
+  };
+  const clearance = given('slotClearanceMm');
+  return {
+    widthMm: SLOT_WIDTH_MM + clearance,
+    heightMm: SLOT_HEIGHT_MM + clearance,
+    chamferMm: given('slotChamferMm'),
+  };
+}
 
 async function check(): Promise<void> {
   try {
@@ -96,7 +114,8 @@ async function build(request: Extract<Request, { kind: 'build' }>): Promise<void
       }
     }
     const transfer = placed.flatMap((m) => [m.positions.buffer, m.triangles.buffer]);
-    reply({ kind: 'built', id, ok: true, parts: placed, min, max, ...(lines ? { panels: lines } : {}) }, transfer);
+    const wallReply = lines ? { wall: { panels: lines, slot: slotOf(read.values) } } : {};
+    reply({ kind: 'built', id, ok: true, parts: placed, min, max, ...wallReply }, transfer);
   } catch (error) {
     reply({ kind: 'built', id, ok: false, problem: error instanceof RangeError ? error.message : String(error) });
   }

@@ -70,16 +70,42 @@ export function defaultValues<const S extends readonly Setting[]>(settings: S): 
 const SIDES: readonly Side[] = ['left', 'right', 'bottom', 'top'];
 const nice = (n: number) => String(Math.round(n * 1000) / 1000);
 
+/** A number as typed, or why it is none. */
+export type TypedNumber = { ok: true; value: number } | { ok: false; why: 'unclear' | 'not a number' };
+
+// A thousands separator's shape: one to three digits, the first not 0, a comma, three digits ("40,000").
+const GROUPED = /^[+-]?[1-9]\d{0,2},\d{3}$/;
+
+/**
+ * A number as typed in a field, read the one way everywhere (D222): a comma is a decimal point, as some keyboards
+ * write one (the design system's fields); but a comma before three digits, as in "40,000", could as well be a
+ * thousands separator, which had read a 40 m wall as a 40 mm board, so it is unclear, and refused.
+ */
+export function readTypedNumber(text: string): TypedNumber {
+  const t = text.trim();
+  if (GROUPED.test(t)) return { ok: false, why: 'unclear' };
+  const n = t === '' ? Number.NaN : Number(t.replace(',', '.'));
+  return Number.isFinite(n) ? { ok: true, value: n } : { ok: false, why: 'not a number' };
+}
+
 function readNumber(s: NumberSetting, given: unknown, errors: Problem[], warnings: Problem[]): number {
   if (given === undefined || given === '') return s.default;
-  // A form hands over text, in which a comma is read as a decimal point, as some keyboards write one; a caller
-  // may hand over a number. Anything else is not a number.
-  const n =
-    typeof given === 'number' ? given : typeof given === 'string' ? Number(given.trim().replace(',', '.')) : Number.NaN;
-  if (!Number.isFinite(n)) {
-    errors.push({ key: s.key, message: `${s.label} must be a number` });
+  // A form hands over text; a caller may hand over a number. Anything else is not a number.
+  const typed: TypedNumber =
+    typeof given === 'number'
+      ? { ok: true, value: given }
+      : typeof given === 'string'
+        ? readTypedNumber(given)
+        : { ok: false, why: 'not a number' };
+  if (!typed.ok || !Number.isFinite(typed.value)) {
+    const message =
+      !typed.ok && typed.why === 'unclear'
+        ? `${s.label} is unclear with a comma before three digits: leave the comma out, or write a point for a decimal`
+        : `${s.label} must be a number`;
+    errors.push({ key: s.key, message });
     return s.default;
   }
+  const n = typed.value;
   if (n < s.min || (s.max !== undefined && n > s.max)) {
     const range = s.max === undefined ? `at least ${nice(s.min)}` : `from ${nice(s.min)} to ${nice(s.max)}`;
     errors.push({ key: s.key, message: `${s.label} must be ${range} ${s.unit}` });
