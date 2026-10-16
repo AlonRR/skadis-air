@@ -7,7 +7,7 @@ import type { Engine } from '../engine.js';
 import { placeOnBed, printPose } from '../print-pose.js';
 import { DEFAULT_BED, type Bed } from '../printer.js';
 import { readValues, type Setting, type Values } from '../settings.js';
-import { wallPlan, type PanelKind } from '../tiling.js';
+import { panelPlaces, wallPlan, type PanelKind } from '../tiling.js';
 
 /** Where the page lists a type (D91): with the boards, or under "Connectors". */
 export type Group = 'board' | 'connector';
@@ -50,7 +50,7 @@ export interface BuiltWall {
 
 /** The wall's panels in place as one solid; they touch at the seams. The panels stay the caller's. */
 export function wallSolid(engine: Engine, wall: BuiltWall): Manifold {
-  const copies = wall.panels.flatMap((p) => p.places.map(([x, y]) => p.solid.translate([x, y, 0])));
+  const copies = wall.panels.flatMap((p) => panelPlaces(p).map(([x, y]) => p.solid.translate([x, y, 0])));
   const solid = engine.Manifold.compose(copies);
   for (const c of copies) c.delete();
   return solid;

@@ -13,6 +13,7 @@ import {
   buildWall,
   loadEngine,
   meshOf,
+  panelCount,
   printedPart,
   readValues,
   to3mf,
@@ -48,7 +49,7 @@ async function build(request: Extract<Request, { kind: 'build' }>): Promise<void
     forget();
     const wall = buildWall(ready, type, read.values, request.bed);
     let lines: PanelLine[] | undefined;
-    let parts: { solid: Manifold; places: [number, number][] }[];
+    let parts: { solid: Manifold; xs: number[]; ys: number[] }[];
     if (wall !== null) {
       last = { id, type, panels: wall.panels.map((p) => p.solid), lines: [] };
       parts = wall.panels;
@@ -63,7 +64,7 @@ async function build(request: Extract<Request, { kind: 'build' }>): Promise<void
         const values = readValues(type.settings, p.values);
         return {
           fileName: values.ok ? boardFileName(type, values.values, 'stl') : '',
-          count: p.places.length,
+          count: panelCount(p),
           widthMm: Number(p.values['widthMm']),
           heightMm: Number(p.values['heightMm']),
           closed,
@@ -77,20 +78,21 @@ async function build(request: Extract<Request, { kind: 'build' }>): Promise<void
         return;
       }
       last = { id, type, solid: built.solid, panels: [], lines: [] };
-      parts = [{ solid: built.solid, places: [[0, 0]] }];
+      parts = [{ solid: built.solid, xs: [0], ys: [0] }];
     }
     // Each mesh once, with the places of its copies: a wall's copies are drawn from it, not sent again.
-    const placed: Placed[] = parts.map(({ solid, places }) => ({ ...meshOf(solid), places }));
+    const placed: Placed[] = parts.map(({ solid, xs, ys }) => ({ ...meshOf(solid), xs, ys }));
     const min: [number, number, number] = [Infinity, Infinity, Infinity];
     const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
-    for (const { solid, places } of parts) {
+    // the wall's extent from each kind's first and last column and row, which come in order: its kinds, not its
+    // panels (C200)
+    for (const { solid, xs, ys } of parts) {
       const box = solid.boundingBox();
-      for (const [x, y] of places) {
-        const offset = [x, y, 0];
-        for (let k = 0; k < 3; k++) {
-          min[k] = Math.min(min[k] ?? Infinity, (box.min[k] ?? 0) + (offset[k] ?? 0));
-          max[k] = Math.max(max[k] ?? -Infinity, (box.max[k] ?? 0) + (offset[k] ?? 0));
-        }
+      const low = [xs[0] ?? 0, ys[0] ?? 0, 0];
+      const high = [xs.at(-1) ?? 0, ys.at(-1) ?? 0, 0];
+      for (let k = 0; k < 3; k++) {
+        min[k] = Math.min(min[k] ?? Infinity, (box.min[k] ?? 0) + (low[k] ?? 0));
+        max[k] = Math.max(max[k] ?? -Infinity, (box.max[k] ?? 0) + (high[k] ?? 0));
       }
     }
     const transfer = placed.flatMap((m) => [m.positions.buffer, m.triangles.buffer]);

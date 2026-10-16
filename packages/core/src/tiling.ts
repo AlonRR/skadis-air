@@ -4,7 +4,9 @@
 // The wall's outer edge follows its sides setting, closed unless opened (D37); every seam is open, half a slot
 // on each side, so the slots run on across it (D15). Each panel is a board with the wall's own settings, its
 // mounting in its own corners (D177). Panels of the same size and sides are one kind, printed as often as the
-// wall has them (D178).
+// wall has them (D178). A panel's kind is its column's width and outer sides with its row's height and outer
+// sides, so each kind holds the places of its columns and of its rows, and its copies are every pair of them:
+// a wall of any size plans in the time its columns and rows take, not its panels (backlog item wall-grid; C200).
 import type { Bed } from './printer.js';
 import { TILE_MM } from './skadis.js';
 import type { Side, Sides } from './slots.js';
@@ -29,10 +31,20 @@ export function largestPanel(bed: Bed): { columns: number; rows: number } {
   return { columns: tiles(bed.xMm), rows: tiles(bed.yMm) };
 }
 
-/** One kind of panel: the board values that make it, and where each copy's lower left corner goes, in mm. */
+/** One kind of panel: the board values that make it, and where its copies' lower left corners go, in mm: one at
+ * each of its columns' places across and each of its rows' places up (C200). */
 export interface PanelKind {
   values: Record<string, unknown>;
-  places: [number, number][];
+  xs: number[]; // where each column of panels of this kind starts, left to right
+  ys: number[]; // where each row of them starts, bottom to top
+}
+
+/** How many copies of a kind of panel the wall has. */
+export const panelCount = (kind: Pick<PanelKind, 'xs' | 'ys'>): number => kind.xs.length * kind.ys.length;
+
+/** Every copy's lower left corner, mm: for a wall small enough to list its panels one by one. */
+export function panelPlaces(kind: Pick<PanelKind, 'xs' | 'ys'>): [number, number][] {
+  return kind.xs.flatMap((x) => kind.ys.map((y): [number, number] => [x, y]));
 }
 
 export interface WallPlan {
@@ -41,7 +53,6 @@ export interface WallPlan {
   panels: PanelKind[];
 }
 
-const SIDES: readonly Side[] = ['left', 'right', 'bottom', 'top'];
 const number = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
 
 /** The wall a board's values describe, split for this bed; null when the board is one panel. */
@@ -69,34 +80,40 @@ export function wallPlan(values: Readonly<Record<string, unknown>>, bed: Bed): W
     typeof given === 'object' && given !== null && Object.getOwnPropertyDescriptor(given, side)?.value === 'open'
       ? 'open'
       : 'closed';
-  const kinds = new Map<string, PanelKind>();
-  let x = 0;
-  across.forEach((w, i) => {
-    let y = 0;
-    up.forEach((h, j) => {
-      const outer: Record<Side, boolean> = {
-        left: i === 0,
-        right: i === across.length - 1,
-        bottom: j === 0,
-        top: j === up.length - 1,
+  const columnKinds = runKinds(across, wallSide('left'), wallSide('right'));
+  const rowKinds = runKinds(up, wallSide('bottom'), wallSide('top'));
+  const panels = columnKinds.flatMap((c) =>
+    rowKinds.map((r): PanelKind => {
+      const sides: Sides = { left: c.first, right: c.last, bottom: r.first, top: r.last };
+      return {
+        values: { ...values, panels: 'one', widthMm: c.tiles * TILE_MM, heightMm: r.tiles * TILE_MM, sides },
+        xs: c.at,
+        ys: r.at,
       };
-      const sideOf = (side: Side) => (outer[side] ? wallSide(side) : 'open');
-      const sides: Sides = {
-        left: sideOf('left'),
-        right: sideOf('right'),
-        bottom: sideOf('bottom'),
-        top: sideOf('top'),
-      };
-      const key = `${w}x${h}:${SIDES.map((side) => sides[side]).join(',')}`;
-      const kind = kinds.get(key) ?? {
-        values: { ...values, panels: 'one', widthMm: w * TILE_MM, heightMm: h * TILE_MM, sides },
-        places: [],
-      };
-      kind.places.push([x, y]);
-      kinds.set(key, kind);
-      y += h * TILE_MM;
-    });
-    x += w * TILE_MM;
+    }),
+  );
+  return { columns: across, rows: up, panels };
+}
+
+/**
+ * The kinds of a run of columns or rows, in the order they first come: each its size in tiles, its sides at
+ * the start and the end of the run, which are the wall's own at its ends and open at the seams, and where each
+ * of its kind starts, mm.
+ */
+function runKinds(
+  run: readonly number[],
+  start: 'open' | 'closed',
+  end: 'open' | 'closed',
+): { tiles: number; first: 'open' | 'closed'; last: 'open' | 'closed'; at: number[] }[] {
+  const kinds = new Map<string, { tiles: number; first: 'open' | 'closed'; last: 'open' | 'closed'; at: number[] }>();
+  let at = 0;
+  run.forEach((size, k) => {
+    const [first, last] = [k === 0 ? start : 'open', k === run.length - 1 ? end : 'open'] as const;
+    const key = `${size}:${first},${last}`;
+    const kind = kinds.get(key) ?? { tiles: size, first, last, at: [] };
+    kind.at.push(at);
+    kinds.set(key, kind);
+    at += size * TILE_MM;
   });
-  return { columns: across, rows: up, panels: [...kinds.values()] };
+  return [...kinds.values()];
 }

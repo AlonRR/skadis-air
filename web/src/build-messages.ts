@@ -19,11 +19,15 @@ export type Request =
       panel?: number | 'all'; // a wall's panel kind, by its place in the list, or every kind in one file (D183)
     };
 
-/** A mesh and where its copies go, mm: a board at the origin, or one kind of panel at each of its places. */
+/**
+ * A mesh and where its copies' lower left corners go, mm: a board at the origin, or one kind of panel at each of
+ * its columns' places across and its rows' places up, every pair of them (C200).
+ */
 export interface Placed {
   positions: Float32Array;
   triangles: Uint32Array;
-  places: [number, number][];
+  xs: number[];
+  ys: number[];
 }
 
 /** One kind of a wall's panels, as the print list shows it (D178). */

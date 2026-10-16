@@ -27,13 +27,13 @@ export function paintBoards(board: string, outline: string): void {
 export function boardScene(parts: readonly Placed[]): Group {
   const group = new Group();
   let triangles = 0;
-  for (const { positions, triangles: indices, places } of parts) {
+  for (const { positions, triangles: indices, xs, ys } of parts) {
     const geometry = new BufferGeometry();
     geometry.setAttribute('position', new BufferAttribute(positions, 3));
     geometry.setIndex(new BufferAttribute(indices, 1));
     geometry.computeVertexNormals();
     const edges = new EdgesGeometry(geometry, OUTLINE_ANGLE_DEGREES);
-    for (const [x, y] of places) {
+    for (const [x, y] of xs.flatMap((px) => ys.map((py) => [px, py] as const))) {
       const mesh = new Mesh(geometry, BOARD);
       const outline = new LineSegments(edges, OUTLINE);
       mesh.position.set(x, y, 0);

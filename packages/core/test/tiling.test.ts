@@ -1,12 +1,13 @@
 // A wall split into panels (backlog item tiling; D15, D37, D175 to D178): panels as even as they can be, none
 // larger than the bed takes or the user allows; closed round the wall's outer edge and open at the seams, so the
-// slots run on across them; each panel a board with the board's own settings and mounting.
+// slots run on across them; each panel a board with the board's own settings and mounting. A kind of panel holds
+// the places of its columns and of its rows, so a wall of any size plans at once (backlog item wall-grid; C200).
 import type { Manifold } from 'manifold-3d';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { defaultValues } from '../src/settings.js';
 import { buildBoard, SOLID } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
-import { evenSplit, largestPanel, wallPlan } from '../src/tiling.js';
+import { evenSplit, largestPanel, panelCount, panelPlaces, wallPlan } from '../src/tiling.js';
 
 vi.setConfig({ testTimeout: 30_000 });
 const engine = await loadEngine();
@@ -60,14 +61,14 @@ describe('wallPlan (D175 to D177)', () => {
     expect(plan.columns).toEqual([4, 4, 3]);
     expect(plan.rows).toEqual([4, 3]);
     expect(plan.panels).toHaveLength(6); // six sizes and side patterns, one of each
-    const bottomLeft = plan.panels.find((p) => p.places.some(([x, y]) => x === 0 && y === 0));
+    const bottomLeft = plan.panels.find((p) => panelPlaces(p).some(([x, y]) => x === 0 && y === 0));
     expect(bottomLeft?.values).toMatchObject({
       widthMm: 160,
       heightMm: 160,
       panels: 'one',
       sides: { left: 'closed', bottom: 'closed', right: 'open', top: 'open' },
     });
-    const count = plan.panels.reduce((n, p) => n + p.places.length, 0);
+    const count = plan.panels.reduce((n, p) => n + panelCount(p), 0);
     expect(count).toBe(6);
   });
 
@@ -77,10 +78,37 @@ describe('wallPlan (D175 to D177)', () => {
     expect(plan.columns).toEqual([5, 5, 5]);
     expect(plan.panels).toHaveLength(9); // four corners, four sides, the middle: each its own sides
     const middle = plan.panels.find((p) => Object.values(p.values.sides as object).every((s) => s === 'open'));
-    expect(middle?.places).toEqual([[200, 200]]);
+    expect(middle && panelPlaces(middle)).toEqual([[200, 200]]);
     const nine = wallPlan(wall({ widthMm: 1000, heightMm: 1000, sides: CLOSED }), { xMm: 200, yMm: 200 });
     const inner = nine?.panels.find((p) => Object.values(p.values.sides as object).every((s) => s === 'open'));
-    expect(inner?.places).toHaveLength(9); // 5 x 5 panels, 3 x 3 of them inside
+    expect(inner && panelCount(inner)).toBe(9); // 5 x 5 panels, 3 x 3 of them inside
+  });
+
+  it('gives each kind the places of its columns and of its rows, every copy one of each (C200)', () => {
+    const plan = wallPlan(wall({ widthMm: 1000, heightMm: 1000, sides: CLOSED }), { xMm: 200, yMm: 200 });
+    const inner = plan?.panels.find((p) => Object.values(p.values.sides as object).every((s) => s === 'open'));
+    if (inner === undefined) throw new Error('an inner kind');
+    expect([inner.xs, inner.ys]).toEqual([
+      [200, 400, 600],
+      [200, 400, 600],
+    ]);
+    expect(panelPlaces(inner)).toHaveLength(9);
+    expect(panelPlaces(inner)).toContainEqual([400, 600]);
+  });
+
+  it('plans a wall 100 m wide at once, its kinds holding columns and rows, not every panel (D196)', () => {
+    const t0 = performance.now();
+    const plan = wallPlan(wall({ widthMm: 100_000, heightMm: 3000, sides: CLOSED }), { xMm: 250, yMm: 210 });
+    const ms = performance.now() - t0;
+    if (plan === null) throw new Error('a plan');
+    const panels = plan.columns.length * plan.rows.length;
+    expect(panels).toBeGreaterThan(5000);
+    expect(plan.panels.reduce((n, p) => n + panelCount(p), 0)).toBe(panels);
+    // at most four kinds of column (the two ends, two widths between) and four of row
+    const held = plan.panels.reduce((n, p) => n + p.xs.length + p.ys.length, 0);
+    expect(held).toBeLessThanOrEqual(4 * (plan.columns.length + plan.rows.length));
+    expect(held).toBeLessThan(panels / 2);
+    expect(ms).toBeLessThan(100);
   });
 
   it('turns the panels on a bed that is not square when that makes fewer of them', () => {
@@ -107,7 +135,7 @@ describe('wallPlan (D175 to D177)', () => {
       const built = buildBoard(engine, SOLID, panel.values as never);
       if (!built.ok) throw new Error(built.problem);
       made.push(built.solid);
-      volume += built.solid.volume() * panel.places.length;
+      volume += built.solid.volume() * panelCount(panel);
     }
     const whole = buildBoard(engine, SOLID, { ...values, panels: 'one' } as never);
     if (!whole.ok) throw new Error(whole.problem);
@@ -120,7 +148,7 @@ describe('wallPlan (D175 to D177)', () => {
       const built = buildBoard(engine, SOLID, { ...panel.values, sides: CLOSED, cornerRadiusMm: 0 } as never);
       if (!built.ok) throw new Error(built.problem);
       made.push(built.solid);
-      closedSeams += built.solid.volume() * panel.places.length;
+      closedSeams += built.solid.volume() * panelCount(panel);
     }
     expect(closedSeams - volume).toBeGreaterThan(100);
   });
