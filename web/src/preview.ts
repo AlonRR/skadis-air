@@ -6,13 +6,15 @@
 // view (D57). It fills the stage, and the board always fits it (D123): framed to --stage-fit whenever the
 // board or its size changes, pulled back on a resize only as far as the whole board needs, never zoomed
 // out below --stage-min-fill, and never panned (C125). A browser without WebGL gets a message instead;
-// the rest of the page does not need it.
+// the rest of the page does not need it. A wall draws in full only the panels the view needs, chosen again
+// whenever the camera moves, and stands the rest in as flat plates with the slots painted on (D197, C204).
 import { AmbientLight, Box3, Color, DirectionalLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import type { Group } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import type { Placed } from './build-messages.js';
+import type { PanelLine, Placed } from './build-messages.js';
 import { distanceToFit, zoomOutLimit, type View } from './framing.js';
 import { boardScene, disposeScene, paintBoards } from './preview-scene.js';
+import { wallView, type WallView } from './wall-scene.js';
 
 // The colours are the design system's tokens (D111): the stage follows the theme (D113), while the board
 // and its edges are a material, the same in both. The typed values stand in only for a stylesheet that
@@ -33,8 +35,9 @@ const FIRST_DIRECTION = new Vector3(-0.15, -0.2, 1.2).normalize();
 const REFIT_SHARE = 0.95;
 
 export interface Preview {
-  /** Draws the board, or empties the preview when there is none; `framing` decides when to frame again. */
-  show(board: readonly Placed[] | null, framing: string): void;
+  /** Draws the board, or a wall's panels with its print list's lines, or empties the preview when there is
+   * none; `framing` decides when to frame again. */
+  show(board: readonly Placed[] | null, framing: string, wall?: readonly PanelLine[]): void;
 }
 
 function webglAvailable(): boolean {
@@ -82,6 +85,7 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enablePan = false; // the board's centre stays the centre of the stage (D123, C125)
   let board: Group | null = null;
+  let wall: WallView | null = null;
   let box = new Box3(); // the board's bounding box, which the framing fits to the stage
   const size = { width: 640, height: 384 };
   const view = (): View => ({
@@ -103,6 +107,23 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
     camera.position.copy(controls.target).addScaledVector(direction, distance);
   };
 
+  // The near and far planes follow the distance, so a wall a kilometre long and a slot seen close up both draw
+  // without their depths running together (C204).
+  const fitDepth = () => {
+    const distance = camera.position.distanceTo(controls.target);
+    const across = box.isEmpty() ? 0 : box.getSize(new Vector3()).length();
+    camera.near = Math.max(0.5, distance / 1000);
+    camera.far = distance + 2 * across + 1000;
+    camera.updateProjectionMatrix();
+  };
+  // A wall: what to draw in full, chosen again from where the camera is now, and how much is drawn.
+  const redetail = () => {
+    if (!wall) return;
+    wall.update(camera, size.height);
+    container.dataset['triangles'] = String(wall.triangles());
+    container.dataset['detailed'] = String(wall.detailed());
+  };
+
   // After each frame, how many geometries the graphics card holds: it must stay at two (the board
   // and its outline) however often the board is redrawn, or editing would leak memory (browser-tested).
   const draw = () => {
@@ -111,6 +132,8 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
   };
   controls.addEventListener('change', () => {
     limitZoom();
+    fitDepth();
+    redetail();
     draw();
   });
   // The theme is an attribute on the page, whoever sets it: the system setting or, later, a toggle (C117).
@@ -133,6 +156,8 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
       controls.maxDistance = Infinity; // the limit for the old size must not hold the camera in; set below
       controls.update();
       limitZoom();
+      fitDepth();
+      redetail();
     }
     draw();
   };
@@ -148,6 +173,8 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
     controls.maxDistance = Infinity; // the limit follows the new view, set below
     controls.update();
     limitZoom();
+    fitDepth();
+    redetail();
     draw();
   };
   reset?.addEventListener('click', frame);
@@ -157,11 +184,13 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
   say('Preparing the preview…');
 
   return {
-    show(mesh, framing) {
+    show(mesh, framing, lines) {
       if (board) {
-        disposeScene(board);
+        if (wall) wall.dispose();
+        else disposeScene(board);
         scene.remove(board);
         board = null;
+        wall = null;
       }
       if (!mesh) {
         container.dataset['state'] = 'waiting';
@@ -172,7 +201,12 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
         return;
       }
       try {
-        board = boardScene(mesh);
+        if (lines && lines.length > 0) {
+          wall = wallView(mesh, lines, renderer.capabilities.getMaxAnisotropy());
+          board = wall.group;
+        } else {
+          board = boardScene(mesh);
+        }
       } catch (error) {
         container.dataset['state'] = 'error';
         say(`The preview could not be drawn: ${String(error)}`);
@@ -180,8 +214,11 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
         return;
       }
       scene.add(board);
-      box = new Box3().setFromObject(board);
-      container.dataset['triangles'] = String(board.userData['triangles']);
+      // a wall's extent from its grid, as only part of it is drawn in full at a time
+      box = wall ? wall.box.clone() : new Box3().setFromObject(board);
+      container.dataset['triangles'] = String(board.userData['triangles'] ?? 0);
+      container.dataset['panels'] = String(wall ? wall.panels() : 1);
+      container.dataset['detailed'] = String(wall ? 0 : 1);
       // Keep the user's view while they edit; frame again only when the board's size changes.
       if (framing !== framedFor) {
         frame();
@@ -190,6 +227,8 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
       container.dataset['state'] = 'ready';
       say(''); // the status bar under the stage says how to turn and zoom it
       limitZoom();
+      fitDepth();
+      redetail();
       draw();
     },
   };

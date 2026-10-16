@@ -29,7 +29,10 @@ All notable changes to this project are recorded here. The format follows
   behind the boards, so the wall holds it on, and leaves every other slot room for a hook.
 - 3MF as well as STL: a choice beside the download. A wall's print list also gives every panel in one file, a zip of
   STLs with the print list in it, or one 3MF with an object for each kind of panel named with how many to print.
-- Walls: "Split into panels" on a board makes its size a wall's, up to 1600 mm each way, cut into panels your
+- Walls of any size: the 3D view draws the panels near the camera, or zoomed in on, in full, and the rest of a
+  large wall as flat plates with the slots shown, so it stays quick however large the wall. A wall's print list
+  scrolls in its own share of the stage, so the 3D view keeps most of it.
+- Walls: "Split into panels" on a board makes its size a wall's, cut into panels your
   printer's bed takes, as even as they can be, closed round the outside and open at the seams so the slots run
   on across them. The preview shows the whole wall, and a print list gives each kind of panel, how many to
   print and its own download.

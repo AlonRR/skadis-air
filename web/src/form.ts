@@ -67,7 +67,7 @@ function numberField(s: NumberSetting, changed: () => void): { field: HTMLElemen
     type: 'number',
     name: s.key,
     min: String(s.min),
-    max: String(s.max),
+    ...(s.max === undefined ? {} : { max: String(s.max) }),
     step: String(s.step),
     value: String(s.default),
     autocomplete: 'off',

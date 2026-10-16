@@ -10,7 +10,7 @@ export interface NumberSetting {
   unit: 'mm';
   default: number;
   min: number;
-  max: number;
+  max?: number; // none: as large as given (a wall's size, D196)
   step: number; // the control's step
   onStep?: boolean; // the value must be min plus a whole number of steps (a board's size, D15)
   count?: string; // what one step is called, shown beside the value as a count: '= 6 tiles' (D45)
@@ -78,8 +78,9 @@ function readNumber(s: NumberSetting, given: unknown, errors: Problem[], warning
     errors.push({ key: s.key, message: `${s.label} must be a number` });
     return s.default;
   }
-  if (n < s.min || n > s.max) {
-    errors.push({ key: s.key, message: `${s.label} must be from ${nice(s.min)} to ${nice(s.max)} ${s.unit}` });
+  if (n < s.min || (s.max !== undefined && n > s.max)) {
+    const range = s.max === undefined ? `at least ${nice(s.min)}` : `from ${nice(s.min)} to ${nice(s.max)}`;
+    errors.push({ key: s.key, message: `${s.label} must be ${range} ${s.unit}` });
   } else if (s.onStep && Math.abs((n - s.min) / s.step - Math.round((n - s.min) / s.step)) > 1e-9) {
     errors.push({ key: s.key, message: `${s.label} goes in ${nice(s.step)} ${s.unit} steps` });
   } else if (s.warnOutside && (n < s.warnOutside[0] || n > s.warnOutside[1])) {

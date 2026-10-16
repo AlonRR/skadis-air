@@ -67,7 +67,7 @@ test("makes the panels as large as the chosen printer's bed takes", async ({ pag
   await expect(page.getByTestId('board-status')).toContainText('Wall ready: 4 panels', { timeout: 30_000 });
 });
 
-test('makes the largest wall, 1600 x 1600 mm, and draws it, each kind of panel sent once', async ({ page }) => {
+test('makes a wall 1600 x 1600 mm and draws it, each kind of panel sent once', async ({ page }) => {
   test.setTimeout(120_000);
   await ready(page);
   await choose(page, 'panels', 'split');
@@ -79,4 +79,41 @@ test('makes the largest wall, 1600 x 1600 mm, and draws it, each kind of panel s
   await expect(page.getByTestId('board-size')).toHaveText('1600 × 1600 × 5 mm');
   // nine kinds: four corners, four sides and the middle, closed round the wall (D37)
   await expect(page.getByTestId('print-list').getByTestId('print-row')).toHaveCount(9);
+  // the print list scrolls in its own share of the stage, so the 3D view keeps most of it (C205)
+  const view = await page.getByTestId('preview').boundingBox();
+  const stage = await page.locator('.ws-stage').boundingBox();
+  expect(view?.height ?? 0).toBeGreaterThan((stage?.height ?? 0) * 0.3);
+});
+
+// A wall of any size (D196), drawn in full only where the view needs it (D197, C203, C204): far panels stand in as
+// flat plates with the slots painted on, and zooming in draws the panels in view in full.
+test('makes a wall 20 m wide and draws it, only the panels the view needs in full', async ({ page }) => {
+  test.setTimeout(120_000);
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  await ready(page);
+  await choose(page, 'panels', 'split');
+  await page.locator('input[name="widthMm"]').fill('20000');
+  await page.locator('input[name="heightMm"]').fill('2400');
+  const status = page.getByTestId('board-status');
+  await expect(status).toContainText('Wall ready', { timeout: 90_000 });
+  const preview = page.getByTestId('preview');
+  await expect(preview).toHaveAttribute('data-state', 'ready');
+  await expect(page.getByTestId('board-size')).toHaveText('20000 × 2400 × 5 mm');
+  const number = async (name: string) => Number(await preview.getAttribute(name));
+  // seen whole, the slots are too small to draw: every panel stands in, in a few triangles
+  const panels = await number('data-panels');
+  expect(panels).toBeGreaterThan(400);
+  expect(await number('data-detailed')).toBeLessThan(panels);
+  expect(await number('data-triangles')).toBeLessThan(5_000_000);
+  // zoomed in, the panels near the middle are drawn in full, still within the budget
+  const canvas = await preview.locator('canvas').boundingBox();
+  if (canvas === null) throw new Error('no canvas');
+  await page.mouse.move(canvas.x + canvas.width / 2, canvas.y + canvas.height / 2);
+  for (let i = 0; i < 40; i += 1) await page.mouse.wheel(0, -400);
+  await expect.poll(() => number('data-detailed'), { timeout: 10_000 }).toBeGreaterThan(0);
+  expect(await number('data-detailed')).toBeLessThan(panels);
+  expect(await number('data-triangles')).toBeLessThanOrEqual(5_000_000 + 10_000);
+  expect(errors).toEqual([]);
 });

@@ -58,7 +58,7 @@ function contract(type: AnyBoardType) {
     for (const s of type.settings) {
       if (s.kind === 'number') {
         expect(s.default).toBeGreaterThanOrEqual(s.min);
-        expect(s.default).toBeLessThanOrEqual(s.max);
+        if (s.max !== undefined) expect(s.default).toBeLessThanOrEqual(s.max);
       } else if (s.kind === 'choice') {
         const values = s.options.map((o) => o.value);
         expect(new Set(values).size).toBe(values.length);
@@ -150,6 +150,16 @@ describe('the solid board type', () => {
     expect(read.ok).toBe(true);
     const off = readValues(solid.settings, { widthMm: '250' });
     expect(off.ok).toBe(false);
+  });
+
+  it('takes a wall of any size: its width and height have no upper limit (D196)', () => {
+    const size = solid.settings.filter((s) => s.key === 'widthMm' || s.key === 'heightMm');
+    expect(size.map((s) => s.kind === 'number' && s.max)).toEqual([undefined, undefined]);
+    const read = readValues(solid.settings, { widthMm: '40000', heightMm: '3000', panels: 'split' });
+    expect(read.ok).toBe(true);
+    // one board is still at most 400 mm a side (C51): the panel size keeps its limit
+    const panel = solid.settings.find((s) => s.key === 'panelWidthMm');
+    expect(panel?.kind === 'number' && panel.max).toBe(400);
   });
 
   it('builds the board its values describe', () => {

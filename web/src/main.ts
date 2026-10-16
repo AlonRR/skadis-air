@@ -104,7 +104,7 @@ function rebuild(type: AnyBoardType, form: Form): void {
       setStatus('ready', `${what === 'board' ? 'Board' : 'Connector'} ready: ${fileName}`, fileName, size);
       showPanels(id, [], '');
     }
-    preview?.show(built.parts, `${type.id} ${size}`); // framed again only when the type or size changes
+    preview?.show(built.parts, `${type.id} ${size}`, built.panels); // framed again only when type or size changes
   });
   const bed = printer?.bed();
   ask({ kind: 'build', id, typeId: type.id, values: read.values, bed: bed?.ok ? bed.bed : { ...DEFAULT_BED } });

@@ -84,6 +84,17 @@ describe('readValues', () => {
     }
   });
 
+  it('takes a number as large as given where its setting has no upper limit, and says so when too small (D196)', () => {
+    const open = defineSettings([
+      { kind: 'number', key: 'lengthMm', label: 'Length', unit: 'mm', default: 40, min: 40, step: 40, onStep: true },
+    ]);
+    const long = readValues(open, { lengthMm: '400000' });
+    expect(long.ok && long.values.lengthMm).toBe(400_000);
+    const short = readValues(open, { lengthMm: '0' });
+    expect(short.ok).toBe(false);
+    if (!short.ok) expect(short.errors[0]?.message).toBe('Length must be at least 40 mm');
+  });
+
   it('refuses text that is not a number', () => {
     const read = readValues(SETTINGS, { widthMm: 'wide' });
     expect(read.ok).toBe(false);

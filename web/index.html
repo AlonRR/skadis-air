@@ -31,6 +31,12 @@
         color: var(--ink-muted);
         font: var(--text-note);
       }
+      /* A wall's print list scrolls in its own share of the stage, so the 3D view keeps most of it (C205). */
+      .print-list {
+        flex: 0 1 auto;
+        max-height: 40%;
+        overflow-y: auto;
+      }
       [data-state='error'],
       [data-state='invalid'],
       [data-state='problem'] {
@@ -75,7 +81,7 @@
           </span>
         </div>
         <!-- A wall's panels: a line for each kind, with its count and its download, written by main.ts (D178) -->
-        <div data-testid="print-list" hidden></div>
+        <div class="print-list" data-testid="print-list" hidden></div>
         <div class="ws-status">
           <span data-testid="board-size"></span>
           <span

@@ -4,21 +4,31 @@
 // The board is light grey (D56), with its sharp edges outlined; preview.ts paints both from the design
 // system's tokens (D111).
 import { BufferAttribute, BufferGeometry, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh } from 'three';
-import { MeshPhongMaterial, type Object3D } from 'three';
+import { DoubleSide, MeshPhongMaterial, type Object3D } from 'three';
 import type { Placed } from './build-messages.js';
 
 // Shared by every board drawn; never disposed.
 // Flat shading: a board is flat faces, and normals averaged across a face and its edges streaked the
 // faces with diagonal shading (seen on the fit coupon, 12 Oct 2026).
-const BOARD = new MeshPhongMaterial({ color: 0xc9cdd1, shininess: 20, flatShading: true });
-const OUTLINE = new LineBasicMaterial({ color: 0x4a525a });
+export const BOARD = new MeshPhongMaterial({ color: 0xc9cdd1, shininess: 20, flatShading: true });
+export const OUTLINE = new LineBasicMaterial({ color: 0x4a525a });
+// What stands in for a wall's far panels (C204): the board's colour over a picture of the slots, which are cut
+// out of it where the picture is clear, seen from either side; wall-scene.ts gives it the picture.
+export const STAND_IN = new MeshPhongMaterial({
+  color: 0xc9cdd1,
+  shininess: 20,
+  flatShading: true,
+  side: DoubleSide,
+  alphaTest: 0.5,
+});
 // Edges are outlined where faces meet at 30 degrees or more: the board's outline and the slots'
 // rims, not the facets of their round ends.
-const OUTLINE_ANGLE_DEGREES = 30;
+export const OUTLINE_ANGLE_DEGREES = 30;
 
 /** Paints the boards, those drawn and those to come, in two CSS colours: the board and its edges. */
 export function paintBoards(board: string, outline: string): void {
   BOARD.color.setStyle(board);
+  STAND_IN.color.setStyle(board);
   OUTLINE.color.setStyle(outline);
 }
 
