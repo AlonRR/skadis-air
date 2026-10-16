@@ -5,6 +5,6 @@ projects:
   - name:     Skådis Air
     kind:     build
     state:    active
-    next:     "conn-seam-plate (D167)"
+    next:     "conn-slot-clip (D185); D187 to D190 asked"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-15
