@@ -5,6 +5,6 @@ projects:
   - name:     Skådis Air
     kind:     build
     state:    active
-    next:     "wall-detail (D196, D197); then edge-joins"
+    next:     "wall-detail (D196, D197), then design-system-v050 (D202); then edge-joins"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-15
