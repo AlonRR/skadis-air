@@ -10,7 +10,7 @@
 import { AmbientLight, Box3, Color, DirectionalLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import type { Group } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import type { MeshData } from 'skadis-air';
+import type { Placed } from './build-messages.js';
 import { distanceToFit, zoomOutLimit, type View } from './framing.js';
 import { boardScene, disposeScene, paintBoards } from './preview-scene.js';
 
@@ -34,7 +34,7 @@ const REFIT_SHARE = 0.95;
 
 export interface Preview {
   /** Draws the board, or empties the preview when there is none; `framing` decides when to frame again. */
-  show(board: MeshData | null, framing: string): void;
+  show(board: readonly Placed[] | null, framing: string): void;
 }
 
 function webglAvailable(): boolean {

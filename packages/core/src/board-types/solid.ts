@@ -4,11 +4,14 @@
 import { makeSolidBoard, solidBoardParams, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from '../board-solid.js';
 import { MOUNTING_SETTINGS, mountingCuts, mountingLabel, mountingOf } from '../mounting.js';
 import { TILE_MM } from '../skadis.js';
+import { MAX_PANEL_TILES } from '../tiling.js';
 import { defineSettings, type Values } from '../settings.js';
 import { ALL_OPEN } from '../slots.js';
 import { defineBoardType } from './define.js';
 
-const SIZE = { unit: 'mm', min: TILE_MM, max: 10 * TILE_MM, step: TILE_MM, onStep: true, count: 'tiles' } as const;
+// A board is up to 10 tiles a side; split into panels, a wall up to 40 (C51, D175).
+const SIZE = { unit: 'mm', min: TILE_MM, max: 40 * TILE_MM, step: TILE_MM, onStep: true, count: 'tiles' } as const;
+const PANEL = { ...SIZE, max: MAX_PANEL_TILES * TILE_MM, default: MAX_PANEL_TILES * TILE_MM, advanced: true } as const;
 
 /** The solid board's own settings, before the mounting's: its size, thickness, sides and slots. */
 export const BOARD_SETTINGS = defineSettings([
@@ -32,6 +35,17 @@ export const BOARD_SETTINGS = defineSettings([
     label: 'Sides',
     default: ALL_OPEN,
     help: 'An open side has half slots, to join a neighbour or add one later; a closed side is a solid edge.',
+  },
+  {
+    kind: 'choice',
+    key: 'panels',
+    label: 'Panels',
+    options: [
+      { value: 'one', label: 'One board' },
+      { value: 'split', label: 'Split into panels' },
+    ],
+    default: 'one',
+    help: "Split, the width and height are a wall's, cut into panels your printer's bed takes; the sides are the wall's outer edges, and the seams are open.",
   },
   {
     kind: 'number',
@@ -69,12 +83,31 @@ export const BOARD_SETTINGS = defineSettings([
     help: 'Where both sides at a corner are closed; open corners stay square, to fit a neighbour.',
     advanced: true,
   },
+  {
+    kind: 'number',
+    key: 'panelWidthMm',
+    label: 'Largest panel width',
+    ...PANEL,
+    help: 'Split, panels are as large as the bed takes, and no larger than this.',
+  },
+  {
+    kind: 'number',
+    key: 'panelHeightMm',
+    label: 'Largest panel height',
+    ...PANEL,
+    help: 'Split, panels are as large as the bed takes, and no taller than this.',
+  },
 ]);
 
 type BoardValues = Values<typeof BOARD_SETTINGS>;
 
-/** The solid board its settings describe. */
+/** The solid board its settings describe; one board larger than a panel can be is refused (C51). */
 export function boardParamsOf(v: BoardValues): SolidBoardParams {
+  if (v.widthMm > MAX_PANEL_TILES * TILE_MM || v.heightMm > MAX_PANEL_TILES * TILE_MM) {
+    throw new RangeError(
+      `One board is at most ${MAX_PANEL_TILES * TILE_MM} mm a side; choose "Split into panels" to make a wall`,
+    );
+  }
   return solidBoardParams({
     columns: v.widthMm / TILE_MM,
     rows: v.heightMm / TILE_MM,

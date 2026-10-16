@@ -5,9 +5,11 @@
 import wasmUrl from 'manifold-3d/manifold.wasm?url';
 import type { Manifold } from 'manifold-3d';
 import {
+  boardFileName,
   boardType,
   buildBoard,
   buildCheckPart,
+  buildWall,
   loadEngine,
   meshOf,
   printedPart,
@@ -15,10 +17,11 @@ import {
   toStl,
   type AnyBoardType,
 } from 'skadis-air';
-import type { Reply, Request } from './build-messages.js';
+import type { PanelLine, Placed, Reply, Request } from './build-messages.js';
 
 const engine = () => loadEngine(wasmUrl);
-let last: { id: number; type: AnyBoardType; solid: Manifold } | undefined; // what the page shows; freed when replaced
+// What the page shows: one board, or a wall's panel kinds, each as it is printed; freed when replaced.
+let last: { id: number; type: AnyBoardType; solid?: Manifold; panels: Manifold[] } | undefined;
 let waiting: Extract<Request, { kind: 'build' }> | undefined; // the newest build asked for, not yet begun
 let scheduled = false;
 
@@ -38,30 +41,77 @@ async function build(request: Extract<Request, { kind: 'build' }>): Promise<void
     const type = boardType(request.typeId);
     const read = readValues(type.settings, request.values);
     if (!read.ok) throw new RangeError(read.errors.map((e) => e.message).join('; '));
-    const built = buildBoard(await engine(), type, read.values);
-    last?.solid.delete();
-    last = undefined;
-    if (!built.ok) {
-      reply({ kind: 'built', id, ok: false, problem: built.problem });
-      return;
+    const ready = await engine();
+    forget();
+    const wall = buildWall(ready, type, read.values, request.bed);
+    let lines: PanelLine[] | undefined;
+    let parts: { solid: Manifold; places: [number, number][] }[];
+    if (wall !== null) {
+      last = { id, type, panels: wall.panels.map((p) => p.solid) };
+      parts = wall.panels;
+      lines = wall.panels.map((p) => {
+        const sides: unknown = p.values['sides'];
+        const closed = ['left', 'right', 'bottom', 'top'].filter(
+          (side) =>
+            typeof sides === 'object' &&
+            sides !== null &&
+            Object.getOwnPropertyDescriptor(sides, side)?.value === 'closed',
+        );
+        const values = readValues(type.settings, p.values);
+        return {
+          fileName: values.ok ? boardFileName(type, values.values, 'stl') : '',
+          count: p.places.length,
+          widthMm: Number(p.values['widthMm']),
+          heightMm: Number(p.values['heightMm']),
+          closed,
+        };
+      });
+    } else {
+      const built = buildBoard(ready, type, read.values);
+      if (!built.ok) {
+        reply({ kind: 'built', id, ok: false, problem: built.problem });
+        return;
+      }
+      last = { id, type, solid: built.solid, panels: [] };
+      parts = [{ solid: built.solid, places: [[0, 0]] }];
     }
-    last = { id, type, solid: built.solid };
-    const { positions, triangles } = meshOf(built.solid);
-    const { min, max } = built.solid.boundingBox();
-    reply({ kind: 'built', id, ok: true, positions, triangles, min, max }, [positions.buffer, triangles.buffer]);
+    // Each mesh once, with the places of its copies: a wall's copies are drawn from it, not sent again.
+    const placed: Placed[] = parts.map(({ solid, places }) => ({ ...meshOf(solid), places }));
+    const min: [number, number, number] = [Infinity, Infinity, Infinity];
+    const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
+    for (const { solid, places } of parts) {
+      const box = solid.boundingBox();
+      for (const [x, y] of places) {
+        const offset = [x, y, 0];
+        for (let k = 0; k < 3; k++) {
+          min[k] = Math.min(min[k] ?? Infinity, (box.min[k] ?? 0) + (offset[k] ?? 0));
+          max[k] = Math.max(max[k] ?? -Infinity, (box.max[k] ?? 0) + (offset[k] ?? 0));
+        }
+      }
+    }
+    const transfer = placed.flatMap((m) => [m.positions.buffer, m.triangles.buffer]);
+    reply({ kind: 'built', id, ok: true, parts: placed, min, max, ...(lines ? { panels: lines } : {}) }, transfer);
   } catch (error) {
     reply({ kind: 'built', id, ok: false, problem: error instanceof RangeError ? error.message : String(error) });
   }
 }
 
-/** The STL of the part the page shows, as it prints (D66, C101). */
+/** Frees the part shown before, and a wall's panels. */
+function forget(): void {
+  last?.solid?.delete();
+  for (const p of last?.panels ?? []) p.delete();
+  last = undefined;
+}
+
+/** The STL of the part the page shows, or of one kind of its wall's panels, as it prints (D66, C101). */
 function stl(request: Extract<Request, { kind: 'stl' }>): void {
   const { id } = request;
-  if (last?.id !== id) {
+  const part = request.panel === undefined ? last?.solid : last?.panels[request.panel];
+  if (last?.id !== id || part === undefined) {
     reply({ kind: 'stl', id, ok: false, error: 'That board is no longer the one shown' });
     return;
   }
-  const printed = printedPart(last.type, last.solid);
+  const printed = printedPart(last.type, part);
   try {
     const bytes = toStl(meshOf(printed), request.name.replace(/\.stl$/, ''));
     reply({ kind: 'stl', id, ok: true, bytes }, [bytes.buffer]);

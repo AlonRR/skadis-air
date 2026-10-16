@@ -1,0 +1,135 @@
+// A wall split into panels (backlog item tiling; D15, D37, D175 to D178): panels as even as they can be, none
+// larger than the bed takes or the user allows; closed round the wall's outer edge and open at the seams, so the
+// slots run on across them; each panel a board with the board's own settings and mounting.
+import type { Manifold } from 'manifold-3d';
+import { afterAll, describe, expect, it, vi } from 'vitest';
+import { defaultValues } from '../src/settings.js';
+import { buildBoard, SOLID } from '../src/board-types/index.js';
+import { loadEngine } from '../src/engine.js';
+import { evenSplit, largestPanel, wallPlan } from '../src/tiling.js';
+
+vi.setConfig({ testTimeout: 30_000 });
+const engine = await loadEngine();
+const made: Manifold[] = [];
+afterAll(() => {
+  for (const m of made) m.delete();
+});
+
+const CLOSED = { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' } as const;
+const wall = (given: Record<string, unknown>) => ({ ...defaultValues(SOLID.settings), panels: 'split', ...given });
+
+describe('evenSplit (D176 B)', () => {
+  it('splits a run of tiles into as few parts as the most allows, as even as they can be', () => {
+    expect(evenSplit(11, 5)).toEqual([4, 4, 3]); // a 440 mm wall in 200 mm panels: 160 + 160 + 120
+    expect(evenSplit(7, 5)).toEqual([4, 3]);
+    expect(evenSplit(10, 5)).toEqual([5, 5]);
+    expect(evenSplit(5, 5)).toEqual([5]);
+    expect(evenSplit(1, 5)).toEqual([1]);
+  });
+
+  it('never leaves parts more than a tile apart, nor one larger than the most', () => {
+    for (let n = 1; n <= 40; n++) {
+      for (let most = 1; most <= 10; most++) {
+        const parts = evenSplit(n, most);
+        expect(parts.reduce((a, b) => a + b, 0)).toBe(n);
+        expect(Math.max(...parts)).toBeLessThanOrEqual(most);
+        expect(Math.max(...parts) - Math.min(...parts)).toBeLessThanOrEqual(1);
+        expect(parts.length).toBe(Math.ceil(n / most));
+      }
+    }
+  });
+});
+
+describe('largestPanel', () => {
+  it('is the most whole tiles the bed takes each way, at most 10 (C51)', () => {
+    expect(largestPanel({ xMm: 200, yMm: 200 })).toEqual({ columns: 5, rows: 5 });
+    expect(largestPanel({ xMm: 250, yMm: 210 })).toEqual({ columns: 6, rows: 5 });
+    expect(largestPanel({ xMm: 180, yMm: 180 })).toEqual({ columns: 4, rows: 4 });
+    expect(largestPanel({ xMm: 600, yMm: 600 })).toEqual({ columns: 10, rows: 10 });
+  });
+});
+
+describe('wallPlan (D175 to D177)', () => {
+  it('is null for one board', () => {
+    expect(wallPlan({ ...defaultValues(SOLID.settings) }, { xMm: 200, yMm: 200 })).toBeNull();
+  });
+
+  it("splits a 440 x 280 mm wall on a 200 mm bed as the figure's B, closed outside and open at the seams", () => {
+    const plan = wallPlan(wall({ widthMm: 440, heightMm: 280, sides: CLOSED }), { xMm: 200, yMm: 200 });
+    if (plan === null) throw new Error('a plan');
+    expect(plan.columns).toEqual([4, 4, 3]);
+    expect(plan.rows).toEqual([4, 3]);
+    expect(plan.panels).toHaveLength(6); // six sizes and side patterns, one of each
+    const bottomLeft = plan.panels.find((p) => p.places.some(([x, y]) => x === 0 && y === 0));
+    expect(bottomLeft?.values).toMatchObject({
+      widthMm: 160,
+      heightMm: 160,
+      panels: 'one',
+      sides: { left: 'closed', bottom: 'closed', right: 'open', top: 'open' },
+    });
+    const count = plan.panels.reduce((n, p) => n + p.places.length, 0);
+    expect(count).toBe(6);
+  });
+
+  it('counts the panels of each kind: a 3 x 3 wall has one middle kind of its own', () => {
+    const plan = wallPlan(wall({ widthMm: 600, heightMm: 600, sides: CLOSED }), { xMm: 200, yMm: 200 });
+    if (plan === null) throw new Error('a plan');
+    expect(plan.columns).toEqual([5, 5, 5]);
+    expect(plan.panels).toHaveLength(9); // four corners, four sides, the middle: each its own sides
+    const middle = plan.panels.find((p) => Object.values(p.values.sides as object).every((s) => s === 'open'));
+    expect(middle?.places).toEqual([[200, 200]]);
+    const nine = wallPlan(wall({ widthMm: 1000, heightMm: 1000, sides: CLOSED }), { xMm: 200, yMm: 200 });
+    const inner = nine?.panels.find((p) => Object.values(p.values.sides as object).every((s) => s === 'open'));
+    expect(inner?.places).toHaveLength(9); // 5 x 5 panels, 3 x 3 of them inside
+  });
+
+  it('turns the panels on a bed that is not square when that makes fewer of them', () => {
+    // 6 x 5 tiles on a 250 x 210 bed: a 440 x 280 wall in 2 x 2 panels; turned, 5 x 6 would take 3 x 2
+    const plan = wallPlan(wall({ widthMm: 440, heightMm: 280 }), { xMm: 250, yMm: 210 });
+    expect([plan?.columns, plan?.rows]).toEqual([
+      [6, 5],
+      [4, 3],
+    ]);
+  });
+
+  it('keeps panels within the largest panel set, smaller than the bed allows (D176)', () => {
+    const plan = wallPlan(wall({ widthMm: 400, heightMm: 120, panelWidthMm: 120 }), { xMm: 200, yMm: 200 });
+    expect(plan?.columns).toEqual([3, 3, 2, 2]); // 10 tiles in panels of at most 3
+    expect(plan?.rows).toEqual([3]);
+  });
+
+  it('puts the wall back together: its panels, placed, are the one board of its size (D15)', () => {
+    const values = wall({ widthMm: 280, heightMm: 200, sides: CLOSED, screwHead: 'none' });
+    const plan = wallPlan(values, { xMm: 200, yMm: 200 });
+    if (plan === null) throw new Error('a plan');
+    let volume = 0;
+    for (const panel of plan.panels) {
+      const built = buildBoard(engine, SOLID, panel.values as never);
+      if (!built.ok) throw new Error(built.problem);
+      made.push(built.solid);
+      volume += built.solid.volume() * panel.places.length;
+    }
+    const whole = buildBoard(engine, SOLID, { ...values, panels: 'one' } as never);
+    if (!whole.ok) throw new Error(whole.problem);
+    made.push(whole.solid);
+    // the seams are open, half a slot each side: the slots across them are whole, none missing or doubled
+    expect(Math.abs(volume - whole.solid.volume())).toBeLessThan(0.1); // of 255 708 mm³: rounding
+    // control: the same panels with their seams closed leave out the slots along them
+    let closedSeams = 0;
+    for (const panel of plan.panels) {
+      const built = buildBoard(engine, SOLID, { ...panel.values, sides: CLOSED, cornerRadiusMm: 0 } as never);
+      if (!built.ok) throw new Error(built.problem);
+      made.push(built.solid);
+      closedSeams += built.solid.volume() * panel.places.length;
+    }
+    expect(closedSeams - volume).toBeGreaterThan(100);
+  });
+});
+
+describe('a board too large to print as one', () => {
+  it('is refused past 400 mm unless split into panels, saying so (C51)', () => {
+    const built = buildBoard(engine, SOLID, { ...defaultValues(SOLID.settings), widthMm: 440 });
+    expect(built.ok).toBe(false);
+    if (!built.ok) expect(built.problem).toContain('Split into panels');
+  });
+});

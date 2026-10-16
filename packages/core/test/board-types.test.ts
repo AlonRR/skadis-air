@@ -199,6 +199,8 @@ describe('the solid board type', () => {
     expect(advanced.sort()).toEqual([
       'cornerRadiusMm',
       'lockScrews',
+      'panelHeightMm',
+      'panelWidthMm',
       'screwMm',
       'slotChamferMm',
       'slotClearanceMm',

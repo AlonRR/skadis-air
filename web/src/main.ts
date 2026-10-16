@@ -2,8 +2,17 @@
 // board rebuilt whenever a setting changes. Every build runs in a web worker (build-worker.ts; D166), so the
 // page answers while a large board is made; the worker also starts the engine and makes its check part, so the
 // browser test still sees the WebAssembly file found, fetched and started from the built page (C32).
-import { BOARD_TYPES, boardFileName, boardType, fitsBed, groupOf, readValues, type AnyBoardType } from 'skadis-air';
-import type { Reply, Request } from './build-messages.js';
+import {
+  BOARD_TYPES,
+  boardFileName,
+  boardType,
+  DEFAULT_BED,
+  fitsBed,
+  groupOf,
+  readValues,
+  type AnyBoardType,
+} from 'skadis-air';
+import type { PanelLine, Reply, Request } from './build-messages.js';
 import { choiceGroup, chosenIn, renderForm, type Form } from './form.js';
 import { saveFile } from './download.js';
 import { mountPreview } from './preview.js';
@@ -23,6 +32,7 @@ const sizeLine = document.querySelector<HTMLElement>('[data-testid="board-size"]
 const downloadButton = document.querySelector<HTMLButtonElement>('[data-testid="download-stl"]');
 const printerBox = document.querySelector<HTMLElement>('[data-testid="printer"]');
 const bedWarning = document.querySelector<HTMLElement>('[data-testid="bed-warning"]');
+const printList = document.querySelector<HTMLElement>('[data-testid="print-list"]'); // a wall's panels (D178)
 let current: (() => void) | undefined; // rebuilds the board on show, for a change of printer
 const printer = printerBox ? mountPrinter(printerBox, () => current?.()) : null;
 
@@ -54,6 +64,7 @@ function rebuild(type: AnyBoardType, form: Form): void {
   const what = groupOf(type) === 'connector' ? 'connector' : 'board';
   const id = ++latest;
   shown = 0;
+  showPanels(id, []);
   setStatus('building', `Making the ${what}…`);
   const fileName = boardFileName(type, read.values, 'stl');
   answers.set('built', (built) => {
@@ -66,11 +77,56 @@ function rebuild(type: AnyBoardType, form: Form): void {
     shown = id;
     const { min, max } = built;
     const size = [0, 1, 2].map((k) => Math.round(((max[k] ?? 0) - (min[k] ?? 0)) * 10) / 10).join(' × ');
-    warnAboutBed(max[0], max[1]);
-    setStatus('ready', `${what === 'board' ? 'Board' : 'Connector'} ready: ${fileName}`, fileName, size);
-    preview?.show(built, `${type.id} ${size}`); // framed again only when the type or size changes
+    if (built.panels) {
+      const count = built.panels.reduce((n, line) => n + line.count, 0);
+      warnAboutBed(0, 0); // every panel fits the bed it was cut for
+      setStatus('ready', `Wall ready: ${count} panels, ${built.panels.length} to download below.`, fileName, size);
+      showPanels(id, built.panels);
+    } else {
+      warnAboutBed(max[0], max[1]);
+      setStatus('ready', `${what === 'board' ? 'Board' : 'Connector'} ready: ${fileName}`, fileName, size);
+      showPanels(id, []);
+    }
+    preview?.show(built.parts, `${type.id} ${size}`); // framed again only when the type or size changes
   });
-  ask({ kind: 'build', id, typeId: type.id, values: read.values });
+  const bed = printer?.bed();
+  ask({ kind: 'build', id, typeId: type.id, values: read.values, bed: bed?.ok ? bed.bed : { ...DEFAULT_BED } });
+}
+
+/** A wall's print list: a line for each kind of panel, its count, its size, its closed sides and its download
+ * (D178); the single download goes while it shows. Empty, for one board. */
+function showPanels(id: number, lines: readonly PanelLine[]): void {
+  // the design system's buttons set their display, which a hidden attribute does not overrule (C179)
+  if (downloadButton !== null) downloadButton.style.display = lines.length > 0 ? 'none' : '';
+  if (printList === null) return;
+  printList.hidden = lines.length === 0;
+  printList.replaceChildren(
+    ...lines.map((line, panel) => {
+      const row = document.createElement('div');
+      row.className = 'ws-plan';
+      row.dataset['testid'] = 'print-row';
+      const text = document.createElement('span');
+      text.className = 'ws-plan__line';
+      const closed = line.closed.length > 0 ? `, closed ${line.closed.join(' and ')}` : ', open all round';
+      text.textContent = `${line.count} × ${line.widthMm} × ${line.heightMm} mm${closed}`;
+      const actions = document.createElement('span');
+      actions.className = 'ws-plan__actions';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'ws-btn';
+      button.textContent = 'Download';
+      button.title = line.fileName;
+      button.addEventListener('click', () => {
+        answers.set('stl', (file) => {
+          if (file.kind === 'stl' && file.ok && file.id === id) saveFile(line.fileName, file.bytes, 'model/stl');
+        });
+        ask({ kind: 'stl', id, name: line.fileName, panel });
+      });
+      actions.append(button);
+      row.append(text, actions);
+      return row;
+    }),
+  );
 }
 
 /** A board larger than the bed is warned about, not refused (D62). */
@@ -87,8 +143,8 @@ function warnAboutBed(widthMm: number, heightMm: number): void {
   bedWarning.replaceChildren(
     headline,
     `This board is ${Math.round(widthMm)} × ${Math.round(heightMm)} mm; it does not fit the ` +
-      `${chosen.bed.xMm} × ${chosen.bed.yMm} mm bed. It can still be downloaded; splitting a board into ` +
-      'tiles that fit comes later.',
+      `${chosen.bed.xMm} × ${chosen.bed.yMm} mm bed. It can still be downloaded, or "Split into panels" ` +
+      'cuts it into panels that fit.',
   );
 }
 
@@ -101,6 +157,11 @@ function show(type: AnyBoardType): void {
   };
   const form = renderForm(formBox, type, changed);
   current = changed;
+  // A wall is closed round its outer edge (D37): split, the sides still open close, and can be opened again.
+  formBox.querySelector('[role="radiogroup"][aria-label="Panels"]')?.addEventListener('change', () => {
+    if (chosenIn(formBox.querySelector('[aria-label="Panels"]') ?? formBox) !== 'split') return;
+    for (const side of formBox.querySelectorAll<HTMLButtonElement>('[data-side][aria-pressed="false"]')) side.click();
+  });
   rebuild(type, form);
 }
 

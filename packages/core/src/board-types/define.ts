@@ -5,7 +5,9 @@
 import type { Manifold } from 'manifold-3d';
 import type { Engine } from '../engine.js';
 import { placeOnBed, printPose } from '../print-pose.js';
-import type { Setting, Values } from '../settings.js';
+import { DEFAULT_BED, type Bed } from '../printer.js';
+import { readValues, type Setting, type Values } from '../settings.js';
+import { wallPlan, type PanelKind } from '../tiling.js';
 
 /** Where the page lists a type (D91): with the boards, or under "Connectors". */
 export type Group = 'board' | 'connector';
@@ -41,10 +43,57 @@ export function printedPart(type: { prints?: 'face-down' | 'as-built' }, solid: 
   return type.prints === 'as-built' ? placeOnBed(solid) : printPose(solid);
 }
 
-/** Builds any board type; a combination of values it cannot make comes back as a problem, not a throw. */
-export function buildBoard<S extends readonly Setting[]>(engine: Engine, type: BoardType<S>, values: Values<S>): Built {
+/** A wall (D175): each kind of panel built once, as it is printed, with the places of its copies. */
+export interface BuiltWall {
+  panels: (PanelKind & { solid: Manifold })[];
+}
+
+/** The wall's panels in place as one solid; they touch at the seams. The panels stay the caller's. */
+export function wallSolid(engine: Engine, wall: BuiltWall): Manifold {
+  const copies = wall.panels.flatMap((p) => p.places.map(([x, y]) => p.solid.translate([x, y, 0])));
+  const solid = engine.Manifold.compose(copies);
+  for (const c of copies) c.delete();
+  return solid;
+}
+
+/** The wall a board type's values describe on this bed, or null when they describe one board. Throws a
+ * RangeError, as a build does, when a panel cannot be made. */
+export function buildWall<S extends readonly Setting[]>(
+  engine: Engine,
+  type: BoardType<S>,
+  values: Values<S>,
+  bed: Bed,
+): BuiltWall | null {
+  const plan = wallPlan(values, bed);
+  if (plan === null) return null;
+  const panels: BuiltWall['panels'] = [];
   try {
-    return { ok: true, solid: type.build(engine, values) };
+    for (const kind of plan.panels) {
+      const read = readValues(type.settings, kind.values);
+      if (!read.ok) throw new RangeError(read.errors.map((e) => e.message).join('; '));
+      panels.push({ ...kind, solid: type.build(engine, read.values) });
+    }
+  } catch (error) {
+    for (const p of panels) p.solid.delete();
+    throw error;
+  }
+  return { panels };
+}
+
+/** Builds any board type, a wall on the default bed unless one is given; a combination of values it cannot
+ * make comes back as a problem, not a throw. */
+export function buildBoard<S extends readonly Setting[]>(
+  engine: Engine,
+  type: BoardType<S>,
+  values: Values<S>,
+  bed: Bed = DEFAULT_BED,
+): Built {
+  try {
+    const wall = buildWall(engine, type, values, bed);
+    if (wall === null) return { ok: true, solid: type.build(engine, values) };
+    const solid = wallSolid(engine, wall);
+    for (const p of wall.panels) p.solid.delete();
+    return { ok: true, solid };
   } catch (error) {
     if (error instanceof RangeError) return { ok: false, problem: error.message };
     throw error;

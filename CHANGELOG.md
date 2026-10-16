@@ -20,6 +20,10 @@ All notable changes to this project are recorded here. The format follows
 - The page is published at <https://alonrr.github.io/skadis-air/>, rebuilt from every change that passes
   the checks.
 - A tab icon: five slots of a SKÅDIS board in the page's blue, lighter when your system is set to dark.
+- Walls: "Split into panels" on a board makes its size a wall's, up to 1600 mm each way, cut into panels your
+  printer's bed takes, as even as they can be, closed round the outside and open at the seams so the slots run
+  on across them. The preview shows the whole wall, and a print list gives each kind of panel, how many to
+  print and its own download.
 - Printers to choose from: under "Printer bed", a button for each of seven makers, then its models, 30 printers
   in all, each bed from its maker's website (`docs/printer-beds.md`). The page remembers the printer, or a custom
   bed, in your browser.

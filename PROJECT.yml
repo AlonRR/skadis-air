@@ -5,6 +5,6 @@ projects:
   - name:     Skådis Air
     kind:     build
     state:    active
-    next:     "tiling; then download-3mf-zip, conn-seam-plate (D167)"
+    next:     "download-3mf-zip; then conn-seam-plate (D167)"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-15

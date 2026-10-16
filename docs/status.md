@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 15 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The repositories are renamed `skadis-air` on Gitea and GitHub (A80, T89); the local folder is renamed between sessions. Keyhole heads and corner holes kept as an option (D130) are in `mounting-ikea`; IKEA's own board has none, its spacer held through a peg slot by a screw with a nub (T17). **`conn-standoff` is done** (D91 to D94, D97): a standoff for 1, 2 or 4 boards under "Connectors", the shared ones with a tunnel for hooks, sized from a replica of IKEA's hook on Printables (T98). A **seam-test pair** (D69) prints with the fit coupon, to test how tiles join. The first test print (the coupon and the pair) and a real board are measured (T109, T17, 15 Oct 2026): the sources' SKÅDIS numbers hold, a slot drawn at 0.2 mm prints at the wide end of the board's slot width and about 0.3 mm shorter than its slot, and the grid holds across the seam, so the default clearance stays 0.2 mm (D129). **The repository is public on GitHub** (D103, T132, 15 Oct 2026), and pushes keep it in step with Gitea (D134); Pages is on, and a workflow publishes the page there after each green checks run on `main` (T132); the first deployment was checked live (15 Oct 2026), and the page has a tab icon (D137). The page has the shared design system's fonts, colours and dark theme (`design-system-base`, D111, D113) and its controls, every choice as buttons (`design-system-controls`, D112), and is its workbench: the board in a stage it always fits, beside the form or above it on a phone, with a theme toggle (`workbench`, D123). **`board-lightened` is done with full-depth members** (D141 to D145, 15 Oct 2026): about 41 % of the solid board's plastic, measured; the I-beam the owner asked about goes to the skeleton board, on the same lattice (D146, D147), and the test print is T151. The design system's v0.3.0 is in (D153, 15 Oct 2026), and **`mounting-ikea` is done** (D155 to D158): keyholes in the top two corners, with lock screws at the bottom as an option. **`board-skeleton` is done** (D146, D147, D161): every rim and web an I-beam, 32 % of the solid board's plastic. Every build now runs in the background (D166, `build-worker`), and the page offers 30 printers by maker (`printer-presets`, D170 to D172). Next: `tiling`, `download-3mf-zip` and `conn-seam-plate` (D167). The evidence for the board types and
+Last updated: 15 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The repositories are renamed `skadis-air` on Gitea and GitHub (A80, T89); the local folder is renamed between sessions. Keyhole heads and corner holes kept as an option (D130) are in `mounting-ikea`; IKEA's own board has none, its spacer held through a peg slot by a screw with a nub (T17). **`conn-standoff` is done** (D91 to D94, D97): a standoff for 1, 2 or 4 boards under "Connectors", the shared ones with a tunnel for hooks, sized from a replica of IKEA's hook on Printables (T98). A **seam-test pair** (D69) prints with the fit coupon, to test how tiles join. The first test print (the coupon and the pair) and a real board are measured (T109, T17, 15 Oct 2026): the sources' SKÅDIS numbers hold, a slot drawn at 0.2 mm prints at the wide end of the board's slot width and about 0.3 mm shorter than its slot, and the grid holds across the seam, so the default clearance stays 0.2 mm (D129). **The repository is public on GitHub** (D103, T132, 15 Oct 2026), and pushes keep it in step with Gitea (D134); Pages is on, and a workflow publishes the page there after each green checks run on `main` (T132); the first deployment was checked live (15 Oct 2026), and the page has a tab icon (D137). The page has the shared design system's fonts, colours and dark theme (`design-system-base`, D111, D113) and its controls, every choice as buttons (`design-system-controls`, D112), and is its workbench: the board in a stage it always fits, beside the form or above it on a phone, with a theme toggle (`workbench`, D123). **`board-lightened` is done with full-depth members** (D141 to D145, 15 Oct 2026): about 41 % of the solid board's plastic, measured; the I-beam the owner asked about goes to the skeleton board, on the same lattice (D146, D147), and the test print is T151. The design system's v0.3.0 is in (D153, 15 Oct 2026), and **`mounting-ikea` is done** (D155 to D158): keyholes in the top two corners, with lock screws at the bottom as an option. **`board-skeleton` is done** (D146, D147, D161): every rim and web an I-beam, 32 % of the solid board's plastic. Every build now runs in the background (D166, `build-worker`), and the page offers 30 printers by maker (`printer-presets`, D170 to D172). **`tiling` is done** (D175 to D178, 16 Oct 2026): walls of panels that fit the bed. Next: `download-3mf-zip` and `conn-seam-plate` (D167). The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
@@ -121,32 +121,16 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D171 | **The chosen printer, or a custom size, is remembered in this browser**, as the theme is | 15 Oct 2026 |
 | D172 | **The list adds the Original Prusa i3 MK3S+, 250 x 210 mm**, from Prusa's page for its 10th Anniversary Edition ("25x21x21 cm") | 15 Oct 2026 |
 | A173 | **A root `LICENSE` names the split and points to `LICENSES/`**, so GitHub shows the repository's licence; raised by an audit of the public repository | 15 Oct 2026 |
+| D175 | **A wall is made on the boards themselves**: "Panels: One board / Split into panels" on the solid, lightened and skeleton boards; split, their width and height are the wall's, up to 1600 mm each way, and every panel takes the board's settings | 16 Oct 2026 |
+| D176 | **A wall's panels are as even as they can be**, none larger than the panel size, which starts at the largest the chosen bed takes and can be set smaller (a 440 mm wall in 200 mm panels: 160 + 160 + 120) | 16 Oct 2026 |
+| D177 | **Each panel keeps the board's mounting in its own four corners**, so a seam plate can fix through them | 16 Oct 2026 |
+| D178 | **The page shows the whole wall and a print list**: a line for each kind of panel, its count and its own download, one STL each until `download-3mf-zip` | 16 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
 ## Open questions
 
 `board-lightened` and `mounting-ikea` were planned and built on 15 Oct 2026 (D141 to D147, D155 to D158; C148 to
 C150, C159, C160; the backlog rows have the results). Waiting on the owner:
-
-`tiling`, asked on 15 Oct 2026, drawn in [`figures/wall-split.png`](figures/wall-split.png)
-(`scripts/figures/wall-split.py`). D37 already says a wall is closed round its outer edge and open at its seams,
-and that the user sets the panel size in 40 mm tiles; D15 that panels are cut through slot centres, so tiles
-side by side make whole slots.
-
-- **D175** Where a wall is made: (a) on the boards themselves: "Panels: One board / Split into panels" on the
-  solid, lightened and skeleton boards; split, the width and height are the wall's, up to 1600 mm each way, and
-  every panel takes the board's own settings; (b) a new "Wall" entry in the list, with its own size and a choice
-  of board for its panels. Recommended: (a).
-- **D176** The panel size starts at the largest the chosen bed takes, and can be set smaller (D37). Where a wall is
-  not a whole number of panels: (A) full panels from the bottom left, the rest in the top row and the right
-  column, which can leave a 40 mm strip; (B) the panels as even as they can be, none larger than the panel size
-  (a 440 mm wall in 200 mm panels: 160 + 160 + 120). Recommended: (B).
-- **D177** Mounting in a wall: (a) each panel keeps the board's mounting in its own four corners, screw holes,
-  keyholes or standoffs, so a seam plate can later fix through them; (b) only the wall's four outer corners.
-  Recommended: (a).
-- **D178** What the page shows and gives: the whole wall in the preview, its panels side by side with their seams;
-  under it a print list, a line for each panel size with its count and its own download, one STL per size,
-  until `download-3mf-zip` puts them in one file. Recommended: these.
 
 - **T151** Print a lightened board with keyholes and hang it: an 80 x 80 mm one is enough
   (`skadis-lightened-80x80-keyholes.stl` from the page, "Keyholes" under "Screw holes"), in the filament you
@@ -169,3 +153,5 @@ side by side make whole slots.
   carries the rules this page had added, and a rule the page lacks goes to it rather than into local CSS. One
   thing for it, seen in the comparison (C154): on a 320 px screen the two buttons under the 3D view wrap inside
   their group and sit on the left, one above the other, while on a 390 px phone they sit on the right.
+  A second (C179): a `hidden` attribute does not hide a `.ws-btn`, whose display the bundle sets; the page hides
+  its download button by its style instead.

@@ -5,7 +5,7 @@
 // system's tokens (D111).
 import { BufferAttribute, BufferGeometry, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh } from 'three';
 import { MeshPhongMaterial, type Object3D } from 'three';
-import type { MeshData } from 'skadis-air';
+import type { Placed } from './build-messages.js';
 
 // Shared by every board drawn; never disposed.
 // Flat shading: a board is flat faces, and normals averaged across a face and its edges streaked the
@@ -22,16 +22,27 @@ export function paintBoards(board: string, outline: string): void {
   OUTLINE.color.setStyle(outline);
 }
 
-/** The board as a mesh and its outline, from the triangles the build sent. */
-export function boardScene({ positions, triangles }: MeshData): Group {
-  const geometry = new BufferGeometry();
-  geometry.setAttribute('position', new BufferAttribute(positions, 3));
-  geometry.setIndex(new BufferAttribute(triangles, 1));
-  geometry.computeVertexNormals();
+/** The board, or a wall's panels, as meshes and their outlines, from the triangles the build sent: each mesh
+ * and its outline made once, and drawn at each of its places, so a wall costs its kinds of panel, not its size. */
+export function boardScene(parts: readonly Placed[]): Group {
   const group = new Group();
-  group.add(new Mesh(geometry, BOARD));
-  group.add(new LineSegments(new EdgesGeometry(geometry, OUTLINE_ANGLE_DEGREES), OUTLINE));
-  group.userData['triangles'] = triangles.length / 3;
+  let triangles = 0;
+  for (const { positions, triangles: indices, places } of parts) {
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new BufferAttribute(positions, 3));
+    geometry.setIndex(new BufferAttribute(indices, 1));
+    geometry.computeVertexNormals();
+    const edges = new EdgesGeometry(geometry, OUTLINE_ANGLE_DEGREES);
+    for (const [x, y] of places) {
+      const mesh = new Mesh(geometry, BOARD);
+      const outline = new LineSegments(edges, OUTLINE);
+      mesh.position.set(x, y, 0);
+      outline.position.set(x, y, 0);
+      group.add(mesh, outline);
+      triangles += indices.length / 3;
+    }
+  }
+  group.userData['triangles'] = triangles;
   return group;
 }
 
@@ -39,6 +50,7 @@ export function boardScene({ positions, triangles }: MeshData): Group {
 const hasGeometry = (o: Object3D): o is Mesh | LineSegments => o instanceof Mesh || o instanceof LineSegments;
 
 export function disposeScene(group: Group): void {
-  for (const child of group.children) if (hasGeometry(child)) child.geometry.dispose();
+  const shared = new Set(group.children.filter(hasGeometry).map((child) => child.geometry));
+  for (const geometry of shared) geometry.dispose(); // each once, however many copies drew it
   group.clear();
 }
