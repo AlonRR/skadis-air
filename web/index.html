@@ -54,11 +54,23 @@
         <div class="ws-plan">
           <span class="ws-plan__line" data-testid="board-status" data-state="building">Making the board…</span>
           <span class="ws-plan__actions">
+            <!-- The file's format, beside the download (D181) -->
+            <span class="ws-choice" role="radiogroup" aria-label="File" data-testid="file-format">
+              <label class="ws-choice__opt">
+                <input class="ws-choice__input" type="radio" name="fileFormat" value="stl" checked />
+                <span class="ws-choice__face">STL</span>
+              </label>
+              <label class="ws-choice__opt">
+                <input class="ws-choice__input" type="radio" name="fileFormat" value="3mf" />
+                <span class="ws-choice__face">3MF</span>
+              </label>
+            </span>
             <button type="button" class="ws-btn" data-testid="preview-reset">
               <span class="ws-ic" aria-hidden="true">&#xeb37;</span>Reset view
             </button>
             <button type="button" class="ws-btn ws-btn--primary" data-testid="download-stl" disabled>
-              <span class="ws-ic" aria-hidden="true">&#xeac2;</span>Download STL
+              <span class="ws-ic" aria-hidden="true">&#xeac2;</span
+              ><span data-testid="download-label">Download STL</span>
             </button>
           </span>
         </div>

@@ -12,7 +12,7 @@ import {
   readValues,
   type AnyBoardType,
 } from 'skadis-air';
-import type { PanelLine, Reply, Request } from './build-messages.js';
+import { panelText, type PanelLine, type Reply, type Request } from './build-messages.js';
 import { choiceGroup, chosenIn, renderForm, type Form } from './form.js';
 import { saveFile } from './download.js';
 import { mountPreview } from './preview.js';
@@ -33,6 +33,21 @@ const downloadButton = document.querySelector<HTMLButtonElement>('[data-testid="
 const printerBox = document.querySelector<HTMLElement>('[data-testid="printer"]');
 const bedWarning = document.querySelector<HTMLElement>('[data-testid="bed-warning"]');
 const printList = document.querySelector<HTMLElement>('[data-testid="print-list"]'); // a wall's panels (D178)
+const formatChoice = document.querySelector<HTMLElement>('[data-testid="file-format"]'); // STL or 3MF (D181)
+const downloadLabel = document.querySelector<HTMLElement>('[data-testid="download-label"]');
+const format = (): 'stl' | '3mf' => (formatChoice && chosenIn(formatChoice) === '3mf' ? '3mf' : 'stl');
+const withFormat = (name: string) => name.replace(/\.(stl|3mf)$/, `.${format()}`);
+formatChoice?.addEventListener('change', () => {
+  if (downloadLabel !== null) downloadLabel.textContent = `Download ${format().toUpperCase()}`;
+});
+
+/** Asks the worker for a file of the build it showed, and saves it under its name (D181 to D183). */
+function download(id: number, name: string, panel?: number | 'all'): void {
+  answers.set('file', (file) => {
+    if (file.kind === 'file' && file.ok && file.id === id) saveFile(name, file.bytes, file.type);
+  });
+  ask({ kind: 'file', id, format: format(), name, ...(panel === undefined ? {} : { panel }) });
+}
 let current: (() => void) | undefined; // rebuilds the board on show, for a change of printer
 const printer = printerBox ? mountPrinter(printerBox, () => current?.()) : null;
 
@@ -64,7 +79,7 @@ function rebuild(type: AnyBoardType, form: Form): void {
   const what = groupOf(type) === 'connector' ? 'connector' : 'board';
   const id = ++latest;
   shown = 0;
-  showPanels(id, []);
+  showPanels(id, [], '');
   setStatus('building', `Making the ${what}…`);
   const fileName = boardFileName(type, read.values, 'stl');
   answers.set('built', (built) => {
@@ -81,11 +96,13 @@ function rebuild(type: AnyBoardType, form: Form): void {
       const count = built.panels.reduce((n, line) => n + line.count, 0);
       warnAboutBed(0, 0); // every panel fits the bed it was cut for
       setStatus('ready', `Wall ready: ${count} panels, ${built.panels.length} to download below.`, fileName, size);
-      showPanels(id, built.panels);
+      const [wide, high] = [Math.round(max[0] - min[0]), Math.round(max[1] - min[1])];
+      const wallName = `skadis-${type.id}-${wide}x${high}-wall`; // D183
+      showPanels(id, built.panels, wallName);
     } else {
       warnAboutBed(max[0], max[1]);
       setStatus('ready', `${what === 'board' ? 'Board' : 'Connector'} ready: ${fileName}`, fileName, size);
-      showPanels(id, []);
+      showPanels(id, [], '');
     }
     preview?.show(built.parts, `${type.id} ${size}`); // framed again only when the type or size changes
   });
@@ -93,39 +110,46 @@ function rebuild(type: AnyBoardType, form: Form): void {
   ask({ kind: 'build', id, typeId: type.id, values: read.values, bed: bed?.ok ? bed.bed : { ...DEFAULT_BED } });
 }
 
+/** A line of the print list: its words and its button. */
+const printRow = (text: string, label: string, act: () => void, testid: string): HTMLElement => {
+  const line = document.createElement('div');
+  line.className = 'ws-plan';
+  line.dataset['testid'] = testid;
+  const words = document.createElement('span');
+  words.className = 'ws-plan__line';
+  words.textContent = text;
+  const actions = document.createElement('span');
+  actions.className = 'ws-plan__actions';
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'ws-btn';
+  button.textContent = label;
+  button.addEventListener('click', act);
+  actions.append(button);
+  line.append(words, actions);
+  return line;
+};
+
 /** A wall's print list: a line for each kind of panel, its count, its size, its closed sides and its download
  * (D178); the single download goes while it shows. Empty, for one board. */
-function showPanels(id: number, lines: readonly PanelLine[]): void {
+function showPanels(id: number, lines: readonly PanelLine[], wallName: string): void {
   // the design system's buttons set their display, which a hidden attribute does not overrule (C179)
   if (downloadButton !== null) downloadButton.style.display = lines.length > 0 ? 'none' : '';
   if (printList === null) return;
   printList.hidden = lines.length === 0;
+  const count = lines.reduce((n, line) => n + line.count, 0);
+  // Every kind in one file: a zip of STLs with the print list, or one 3MF (D181 to D183).
+  const all = printRow(
+    `All ${count} panels in one file`,
+    'Download all',
+    () => download(id, `${wallName}.${format() === '3mf' ? '3mf' : 'zip'}`, 'all'),
+    'print-all',
+  );
   printList.replaceChildren(
-    ...lines.map((line, panel) => {
-      const row = document.createElement('div');
-      row.className = 'ws-plan';
-      row.dataset['testid'] = 'print-row';
-      const text = document.createElement('span');
-      text.className = 'ws-plan__line';
-      const closed = line.closed.length > 0 ? `, closed ${line.closed.join(' and ')}` : ', open all round';
-      text.textContent = `${line.count} × ${line.widthMm} × ${line.heightMm} mm${closed}`;
-      const actions = document.createElement('span');
-      actions.className = 'ws-plan__actions';
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'ws-btn';
-      button.textContent = 'Download';
-      button.title = line.fileName;
-      button.addEventListener('click', () => {
-        answers.set('stl', (file) => {
-          if (file.kind === 'stl' && file.ok && file.id === id) saveFile(line.fileName, file.bytes, 'model/stl');
-        });
-        ask({ kind: 'stl', id, name: line.fileName, panel });
-      });
-      actions.append(button);
-      row.append(text, actions);
-      return row;
-    }),
+    ...(lines.length > 0 ? [all] : []),
+    ...lines.map((line, panel) =>
+      printRow(panelText(line), 'Download', () => download(id, withFormat(line.fileName), panel), 'print-row'),
+    ),
   );
 }
 
@@ -165,14 +189,11 @@ function show(type: AnyBoardType): void {
   rebuild(type, form);
 }
 
-// The worker writes the STL of the part it built last, as it prints (D66, C101); the page saves it.
+// The worker writes the file of the part it built last, as it prints (D66, C101), in the format chosen; the page
+// saves it.
 downloadButton?.addEventListener('click', () => {
   const fileName = boardStatus?.dataset['fileName'] ?? '';
-  if (shown === 0 || fileName === '') return;
-  answers.set('stl', (file) => {
-    if (file.kind === 'stl' && file.ok && file.id === shown) saveFile(fileName, file.bytes, 'model/stl');
-  });
-  ask({ kind: 'stl', id: shown, name: fileName });
+  if (shown !== 0 && fileName !== '') download(shown, withFormat(fileName));
 });
 
 /** The engine's check, made in the worker: its volume, or why the engine could not start. */

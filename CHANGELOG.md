@@ -20,6 +20,8 @@ All notable changes to this project are recorded here. The format follows
 - The page is published at <https://alonrr.github.io/skadis-air/>, rebuilt from every change that passes
   the checks.
 - A tab icon: five slots of a SKÅDIS board in the page's blue, lighter when your system is set to dark.
+- 3MF as well as STL: a choice beside the download. A wall's print list also gives every panel in one file, a zip of
+  STLs with the print list in it, or one 3MF with an object for each kind of panel named with how many to print.
 - Walls: "Split into panels" on a board makes its size a wall's, up to 1600 mm each way, cut into panels your
   printer's bed takes, as even as they can be, closed round the outside and open at the seams so the slots run
   on across them. The preview shows the whole wall, and a print list gives each kind of panel, how many to

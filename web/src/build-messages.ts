@@ -11,7 +11,13 @@ export type Request =
       values: Readonly<Record<string, unknown>>;
       bed: { xMm: number; yMm: number }; // the bed a wall's panels must fit (D176)
     }
-  | { kind: 'stl'; id: number; name: string; panel?: number }; // a wall's panel kind, by its place in the list
+  | {
+      kind: 'file';
+      id: number;
+      format: 'stl' | '3mf'; // D181
+      name: string; // the file's name, which also names what is in it
+      panel?: number | 'all'; // a wall's panel kind, by its place in the list, or every kind in one file (D183)
+    };
 
 /** A mesh and where its copies go, mm: a board at the origin, or one kind of panel at each of its places. */
 export interface Placed {
@@ -42,5 +48,16 @@ export type Reply =
       panels?: PanelLine[]; // a wall's panels, one line for each kind
     }
   | { kind: 'built'; id: number; ok: false; problem: string }
-  | { kind: 'stl'; id: number; ok: true; bytes: Uint8Array }
-  | { kind: 'stl'; id: number; ok: false; error: string };
+  | { kind: 'file'; id: number; ok: true; bytes: Uint8Array; type: string }
+  | { kind: 'file'; id: number; ok: false; error: string };
+
+const closedText = (line: PanelLine) =>
+  line.closed.length > 0 ? `, closed ${line.closed.join(' and ')}` : ', open all round';
+
+/** A line of the print list, as the page and print-list.txt show it: "1 × 160 × 160 mm, closed left and bottom". */
+export const panelText = (line: PanelLine) =>
+  `${line.count} × ${line.widthMm} × ${line.heightMm} mm${closedText(line)}`;
+
+/** A kind's object in a wall's 3MF, named with how many to print (D182): "160 × 160 mm, closed left, × 4". */
+export const panelObjectName = (line: PanelLine) =>
+  `${line.widthMm} × ${line.heightMm} mm${closedText(line)}, × ${line.count}`;

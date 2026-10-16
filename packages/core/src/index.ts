@@ -17,3 +17,4 @@ export * from './lightened.js';
 export * from './skeleton.js';
 export * from './printers.js';
 export * from './tiling.js';
+export * from './export3mf.js';

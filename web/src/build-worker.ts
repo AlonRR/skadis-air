@@ -5,6 +5,7 @@
 import wasmUrl from 'manifold-3d/manifold.wasm?url';
 import type { Manifold } from 'manifold-3d';
 import {
+  MEDIA_TYPES,
   boardFileName,
   boardType,
   buildBoard,
@@ -14,14 +15,16 @@ import {
   meshOf,
   printedPart,
   readValues,
+  to3mf,
   toStl,
+  zipFiles,
   type AnyBoardType,
 } from 'skadis-air';
-import type { PanelLine, Placed, Reply, Request } from './build-messages.js';
+import { panelObjectName, panelText, type PanelLine, type Placed, type Reply, type Request } from './build-messages.js';
 
 const engine = () => loadEngine(wasmUrl);
 // What the page shows: one board, or a wall's panel kinds, each as it is printed; freed when replaced.
-let last: { id: number; type: AnyBoardType; solid?: Manifold; panels: Manifold[] } | undefined;
+let last: { id: number; type: AnyBoardType; solid?: Manifold; panels: Manifold[]; lines: PanelLine[] } | undefined;
 let waiting: Extract<Request, { kind: 'build' }> | undefined; // the newest build asked for, not yet begun
 let scheduled = false;
 
@@ -47,7 +50,7 @@ async function build(request: Extract<Request, { kind: 'build' }>): Promise<void
     let lines: PanelLine[] | undefined;
     let parts: { solid: Manifold; places: [number, number][] }[];
     if (wall !== null) {
-      last = { id, type, panels: wall.panels.map((p) => p.solid) };
+      last = { id, type, panels: wall.panels.map((p) => p.solid), lines: [] };
       parts = wall.panels;
       lines = wall.panels.map((p) => {
         const sides: unknown = p.values['sides'];
@@ -66,13 +69,14 @@ async function build(request: Extract<Request, { kind: 'build' }>): Promise<void
           closed,
         };
       });
+      last.lines = lines;
     } else {
       const built = buildBoard(ready, type, read.values);
       if (!built.ok) {
         reply({ kind: 'built', id, ok: false, problem: built.problem });
         return;
       }
-      last = { id, type, solid: built.solid, panels: [] };
+      last = { id, type, solid: built.solid, panels: [], lines: [] };
       parts = [{ solid: built.solid, places: [[0, 0]] }];
     }
     // Each mesh once, with the places of its copies: a wall's copies are drawn from it, not sent again.
@@ -103,27 +107,63 @@ function forget(): void {
   last = undefined;
 }
 
-/** The STL of the part the page shows, or of one kind of its wall's panels, as it prints (D66, C101). */
-function stl(request: Extract<Request, { kind: 'stl' }>): void {
-  const { id } = request;
-  const part = request.panel === undefined ? last?.solid : last?.panels[request.panel];
-  if (last?.id !== id || part === undefined) {
-    reply({ kind: 'stl', id, ok: false, error: 'That board is no longer the one shown' });
-    return;
-  }
-  const printed = printedPart(last.type, part);
+/** A part's mesh as it prints, face down (D66) unless its type says otherwise (C101). */
+function printedMesh(type: AnyBoardType, part: Manifold) {
+  const printed = printedPart(type, part);
   try {
-    const bytes = toStl(meshOf(printed), request.name.replace(/\.stl$/, ''));
-    reply({ kind: 'stl', id, ok: true, bytes }, [bytes.buffer]);
+    return meshOf(printed);
   } finally {
     printed.delete();
   }
 }
 
+/** The file of the part the page shows, of one kind of its wall's panels, or of every kind: an STL or a 3MF,
+ * and every kind as a zip of STLs with the print list, or one 3MF (D181 to D183). */
+function file(request: Extract<Request, { kind: 'file' }>): void {
+  const { id, format, name } = request;
+  const shown = last;
+  const base = name.replace(/\.(stl|3mf|zip)$/, '');
+  if (shown?.id !== id) {
+    reply({ kind: 'file', id, ok: false, error: 'That board is no longer the one shown' });
+    return;
+  }
+  let bytes: Uint8Array;
+  let type: string = MEDIA_TYPES[format];
+  if (request.panel === 'all') {
+    const meshes = shown.panels.map((part) => printedMesh(shown.type, part));
+    if (format === '3mf') {
+      bytes = to3mf(meshes.map((mesh, k) => ({ name: shown.lines[k] ? panelObjectName(shown.lines[k]) : '', mesh })));
+    } else {
+      const count = shown.lines.reduce((n, line) => n + line.count, 0);
+      const list = [
+        `Skadis Air: ${base}, ${count} panels`,
+        ...shown.lines.map((l) => `${panelText(l)}: ${l.fileName}`),
+      ];
+      bytes = zipFiles([
+        ...meshes.map((mesh, k) => {
+          const fileName = shown.lines[k]?.fileName ?? `panel-${k + 1}.stl`;
+          return { name: fileName, bytes: toStl(mesh, fileName.replace(/\.stl$/, '')) };
+        }),
+        { name: 'print-list.txt', bytes: new TextEncoder().encode(`${list.join('\n')}\n`) },
+      ]);
+      type = MEDIA_TYPES.zip;
+    }
+  } else {
+    const part = request.panel === undefined ? shown.solid : shown.panels[request.panel];
+    if (part === undefined) {
+      reply({ kind: 'file', id, ok: false, error: 'There is no such panel' });
+      return;
+    }
+    const mesh = printedMesh(shown.type, part);
+    bytes = format === '3mf' ? to3mf([{ name: base, mesh }]) : toStl(mesh, base);
+  }
+  reply({ kind: 'file', id, ok: true, bytes, type }, [bytes.buffer]);
+}
+
 addEventListener('message', (event: MessageEvent<Request>) => {
   const request = event.data;
   if (request.kind === 'check') void check();
-  else if (request.kind === 'stl') stl(request);
+  else if (request.kind === 'file') file(request);
   else {
     // The messages that came while a build ran are all read before this timer fires: build the newest only.
     waiting = request;
