@@ -416,25 +416,44 @@ describe('the standoff connector type (D91 to D94)', () => {
   });
 });
 
-describe('the slot clip connector type (D187 to D189, C191)', () => {
+describe('the slot clip connector type (D187 to D189, D194, D195, C191, C199)', () => {
   const slotClip = boardType('slot-clip');
 
-  it('is a connector, listed after the standoff, for 2 boards side by side and 20 mm deep unless set', () => {
+  it('is a connector, listed after the standoff, for 2 boards side by side, 20 mm deep, ribs and no fixing unless set', () => {
     expect(groupOf(slotClip)).toBe('connector');
     const ids = BOARD_TYPES.map((t) => t.id);
     expect(ids.indexOf('slot-clip')).toBe(ids.indexOf('standoff') + 1);
-    expect(defaultValues(slotClip.settings)).toEqual({ boards: '2', depthMm: 20, pegClearanceMm: 0.4 });
+    expect(defaultValues(slotClip.settings)).toEqual({
+      boards: '2',
+      fixing: 'none',
+      depthMm: 20,
+      grip: 'ribs',
+      pegClearanceMm: 0.4,
+      screwMm: 4,
+    });
   });
 
-  it('offers 2 boards side by side, 2 one above the other, and 4, and puts the peg clearance under Advanced', () => {
-    const boards = slotClip.settings.find((s) => s.key === 'boards');
-    expect(boards?.kind === 'choice' && boards.options.map((o) => o.value)).toEqual(['2', '2-stacked', '4']);
-    const advanced = slotClip.settings.filter((s) => s.kind === 'number' && s.advanced === true).map((s) => s.key);
-    expect(advanced).toEqual(['pegClearanceMm']);
+  it('offers 2 boards side by side or one above the other, or 4; no fixing, a screw or a keyhole; ribs or a lip', () => {
+    const options = (key: string) => {
+      const s = slotClip.settings.find((setting) => setting.key === key);
+      return s?.kind === 'choice' && s.options.map((o) => o.value);
+    };
+    expect(options('boards')).toEqual(['2', '2-stacked', '4']);
+    expect(options('fixing')).toEqual(['none', 'screw', 'keyhole']);
+    expect(options('grip')).toEqual(['ribs', 'lip']);
+    // the grip, the peg clearance and the screw size under Advanced; the fixing on the main form
+    const advanced = slotClip.settings.filter((s) => 'advanced' in s && s.advanced === true).map((s) => s.key);
+    expect(advanced).toEqual(['grip', 'pegClearanceMm', 'screwMm']);
+  });
+
+  it('shares its screw size setting with the board, so the two cannot drift apart', () => {
+    const screw = (type: AnyBoardType) => type.settings.find((s) => s.key === 'screwMm');
+    expect(screw(slotClip)).toBe(screw(boardType('solid')));
   });
 
   it('builds the clip its values describe, and prints as built, wall face down, the pegs on top', () => {
-    const built = buildBoard(engine, slotClip, { boards: '4', depthMm: 25, pegClearanceMm: 0.4 });
+    const v = defaultValues(slotClip.settings);
+    const built = buildBoard(engine, slotClip, { ...v, boards: '4', depthMm: 25 });
     if (!built.ok) throw new Error(built.problem);
     const printed = printedPart(slotClip, built.solid);
     made.push(built.solid, printed);
@@ -448,12 +467,20 @@ describe('the slot clip connector type (D187 to D189, C191)', () => {
   });
 
   it('says a clip too shallow for the hooks room and its bar is a problem', () => {
-    const built = buildBoard(engine, slotClip, { boards: '2', depthMm: 10, pegClearanceMm: 0.4 });
+    const built = buildBoard(engine, slotClip, { ...defaultValues(slotClip.settings), depthMm: 10 });
     expect(built.ok).toBe(false);
     if (!built.ok) expect(built.problem).toContain('12 mm');
+    // a keyhole needs room for its lips, the head and a roof behind the hooks' room (C199)
+    const keyhole = buildBoard(engine, slotClip, {
+      ...defaultValues(slotClip.settings),
+      fixing: 'keyhole',
+      depthMm: 14,
+    });
+    expect(keyhole.ok).toBe(false);
+    if (!keyhole.ok) expect(keyhole.problem).toContain('14.2 mm');
   });
 
-  it('names its file with the boards it joins, its depth, and a peg clearance other than 0.4 mm', () => {
+  it('names its file with the boards it joins, its depth, a lip, a fixing, and what differs from the start', () => {
     const name = (given: Record<string, number | string>) =>
       boardFileName(slotClip, { ...defaultValues(slotClip.settings), ...given }, 'stl');
     expect(name({})).toBe('skadis-slot-clip-2-boards-20mm.stl');
@@ -461,6 +488,11 @@ describe('the slot clip connector type (D187 to D189, C191)', () => {
     expect(name({ boards: '4', depthMm: 25, pegClearanceMm: 0.3 })).toBe(
       'skadis-slot-clip-4-boards-25mm-clearance-0.3mm.stl',
     );
+    expect(name({ fixing: 'screw' })).toBe('skadis-slot-clip-2-boards-20mm-screw.stl');
+    expect(name({ grip: 'lip', fixing: 'keyhole', screwMm: 3.5 })).toBe(
+      'skadis-slot-clip-2-boards-20mm-lip-keyhole-screw-3.5mm.stl',
+    );
+    expect(name({ screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-20mm.stl'); // no screw, so no screw size
   });
 });
 

@@ -175,7 +175,7 @@ test('makes the standoff for 2 or 4 boards, and says when it is too short for it
   await expect(status).toContainText('12 mm');
 });
 
-test('makes the slot clip for 2 boards either way or for 4, and says when it is too shallow (D187 to D189, C191)', async ({
+test('makes the slot clip for 2 boards either way or for 4, with a fixing and a grip (D187 to D189, D194, D195)', async ({
   page,
 }) => {
   await ready(page);
@@ -190,6 +190,13 @@ test('makes the slot clip for 2 boards either way or for 4, and says when it is 
   await choose(page, 'boards', '4');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-4-boards-20mm.stl');
   await expect(page.getByTestId('board-size')).toHaveText('60 × 60 × 22.5 mm');
+  // a screw through its free half, and a lip under Advanced (D194, D195)
+  await choose(page, 'fixing', 'screw');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-4-boards-20mm-screw.stl');
+  await page.getByTestId('advanced').locator('summary').click();
+  await choose(page, 'grip', 'lip');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-4-boards-20mm-lip-screw.stl');
+  await expect(status).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
   // the form refuses a depth under 12 mm before anything is built (D187: the hooks' 8 mm and a 4 mm bar)
   await page.locator('input[name="depthMm"]').fill('10');
   await expect(page.getByTestId('error-depthMm')).toContainText('from 12');

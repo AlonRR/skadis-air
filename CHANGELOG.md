@@ -20,6 +20,8 @@ All notable changes to this project are recorded here. The format follows
 - The page is published at <https://alonrr.github.io/skadis-air/>, rebuilt from every change that passes
   the checks.
 - A tab icon: five slots of a SKÅDIS board in the page's blue, lighter when your system is set to dark.
+- The slot clip's pegs grip by ribs, or by a snap lip that catches in the slots of a 5 mm board; and the clip can
+  be screwed to the wall through its free half or hung on a wall screw by a keyhole.
 - Boards on keyholes stand on standoffs, so a hook has room behind them: choosing keyholes turns the standoffs
   on, and the keyhole's slot runs on up through the top two, where the screw rests.
 - The slot clip, a connector that joins boards behind a seam by pegs in their slots, so it needs no screw holes:
