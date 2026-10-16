@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-16
+
 ### Fixed
 
 - A size typed with a comma before three digits, such as "40,000", was read as 40 mm; it is now refused as
