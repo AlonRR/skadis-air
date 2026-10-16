@@ -5,6 +5,6 @@ projects:
   - name:     Skådis Air
     kind:     build
     state:    active
-    next:     "conn-slot-clip (D185); D187 to D190 asked"
+    next:     "conn-slot-clip (D187 to D189); then keyhole-pads (D190)"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-15
