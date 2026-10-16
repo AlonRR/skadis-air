@@ -3,15 +3,17 @@
 // closed; countersunk at the front by default, or plain for a round head; and, as an option, standoffs
 // on the back round the holes, which hold the board off the wall so hooks have room. A board prints
 // face down (D66), so a countersink is a 45 degree overhang at the bed and the standoffs print on top.
-// Or keyholes at the top two corners (backlog item mounting-ikea; D155 to D158), so the board drops onto
-// two screws and lifts off them, with countersunk lock screws at the bottom as an option.
+// Or keyholes at the top two corners (backlog item mounting-ikea; D155 to D157), so the board drops onto
+// two screws and lifts off them, with countersunk lock screws at the bottom as an option. A board on keyholes
+// stands on standoffs, so a hook has room behind it (backlog item keyhole-pads; D190): the keyhole's slot runs
+// on up through each top standoff, open at its foot, and the screw rests in it along the standoff's length.
 // Any board type built on the solid board takes these as its third argument (BoardCuts).
 import type { Manifold, Vec2 } from 'manifold-3d';
 import type { BoardCuts, SolidBoardParams } from './board-solid.js';
 import type { Engine } from './engine.js';
 import { circle, ringedSolid, stadium } from './rings.js';
 import { defineSettings, type NumberSetting, type Values } from './settings.js';
-import { TILE_MM, WALL_DISTANCE_MM } from './skadis.js';
+import { HOOK_DEPTH_MM, TILE_MM, WALL_DISTANCE_MM } from './skadis.js';
 
 export type ScrewHead = 'countersunk' | 'round' | 'keyhole' | 'none';
 
@@ -36,6 +38,8 @@ const MIN_PLAIN_HOLE_MM = 1;
 const HEADS: ReadonlySet<string> = new Set(['countersunk', 'round', 'keyhole', 'none']);
 /** What a keyhole leaves behind its channel (D157): about three lines of a 0.4 mm nozzle. */
 export const MIN_BEHIND_CHANNEL_MM = 1.2;
+/** The least standoff a board on keyholes stands on: the room a hook takes behind it and C99's margin (D190). */
+export const MIN_KEYHOLE_STANDOFF_MM = HOOK_DEPTH_MM + 2;
 
 /** A screw's hole, its 90 degree countersink across the front, and the standoff round it (C83). */
 export function screwHole(screwMm: number): { holeMm: number; countersinkMm: number; standoffDiameterMm: number } {
@@ -92,18 +96,20 @@ export function mountingPads(m: MountingParams, board: Pick<SolidBoardParams, 'c
   if (m.screwHead !== 'keyhole') return [...bottom, ...top].map(([x, y]) => circle(x, y, padMm));
   const k = keyhole(m.screwMm);
   const pad = 2 * PAD_MARGIN_MM;
+  // at the bottom, a pad for a lock screw or a standoff (D190)
   return [
-    ...(m.lockScrews ? bottom.map(([x, y]) => circle(x, y, padMm)) : []),
+    ...(m.lockScrews || m.standoffHeightMm > 0 ? bottom.map(([x, y]) => circle(x, y, padMm)) : []),
     ...top.map(([x, y]) => stadium(x, y - k.slideMm / 2, k.entryMm + pad, k.slideMm + k.entryMm + pad)),
   ];
 }
 
 /**
  * One keyhole's cutter, the screw resting at (x, y): behind the channel the entry and the slot up to the screw,
- * through the back; in front, the channel the head slides in, from the entry up past the screw. Two prisms
- * stacked, which meet on one plane rather than overlapping, so no two walls lie on each other.
+ * through the back and on through the standoff from `footZ` (D190); in front, the channel the head slides in,
+ * from the entry up past the screw. Two prisms stacked, which meet on one plane rather than overlapping, so no
+ * two walls lie on each other.
  */
-function keyholeCutter(engine: Engine, x: number, y: number, screwMm: number, t: number): Manifold {
+function keyholeCutter(engine: Engine, x: number, y: number, screwMm: number, t: number, footZ: number): Manifold {
   const { CrossSection } = engine;
   const k = keyhole(screwMm);
   const middle = y - k.slideMm / 2;
@@ -114,9 +120,9 @@ function keyholeCutter(engine: Engine, x: number, y: number, screwMm: number, t:
   const channel = new CrossSection([stadium(x, middle, k.entryMm, k.slideMm + k.entryMm)], 'Positive');
   const zc = t - k.channelMm;
   const made = [behind, channel];
-  const back = behind.extrude(zc + 1);
+  const back = behind.extrude(zc - footZ);
   const front = channel.extrude(k.channelMm + 1);
-  const [low, high] = [back.translate([0, 0, -1]), front.translate([0, 0, zc])];
+  const [low, high] = [back.translate([0, 0, footZ]), front.translate([0, 0, zc])];
   const cutter = engine.Manifold.union(low, high);
   for (const m of [back, front, low, high]) m.delete();
   for (const c of made) c.delete();
@@ -132,8 +138,11 @@ export function mountingCuts(
   const { holeMm, countersinkMm, standoffDiameterMm } = screwHole(m.screwMm);
   const depth = (countersinkMm - holeMm) / 2; // 45 degree walls
   const keyholes = m.screwHead === 'keyhole';
-  if (keyholes && m.standoffHeightMm > 0) {
-    throw new RangeError('Keyholes hang the board flat on the wall; choose screw holes for standoffs');
+  if (keyholes && m.standoffHeightMm < MIN_KEYHOLE_STANDOFF_MM) {
+    throw new RangeError(
+      'Keyholes stand the board off the wall, so a hook has room behind it: choose standoffs at least ' +
+        `${MIN_KEYHOLE_STANDOFF_MM} mm tall`,
+    );
   }
   const channelMm = keyhole(m.screwMm).channelMm;
   if (keyholes && t - channelMm < MIN_BEHIND_CHANNEL_MM - 1e-9) {
@@ -168,7 +177,7 @@ export function mountingCuts(
     // the bottom two only with lock screws; the top two are keyholes, the screw resting where a hole would be
     cuts.extraCutters = (engine: Engine): Manifold[] => [
       ...(m.lockScrews ? places.slice(0, 2).map((p) => hole(engine, p)) : []),
-      ...places.slice(2).map(([x, y]) => keyholeCutter(engine, x, y, m.screwMm, t)),
+      ...places.slice(2).map(([x, y]) => keyholeCutter(engine, x, y, m.screwMm, t, back)),
     ];
   } else if (m.screwHead !== 'none') {
     cuts.extraCutters = (engine: Engine): Manifold[] => places.map((p) => hole(engine, p));
@@ -214,7 +223,8 @@ export const MOUNTING_SETTINGS = defineSettings([
     default: MOUNTING_DEFAULTS.screwHead,
     help:
       'One in each corner, 10 mm in from both edges. A countersunk head keeps the front flat. Keyholes, ' +
-      'in the top two corners, let the board drop onto two pan-head screws and lift off them.',
+      'in the top two corners, let the board drop onto two pan-head screws and lift off them; they stand ' +
+      'on standoffs, so a hook has room behind the board.',
   },
   {
     kind: 'choice',
@@ -225,7 +235,9 @@ export const MOUNTING_SETTINGS = defineSettings([
       { value: 'back', label: 'On the back' },
     ],
     default: 'none',
-    help: 'Posts on the back at the corners, round the screws, that hold the board off the wall so hooks have room.',
+    help:
+      'Posts on the back at the corners, round the screws, that hold the board off the wall so hooks have room. ' +
+      'Keyholes need them.',
   },
   SCREW_SIZE_SETTING,
   {

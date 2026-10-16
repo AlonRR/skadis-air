@@ -74,13 +74,17 @@ const samples = [
   {
     name: 'solid-2x2-closed-keyholes-lock-screws',
     type: solid,
-    values: { ...solidAt(80, 80, closed), screwHead: 'keyhole', lockScrews: 'bottom' },
+    values: { ...solidAt(80, 80, closed), screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'back' },
   },
-  { name: 'lightened-4x4-keyholes', type: lightened, values: { ...lightenedAt(160, 160, open), screwHead: 'keyhole' } },
+  {
+    name: 'lightened-4x4-keyholes',
+    type: lightened,
+    values: { ...lightenedAt(160, 160, open), screwHead: 'keyhole', standoffs: 'back' },
+  },
   {
     name: 'skeleton-3x2-closed-keyholes',
     type: skeleton,
-    values: { ...skeletonAt(120, 80, closed), screwHead: 'keyhole', lockScrews: 'bottom' },
+    values: { ...skeletonAt(120, 80, closed), screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'back' },
   },
   {
     name: 'skeleton-6x5-open-thinnest',

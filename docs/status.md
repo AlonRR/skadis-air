@@ -3,7 +3,7 @@
 Working document: the brief, every decision so far, and every open question. Keep it current;
 a fresh session resumes from here.
 
-Last updated: 16 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The repositories are renamed `skadis-air` on Gitea and GitHub (A80, T89); the local folder is renamed between sessions. Keyhole heads and corner holes kept as an option (D130) are in `mounting-ikea`; IKEA's own board has none, its spacer held through a peg slot by a screw with a nub (T17). **`conn-standoff` is done** (D91 to D94, D97): a standoff for 1, 2 or 4 boards under "Connectors", the shared ones with a tunnel for hooks, sized from a replica of IKEA's hook on Printables (T98). A **seam-test pair** (D69) prints with the fit coupon, to test how tiles join. The first test print (the coupon and the pair) and a real board are measured (T109, T17, 15 Oct 2026): the sources' SKÅDIS numbers hold, a slot drawn at 0.2 mm prints at the wide end of the board's slot width and about 0.3 mm shorter than its slot, and the grid holds across the seam, so the default clearance stays 0.2 mm (D129). **The repository is public on GitHub** (D103, T132, 15 Oct 2026), and pushes keep it in step with Gitea (D134); Pages is on, and a workflow publishes the page there after each green checks run on `main` (T132); the first deployment was checked live (15 Oct 2026), and the page has a tab icon (D137). The page has the shared design system's fonts, colours and dark theme (`design-system-base`, D111, D113) and its controls, every choice as buttons (`design-system-controls`, D112), and is its workbench: the board in a stage it always fits, beside the form or above it on a phone, with a theme toggle (`workbench`, D123). **`board-lightened` is done with full-depth members** (D141 to D145, 15 Oct 2026): about 41 % of the solid board's plastic, measured; the I-beam the owner asked about goes to the skeleton board, on the same lattice (D146, D147), and the test print is T151. The design system's v0.3.0 is in (D153, 15 Oct 2026), and **`mounting-ikea` is done** (D155 to D158): keyholes in the top two corners, with lock screws at the bottom as an option. **`board-skeleton` is done** (D146, D147, D161): every rim and web an I-beam, 32 % of the solid board's plastic. Every build now runs in the background (D166, `build-worker`), and the page offers 30 printers by maker (`printer-presets`, D170 to D172). **`tiling` is done** (D175 to D178, 16 Oct 2026): walls of panels that fit the bed. 3MF and a wall's files in one download followed (D181 to D183, `download-3mf-zip`). Boards join with the slot clip, not a seam plate (D185). **`conn-slot-clip` is done** (D187 to D189): boards join behind a seam by pegs in their slots. Next: pads for boards on keyholes (D190), when D191 says. The evidence for the board types and
+Last updated: 16 Oct 2026. Phase: **building**. `v0.1.0` is released (12 Oct 2026); since then the boards print face down (D66), the fit coupon is a board type, the project is named Skådis Air (D79), Gitea and the GitHub copy are kept in step (A77), and **`mounting` is done** (14 Oct 2026): corner screw holes for 4 mm screws (D76), countersunk or round, and optional standoffs on the back (D73 to D75), with the visible picks kept (D88). The repositories are renamed `skadis-air` on Gitea and GitHub (A80, T89); the local folder is renamed between sessions. Keyhole heads and corner holes kept as an option (D130) are in `mounting-ikea`; IKEA's own board has none, its spacer held through a peg slot by a screw with a nub (T17). **`conn-standoff` is done** (D91 to D94, D97): a standoff for 1, 2 or 4 boards under "Connectors", the shared ones with a tunnel for hooks, sized from a replica of IKEA's hook on Printables (T98). A **seam-test pair** (D69) prints with the fit coupon, to test how tiles join. The first test print (the coupon and the pair) and a real board are measured (T109, T17, 15 Oct 2026): the sources' SKÅDIS numbers hold, a slot drawn at 0.2 mm prints at the wide end of the board's slot width and about 0.3 mm shorter than its slot, and the grid holds across the seam, so the default clearance stays 0.2 mm (D129). **The repository is public on GitHub** (D103, T132, 15 Oct 2026), and pushes keep it in step with Gitea (D134); Pages is on, and a workflow publishes the page there after each green checks run on `main` (T132); the first deployment was checked live (15 Oct 2026), and the page has a tab icon (D137). The page has the shared design system's fonts, colours and dark theme (`design-system-base`, D111, D113) and its controls, every choice as buttons (`design-system-controls`, D112), and is its workbench: the board in a stage it always fits, beside the form or above it on a phone, with a theme toggle (`workbench`, D123). **`board-lightened` is done with full-depth members** (D141 to D145, 15 Oct 2026): about 41 % of the solid board's plastic, measured; the I-beam the owner asked about goes to the skeleton board, on the same lattice (D146, D147), and the test print is T151. The design system's v0.3.0 is in (D153, 15 Oct 2026), and **`mounting-ikea` is done** (D155 to D158): keyholes in the top two corners, with lock screws at the bottom as an option. **`board-skeleton` is done** (D146, D147, D161): every rim and web an I-beam, 32 % of the solid board's plastic. Every build now runs in the background (D166, `build-worker`), and the page offers 30 printers by maker (`printer-presets`, D170 to D172). **`tiling` is done** (D175 to D178, 16 Oct 2026): walls of panels that fit the bed. 3MF and a wall's files in one download followed (D181 to D183, `download-3mf-zip`). Boards join with the slot clip, not a seam plate (D185). **`conn-slot-clip` is done** (D187 to D189): boards join behind a seam by pegs in their slots. Boards on keyholes now stand on standoffs, so a hook has room behind them (D190, D191, `keyhole-pads`). Next: the slot clip's grip and fixing (D194, D195) and walls past 1.6 m (D196, D197), asked. The evidence for the board types and
 the SKÅDIS numbers is in [`research/2026-10-12-skadis-survey.md`](research/2026-10-12-skadis-survey.md),
 the numbers themselves in [`skadis-standard.md`](skadis-standard.md), the work in
 [`backlog.md`](backlog.md), the choices made without asking in [`choices.md`](choices.md), and the
@@ -134,6 +134,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D188 | **For 4 boards the clip is a square ring** through the four whole slots round the point where the corners meet, 40 mm on a side, the slot they share left free | 16 Oct 2026 |
 | D189 | **The pegs are the slot as the board cuts it less a 0.4 mm peg clearance** (4.8 x 14.8 mm; the clearance under Advanced), stopping 2.5 mm short of the front face; the bar is 10 mm wide. On the page under "Connectors" as "Slot clip", for 2 or 4 boards, its depth 20 mm by default, 12 to 40 mm; solid only; saved as `skadis-slot-clip-2-boards-20mm.stl`. The questions' text said boards one above the other take the same clip turned a quarter, which is wrong: the slots stand upright, so they take a clip of their own (C191) | 16 Oct 2026 |
 | D190 | **A board on keyholes stands off the wall on pads at its four corners**, as tall as the standoffs (20 mm unless set, at least 8 mm, C99), the keyholes through the top two, so a hook has room behind it; standoffs then go with keyholes, which reverses D158. When: D191 | 16 Oct 2026 |
+| D191 | **The pads were built at once**, not after T151, which then prints the padded board: every hook measured needs room behind the board, which a flat board does not give | 16 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
 ## Open questions
@@ -144,11 +145,34 @@ C150, C159, C160; the backlog rows have the results). Waiting on the owner:
 `conn-slot-clip` was built on 16 Oct 2026 (D187 to D189; C191, C192; the backlog row has the result;
 [figure](figures/slot-clip.png)).
 
-- **D191** When to give boards on keyholes their pads (D190): (a) now, right after the slot clip, and T151 then
-  prints the padded board, so one print tests the keyholes, the pads and a hook; (b) after T151 has printed
-  today's flat board and shown that a hook cannot go in. D190 recommended waiting for T151; but every hook
-  measured needs room behind the board (the replica 6 mm, the popular printed hook 4.5 mm), and a flat board
-  gives none, so that print would only confirm it. Recommended: (a).
+`keyhole-pads` was built on 16 Oct 2026 (D190, D191; C198; the backlog row has the result). The owner then asked
+for a lip or friction ribs on the slot clip's pegs, a screw or a keyhole on the clip, and walls larger than 1.6 m,
+drawn without slowing or crashing the page (16 Oct 2026). Measured that day, the page builds each kind of panel once,
+2 kinds for a 1.6 m wall, in 0.1 s (solid) to 2.6 s (skeleton), but draws every panel in full: 56 panels and 2.6,
+3.9 and 4.9 million triangles for the solid, lightened and skeleton boards on a 250 x 210 mm bed. A wall of
+4 x 2.5 m would draw about 10 to 20 million.
+
+- **D194** How the clip's pegs grip: (a) friction ribs, three along each long side of every peg, 0.3 mm proud,
+  which crush as the peg goes in, so it grips whatever the printer's tolerance; the pegs stay 2.5 mm long, nothing
+  shows on the front, and a two-peg hook above still fits (D189); it holds by friction alone; (b) a snap lip, each
+  peg split along its length and 4.5 mm long, its lips springing into the slot's 1 mm front chamfer (D41) so they
+  catch 0.5 mm below the face; it holds firmly, but the slot 40 mm above each peg loses two-peg hooks, and a
+  printed lip can break; (c) both, a "Grip" choice under Advanced, ribs unless set. Recommended: (c).
+- **D195** A screw or keyhole on the clip, a "Fixing" choice, none unless set. A screw: a countersunk hole at the
+  screw size (D76) in a round pad on the bar, 10 mm beside the seam, so the first board goes up with the clip
+  pegged into it, the clip is screwed to the wall through its free half, and the next board is pressed on; the
+  pegs set the clip's place, so nothing is measured. A keyhole: in the middle of the clip's wall face, so the clip
+  hangs on a screw already in the wall; that screw must be where the boards' slots will put the clip, to within
+  the pegs' play, about 0.2 mm, so it suits a clip hung before its boards rather than one joining two boards
+  already up. (a) Both, (b) the screw only, (c) the keyhole only. Recommended: (a), the keyhole's limit said on
+  the page.
+- **D196** The largest wall: (a) 4 m each way; (b) 10 m each way; (c) no limit. Building does not grow with the
+  wall, which has 2 to 9 kinds of panel, so a limit only guards against a mistyped size. Recommended: (b).
+- **D197** How the page draws a large wall: (a) one draw for each kind of panel instead of each panel, every
+  triangle still drawn; (b) in full up to about 5 million triangles, which today's 1.6 m walls fit, and above it
+  each panel a flat plate with its slots drawn on it as a picture, a few triangles each, those near the camera
+  drawn in full as it comes close; (c) above that, a flat plan of panel outlines and slots, and a panel of each
+  kind in 3D when its line in the print list is chosen. Recommended: (b), on (a).
 
 - **T193** Print a slot clip and two small boards to try its pegs: `skadis-slot-clip-2-boards-20mm.stl`
   from the page ("Slot clip" under "Connectors"), and two 40 x 40 mm solid boards, one with its right side open
@@ -156,11 +180,11 @@ C150, C159, C160; the backlog rows have the results). Waiting on the owner:
   then the other board onto the free pegs. Then say whether the pegs went in, how tight they sat, and whether
   the two boards' faces lined up at the seam. A tight or loose fit is set by "Peg clearance" under Advanced.
 - **T151** Print a lightened board with keyholes and hang it: an 80 x 80 mm one is enough
-  (`skadis-lightened-80x80-keyholes.stl` from the page, "Keyholes" under "Screw holes"), in the filament you
-  choose. Hang it on two 4 mm pan-head screws and put an IKEA hook in it. Then say whether the rims and webs
-  held, whether the heads went in and sat below the face, whether the hook sat straight, and what it weighs.
-  Such a board hangs flat, so the hook may not go in (D190): if D191 is (a), wait and print the padded board
-  instead.
+  (`skadis-lightened-80x80-keyholes-standoffs-20mm.stl` from the page, "Keyholes" under "Screw holes", which
+  turns the standoffs on), in the filament you choose. Hang it on two 4 mm pan-head screws standing out of the
+  wall so their heads are about 21.5 mm off it, turned in or out until the board hangs snug on its standoffs, and
+  put an IKEA hook in it. Then say whether the rims and webs held, whether the heads went in and sat below the
+  face, whether the screws slid into the standoffs' slots, whether the hook sat straight, and what it weighs.
 
 ## Inputs from outside this repository
 

@@ -239,7 +239,7 @@ describe('the solid board type', () => {
     expect(name({ lockScrews: 'bottom' })).toBe('skadis-solid-160x160.stl'); // lock screws go only with keyholes
   });
 
-  it('offers keyholes, and says standoffs with keyholes are a problem (D156, D158)', () => {
+  it('offers keyholes, which stand on standoffs, and says keyholes without them are a problem (D156, D190)', () => {
     const v = defaultValues(solid.settings);
     const head = solid.settings.find((s) => s.key === 'screwHead');
     expect(head?.kind === 'choice' && head.options.map((o) => o.label)).toEqual([
@@ -248,12 +248,12 @@ describe('the solid board type', () => {
       'Keyholes',
       'None',
     ]);
-    const keyholes = buildBoard(engine, solid, { ...v, screwHead: 'keyhole' });
+    const keyholes = buildBoard(engine, solid, { ...v, screwHead: 'keyhole', standoffs: 'back' });
     expect(keyholes.ok).toBe(true);
     if (keyholes.ok) made.push(keyholes.solid);
-    const both = buildBoard(engine, solid, { ...v, screwHead: 'keyhole', standoffs: 'back' });
-    expect(both.ok).toBe(false);
-    if (!both.ok) expect(both.problem).toContain('choose screw holes for standoffs');
+    const flat = buildBoard(engine, solid, { ...v, screwHead: 'keyhole' });
+    expect(flat.ok).toBe(false);
+    if (!flat.ok) expect(flat.problem).toContain('standoffs at least 8 mm');
   });
 });
 

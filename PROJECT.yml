@@ -5,6 +5,6 @@ projects:
   - name:     Skådis Air
     kind:     build
     state:    active
-    next:     "keyhole-pads (D190), when D191 says; then edge-joins"
+    next:     "slot clip grip and fixing (D194, D195); walls past 1.6 m (D196, D197); then edge-joins"
     trackers: [docs/status.md, docs/backlog.md]
     review:   2026-10-15

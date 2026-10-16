@@ -131,7 +131,7 @@ describe('makeSkeletonBoard (D146, D147, D161)', () => {
   it('leaves no degenerate facet, open or closed, with keyholes or standoffs', () => {
     expect(degenerateFacets(meshOf(skeleton()))).toBe(0);
     const closed = { sides: { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' } } as const;
-    expect(degenerateFacets(meshOf(skeleton(closed, {}, { screwHead: 'keyhole' })))).toBe(0);
+    expect(degenerateFacets(meshOf(skeleton(closed, {}, { screwHead: 'keyhole', standoffHeightMm: 20 })))).toBe(0);
     expect(degenerateFacets(meshOf(skeleton({}, {}, { standoffHeightMm: 20 })))).toBe(0);
   });
 
