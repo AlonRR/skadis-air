@@ -146,8 +146,11 @@ lie; and a board hung on keyholes lies flat on the wall (D158), which a plate be
   the wall there, and a wall hung on its top panels' keyholes holds together; refused with standoffs, which
   stand where it lies; (b) lining boards up only, held by the same screws that go on into the wall or a
   spacer, as IKEA's plate is; (c) none: the 2- and 4-board standoffs already join boards at their corners, so
-  the row is done by them, and `edge-joins` and the slot clip join panels without a plate. Recommended: (c),
-  as (a) and (b) each work only where nothing else holds the corner.
+  the row is done by them, and `edge-joins` and the slot clip join panels without a plate; (d), added when the
+  owner asked how boards with no screw holes would join (16 Oct 2026): a plate held by pegs in the slots either
+  side of the seam instead of screws, which is the slot clip (`conn-slot-clip`), needing no holes, and working
+  with keyholes and on the lightened and skeleton boards. (a), (b) and (c) all need the corner holes, which "Screw
+  holes: None" leaves out. Recommended: (d).
 - **D186** If (a) or (b): its shape, for 2 boards a strip 10 mm wide over the two holes 20 mm apart, for 4 a
   square over the four, cut away round the slots it crosses so a hook still fits behind them, as the
   standoff's tunnel does (D97); solid only, as a part this small has nothing to lighten (as D92).
