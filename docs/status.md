@@ -132,6 +132,19 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 `board-lightened` and `mounting-ikea` were planned and built on 15 Oct 2026 (D141 to D147, D155 to D158; C148 to
 C150, C159, C160; the backlog rows have the results). Waiting on the owner:
 
+`download-3mf-zip`, asked on 16 Oct 2026. The reference project writes 3MF itself, a zip of XML (C32), and
+offers STL or 3MF, one file per part or zipped, or every part in one 3MF.
+
+- **D181** The formats: (a) a choice "File: STL / 3MF" beside the download; one board is one file in it; a wall
+  keeps a download on each line of its print list, and gains "Download all": with STL, a zip of every kind's
+  file; with 3MF, one 3MF holding every kind; (b) STL only, and a zip for a wall; (c) 3MF only for a wall, STL
+  for one board. Recommended: (a).
+- **D182** In a wall's 3MF, the copies: (a) one object for each kind, named with its count ("160 x 160 mm,
+  closed left and bottom, x 4"), the copies left to the slicer; (b) every copy placed, which for a large wall
+  is far more than a bed holds. Recommended: (a).
+- **D183** A wall's zip or 3MF is named for the wall (`skadis-solid-1600x1600-wall.zip`), and a zip also holds
+  `print-list.txt`, the print list as the page shows it. Recommended: these.
+
 - **T151** Print a lightened board with keyholes and hang it: an 80 x 80 mm one is enough
   (`skadis-lightened-80x80-keyholes.stl` from the page, "Keyholes" under "Screw holes"), in the filament you
   choose. Hang it on two 4 mm pan-head screws and put an IKEA hook in it. Then say whether the rims and webs
