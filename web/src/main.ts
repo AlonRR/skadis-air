@@ -105,6 +105,7 @@ function rebuild(type: AnyBoardType, form: Form): void {
       showPanels(id, [], '');
     }
     preview?.show(built.parts, `${type.id} ${size}`, built.panels); // framed again only when type or size changes
+    preview?.name(`The ${built.panels ? 'wall' : what} in 3D`);
   });
   const bed = printer?.bed();
   ask({ kind: 'build', id, typeId: type.id, values: read.values, bed: bed?.ok ? bed.bed : { ...DEFAULT_BED } });

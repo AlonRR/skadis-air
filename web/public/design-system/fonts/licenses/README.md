@@ -21,7 +21,7 @@ for them to be kept.
 The fonts were subset with fontTools' `pyftsubset` to the ranges above plus Basic Latin, Latin-1,
 general punctuation and arrows, keeping every OpenType layout feature so the ligatures work, and
 saved as WOFF2. The subsets keep no licence fields of their own in the name table, so this folder
-carries the licences instead. No glyph was redrawn. How to rebuild them is in `FONTS.md` in the
+carries the licences instead. No glyph was redrawn; each icon's advance width was set to the width it draws (`scripts/fit-icon-advances.py` in the design system), so the gap to its label is the same for every icon. How to rebuild them is in `FONTS.md` in the
 design system's repository, AlonRR/printable-parts-design-system.
 
 ## Where each text came from

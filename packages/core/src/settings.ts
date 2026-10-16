@@ -72,8 +72,10 @@ const nice = (n: number) => String(Math.round(n * 1000) / 1000);
 
 function readNumber(s: NumberSetting, given: unknown, errors: Problem[], warnings: Problem[]): number {
   if (given === undefined || given === '') return s.default;
-  // A form hands over text; a caller may hand over a number. Anything else is not a number.
-  const n = typeof given === 'number' ? given : typeof given === 'string' ? Number(given.trim()) : Number.NaN;
+  // A form hands over text, in which a comma is read as a decimal point, as some keyboards write one; a caller
+  // may hand over a number. Anything else is not a number.
+  const n =
+    typeof given === 'number' ? given : typeof given === 'string' ? Number(given.trim().replace(',', '.')) : Number.NaN;
   if (!Number.isFinite(n)) {
     errors.push({ key: s.key, message: `${s.label} must be a number` });
     return s.default;

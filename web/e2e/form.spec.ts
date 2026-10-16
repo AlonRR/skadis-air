@@ -40,7 +40,9 @@ test('shows size, thickness and sides on the form, and folds the fine settings u
 test('takes the size in mm, in 40 mm steps, and shows it in tiles (D45)', async ({ page }) => {
   await ready(page);
   const width = page.locator('input[name="widthMm"]');
-  await expect(width).toHaveAttribute('step', '40');
+  // the decimal keypad's field has no step of its own: the reader holds the value to its steps, as the test of a
+  // size off them shows (D202)
+  await expect(width).toHaveAttribute('inputmode', 'decimal');
   await expect(page.getByTestId('count-widthMm')).toHaveText('= 4 tiles');
   await width.fill('240');
   await page.locator('input[name="heightMm"]').fill('200');
@@ -201,4 +203,29 @@ test('makes the slot clip for 2 boards either way or for 4, with a fixing and a 
   await page.locator('input[name="depthMm"]').fill('10');
   await expect(page.getByTestId('error-depthMm')).toContainText('from 12');
   await expect(status).toHaveAttribute('data-state', 'invalid');
+});
+
+// The design system's fields (v0.4.0, D202): the decimal keypad for a value that cannot go below zero, a number
+// field for one that can; each error announced, and linked with the field's notes from the field.
+test('gives each field the keyboard its values need, and links its notes and its error to it (D202)', async ({
+  page,
+}) => {
+  await ready(page);
+  const thickness = page.locator('input[name="thicknessMm"]');
+  await expect(thickness).toHaveAttribute('inputmode', 'decimal');
+  await expect(thickness).not.toHaveAttribute('type', 'number');
+  const clearance = page.locator('input[name="slotClearanceMm"]'); // from -0.5 mm
+  await expect(clearance).toHaveAttribute('type', 'number');
+  await expect(clearance).not.toHaveAttribute('inputmode', 'decimal');
+  // the error is a live region, and the field names it and its notes
+  const error = page.getByTestId('error-widthMm');
+  await expect(error).toHaveAttribute('aria-live', 'polite');
+  const width = page.locator('input[name="widthMm"]');
+  const described = (await width.getAttribute('aria-describedby'))?.split(' ') ?? [];
+  expect(described).toContain(await error.getAttribute('id'));
+  expect(described).toContain(await page.getByTestId('count-widthMm').getAttribute('id'));
+  // a comma reads as a decimal point
+  await thickness.fill('4,5');
+  await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
+  await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 4.5 mm');
 });

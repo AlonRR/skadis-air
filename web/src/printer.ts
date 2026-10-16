@@ -54,6 +54,10 @@ export interface PrinterChoice {
   bed(): { ok: true; bed: Bed } | { ok: false; problem: string };
 }
 
+/** A bed's size as typed, a comma read as a decimal point, as the design system's fields take it (D202). */
+const size = (input: HTMLInputElement | null): number =>
+  input === null ? Number.NaN : Number(input.value.trim().replace(',', '.'));
+
 export function mountPrinter(box: HTMLElement, changed: () => void): PrinterChoice {
   const list = box.querySelector<HTMLElement>('[data-testid="printer-bed"]');
   const models = box.querySelector<HTMLElement>('[data-testid="printer-model"]');
@@ -100,7 +104,7 @@ export function mountPrinter(box: HTMLElement, changed: () => void): PrinterChoi
     if (custom) custom.hidden = bed !== 'custom';
     const printer = chosenPrinter();
     if (note) note.textContent = printer ? `The ${printer.model}'s bed: ${mm(printer)}.` : defaultNote;
-    if (bed === 'custom') remember({ bed, xMm: Number(x?.value), yMm: Number(y?.value) });
+    if (bed === 'custom') remember({ bed, xMm: size(x), yMm: size(y) });
     else remember(printer ? { bed, model: printer.id } : { bed });
   };
 
@@ -142,7 +146,7 @@ export function mountPrinter(box: HTMLElement, changed: () => void): PrinterChoi
       const printer = chosenPrinter();
       if (printer) return { ok: true, bed: { xMm: printer.xMm, yMm: printer.yMm } };
       if (bed !== 'custom') return { ok: true, bed: { ...DEFAULT_BED } };
-      const [bx, by] = [Number(x?.value), Number(y?.value)];
+      const [bx, by] = [size(x), size(y)];
       if (![bx, by].every((v) => Number.isFinite(v) && v >= MIN_MM && v <= MAX_MM)) {
         const problem = `A custom bed is ${MIN_MM} to ${MAX_MM} mm each way.`;
         if (error) error.textContent = problem;

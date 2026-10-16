@@ -2,7 +2,8 @@
 
 Copied unchanged from the owner's shared design system,
 [`AlonRR/printable-parts-design-system`](https://github.com/AlonRR/printable-parts-design-system),
-at its tag `v0.3.0`, commit `937f5c3` (15 Oct 2026, D153; first copied at `v0.1.0`, D111, then `v0.2.0`):
+at its tag `v0.5.0`, commit `38b9cae` (16 Oct 2026, D202, with v0.4.0's steps; first copied at `v0.1.0`, D111,
+then `v0.2.0` and `v0.3.0`):
 
 - `tokens.css`: the colours of both themes, the spacing, the type, how much of the stage the part
   fills (D123) and the `@font-face` rules. It loads `fonts/` by a relative address, so `fonts/` stays
@@ -29,6 +30,9 @@ it twice with `node scripts/design-system/screenshots.mjs http://127.0.0.1:4199/
 identical. Then copy the new version, rebuild, shoot `after`, and compare it with `before`; every state
 that changed should be one the release says it changes. For `v0.3.0`, 5 of 10 states changed: the warnings'
 outlines, the buttons under the 3D view on a phone, and the 320 px screen, which no longer scrolls sideways.
+For `v0.5.0`, all 10 changed, as its fonts, the look of what is chosen (tint and ring) and the phone stage did;
+with the page's own markup unchanged, the phone and 320 px screens scrolled sideways (541 px wide), as the plan
+bar is one row on a phone, which moving the file's format into the form fixed (D207).
 
 Licensing is
 in `REUSE.toml`: the stylesheets are MPL-2.0 like the rest of the page, the fonts

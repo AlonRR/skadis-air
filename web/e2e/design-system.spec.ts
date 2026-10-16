@@ -179,23 +179,34 @@ test.describe('a warning', () => {
   });
 });
 
-// The chosen option of a choice, and a closed side, are filled with the action colour; the rest are not.
-test('the chosen option and a closed side are filled, the others are not', async ({ page }) => {
+// The chosen option of a choice, and a closed side, are tinted with the action colour and ringed with it; the
+// rest are not; and only the primary button is filled with it (the design system's D26, v0.4.0; D202).
+test('the chosen option and a closed side are tinted and ringed, the others are not, and only the primary button is filled', async ({
+  page,
+}) => {
   await page.goto('./');
   await ready(page);
-  const action = await token(page, '--action');
+  const [action, tint] = [await token(page, '--action'), await token(page, '--action-tint')];
   expect(action).toHaveLength(3);
-  const fill = (selector: string) =>
+  expect(tint).not.toEqual(action);
+  const style = (selector: string, property: 'backgroundColor' | 'outlineColor') =>
     page
       .locator(selector)
       .first()
-      .evaluate((e) => getComputedStyle(e).backgroundColor);
-  expect(rgb(await fill('input[name="boardType"]:checked + .ws-choice__face'))).toEqual(action);
-  expect(rgb(await fill('input[name="boardType"]:not(:checked) + .ws-choice__face'))).not.toEqual(action);
+      .evaluate((e, p) => getComputedStyle(e)[p], property);
+  const chosen = 'input[name="boardType"]:checked + .ws-choice__face';
+  expect(rgb(await style(chosen, 'backgroundColor'))).toEqual(tint);
+  expect(rgb(await style(chosen, 'outlineColor'))).toEqual(action);
+  expect(rgb(await style('input[name="boardType"]:not(:checked) + .ws-choice__face', 'backgroundColor'))).not.toEqual(
+    tint,
+  );
   await choose(page, 'screwHead', 'round');
-  expect(rgb(await fill('input[name="screwHead"]:checked + .ws-choice__face'))).toEqual(action);
-  expect(rgb(await fill('[data-side="left"]'))).not.toEqual(action); // open
+  expect(rgb(await style('input[name="screwHead"]:checked + .ws-choice__face', 'backgroundColor'))).toEqual(tint);
+  expect(rgb(await style('[data-side="left"]', 'backgroundColor'))).not.toEqual(tint); // open
   await page.locator('[data-side="left"]').click();
   await expect(page.locator('[data-side="left"]')).toHaveAttribute('aria-pressed', 'true');
-  expect(rgb(await fill('[data-side="left"]'))).toEqual(action); // closed
+  expect(rgb(await style('[data-side="left"]', 'backgroundColor'))).toEqual(tint); // closed
+  // the action fill is the primary button's alone
+  expect(rgb(await style('.ws-btn--primary', 'backgroundColor'))).toEqual(action);
+  expect(rgb(await style(chosen, 'backgroundColor'))).not.toEqual(action);
 });

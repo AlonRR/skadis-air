@@ -8,7 +8,20 @@
 // out below --stage-min-fill, and never panned (C125). A browser without WebGL gets a message instead;
 // the rest of the page does not need it. A wall draws in full only the panels the view needs, chosen again
 // whenever the camera moves, and stands the rest in as flat plates with the slots painted on (D197, C204).
-import { AmbientLight, Box3, Color, DirectionalLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+// Without a pointer (the design system's D30, D36; D202, C208): Zoom in and Zoom out, which stop where a pinch
+// stops; Front, Back and Top, each facing that side, framed again, cleared by a turn away; and on the focused
+// drawing the arrow keys turn it and + and - zoom it, by the buttons' steps.
+import {
+  AmbientLight,
+  Box3,
+  Color,
+  DirectionalLight,
+  PerspectiveCamera,
+  Scene,
+  Spherical,
+  Vector3,
+  WebGLRenderer,
+} from 'three';
 import type { Group } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { PanelLine, Placed } from './build-messages.js';
@@ -33,11 +46,23 @@ const FIRST_DIRECTION = new Vector3(-0.15, -0.2, 1.2).normalize();
 // After a resize the whole board fits again with this much of the stage to spare at its tightest side,
 // so its edge never sits on the stage's (C125).
 const REFIT_SHARE = 0.95;
+// The steps of the buttons and the keys (C208): a turn of 15 degrees, a zoom of a quarter.
+const TURN_STEP = Math.PI / 12;
+const ZOOM_STEP = 1.25;
+// The named views, each the direction the camera looks from: the front, the back, and above, a hair to the
+// front so the camera's up is still defined.
+const VIEWS: Record<string, Vector3> = {
+  front: new Vector3(0, 0, 1),
+  back: new Vector3(0, 0, -1),
+  top: new Vector3(0, 1, 1e-4).normalize(),
+};
 
 export interface Preview {
   /** Draws the board, or a wall's panels with its print list's lines, or empties the preview when there is
    * none; `framing` decides when to frame again. */
   show(board: readonly Placed[] | null, framing: string, wall?: readonly PanelLine[]): void;
+  /** Names the drawing for assistive technology: what is in it, in words ("The wall in 3D"). */
+  name(label: string): void;
 }
 
 function webglAvailable(): boolean {
@@ -59,7 +84,7 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
     container.dataset['state'] = 'unavailable';
     say('The 3D preview needs WebGL, which this browser has switched off. Everything else works.');
     if (reset) reset.hidden = true;
-    return { show: () => {} };
+    return { show: () => {}, name: () => {} };
   }
 
   // preserveDrawingBuffer keeps the last drawn image readable, for the browser test; drawing only on
@@ -67,6 +92,13 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
   const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.prepend(renderer.domElement);
+  // The drawing as assistive technology meets it: focusable, an image named for its part, described by the plan
+  // line (the design system's D30).
+  const canvas = renderer.domElement;
+  canvas.tabIndex = 0;
+  canvas.setAttribute('role', 'img');
+  canvas.setAttribute('aria-label', 'The board in 3D');
+  canvas.setAttribute('aria-describedby', 'plan-line');
 
   const scene = new Scene();
   const background = new Color();
@@ -128,12 +160,28 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
   // and its outline) however often the board is redrawn, or editing would leak memory (browser-tested).
   const draw = () => {
     renderer.render(scene, camera);
+    container.dataset['distance'] = String(Math.round(camera.position.distanceTo(controls.target)));
     container.dataset['geometries'] = String(renderer.info.memory.geometries);
+  };
+  // The named view the camera faces, until a turn takes it away from that side.
+  const views = container.querySelector<HTMLElement>('[data-testid="views"]');
+  let facing = '';
+  const face = (name: string) => {
+    facing = name;
+    container.dataset['view'] = name;
+    for (const input of views?.querySelectorAll<HTMLInputElement>('input') ?? []) input.checked = input.value === name;
+  };
+  const awayFromFacing = () => {
+    const side = VIEWS[facing];
+    if (!side) return false;
+    const looking = new Vector3().subVectors(camera.position, controls.target).normalize();
+    return looking.angleTo(side) > 0.01;
   };
   controls.addEventListener('change', () => {
     limitZoom();
     fitDepth();
     redetail();
+    if (facing !== '' && awayFromFacing()) face('');
     draw();
   });
   // The theme is an attribute on the page, whoever sets it: the system setting or, later, a toggle (C117).
@@ -177,13 +225,67 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
     redetail();
     draw();
   };
-  reset?.addEventListener('click', frame);
+  reset?.addEventListener('click', () => {
+    frame();
+    face('');
+  });
+
+  // Zoom by a step, in or out, no nearer than the controls allow nor farther than a pinch may go.
+  const zoom = (factor: number) => {
+    if (!board) return;
+    const now = camera.position.distanceTo(controls.target);
+    standAt(Math.min(controls.maxDistance, Math.max(controls.minDistance, now * factor)));
+    controls.update();
+  };
+  // Turn round what the camera looks at, across and up, keeping the distance.
+  const turn = (across: number, up: number) => {
+    if (!board) return;
+    const offset = new Vector3().subVectors(camera.position, controls.target);
+    const at = new Spherical().setFromVector3(offset);
+    at.theta += across;
+    at.phi = Math.min(Math.PI - 0.01, Math.max(0.01, at.phi - up));
+    camera.position.copy(controls.target).add(new Vector3().setFromSpherical(at));
+    controls.update();
+  };
+  container.querySelector('[data-testid="zoom-in"]')?.addEventListener('click', () => zoom(1 / ZOOM_STEP));
+  container.querySelector('[data-testid="zoom-out"]')?.addEventListener('click', () => zoom(ZOOM_STEP));
+  canvas.addEventListener('keydown', (event) => {
+    const keys: Record<string, () => void> = {
+      ArrowLeft: () => turn(-TURN_STEP, 0),
+      ArrowRight: () => turn(TURN_STEP, 0),
+      ArrowUp: () => turn(0, TURN_STEP),
+      ArrowDown: () => turn(0, -TURN_STEP),
+      '+': () => zoom(1 / ZOOM_STEP),
+      '=': () => zoom(1 / ZOOM_STEP),
+      '-': () => zoom(ZOOM_STEP),
+      _: () => zoom(ZOOM_STEP),
+    };
+    const act = keys[event.key];
+    if (!act) return;
+    event.preventDefault(); // the arrows would scroll the page
+    act();
+  });
+  // A named view faces that side, framed again to --stage-fit.
+  views?.addEventListener('change', (event) => {
+    const name = event.target instanceof HTMLInputElement ? event.target.value : '';
+    const side = VIEWS[name];
+    if (!board || !side) return;
+    face(name);
+    controls.target.copy(box.getCenter(new Vector3()));
+    camera.position.copy(controls.target).add(side);
+    standAt(distanceToFit(box, view(), ratio('--stage-fit', 0.85)));
+    controls.maxDistance = Infinity; // the limit follows the new view, set by the change
+    controls.update();
+  });
 
   let framedFor = '';
   container.dataset['state'] = 'loading';
   say('Preparing the preview…');
 
   return {
+    name(label) {
+      canvas.setAttribute('aria-label', label);
+    },
     show(mesh, framing, lines) {
       if (board) {
         if (wall) wall.dispose();

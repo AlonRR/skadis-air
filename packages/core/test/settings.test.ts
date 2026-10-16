@@ -95,6 +95,11 @@ describe('readValues', () => {
     if (!short.ok) expect(short.errors[0]?.message).toBe('Length must be at least 40 mm');
   });
 
+  it('reads a comma as a decimal point, as some keyboards write one (the design system, v0.4.0)', () => {
+    const read = readValues(SETTINGS, { thicknessMm: '4,5' });
+    expect(read.ok && read.values.thicknessMm).toBe(4.5);
+  });
+
   it('refuses text that is not a number', () => {
     const read = readValues(SETTINGS, { widthMm: 'wide' });
     expect(read.ok).toBe(false);

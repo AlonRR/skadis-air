@@ -55,25 +55,45 @@
       </header>
       <section class="ws-stage" aria-label="The board in 3D">
         <div class="ws-stage__view" data-testid="preview" data-state="loading">
-          <p class="ws-stage__message" data-testid="preview-message"></p>
-        </div>
-        <div class="ws-plan">
-          <span class="ws-plan__line" data-testid="board-status" data-state="building">Making the board…</span>
-          <span class="ws-plan__actions">
-            <!-- The file's format, beside the download (D181) -->
-            <span class="ws-choice" role="radiogroup" aria-label="File" data-testid="file-format">
-              <label class="ws-choice__opt">
-                <input class="ws-choice__input" type="radio" name="fileFormat" value="stl" checked />
-                <span class="ws-choice__face">STL</span>
-              </label>
-              <label class="ws-choice__opt">
-                <input class="ws-choice__input" type="radio" name="fileFormat" value="3mf" />
-                <span class="ws-choice__face">3MF</span>
-              </label>
-            </span>
+          <p class="ws-stage__message" data-testid="preview-message" aria-live="polite"></p>
+          <!-- The 3D view's own controls (the design system's D25, D30, D36): on a phone or a short screen,
+            Zoom and the views wait in the View... menu -->
+          <div class="ws-stage__tools">
             <button type="button" class="ws-btn" data-testid="preview-reset">
               <span class="ws-ic" aria-hidden="true">&#xeb37;</span>Reset view
             </button>
+            <button type="button" class="ws-btn ws-stage__more" popovertarget="view-menu" data-testid="view-more">
+              View…
+            </button>
+            <div class="ws-stage__menu" id="view-menu" popover data-testid="view-menu">
+              <button type="button" class="ws-btn" data-testid="zoom-in">
+                <span class="ws-ic" aria-hidden="true">&#xeb81;</span>Zoom in
+              </button>
+              <button type="button" class="ws-btn" data-testid="zoom-out">
+                <span class="ws-ic" aria-hidden="true">&#xeb82;</span>Zoom out
+              </button>
+              <div class="ws-choice ws-stage__views" role="radiogroup" aria-label="View" data-testid="views">
+                <label class="ws-choice__opt">
+                  <input class="ws-choice__input" type="radio" name="view" value="front" />
+                  <span class="ws-choice__face">Front</span>
+                </label>
+                <label class="ws-choice__opt">
+                  <input class="ws-choice__input" type="radio" name="view" value="back" />
+                  <span class="ws-choice__face">Back</span>
+                </label>
+                <label class="ws-choice__opt">
+                  <input class="ws-choice__input" type="radio" name="view" value="top" />
+                  <span class="ws-choice__face">Top</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ws-plan">
+          <span class="ws-plan__line" id="plan-line" data-testid="board-status" data-state="building" aria-live="polite"
+            >Making the board…</span
+          >
+          <span class="ws-plan__actions">
             <button type="button" class="ws-btn ws-btn--primary" data-testid="download-stl" disabled>
               <span class="ws-ic" aria-hidden="true">&#xeac2;</span
               ><span data-testid="download-label">Download STL</span>
@@ -85,7 +105,7 @@
         <div class="ws-status">
           <span data-testid="board-size"></span>
           <span
-            ><span class="ws-hint-fine">Drag: turn · Wheel or pinch: zoom</span
+            ><span class="ws-hint-fine">Drag: turn · Wheel or pinch: zoom · Arrow keys: turn</span
             ><span class="ws-hint-touch">Drag: turn · Pinch: zoom</span></span
           >
         </div>
@@ -124,32 +144,28 @@
               <div data-testid="custom-bed" hidden>
                 <label class="ws-label">
                   Bed width (mm)
-                  <input
-                    class="ws-input"
-                    type="number"
-                    name="bedXMm"
-                    min="50"
-                    max="1000"
-                    step="1"
-                    value="200"
-                    autocomplete="off"
-                  />
+                  <input class="ws-input" inputmode="decimal" name="bedXMm" value="200" autocomplete="off" />
                 </label>
                 <label class="ws-label">
                   Bed depth (mm)
-                  <input
-                    class="ws-input"
-                    type="number"
-                    name="bedYMm"
-                    min="50"
-                    max="1000"
-                    step="1"
-                    value="200"
-                    autocomplete="off"
-                  />
+                  <input class="ws-input" inputmode="decimal" name="bedYMm" value="200" autocomplete="off" />
                 </label>
               </div>
-              <span class="ws-error" data-testid="bed-error"></span>
+              <span class="ws-error" data-testid="bed-error" aria-live="polite"></span>
+            </fieldset>
+            <!-- The file's format: set once, as the printer is (D207; first beside the download, D181) -->
+            <fieldset class="ws-fieldset" data-testid="file">
+              <legend>File</legend>
+              <span class="ws-choice" role="radiogroup" aria-label="File" data-testid="file-format">
+                <label class="ws-choice__opt">
+                  <input class="ws-choice__input" type="radio" name="fileFormat" value="stl" checked />
+                  <span class="ws-choice__face">STL</span>
+                </label>
+                <label class="ws-choice__opt">
+                  <input class="ws-choice__input" type="radio" name="fileFormat" value="3mf" />
+                  <span class="ws-choice__face">3MF</span>
+                </label>
+              </span>
             </fieldset>
           </form>
           <footer>

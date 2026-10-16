@@ -53,39 +53,57 @@ export const chosenIn = (group: ParentNode): string =>
 
 // The lines kept under every control for its problems: an error, which stops the build, and a warning,
 // which does not and is a Notice (C120).
-const errorLine = (key: string) => element('span', { class: 'ws-error', 'data-testid': `error-${key}` });
+// Each field's notes and error carry ids its control names (`aria-describedby`), and an error is a live region, so
+// a screen reader reads them with the field and hears a new error (the design system's Field, v0.4.0).
+const idOf = (key: string, part: string) => `field-${key}-${part}`;
+const errorLine = (key: string) =>
+  element('span', { class: 'ws-error', id: idOf(key, 'error'), 'aria-live': 'polite', 'data-testid': `error-${key}` });
 const warningBox = (key: string) =>
   element('div', { class: 'ws-notice ws-notice--warning', 'data-testid': `warning-${key}`, 'aria-live': 'polite' });
-const note = (text: string) => element('p', { class: 'ws-note' }, text);
+const note = (text: string, id?: string) => element('p', { class: 'ws-note', ...(id ? { id } : {}) }, text);
 
 function numberField(s: NumberSetting, changed: () => void): { field: HTMLElement; read: () => string } {
   const field = element('div', { class: 'field' });
   const label = element('label', { class: 'ws-label' });
   label.append(`${s.label} (${s.unit})`);
+  // A value that cannot go below zero takes the decimal keypad, which has no minus sign; one that can, a number
+  // field (the design system's Field, v0.4.0).
+  const keyboard: Record<string, string> =
+    s.min >= 0
+      ? { inputmode: 'decimal' }
+      : {
+          type: 'number',
+          min: String(s.min),
+          ...(s.max === undefined ? {} : { max: String(s.max) }),
+          step: String(s.step),
+        };
   const input = element('input', {
     class: 'ws-input',
-    type: 'number',
+    ...keyboard,
     name: s.key,
-    min: String(s.min),
-    ...(s.max === undefined ? {} : { max: String(s.max) }),
-    step: String(s.step),
     value: String(s.default),
     autocomplete: 'off',
   });
+  const described = [];
   label.append(input);
   field.append(label);
   if (s.count !== undefined) {
-    const count = element('p', { class: 'ws-note', 'data-testid': `count-${s.key}` });
+    const count = element('p', { class: 'ws-note', id: idOf(s.key, 'count'), 'data-testid': `count-${s.key}` });
+    described.push(count.id);
     const update = () => {
-      const n = Number(input.value) / s.step;
+      const n = Number(input.value.replace(',', '.')) / s.step;
       count.textContent = Number.isInteger(n) && n > 0 ? `= ${n} ${s.count}` : '';
     };
     update();
     input.addEventListener('input', update);
     field.append(count);
   }
-  if (s.help !== undefined) field.append(note(s.help));
+  if (s.help !== undefined) {
+    field.append(note(s.help, idOf(s.key, 'note')));
+    described.push(idOf(s.key, 'note'));
+  }
   field.append(errorLine(s.key), warningBox(s.key));
+  input.setAttribute('aria-describedby', [...described, idOf(s.key, 'error')].join(' '));
   input.addEventListener('input', changed);
   return { field, read: () => input.value };
 }
@@ -115,8 +133,12 @@ function sidesField(s: SidesSetting, changed: () => void): { field: HTMLElement;
     grid.append(button);
   }
   field.append(grid);
-  if (s.help !== undefined) field.append(note(s.help));
+  if (s.help !== undefined) field.append(note(s.help, idOf(s.key, 'note')));
   field.append(errorLine(s.key));
+  grid.setAttribute(
+    'aria-describedby',
+    [...(s.help === undefined ? [] : [idOf(s.key, 'note')]), idOf(s.key, 'error')].join(' '),
+  );
   return { field, read: () => ({ ...state }) };
 }
 
@@ -126,8 +148,12 @@ function choiceField(s: ChoiceSetting, changed: () => void): { field: HTMLElemen
   const group = choiceGroup(s.key, s.label, s.options, s.default);
   group.addEventListener('change', changed);
   field.append(group);
-  if (s.help !== undefined) field.append(note(s.help));
+  if (s.help !== undefined) field.append(note(s.help, idOf(s.key, 'note')));
   field.append(errorLine(s.key));
+  group.setAttribute(
+    'aria-describedby',
+    [...(s.help === undefined ? [] : [idOf(s.key, 'note')]), idOf(s.key, 'error')].join(' '),
+  );
   return { field, read: () => chosenIn(group) };
 }
 

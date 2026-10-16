@@ -99,14 +99,16 @@ test.describe('the layout', () => {
   test.describe('on a phone', () => {
     test.use({ viewport: { width: 375, height: 800 }, hasTouch: true, isMobile: true });
 
-    test('the stage is 45 % of the height, stays on top as the form scrolls, with the download in reach', async ({
+    // The design system's phone stage (D25, v0.4.0; D202): the 3D view alone pinned at 45 % of the height, the
+    // plan bar pinned under it; the stage itself lays its parts out in the page, so it has no box of its own.
+    test('the 3D view is 45 % of the height, stays on top as the form scrolls, with the download in reach', async ({
       page,
     }) => {
       await ready(page);
-      const stage = page.locator('.ws-stage');
-      expect(Math.abs(((await stage.boundingBox())?.height ?? 0) - 0.45 * 800)).toBeLessThan(4);
+      const view = page.getByTestId('preview');
+      expect(Math.abs(((await view.boundingBox())?.height ?? 0) - 0.45 * 800)).toBeLessThan(4);
       await page.evaluate(() => window.scrollTo(0, 900));
-      await expect.poll(async () => (await stage.boundingBox())?.y ?? -1).toBe(0);
+      await expect.poll(async () => (await view.boundingBox())?.y ?? -1).toBe(0);
       await expect(page.getByRole('button', { name: 'Download STL' })).toBeInViewport();
     });
   });

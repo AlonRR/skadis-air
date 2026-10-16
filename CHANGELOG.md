@@ -29,6 +29,9 @@ All notable changes to this project are recorded here. The format follows
   behind the boards, so the wall holds it on, and leaves every other slot room for a hook.
 - 3MF as well as STL: a choice beside the download. A wall's print list also gives every panel in one file, a zip of
   STLs with the print list in it, or one 3MF with an object for each kind of panel named with how many to print.
+- The 3D view's own controls: Zoom in, Zoom out and Front, Back and Top beside Reset view, in a "View..." menu on
+  a phone; the arrow keys turn the view and + and - zoom it. The page follows the design system's v0.5.0, and the
+  file's format, STL or 3MF, is now chosen in the form, under "Printer".
 - Walls of any size: the 3D view draws the panels near the camera, or zoomed in on, in full, and the rest of a
   large wall as flat plates with the slots shown, so it stays quick however large the wall. A wall's print list
   scrolls in its own share of the stage, so the 3D view keeps most of it.
