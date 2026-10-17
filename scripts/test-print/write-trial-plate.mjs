@@ -5,6 +5,10 @@
 // boards they join, one open on its right and one on its left, and an 80 x 80 mm lightened board on keyholes and
 // its standoffs; each as the page downloads it, laid in rows 10 mm apart, into .check/test-print/. Reads the
 // library's build, so run `npm run build -w skadis-air` first; `npm run trial-plate` does both and checks it.
+//
+//   node scripts/test-print/write-trial-plate.mjs [clips]
+//
+// `clips` writes T193's parts alone, the clips and their two boards, as skadis-trial-clips.stl.
 // One file, as write-test-plate.mjs says why: PrusaSlicer's command line slices each input file on its own.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -28,13 +32,16 @@ const GAP_MM = 10;
 const closedBut = (open) =>
   Object.fromEntries(['left', 'right', 'bottom', 'top'].map((side) => [side, side === open ? 'open' : 'closed']));
 
-const PARTS = [
-  { id: 'lightened', given: { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'back' } }, // T151
+const CLIPS = [
   { id: 'slot-clip', given: { boards: '2', grip: 'ribs' } }, // T193
   { id: 'slot-clip', given: { boards: '2', grip: 'lip' } },
   { id: 'solid', given: { widthMm: 40, heightMm: 40, sides: closedBut('right') } },
   { id: 'solid', given: { widthMm: 40, heightMm: 40, sides: closedBut('left') } },
 ];
+const KEYHOLE = { id: 'lightened', given: { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'back' } }; // T151
+const clipsOnly = process.argv[2] === 'clips';
+const PARTS = clipsOnly ? CLIPS : [KEYHOLE, ...CLIPS];
+const stem = clipsOnly ? 'skadis-trial-clips' : 'skadis-trial-clips-keyhole';
 
 const engine = await loadEngine();
 const solids = PARTS.map(({ id, given }) => {
@@ -67,9 +74,9 @@ if (box.max[0] > BED.xMm || box.max[1] > BED.yMm)
   throw new Error(`the plate is ${box.max[0].toFixed(0)} x ${box.max[1].toFixed(0)} mm, larger than the bed`);
 
 mkdirSync(out, { recursive: true });
-const file = join(out, 'skadis-trial-clips-keyhole.stl');
+const file = join(out, `${stem}.stl`);
 writeFileSync(file, toStl(meshOf(plate), 'Skadis Air trial print: slot clips and a keyhole board'));
-writeFileSync(join(out, 'skadis-trial-clips-keyhole.parts'), String(PARTS.length)); // for stl-check.sh (C107)
+writeFileSync(join(out, `${stem}.parts`), String(PARTS.length)); // for stl-check.sh (C107)
 console.log(
   `${file}: ${parts} parts, ${box.max[0].toFixed(0)} x ${box.max[1].toFixed(0)} mm, ${plate.volume().toFixed(0)} mm3`,
 );

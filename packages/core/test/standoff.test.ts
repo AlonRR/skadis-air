@@ -20,12 +20,14 @@ afterAll(() => {
   for (const m of made) m.delete();
 });
 
-const standoff = (given: Partial<StandoffParams> = {}) => keep(makeStandoff(engine, standoffParams(given)));
+// The shapes' figures are worked out for a standoff 20 mm tall; the starting height is tested on its own (D238).
+const standoff = (given: Partial<StandoffParams> = {}) =>
+  keep(makeStandoff(engine, standoffParams({ heightMm: 20, ...given })));
 const CLOSED: Sides = { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' };
 
 describe('standoffParams: the starting values', () => {
-  it('are 20 mm tall (D94, from IKEA spacers) for a 4 mm screw (D76)', () => {
-    expect(standoffParams({})).toEqual({ boards: 1, heightMm: 20, screwMm: 4 });
+  it('are 15 mm tall (D238; IKEA spacers are 20 mm, D94) for a 4 mm screw (D76)', () => {
+    expect(standoffParams({})).toEqual({ boards: 1, heightMm: 15, screwMm: 4 });
   });
 
   it('refuses what cannot be made', () => {

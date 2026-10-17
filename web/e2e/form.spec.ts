@@ -100,8 +100,8 @@ test('offers screw holes and standoffs, and names the file for what differs from
   await choose(page, 'screwHead', 'round');
   await choose(page, 'standoffs', 'back');
   const status = page.getByTestId('board-status');
-  await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-round-head-standoffs-20mm.stl');
-  await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 25 mm'); // 5 mm of board, 20 mm of standoff
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-round-head-standoffs-15mm.stl');
+  await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 20 mm'); // 5 mm of board, 15 mm of standoff (D238)
 });
 
 test('offers keyholes, which bring their standoffs, with lock screws under Advanced (D155 to D157, D190)', async ({
@@ -112,14 +112,14 @@ test('offers keyholes, which bring their standoffs, with lock screws under Advan
   await choose(page, 'screwHead', 'keyhole');
   // choosing keyholes turns the standoffs on, so a hook has room behind the board (D190)
   await expect(chosen(page, 'standoffs')).toHaveValue('back');
-  await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-keyholes-standoffs-20mm.stl');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-keyholes-standoffs-15mm.stl');
   await expect(status).toHaveAttribute('data-state', 'ready');
-  await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 25 mm');
+  await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 20 mm');
   await page.getByTestId('advanced').locator('summary').click();
   await choose(page, 'lockScrews', 'bottom');
   await expect(status).toHaveAttribute(
     'data-file-name',
-    'skadis-solid-160x160-keyholes-lock-screws-standoffs-20mm.stl',
+    'skadis-solid-160x160-keyholes-lock-screws-standoffs-15mm.stl',
   );
   // taking the standoffs off again would hang the board flat: a problem, saying why
   await choose(page, 'standoffs', 'none');
@@ -153,9 +153,9 @@ test('makes a standoff from the same form, preview and download as a board (D91 
   await ready(page);
   await choose(page, 'boardType', 'standoff');
   const status = page.getByTestId('board-status');
-  await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-1-board-20mm.stl');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-1-board-15mm.stl');
   await expect(status).toContainText('Connector ready');
-  await expect(page.getByTestId('board-size')).toHaveText('10 × 10 × 20 mm');
+  await expect(page.getByTestId('board-size')).toHaveText('10 × 10 × 15 mm');
   await expect(page.locator('[data-side="left"]')).toHaveCount(0); // a spacer has no sides
   await page.locator('input[name="heightMm"]').fill('25');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-1-board-25mm.stl');
@@ -169,8 +169,8 @@ test('makes the standoff for 2 or 4 boards, and says when it is too short for it
   await choose(page, 'boardType', 'standoff');
   const status = page.getByTestId('board-status');
   await choose(page, 'boards', '4');
-  await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-4-boards-20mm.stl');
-  await expect(page.getByTestId('board-size')).toHaveText('30 × 30 × 20 mm');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-standoff-4-boards-15mm.stl');
+  await expect(page.getByTestId('board-size')).toHaveText('30 × 30 × 15 mm');
   await choose(page, 'boards', '2');
   await page.locator('input[name="heightMm"]').fill('10');
   await expect(status).toHaveAttribute('data-state', 'problem');
@@ -183,21 +183,21 @@ test('makes the slot clip for 2 boards either way or for 4, with a fixing and a 
   await ready(page);
   await choose(page, 'boardType', 'slot-clip');
   const status = page.getByTestId('board-status');
-  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-2-boards-20mm.stl');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-2-boards-15mm.stl');
   await expect(status).toContainText('Connector ready');
-  await expect(page.getByTestId('board-size')).toHaveText('60 × 20 × 22.5 mm');
+  await expect(page.getByTestId('board-size')).toHaveText('60 × 20 × 17.5 mm');
   await choose(page, 'boards', '2-stacked');
-  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-2-boards-stacked-20mm.stl');
-  await expect(page.getByTestId('board-size')).toHaveText('20 × 60 × 22.5 mm');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-2-boards-stacked-15mm.stl');
+  await expect(page.getByTestId('board-size')).toHaveText('20 × 60 × 17.5 mm');
   await choose(page, 'boards', '4');
-  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-4-boards-20mm.stl');
-  await expect(page.getByTestId('board-size')).toHaveText('60 × 60 × 22.5 mm');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-4-boards-15mm.stl');
+  await expect(page.getByTestId('board-size')).toHaveText('60 × 60 × 17.5 mm');
   // a screw through its free half, and a lip under Advanced (D194, D195)
   await choose(page, 'fixing', 'screw');
-  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-4-boards-20mm-screw.stl');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-4-boards-15mm-screw.stl');
   await page.getByTestId('advanced').locator('summary').click();
   await choose(page, 'grip', 'lip');
-  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-4-boards-20mm-lip-screw.stl');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-4-boards-15mm-lip-screw.stl');
   await expect(status).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
   // the form refuses a depth under 12 mm before anything is built (D187: the hooks' 8 mm and a 4 mm bar)
   await page.locator('input[name="depthMm"]').fill('10');

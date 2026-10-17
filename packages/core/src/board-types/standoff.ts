@@ -34,7 +34,7 @@ export const STANDOFF = defineBoardType({
       min: 3,
       max: 40,
       step: 0.5,
-      help: "How far it holds the boards off the wall; IKEA's spacers hold them about 20 mm off. For 2 or 4 boards, at least 12 mm.",
+      help: "How far it holds the boards off the wall: 15 mm unless set; IKEA's spacers hold them about 20 mm off. For 2 or 4 boards, at least 12 mm.",
     },
     SCREW_SIZE_SETTING,
   ]),

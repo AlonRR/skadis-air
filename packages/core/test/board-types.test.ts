@@ -181,7 +181,7 @@ describe('the solid board type', () => {
 
   it('takes the mounting: countersunk holes unless set, a round head or none, and standoffs as an option (D73 to D75)', () => {
     const v = defaultValues(solid.settings);
-    expect([v.screwHead, v.screwMm, v.standoffs, v.standoffHeightMm]).toEqual(['countersunk', 4, 'none', 20]);
+    expect([v.screwHead, v.screwMm, v.standoffs, v.standoffHeightMm]).toEqual(['countersunk', 4, 'none', 15]); // D238
     const genus = (values: typeof v) => {
       const built = buildBoard(engine, solid, values);
       if (!built.ok) throw new Error(built.problem);
@@ -192,7 +192,7 @@ describe('the solid board type', () => {
     expect(genus(v)).toBe(slots + 4);
     expect(genus({ ...v, screwHead: 'round' })).toBe(slots + 4);
     const built = buildBoard(engine, solid, { ...v, standoffs: 'back' });
-    expect(built.ok && built.solid.boundingBox().min[2]).toBeCloseTo(-20, 9);
+    expect(built.ok && built.solid.boundingBox().min[2]).toBeCloseTo(-15, 9); // the starting standoff height (D238)
     if (built.ok) made.push(built.solid);
   });
 
@@ -243,7 +243,7 @@ describe('the solid board type', () => {
   it('adds to the name only the mounting that differs from the starting one (C85)', () => {
     const v = defaultValues(solid.settings);
     const name = (given: Record<string, string | number>) => boardFileName(solid, { ...v, ...given }, 'stl');
-    expect(name({ screwHead: 'round', standoffs: 'back' })).toBe('skadis-solid-160x160-round-head-standoffs-20mm.stl');
+    expect(name({ screwHead: 'round', standoffs: 'back' })).toBe('skadis-solid-160x160-round-head-standoffs-15mm.stl');
     expect(name({ screwHead: 'none', screwMm: 3.5 })).toBe('skadis-solid-160x160-no-holes.stl');
     expect(name({ screwMm: 3.5, standoffHeightMm: 25 })).toBe('skadis-solid-160x160-screw-3.5mm.stl');
     expect(name({ screwHead: 'keyhole' })).toBe('skadis-solid-160x160-keyholes.stl');
@@ -376,9 +376,9 @@ describe('the skeleton board type (D146, D147, D161)', () => {
 describe('the standoff connector type (D91 to D94)', () => {
   const standoff = boardType('standoff');
 
-  it('is a connector, 20 mm tall for a 4 mm screw unless set', () => {
+  it('is a connector, 15 mm tall for a 4 mm screw unless set (D238)', () => {
     expect(groupOf(standoff)).toBe('connector');
-    expect(defaultValues(standoff.settings)).toEqual({ boards: '1', heightMm: 20, screwMm: 4 });
+    expect(defaultValues(standoff.settings)).toEqual({ boards: '1', heightMm: 15, screwMm: 4 });
   });
 
   it('builds the spacer its values describe', () => {
@@ -422,23 +422,23 @@ describe('the standoff connector type (D91 to D94)', () => {
   it('names its file with the boards it serves, its height, and a screw other than 4 mm', () => {
     const name = (given: Record<string, number | string>) =>
       boardFileName(standoff, { ...defaultValues(standoff.settings), ...given }, 'stl');
-    expect(name({})).toBe('skadis-standoff-1-board-20mm.stl');
+    expect(name({})).toBe('skadis-standoff-1-board-15mm.stl');
     expect(name({ heightMm: 25, screwMm: 3.5 })).toBe('skadis-standoff-1-board-25mm-screw-3.5mm.stl');
-    expect(name({ boards: '4' })).toBe('skadis-standoff-4-boards-20mm.stl');
+    expect(name({ boards: '4' })).toBe('skadis-standoff-4-boards-15mm.stl');
   });
 });
 
 describe('the slot clip connector type (D187 to D189, D194, D195, C191, C199)', () => {
   const slotClip = boardType('slot-clip');
 
-  it('is a connector, listed after the standoff, for 2 boards side by side, 20 mm deep, ribs and no fixing unless set', () => {
+  it('is a connector, listed after the standoff, for 2 boards side by side, 15 mm deep, ribs and no fixing unless set (D238)', () => {
     expect(groupOf(slotClip)).toBe('connector');
     const ids = BOARD_TYPES.map((t) => t.id);
     expect(ids.indexOf('slot-clip')).toBe(ids.indexOf('standoff') + 1);
     expect(defaultValues(slotClip.settings)).toEqual({
       boards: '2',
       fixing: 'none',
-      depthMm: 20,
+      depthMm: 15,
       grip: 'ribs',
       pegClearanceMm: 0.4,
       screwMm: 4,
@@ -495,16 +495,16 @@ describe('the slot clip connector type (D187 to D189, D194, D195, C191, C199)', 
   it('names its file with the boards it joins, its depth, a lip, a fixing, and what differs from the start', () => {
     const name = (given: Record<string, number | string>) =>
       boardFileName(slotClip, { ...defaultValues(slotClip.settings), ...given }, 'stl');
-    expect(name({})).toBe('skadis-slot-clip-2-boards-20mm.stl');
-    expect(name({ boards: '2-stacked' })).toBe('skadis-slot-clip-2-boards-stacked-20mm.stl');
+    expect(name({})).toBe('skadis-slot-clip-2-boards-15mm.stl');
+    expect(name({ boards: '2-stacked' })).toBe('skadis-slot-clip-2-boards-stacked-15mm.stl');
     expect(name({ boards: '4', depthMm: 25, pegClearanceMm: 0.3 })).toBe(
       'skadis-slot-clip-4-boards-25mm-clearance-0.3mm.stl',
     );
-    expect(name({ fixing: 'screw' })).toBe('skadis-slot-clip-2-boards-20mm-screw.stl');
+    expect(name({ fixing: 'screw' })).toBe('skadis-slot-clip-2-boards-15mm-screw.stl');
     expect(name({ grip: 'lip', fixing: 'keyhole', screwMm: 3.5 })).toBe(
-      'skadis-slot-clip-2-boards-20mm-lip-keyhole-screw-3.5mm.stl',
+      'skadis-slot-clip-2-boards-15mm-lip-keyhole-screw-3.5mm.stl',
     );
-    expect(name({ screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-20mm.stl'); // no screw, so no screw size
+    expect(name({ screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-15mm.stl'); // no screw, so no screw size
   });
 });
 

@@ -16,9 +16,9 @@
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { SOLID_BOARD_DEFAULTS } from './board-solid.js';
 import type { Engine } from './engine.js';
-import { keyhole, MIN_BEHIND_CHANNEL_MM, MOUNTING_DEFAULTS, screwHole } from './mounting.js';
+import { keyhole, MIN_BEHIND_CHANNEL_MM, MOUNTING_DEFAULTS, screwHole, STANDOFF_DEFAULT_MM } from './mounting.js';
 import { circle, ringedSolid, stadium } from './rings.js';
-import { BOARD_THICKNESS_MM, GRID_PITCH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, WALL_DISTANCE_MM } from './skadis.js';
+import { BOARD_THICKNESS_MM, GRID_PITCH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM } from './skadis.js';
 import { TUNNEL_DEPTH_MM } from './standoff.js';
 
 /** The boards it joins: 2 side by side, 2 one above the other (C191), or 4 where their corners meet. */
@@ -39,7 +39,7 @@ export interface SlotClipParams {
 
 export const SLOT_CLIP_DEFAULTS: SlotClipParams = {
   boards: '2',
-  depthMm: WALL_DISTANCE_MM,
+  depthMm: STANDOFF_DEFAULT_MM,
   pegClearanceMm: 0.4,
   grip: 'ribs',
   fixing: 'none',

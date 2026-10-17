@@ -54,7 +54,7 @@ export const SLOT_CLIP = defineBoardType({
       min: 12,
       max: 40,
       step: 0.5,
-      help: "The gap behind the boards, as the standoffs' height: 20 mm unless set. At least 12 mm, so hooks have room.",
+      help: "The gap behind the boards, as the standoffs' height: 15 mm unless set. At least 12 mm, so hooks have room.",
     },
     {
       kind: 'choice',

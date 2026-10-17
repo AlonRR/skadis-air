@@ -28,7 +28,9 @@ afterAll(() => {
   for (const m of made) m.delete();
 });
 
-const clip = (given: Partial<SlotClipParams> = {}) => keep(makeSlotClip(engine, slotClipParams(given)));
+// The shapes' figures are worked out for a clip 20 mm deep; the starting depth is tested on its own (D238).
+const clip = (given: Partial<SlotClipParams> = {}) =>
+  keep(makeSlotClip(engine, slotClipParams({ depthMm: 20, ...given })));
 const within = (actual: number, expected: number) => Math.abs(actual - expected) / expected;
 const round = (v: number[]) => v.map((x) => Math.round(x * 1000) / 1000);
 /** The bounds of each separate outline in a slice, as [minX, maxX, minY, maxY]. */
@@ -62,10 +64,10 @@ const POST = Math.PI * 10 ** 2; // a post, 20 mm across
 const BAR_IN_POST = halfBand(10, 10) + (Math.PI * 25) / 2;
 
 describe('slotClipParams: the starting values', () => {
-  it('are for 2 boards side by side, 20 mm deep, pegs 0.4 mm under the slot with ribs, and no fixing', () => {
+  it('are for 2 boards side by side, 15 mm deep, pegs 0.4 mm under the slot with ribs, and no fixing (D238)', () => {
     expect(slotClipParams({})).toEqual({
       boards: '2',
-      depthMm: 20,
+      depthMm: 15,
       pegClearanceMm: 0.4,
       grip: 'ribs',
       fixing: 'none',

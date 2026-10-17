@@ -13,7 +13,7 @@ import type { BoardCuts, SolidBoardParams } from './board-solid.js';
 import type { Engine } from './engine.js';
 import { circle, ringedSolid, stadium } from './rings.js';
 import { defineSettings, type NumberSetting, type Values } from './settings.js';
-import { HOOK_DEPTH_MM, TILE_MM, WALL_DISTANCE_MM } from './skadis.js';
+import { HOOK_DEPTH_MM, TILE_MM } from './skadis.js';
 
 export type ScrewHead = 'countersunk' | 'round' | 'keyhole' | 'none';
 
@@ -30,6 +30,10 @@ export const MOUNTING_DEFAULTS: MountingParams = {
   standoffHeightMm: 0,
   lockScrews: false,
 };
+
+/** How far the parts that stand behind a board hold it off the wall unless set, mm: the boards' standoffs, the
+ * standoff connector and the slot clip, so the parts of one wall match. Less than IKEA's spacers (D238). */
+export const STANDOFF_DEFAULT_MM = 15;
 
 /** The holes' centres are this far in from both edges at each corner (D73). */
 export const SCREW_INSET_MM = 10;
@@ -257,11 +261,11 @@ export const MOUNTING_SETTINGS = defineSettings([
     key: 'standoffHeightMm',
     label: 'Standoff height',
     unit: 'mm',
-    default: WALL_DISTANCE_MM,
+    default: STANDOFF_DEFAULT_MM,
     min: 3,
     max: 40,
     step: 0.5,
-    help: "How far the standoffs hold the board off the wall; IKEA's spacers hold it about 20 mm off.",
+    help: "How far the standoffs hold the board off the wall: 15 mm unless set; IKEA's spacers hold it about 20 mm off.",
     advanced: true,
   },
 ]);

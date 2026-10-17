@@ -6,6 +6,11 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Standoffs, the standoff connector and the slot clip start at 15 mm deep, not IKEA's 20 mm; any depth can still
+  be set.
+
 ## [0.2.1] - 2026-10-16
 
 ### Fixed

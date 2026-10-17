@@ -13,9 +13,9 @@
 import type { CrossSection, Manifold } from 'manifold-3d';
 import { SOLID_BOARD_DEFAULTS } from './board-solid.js';
 import type { Engine } from './engine.js';
-import { SCREW_INSET_MM, screwHole } from './mounting.js';
+import { SCREW_INSET_MM, screwHole, STANDOFF_DEFAULT_MM } from './mounting.js';
 import { circle } from './rings.js';
-import { HOOK_DEPTH_MM, SLOT_WIDTH_MM, WALL_DISTANCE_MM } from './skadis.js';
+import { HOOK_DEPTH_MM, SLOT_WIDTH_MM } from './skadis.js';
 
 export type StandoffBoards = 1 | 2 | 4;
 
@@ -25,7 +25,7 @@ export interface StandoffParams {
   screwMm: number; // the screw's diameter (D76)
 }
 
-export const STANDOFF_DEFAULTS: StandoffParams = { boards: 1, heightMm: WALL_DISTANCE_MM, screwMm: 4 };
+export const STANDOFF_DEFAULTS: StandoffParams = { boards: 1, heightMm: STANDOFF_DEFAULT_MM, screwMm: 4 };
 
 /** The room kept round a slot and a hook, beyond what each takes: the margin of C83. */
 const ROOM_MARGIN_MM = 2;
