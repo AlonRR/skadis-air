@@ -13,6 +13,7 @@ import {
   type AnyBoardType,
 } from 'skadis-air';
 import { panelText, type PanelLine, type Reply, type Request } from './build-messages.js';
+import { loadChoices, saveChoices, startingValues } from './choices.js';
 import { choiceGroup, chosenIn, renderForm, type Form } from './form.js';
 import { saveFile } from './download.js';
 import { mountPreview } from './preview.js';
@@ -20,6 +21,16 @@ import { mountPrinter } from './printer.js';
 import { mountTheme } from './theme.js';
 
 mountTheme(document.querySelector<HTMLButtonElement>('[data-testid="theme-toggle"]'));
+
+// The choices made, kept in this browser (D250 g), and the values of the form shown now, which the next type
+// starts from where it has the same settings.
+const choices = loadChoices();
+let shownValues: Record<string, unknown> = {};
+let shownGroup = '';
+// Whether a wall's files are listed one by one, or folded away under "Download all" (D250 d).
+let filesShown = false;
+/** The types of a group, boards or connectors, in the list's order. */
+const typesOf = (group: string) => BOARD_TYPES.filter((t) => groupOf(t) === group);
 
 const engineStatus = document.querySelector<HTMLElement>('[data-testid="engine-status"]');
 const boardStatus = document.querySelector<HTMLElement>('[data-testid="board-status"]');
@@ -146,12 +157,31 @@ function showPanels(id: number, lines: readonly PanelLine[], wallName: string): 
     () => download(id, `${wallName}.${format() === '3mf' ? '3mf' : 'zip'}`, 'all'),
     'print-all',
   );
-  printList.replaceChildren(
-    ...(lines.length > 0 ? [all] : []),
+  // Each kind's own file, folded away unless asked for, so a wall's many lines leave the stage its room (D250 d).
+  const files = document.createElement('div');
+  files.id = 'print-files';
+  files.dataset['testid'] = 'print-files';
+  files.append(
     ...lines.map((line, panel) =>
       printRow(panelText(line), 'Download', () => download(id, withFormat(line.fileName), panel), 'print-row'),
     ),
   );
+  const fold = document.createElement('button');
+  fold.type = 'button';
+  fold.className = 'ws-btn';
+  fold.setAttribute('aria-controls', files.id);
+  const showFiles = () => {
+    files.hidden = !filesShown;
+    fold.setAttribute('aria-expanded', String(filesShown));
+    fold.textContent = filesShown ? 'Hide files' : 'Show files';
+  };
+  fold.addEventListener('click', () => {
+    filesShown = !filesShown;
+    showFiles();
+  });
+  showFiles();
+  all.querySelector('.ws-plan__actions')?.append(fold);
+  printList.replaceChildren(...(lines.length > 0 ? [all, files] : []));
 }
 
 /** A board larger than the bed is warned about, not refused (D62). */
@@ -176,11 +206,22 @@ function warnAboutBed(widthMm: number, heightMm: number): void {
 function show(type: AnyBoardType): void {
   if (formBox === null) return;
   let timer: ReturnType<typeof setTimeout> | undefined;
-  const changed = () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => rebuild(type, form), 150); // one build after a burst of typing
+  // every edit is kept at once, and builds after a burst of typing
+  const keep = () => {
+    shownValues = form.read();
+    choices.values[type.id] = shownValues;
+    saveChoices(choices);
   };
-  const form = renderForm(formBox, type, changed);
+  const changed = () => {
+    keep();
+    clearTimeout(timer);
+    timer = setTimeout(() => rebuild(type, form), 150);
+  };
+  // a type starts from the one shown before only within its group: boards from boards, connectors from connectors
+  const before = groupOf(type) === shownGroup ? shownValues : {};
+  shownGroup = groupOf(type);
+  const form = renderForm(formBox, type, changed, startingValues(type, choices.values[type.id], before));
+  keep();
   current = changed;
   // A wall is closed round its outer edge (D37): split, the sides still open close, and can be opened again.
   formBox.querySelector('[role="radiogroup"][aria-label="Panels"]')?.addEventListener('change', () => {
@@ -225,24 +266,60 @@ async function start(): Promise<void> {
     return;
   }
   if (typeList === null) return;
-  // Buttons under a heading wherever the group changes (D91, D112); the list keeps each group together,
-  // boards first. Every button is one choice: the same name in both groups.
-  const headings = { board: 'Boards', connector: 'Connectors' } as const;
-  const first = BOARD_TYPES[0];
-  const runs: { heading: string; types: AnyBoardType[] }[] = [];
-  for (const t of BOARD_TYPES) {
-    const heading = headings[groupOf(t)];
-    if (runs.at(-1)?.heading !== heading) runs.push({ heading, types: [] });
-    runs.at(-1)?.types.push(t);
+  // Boards or connectors, a toggle at the top, and under it the types of the group chosen (D250 h; D91, D112).
+  // Every type is one choice, the same name in both groups; each group's list keeps the type last chosen in it.
+  const groups = [
+    { group: 'board', heading: 'Boards' },
+    { group: 'connector', heading: 'Connectors' },
+  ] as const;
+  const startGroup = groups.some((g) => g.group === choices.group) ? (choices.group ?? 'board') : 'board';
+  const chosenOf = (group: string) => {
+    const kept = choices.types[group];
+    return typesOf(group).find((t) => t.id === kept) ?? typesOf(group)[0];
+  };
+  const toggle = choiceGroup(
+    'typeGroup',
+    'Boards or connectors',
+    groups.map((g) => ({ value: g.group, label: g.heading })),
+    startGroup,
+  );
+  toggle.dataset['testid'] = 'type-group';
+  typeList.append(toggle);
+  const lists = new Map<string, HTMLElement>();
+  for (const { group, heading } of groups) {
+    const options = typesOf(group).map((t) => ({ value: t.id, label: t.name }));
+    const list = choiceGroup('boardType', heading, options, group === startGroup ? (chosenOf(group)?.id ?? '') : '');
+    for (const input of list.querySelectorAll<HTMLInputElement>('input')) input.dataset['group'] = group;
+    // in a plain box, as the design system's Choice sets its display, which a hidden attribute does not overrule
+    // (C179)
+    const box = document.createElement('div');
+    box.append(list);
+    box.hidden = group !== startGroup;
+    lists.set(group, box);
+    typeList.append(box);
   }
-  for (const { heading, types } of runs) {
-    const caption = document.createElement('div');
-    caption.className = 'ws-caps';
-    caption.textContent = heading;
-    const options = types.map((t) => ({ value: t.id, label: t.name }));
-    typeList.append(caption, choiceGroup('boardType', heading, options, first?.id ?? ''));
-  }
-  typeList.addEventListener('change', () => show(boardType(chosenIn(typeList))));
+  // the group shown: its list, and the type last chosen in it, shown
+  const showGroup = (group: string) => {
+    for (const [g, list] of lists) list.hidden = g !== group;
+    for (const input of toggle.querySelectorAll<HTMLInputElement>('input')) input.checked = input.value === group;
+    choices.group = group;
+  };
+  typeList.addEventListener('change', (event) => {
+    const input = event.target instanceof HTMLInputElement ? event.target : null;
+    if (input?.name === 'typeGroup') {
+      const type = chosenOf(input.value);
+      showGroup(input.value);
+      const option = lists.get(input.value)?.querySelector<HTMLInputElement>(`input[value="${type?.id ?? ''}"]`);
+      if (option) option.checked = true;
+      if (type !== undefined) show(type);
+    } else if (input?.name === 'boardType') {
+      const group = input.dataset['group'] ?? 'board';
+      showGroup(group); // a type chosen in the other group, as a script may, shows that group
+      choices.types[group] = input.value;
+      show(boardType(input.value));
+    }
+  });
+  const first = chosenOf(startGroup);
   if (first !== undefined) show(first);
 }
 

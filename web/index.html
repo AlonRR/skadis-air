@@ -6,19 +6,9 @@
     <title>Skådis Air: SKÅDIS pegboard generator</title>
     <!-- The tab icon (D137): slots in the action colour, dark with the system's dark setting -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <script>
-      // The theme (D113): the one chosen with the header's toggle, remembered in this browser, or else the
-      // system setting. Set here, before anything is drawn, so a dark screen never flashes light;
-      // src/theme.ts keeps it in step while the page is open (C117, C124).
-      (() => {
-        let chosen = null;
-        try {
-          chosen = localStorage.getItem('skadis-air-theme');
-        } catch {}
-        const system = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        document.documentElement.dataset.theme = chosen === 'light' || chosen === 'dark' ? chosen : system;
-      })();
-    </script>
+    <!-- The theme, set before anything is drawn so a dark screen never flashes light (D113): its own file, loaded
+      in turn, not a script in the page (D250) -->
+    <script src="./theme-init.js"></script>
     <!-- The shared design system (D111): its tokens first, then its components; web/public/design-system/README.md -->
     <link rel="stylesheet" href="/design-system/tokens.css" />
     <link rel="stylesheet" href="/design-system/components/bundle.css" />
@@ -36,6 +26,31 @@
         flex: 0 1 auto;
         max-height: 40%;
         overflow-y: auto;
+      }
+      /* A number field's arrows for larger and smaller (D250 c): two of the design system's Buttons beside it. */
+      .number-row {
+        display: flex;
+        gap: var(--space-1);
+      }
+      .number-row .ws-input {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .number-step {
+        flex: 0 0 auto;
+        padding-inline: var(--space-2);
+      }
+      .number-row input[type='number'] {
+        appearance: textfield;
+      }
+      .number-row input[type='number']::-webkit-inner-spin-button,
+      .number-row input[type='number']::-webkit-outer-spin-button {
+        appearance: none;
+        margin: 0;
+      }
+      /* Boards or connectors, then the types of the one chosen (D250 h). */
+      [data-testid='type-group'] {
+        margin-bottom: var(--space-3);
       }
       [data-state='error'],
       [data-state='invalid'],

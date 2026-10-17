@@ -81,9 +81,13 @@ export const previewBackground = (page: Page): Promise<number[]> =>
     return Array.from(ctx.getImageData(2, 2, 1, 1).data.subarray(0, 3));
   });
 
-/** Chooses an option of a Choice by its value, as a click on its button does. */
-export const choose = (page: Page, name: string, value: string): Promise<void> =>
-  page.locator(`input[name="${name}"][value="${value}"]`).check();
+/** Chooses an option of a Choice by its value, as a click on its button does; a type, in its group first (D250 h). */
+export async function choose(page: Page, name: string, value: string): Promise<void> {
+  const input = page.locator(`input[name="${name}"][value="${value}"]`);
+  const group = name === 'boardType' ? await input.getAttribute('data-group') : null;
+  if (group !== null) await page.locator(`input[name="typeGroup"][value="${group}"]`).check();
+  await input.check();
+}
 
 /** The option chosen in a Choice, to read its value. */
 export const chosen = (page: Page, name: string): Locator => page.locator(`input[name="${name}"]:checked`);

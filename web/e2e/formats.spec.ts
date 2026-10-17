@@ -78,6 +78,7 @@ test('downloads a line of the print list in the format chosen', async ({ page })
   test.setTimeout(90_000);
   await wall(page);
   await choose(page, 'fileFormat', '3mf');
+  await page.getByRole('button', { name: 'Show files' }).click(); // folded away (D250 d)
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.getByTestId('print-row').first().getByRole('button', { name: 'Download', exact: true }).click(),

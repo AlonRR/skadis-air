@@ -6,8 +6,17 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Boards or connectors is a toggle at the top of the form, each showing its own types.
+- The choices are kept in the browser: switching between types, or reloading, loses none of them, and a board's
+  size goes on to the next board.
+- Arrows beside each number field for larger and smaller, by the setting's own step; the arrow keys do the same.
+- A wall's list of files is folded away under "Download all", with "Show files" beside it.
+
 ### Changed
 
+- The theme is set by its own script file, before the page is drawn, not by a script written into the page.
 - The slot clip's ribbed pegs reach the front of a 5 mm board, flush with it; they stopped halfway before. A clip
   starts with a screw, and a screw size other than 4 mm is named `-screw-3.5mm`.
 - On a lightened or skeleton board on keyholes, the slots behind which the standoffs stand keep the same rims as

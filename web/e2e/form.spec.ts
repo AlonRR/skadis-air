@@ -16,8 +16,12 @@ test('lists the board types that are built, in the order of the registry, openin
   page,
 }) => {
   await ready(page);
-  const options = page.getByTestId('board-type').locator('.ws-choice__face');
-  await expect(options).toHaveText(BOARD_TYPES.map((t) => t.name));
+  // every type, boards then connectors as the registry lists them, under the toggle between the two (D250 h)
+  const ids = await page
+    .getByTestId('board-type')
+    .locator('input[name="boardType"]')
+    .evaluateAll((inputs) => inputs.map((i) => (i instanceof HTMLInputElement ? i.value : '')));
+  expect(ids).toEqual(BOARD_TYPES.map((t) => t.id));
   await expect(chosen(page, 'boardType')).toHaveValue(BOARD_TYPES[0]?.id ?? '');
 });
 
@@ -138,15 +142,17 @@ test('says a countersink too deep for a thin board cannot be made, and makes it 
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready');
 });
 
-test('lists the boards, then the connectors under their own heading, as buttons (D91, D112)', async ({ page }) => {
+test('puts boards and connectors on a toggle at the top, the types of each under it as buttons (D250 h; D91, D112)', async ({
+  page,
+}) => {
   await ready(page);
   const types = page.getByTestId('board-type');
-  await expect(types.locator('.ws-caps')).toHaveText(['Boards', 'Connectors']);
-  const groups = types.getByRole('radiogroup');
-  await expect(groups).toHaveCount(2);
-  await expect(groups.nth(0)).toHaveAttribute('aria-label', 'Boards');
-  await expect(groups.nth(1)).toHaveAttribute('aria-label', 'Connectors');
-  await expect(groups.nth(1).getByRole('radio', { name: 'Standoff' })).toHaveValue('standoff');
+  const toggle = types.getByRole('radiogroup', { name: 'Boards or connectors' });
+  await expect(toggle.locator('.ws-choice__face')).toHaveText(['Boards', 'Connectors']);
+  await expect(types.getByRole('radiogroup', { name: 'Boards', exact: true })).toBeVisible();
+  const connectors = types.getByRole('radiogroup', { name: 'Connectors', exact: true, includeHidden: true });
+  await expect(connectors).toBeHidden();
+  await expect(connectors.getByRole('radio', { name: 'Standoff', includeHidden: true })).toHaveValue('standoff');
 });
 
 test('makes a standoff from the same form, preview and download as a board (D91 to D94)', async ({ page }) => {

@@ -25,6 +25,15 @@ test('splits a board into panels for the bed, lists each size with its count, an
   await expect(list).toBeVisible();
   const rows = list.getByTestId('print-row');
   await expect(rows).toHaveCount(6);
+  // the files are folded away, their button beside "Download all" (D250 d)
+  const all = list.getByTestId('print-all');
+  await expect(all.getByRole('button', { name: 'Download all' })).toBeVisible();
+  const fold = all.getByRole('button', { name: 'Show files' });
+  await expect(fold).toHaveAttribute('aria-expanded', 'false');
+  await expect(rows.first()).toBeHidden();
+  await fold.click();
+  await expect(all.getByRole('button', { name: 'Hide files' })).toHaveAttribute('aria-expanded', 'true');
+  await expect(rows.first()).toBeVisible();
   await expect(rows.first()).toContainText('1 × 160 × 160 mm');
   await expect(page.getByRole('button', { name: 'Download STL' })).toBeHidden(); // each size has its own (D178)
   await expect(page.getByTestId('bed-warning')).toBeEmpty(); // every panel fits the bed
