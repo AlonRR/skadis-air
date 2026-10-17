@@ -2,8 +2,8 @@
 
 Copied unchanged from the owner's shared design system,
 [`AlonRR/printable-parts-design-system`](https://github.com/AlonRR/printable-parts-design-system),
-at its tag `v0.5.0`, commit `38b9cae` (16 Oct 2026, D202, with v0.4.0's steps; first copied at `v0.1.0`, D111,
-then `v0.2.0` and `v0.3.0`):
+at its tag `v0.5.1`, commit `156bf36` (17 Oct 2026, D250 e; first copied at `v0.1.0`, D111, then `v0.2.0`,
+`v0.3.0` and `v0.5.0` with v0.4.0's steps, D202):
 
 - `tokens.css`: the colours of both themes, the spacing, the type, how much of the stage the part
   fills (D123) and the `@font-face` rules. It loads `fonts/` by a relative address, so `fonts/` stays
@@ -33,6 +33,8 @@ outlines, the buttons under the 3D view on a phone, and the 320 px screen, which
 For `v0.5.0`, all 10 changed, as its fonts, the look of what is chosen (tint and ring) and the phone stage did;
 with the page's own markup unchanged, the phone and 320 px screens scrolled sideways (541 px wide), as the plan
 bar is one row on a phone, which moving the file's format into the form fixed (D207).
+For `v0.5.1`, a patch, the same page shot twice came out identical (10 of 10), and after the copy all 10 changed,
+where its release says: the wide header, and the space under each legend and above each note.
 
 Licensing is
 in `REUSE.toml`: the stylesheets are MPL-2.0 like the rest of the page, the fonts
