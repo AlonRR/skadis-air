@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760"><style>
+ .t { font: 600 17px system-ui, sans-serif; fill: #1f2933; }
+ .s { font: 13px system-ui, sans-serif; fill: #3e4c59; }
+ .board { fill: #eef1f3; stroke: #9aa5b1; } .chamfer { fill: #c3cad1; } .slot { fill: #52606d; }
+ .behind { fill: none; stroke: #1b7f3b; stroke-width: 2; stroke-dasharray: 5 4; }
+ .headdeep { fill: #1f2933; stroke: #ffffff; stroke-width: 1.5; }
+ .wall { fill: #d9d9d9; } .padx { fill: #b7e4c7; stroke: #1b7f3b; } .boardx { fill: #c3cad1; stroke: #616e7c; }
+ .room { fill: #ffffff; stroke: #9aa5b1; stroke-dasharray: 2 3; } .cutx { fill: #ffffff; } .screwx { fill: #1f2933; }
+ .hook { fill: #f2a541; fill-opacity: 0.9; } .driver { stroke: #b42318; stroke-width: 3; }
+</style><rect width="1500" height="760" fill="#ffffff"/><text x="30" y="34" class="t" style="font-size:21px">A lock screw tucked behind the bottom corner slot, to scale</text><text x="30" y="78" class="t">A bottom corner tile, from the front</text>
+<rect x="30" y="90" width="320" height="320" class="board"/>
+<path d="M 130.0 286.0 L 130.1 289.9 L 130.5 293.8 L 131.2 297.7 L 132.0 301.5 L 133.2 305.3 L 134.6 309.0 L 136.2 312.5 L 138.0 316.0 L 140.1 319.3 L 142.4 322.5 L 144.9 325.6 L 147.6 328.4 L 150.4 331.1 L 153.5 333.6 L 156.7 335.9 L 160.0 338.0 L 163.5 339.8 L 167.0 341.4 L 170.7 342.8 L 174.5 344.0 L 178.3 344.8 L 182.2 345.5 L 186.1 345.9 L 190.0 346.0 L 193.9 345.9 L 197.8 345.5 L 201.7 344.8 L 205.5 344.0 L 209.3 342.8 L 213.0 341.4 L 216.5 339.8 L 220.0 338.0 L 223.3 335.9 L 226.5 333.6 L 229.6 331.1 L 232.4 328.4 L 235.1 325.6 L 237.6 322.5 L 239.9 319.3 L 242.0 316.0 L 243.8 312.5 L 245.4 309.0 L 246.8 305.3 L 248.0 301.5 L 248.8 297.7 L 249.5 293.8 L 249.9 289.9 L 250.0 286.0 L 250.0 214.0 L 249.9 210.1 L 249.5 206.2 L 248.8 202.3 L 248.0 198.5 L 246.8 194.7 L 245.4 191.0 L 243.8 187.5 L 242.0 184.0 L 239.9 180.7 L 237.6 177.5 L 235.1 174.4 L 232.4 171.6 L 229.6 168.9 L 226.5 166.4 L 223.3 164.1 L 220.0 162.0 L 216.5 160.2 L 213.0 158.6 L 209.3 157.2 L 205.5 156.0 L 201.7 155.2 L 197.8 154.5 L 193.9 154.1 L 190.0 154.0 L 186.1 154.1 L 182.2 154.5 L 178.3 155.2 L 174.5 156.0 L 170.7 157.2 L 167.0 158.6 L 163.5 160.2 L 160.0 162.0 L 156.7 164.1 L 153.5 166.4 L 150.4 168.9 L 147.6 171.6 L 144.9 174.4 L 142.4 177.5 L 140.1 180.7 L 138.0 184.0 L 136.2 187.5 L 134.6 191.0 L 133.2 194.7 L 132.0 198.5 L 131.2 202.3 L 130.5 206.2 L 130.1 210.1 L 130.0 214.0 Z" class="behind"/>
+<path d="M 161.2 290.0 L 161.3 291.9 L 161.4 293.8 L 161.8 295.6 L 162.2 297.5 L 162.7 299.3 L 163.4 301.0 L 164.2 302.7 L 165.1 304.4 L 166.1 306.0 L 167.2 307.5 L 168.3 309.0 L 169.6 310.4 L 171.0 311.7 L 172.5 312.8 L 174.0 313.9 L 175.6 314.9 L 177.3 315.8 L 179.0 316.6 L 180.7 317.3 L 182.5 317.8 L 184.4 318.2 L 186.2 318.6 L 188.1 318.7 L 190.0 318.8 L 191.9 318.7 L 193.8 318.6 L 195.6 318.2 L 197.5 317.8 L 199.3 317.3 L 201.0 316.6 L 202.7 315.8 L 204.4 314.9 L 206.0 313.9 L 207.5 312.8 L 209.0 311.7 L 210.4 310.4 L 211.7 309.0 L 212.8 307.5 L 213.9 306.0 L 214.9 304.4 L 215.8 302.7 L 216.6 301.0 L 217.3 299.3 L 217.8 297.5 L 218.2 295.6 L 218.6 293.8 L 218.7 291.9 L 218.8 290.0 L 218.8 210.0 L 218.7 208.1 L 218.6 206.2 L 218.2 204.4 L 217.8 202.5 L 217.3 200.7 L 216.6 199.0 L 215.8 197.3 L 214.9 195.6 L 213.9 194.0 L 212.8 192.5 L 211.7 191.0 L 210.4 189.6 L 209.0 188.3 L 207.5 187.2 L 206.0 186.1 L 204.4 185.1 L 202.7 184.2 L 201.0 183.4 L 199.3 182.7 L 197.5 182.2 L 195.6 181.8 L 193.8 181.4 L 191.9 181.3 L 190.0 181.2 L 188.1 181.3 L 186.2 181.4 L 184.4 181.8 L 182.5 182.2 L 180.7 182.7 L 179.0 183.4 L 177.3 184.2 L 175.6 185.1 L 174.0 186.1 L 172.5 187.2 L 171.0 188.3 L 169.6 189.6 L 168.3 191.0 L 167.2 192.5 L 166.1 194.0 L 165.1 195.6 L 164.2 197.3 L 163.4 199.0 L 162.7 200.7 L 162.2 202.5 L 161.8 204.4 L 161.4 206.2 L 161.3 208.1 L 161.2 210.0 Z" class="chamfer"/>
+<path d="M 169.2 290.0 L 169.2 291.4 L 169.4 292.7 L 169.6 294.1 L 169.9 295.4 L 170.3 296.7 L 170.8 298.0 L 171.3 299.2 L 172.0 300.4 L 172.7 301.6 L 173.5 302.7 L 174.4 303.7 L 175.3 304.7 L 176.3 305.6 L 177.3 306.5 L 178.4 307.3 L 179.6 308.0 L 180.8 308.7 L 182.0 309.2 L 183.3 309.7 L 184.6 310.1 L 185.9 310.4 L 187.3 310.6 L 188.6 310.8 L 190.0 310.8 L 191.4 310.8 L 192.7 310.6 L 194.1 310.4 L 195.4 310.1 L 196.7 309.7 L 198.0 309.2 L 199.2 308.7 L 200.4 308.0 L 201.6 307.3 L 202.7 306.5 L 203.7 305.6 L 204.7 304.7 L 205.6 303.7 L 206.5 302.7 L 207.3 301.6 L 208.0 300.4 L 208.7 299.2 L 209.2 298.0 L 209.7 296.7 L 210.1 295.4 L 210.4 294.1 L 210.6 292.7 L 210.8 291.4 L 210.8 290.0 L 210.8 210.0 L 210.8 208.6 L 210.6 207.3 L 210.4 205.9 L 210.1 204.6 L 209.7 203.3 L 209.2 202.0 L 208.7 200.8 L 208.0 199.6 L 207.3 198.4 L 206.5 197.3 L 205.6 196.3 L 204.7 195.3 L 203.7 194.4 L 202.7 193.5 L 201.6 192.7 L 200.4 192.0 L 199.2 191.3 L 198.0 190.8 L 196.7 190.3 L 195.4 189.9 L 194.1 189.6 L 192.7 189.4 L 191.4 189.2 L 190.0 189.2 L 188.6 189.2 L 187.3 189.4 L 185.9 189.6 L 184.6 189.9 L 183.3 190.3 L 182.0 190.8 L 180.8 191.3 L 179.6 192.0 L 178.4 192.7 L 177.3 193.5 L 176.3 194.4 L 175.3 195.3 L 174.4 196.3 L 173.5 197.3 L 172.7 198.4 L 172.0 199.6 L 171.3 200.8 L 170.8 202.0 L 170.3 203.3 L 169.9 204.6 L 169.6 205.9 L 169.4 207.3 L 169.2 208.6 L 169.2 210.0 Z" class="slot"/>
+<circle cx="190" cy="250" r="20.0" class="headdeep"/>
+<text x="30" y="434" class="s">Through the slot you see the screw head, 8 mm behind the face:</text>
+<text x="30" y="452" class="s">nothing in the slot itself. Dashed: the standoff behind.</text>
+<text x="420" y="78" class="t">From the side, through the slot</text>
+<rect x="420" y="160" width="60" height="340" class="wall"/>
+<rect x="480" y="180" width="150" height="240" class="padx"/>
+<rect x="550.0" y="199.0" width="80.0" height="279.5" class="room"/>
+<rect x="630" y="160" width="50" height="340" class="boardx"/>
+<rect x="630" y="224.0" width="50" height="152.0" class="cutx"/>
+<rect x="529.0" y="272.5" width="21.0" height="55.0" class="cutx"/>
+<rect x="430" y="287.5" width="102.0" height="25.0" class="screwx"/>
+<rect x="532.0" y="275.0" width="18.0" height="50.0" class="screwx"/>
+<rect x="570" y="351.0" width="190" height="25.0" class="hook"/>
+<rect x="570" y="351.0" width="25.0" height="107.5" class="hook"/>
+<rect x="735.0" y="271.0" width="25.0" height="80" class="hook"/>
+<line x1="800" y1="300" x2="550.0" y2="300" class="driver"/>
+<text x="420.0" y="520.0" class="s">wall</text>
+<text x="490.0" y="520.0" class="s">standoff 15 mm</text>
+<text x="630.0" y="520.0" class="s">board 5</text>
+<text x="690" y="170" class="s">red: a screwdriver through the slot</text>
+<text x="690" y="190" class="s">orange: a hook, its back tab 6 mm deep</text>
+<text x="690" y="210" class="s">dotted: the hook's room, 8 mm (C99)</text>
+<text x="960" y="110" class="s">The lock screw goes in through the slot, head and all, and its</text>
+<text x="960" y="130" class="s">head sits in a recess in the floor of the hook's room, 8 mm behind</text>
+<text x="960" y="150" class="s">the board: nothing of it is in the slot or in the room, so a hook</text>
+<text x="960" y="170" class="s">goes in as in any slot. A screwdriver reaches it through the slot.</text>
+<text x="960" y="190" class="s"></text>
+<text x="960" y="210" class="s">Its head must pass the slot: 5.2 mm wide as drawn, 5.16 mm as</text>
+<text x="960" y="230" class="s">printed (T109). A 4 mm screw's head is 8 mm, so the lock screw</text>
+<text x="960" y="250" class="s">needs its own, smaller size: a pan head no more than 5 mm across,</text>
+<text x="960" y="270" class="s">such as a 2.5 mm screw (ISO 7045 M2.5: 5.0 mm), which leaves</text>
+<text x="960" y="290" class="s">0.1 mm either side; check the head of the screw you buy. It only</text>
+<text x="960" y="310" class="s">stops the board lifting off its keyholes, which carry the weight.</text>
+<text x="960" y="330" class="s"></text>
+<text x="960" y="350" class="s">Drawn for the lock screws of a board on keyholes; the keyhole</text>
+<text x="960" y="370" class="s">screws, and boards with screw holes, stay as they are.</text></svg>

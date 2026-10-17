@@ -23,7 +23,8 @@ export interface MountingParams {
   screwHead: ScrewHead; // D74; keyholes at the top two corners (D156)
   screwMm: number; // the screw's diameter, 4 mm unless set (D76)
   standoffHeightMm: number; // how far the standoffs stand behind the board; 0 for none (D75)
-  lockScrews: boolean; // with keyholes: countersunk holes at the bottom two corners too (D156)
+  lockScrews: boolean; // with keyholes: screws through the bottom corner slots too, tucked behind them (D156, A248)
+  lockScrewMm: number; // their size: a head up to 5 mm passes the slot, a larger one a groove cut in it (A248)
 }
 
 export const MOUNTING_DEFAULTS: MountingParams = {
@@ -31,6 +32,7 @@ export const MOUNTING_DEFAULTS: MountingParams = {
   screwMm: 4,
   standoffHeightMm: 0,
   lockScrews: false,
+  lockScrewMm: 2.5, // a 5 mm head, which passes the slot (A248)
 };
 
 /** How far the parts that stand behind a board hold it off the wall unless set, mm: the boards' standoffs, the
@@ -53,6 +55,15 @@ export const KEYHOLE_LIPS_MM = 1.5;
 const KEYHOLE_WALL_MM = 3;
 /** The room a hook takes behind a board, C99's margin and all (D190): its back tab's depth and 2 mm. */
 const HOOK_ROOM_MM = HOOK_DEPTH_MM + 2;
+/** The widest head that passes through a slot, mm: a larger lock screw's head gets a groove in the slot (A248). */
+const HEAD_THROUGH_SLOT_MM = 5;
+/** What a lock screw's head and shank are given round them, mm, and the standoff left under its head. */
+const HEAD_ROOM_MM = 0.4;
+const GROOVE_ROOM_MM = 0.5;
+const UNDER_HEAD_MM = 2;
+
+/** A lock screw's pan head (D157's proportions): twice the screw across, 0.8 times it tall. */
+const lockHead = (lockScrewMm: number) => ({ acrossMm: 2 * lockScrewMm, tallMm: 0.8 * lockScrewMm });
 
 /** A screw's hole, its 90 degree countersink across the front, and the standoff round it (C83). */
 export function screwHole(screwMm: number): { holeMm: number; countersinkMm: number; standoffDiameterMm: number } {
@@ -78,6 +89,7 @@ export function mountingParams(given: Partial<MountingParams>): MountingParams {
   if (!(m.screwMm > 0)) throw new RangeError('The screw size must be more than 0 mm');
   if (!(m.standoffHeightMm >= 0)) throw new RangeError('The standoffs cannot be less than 0 mm tall');
   if (typeof m.lockScrews !== 'boolean') throw new RangeError('Lock screws must be on or off');
+  if (!(m.lockScrewMm > 0)) throw new RangeError('The lock screw size must be more than 0 mm');
   return m;
 }
 
@@ -140,9 +152,9 @@ export function mountingPads(m: MountingParams, board: Pick<SolidBoardParams, 'c
   const [bottom, top] = [screwPlaces(board).slice(0, 2), screwPlaces(board).slice(2)];
   if (m.screwHead !== 'keyhole') return [...bottom, ...top].map(([x, y]) => circle(x, y, padMm));
   // at the bottom, a pad for a lock screw in the corner, or for a standoff behind the corner slot (D190, D245)
-  const lowPads = m.lockScrews
-    ? bottom.map(([x, y]) => circle(x, y, padMm))
-    : m.standoffHeightMm > 0
+  // behind the bottom corner slots, lock screws or not (D245, A248)
+  const lowPads =
+    m.standoffHeightMm > 0 || m.lockScrews
       ? bottomSlotPlaces(board).map((place) => keyholePad(m.screwMm, place, 1))
       : [];
   return [...lowPads, ...keyholePlaces(board).map((place) => keyholePad(m.screwMm, place, 1))];
@@ -193,8 +205,9 @@ function hookRoomOutline(
   const tab: Vec2[] = [
     [x - tabWidth / 2, bottom - drop],
     [x + tabWidth / 2, bottom - drop],
-    [x + tabWidth / 2, y],
-    [x - tabWidth / 2, y],
+    // up to 1 mm past the slot's bottom end, inside the slot's part of the room, clear of a lock screw's groove
+    [x + tabWidth / 2, bottom + 1],
+    [x - tabWidth / 2, bottom + 1],
   ];
   return new CrossSection([stadium(x, y, slot.widthMm, slot.heightMm, slot.chamferMm + 1.5), tab], 'NonZero');
 }
@@ -209,8 +222,14 @@ export function mountingCuts(
   const { holeMm, countersinkMm, standoffDiameterMm } = screwHole(m.screwMm);
   const depth = (countersinkMm - holeMm) / 2; // 45 degree walls
   const keyholes = m.screwHead === 'keyhole';
-  // the lips, the head's channel and a roof over it, then a hook's room behind the slot in front (D235, D244)
-  const leastStandoff = KEYHOLE_LIPS_MM + keyhole(m.screwMm).channelMm + MIN_BEHIND_CHANNEL_MM + HOOK_ROOM_MM;
+  // the lips, the head's channel and a roof over it, then a hook's room behind the slot in front (D235, D244); a
+  // lock screw's head in its recess behind the room, and some standoff under it (A248)
+  const head = lockHead(m.lockScrewMm);
+  const recessMm = head.tallMm + 0.3;
+  const leastStandoff = Math.max(
+    KEYHOLE_LIPS_MM + keyhole(m.screwMm).channelMm + MIN_BEHIND_CHANNEL_MM + HOOK_ROOM_MM,
+    m.lockScrews ? HOOK_ROOM_MM + recessMm + UNDER_HEAD_MM : 0,
+  );
   if (keyholes && m.standoffHeightMm < leastStandoff - 1e-9) {
     throw new RangeError(
       "Keyholes stand the board off the wall, with a hook's room behind the slot in front of each: choose " +
@@ -223,7 +242,7 @@ export function mountingCuts(
         'meet the bottom ones or each other',
     );
   }
-  const countersunk = m.screwHead === 'countersunk' || (keyholes && m.lockScrews);
+  const countersunk = m.screwHead === 'countersunk';
   if (countersunk && t - depth < MIN_PLAIN_HOLE_MM) {
     throw new RangeError(
       `A countersunk ${nice(m.screwMm)} mm screw needs a board at least ${nice(depth + MIN_PLAIN_HOLE_MM)} mm ` +
@@ -253,9 +272,26 @@ export function mountingCuts(
     chamferMm: board.slotChamferMm ?? SOLID_BOARD_DEFAULTS.slotChamferMm,
   };
   if (keyholes) {
-    // the bottom two only with lock screws; the keyholes in the top standoffs' wall faces (D235, D237)
+    // A lock screw goes in through its bottom corner slot, head and all: its shank's hole from the wall up through
+    // the standoff, and its head in a recess just behind the hook's room, so the slot still takes a hook; a head
+    // too wide to pass the slot gets a groove, the recess carried on up through the slot's sides (A248).
+    const lockScrew = (engine: Engine, [x, y]: readonly [number, number]): Manifold[] => {
+      const floor = -HOOK_ROOM_MM - recessMm;
+      const shank = ringedSolid(engine, (grow) => circle(x, y, m.lockScrewMm + 0.5, grow), [
+        [-m.standoffHeightMm - 1, 0],
+        [floor + 0.5, 0],
+      ]);
+      const grooved = head.acrossMm > HEAD_THROUGH_SLOT_MM;
+      const across = head.acrossMm + (grooved ? GROOVE_ROOM_MM : HEAD_ROOM_MM);
+      const recess = ringedSolid(engine, (grow) => circle(x, y, across, grow), [
+        [floor, 0],
+        [grooved ? t + 1 : -HOOK_ROOM_MM + 0.5, 0],
+      ]);
+      return [shank, recess];
+    };
+    // the keyholes in the top standoffs' wall faces (D235, D244); lock screws through the bottom slots (A248)
     cuts.extraCutters = (engine: Engine): Manifold[] => [
-      ...(m.lockScrews ? places.slice(0, 2).map((p) => hole(engine, p)) : []),
+      ...(m.lockScrews ? bottomSlotPlaces(board).flatMap((p) => lockScrew(engine, p)) : []),
       ...keyholePlaces(board).map((p) => wallKeyholeCutter(engine, p, m.screwMm, -m.standoffHeightMm)),
     ];
   } else if (m.screwHead !== 'none') {
@@ -289,10 +325,8 @@ export function mountingCuts(
     cuts.extraSolids = (engine: Engine): Manifold[] =>
       keyholes
         ? [
-            // at the bottom, behind the corner slots as at the top (D245); with lock screws, round them in the corners
-            ...(m.lockScrews
-              ? places.slice(0, 2).map((p) => round(engine, p))
-              : bottomSlotPlaces(board).map((p) => pad(engine, p))),
+            // at the bottom, behind the corner slots as at the top (D245), the lock screws through them (A248)
+            ...bottomSlotPlaces(board).map((p) => pad(engine, p)),
             ...keyholePlaces(board).map((p) => pad(engine, p)),
           ]
         : places.map((p) => round(engine, p));
@@ -355,7 +389,23 @@ export const MOUNTING_SETTINGS = defineSettings([
       { value: 'bottom', label: 'At the bottom' },
     ],
     default: 'none',
-    help: 'With keyholes: countersunk holes in the bottom two corners too, for screws that hold the board in place.',
+    help:
+      'With keyholes: screws through the bottom corner slots into the standoffs behind, which hold the board in ' +
+      "place; each goes in head and all, its head behind the hook's room, so the slot still takes a hook.",
+    advanced: true,
+  },
+  {
+    kind: 'number',
+    key: 'lockScrewMm',
+    label: 'Lock screw size',
+    unit: 'mm',
+    default: MOUNTING_DEFAULTS.lockScrewMm,
+    min: 2,
+    max: 5,
+    step: 0.5,
+    help:
+      'With lock screws: their size. A pan head up to 5 mm across, about a 2.5 mm screw, passes through the slot; ' +
+      "a larger one gets a groove cut in the slot's sides to pass.",
     advanced: true,
   },
   {
@@ -381,6 +431,7 @@ export function mountingOf(v: MountingValues): MountingParams {
     screwMm: v.screwMm,
     standoffHeightMm: v.standoffs === 'back' ? v.standoffHeightMm : 0,
     lockScrews: v.lockScrews === 'bottom',
+    lockScrewMm: v.lockScrewMm,
   });
 }
 
@@ -390,6 +441,9 @@ export function mountingLabel(v: MountingValues): string {
   if (v.screwHead === 'round') parts.push('round-head');
   if (v.screwHead === 'none') parts.push('no-holes');
   if (v.screwHead === 'keyhole') parts.push(v.lockScrews === 'bottom' ? 'keyholes-lock-screws' : 'keyholes');
+  if (v.screwHead === 'keyhole' && v.lockScrews === 'bottom' && v.lockScrewMm !== MOUNTING_DEFAULTS.lockScrewMm) {
+    parts.push(`${v.lockScrewMm}mm`);
+  }
   if (v.screwHead !== 'none' && v.screwMm !== MOUNTING_DEFAULTS.screwMm) parts.push(`screw-${v.screwMm}mm`);
   if (v.standoffs === 'back') parts.push(`standoffs-${v.standoffHeightMm}mm`);
   return parts.map((p) => `-${p}`).join('');

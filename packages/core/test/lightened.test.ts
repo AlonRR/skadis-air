@@ -173,8 +173,11 @@ describe('makeLightenedBoard (D141 to D144)', () => {
     expect(uncovered(low(15 - 0.02, 24 - 0.02), light, full)).toBeLessThan(0.01);
     expect(uncovered(low(21, 30), light, full)).toBeGreaterThan(1); // control
     const bottom = shape([10, 150].map((x) => circle(x, 10, 13 - 0.02)));
+    // with lock screws too, through those slots (A248)
     const locked = { ...m, lockScrews: true };
-    expect(uncovered(bottom, midSlice(lightened({}, {}, locked)), midSlice(solid({}, locked)))).toBeLessThan(0.01);
+    const lockedLight = midSlice(lightened({}, {}, locked));
+    expect(uncovered(low(15 - 0.02, 24 - 0.02), lockedLight, midSlice(solid({}, locked)))).toBeLessThan(0.01);
+    expect(uncovered(bottom, lockedLight, midSlice(solid({}, locked)))).toBeGreaterThan(1); // no pad in the corner
   });
 
   it('keeps the pad round a standoff with no screw hole, and the standoff whole', () => {

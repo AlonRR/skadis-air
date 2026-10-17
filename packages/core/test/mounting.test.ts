@@ -62,6 +62,7 @@ describe('mountingParams: the starting values', () => {
       screwMm: 4,
       standoffHeightMm: 0,
       lockScrews: false,
+      lockScrewMm: 2.5, // its head passes the slot (A248)
     });
   });
 
@@ -322,8 +323,13 @@ describe('keyholes, in the top standoffs behind the corner slots (D235, D244; D1
     const sized = (sides: Sides) => ({ columns: 2, rows: 2, sides });
     const taken = (b: Manifold, zone: Manifold) => keep(b.intersect(zone)).volume();
     for (const sides of [ALL_OPEN, CLOSED]) {
-      for (const screwMm of [3, 4, 5]) {
-        const b = mounted(sized(sides), { ...keyholes, screwMm });
+      for (const [screwMm, lockScrews] of [
+        [3, false],
+        [4, false],
+        [5, false],
+        [4, true],
+      ] as const) {
+        const b = mounted(sized(sides), { ...keyholes, screwMm, lockScrews });
         // a hook in any slot, those in front of the standoffs too: the slot and its chamfer, and the back tab's
         // drop with C99's 2 mm, 8 mm back from the board (the zones stop 0.01 mm off its face)
         const room = (depth: number) =>
@@ -350,18 +356,48 @@ describe('keyholes, in the top standoffs behind the corner slots (D235, D244; D1
     expect(taken(b, slotClearZone(engine, sized(ALL_OPEN), 2, 30, keep))).toBeGreaterThan(1);
   });
 
-  it('add no through-hole, and with lock screws two countersunk holes at the bottom (D156)', () => {
+  it('add no through-hole; lock screws go in through the bottom corner slots, tucked behind them (D247, A248)', () => {
     const none = mounted(board, { screwHead: 'none' }).genus();
     expect(mounted(board, keyholes).genus()).toBe(none);
+    // a 2.5 mm lock screw, head and all, through each bottom corner slot: one hole each through the standoff
     const locked = mounted(board, { ...keyholes, lockScrews: true });
     expect(locked.genus()).toBe(none + 2);
-    const bottom = roundHoles(keep(locked.slice(4.75))).find((h) => h.y < 20);
-    expect(bottom?.w).toBeCloseTo(8.5, 2); // countersunk, as D74's holes
-    // with lock screws the bottom standoffs stay round posts round them, in the corners, until D247
-    const posts = roundHoles(keep(locked.slice(foot + 0.5))).filter((h) => h.y < 40);
-    expect(posts.map((h) => Math.round(h.w * 10) / 10).sort((a, b) => a - b)).toEqual([4.5, 4.5, 10, 10]);
+    // the front stays plain: no countersink in a corner, the slot as it is
+    const face = (b: Manifold) => keep(b.slice(5 - 0.1)).area();
+    expect(face(locked)).toBeCloseTo(face(mounted(board, keyholes)), 6);
+    // at the wall, the screw's 3 mm hole in each bottom standoff, behind the slot's middle
+    const at = (z: number) =>
+      roundHoles(keep(locked.slice(z)))
+        .filter((h) => h.y < 40)
+        .map((h) => [Math.round(h.x * 10) / 10, Math.round(h.y * 10) / 10, Math.round(h.w * 10) / 10]);
+    expect(at(foot + 0.5)).toEqual(
+      expect.arrayContaining([
+        [20, 20, 3],
+        [60, 20, 3],
+      ]),
+    );
+    expect(at(foot + 0.5)).toHaveLength(2);
+    // its head in a recess 5.4 mm across, just behind the hook's 8 mm of room
+    expect(at(-8 - 1)).toEqual(
+      expect.arrayContaining([
+        [20, 20, 5.4],
+        [60, 20, 5.4],
+      ]),
+    );
     // lock screws mean nothing without keyholes
     expect(mounted(board, { lockScrews: true }).genus()).toBe(none + 4);
+  });
+
+  it("cut a groove in the slot's sides for a lock screw whose head is wider than 5 mm, to pass it (A248)", () => {
+    // the hole round the bottom left slot, halfway through the board: the slot, 5.2 mm wide, or the groove
+    const width = (lockScrewMm: number) => {
+      const b = mounted(board, { ...keyholes, lockScrews: true, lockScrewMm });
+      const [hole] = holesAt(keep(b.slice(2.5)), 20, 20);
+      return (hole?.maxX ?? 0) - (hole?.minX ?? 0);
+    };
+    expect(width(2.5)).toBeCloseTo(5.2, 1); // a 5 mm head passes the slot
+    expect(width(4)).toBeCloseTo(8.5, 1); // an 8 mm head and 0.5 mm
+    expect(width(5)).toBeCloseTo(10.5, 1);
   });
 
   it('take a board of any thickness, as nothing is cut from it (D235): 4.6 mm was refused before', () => {
@@ -389,6 +425,10 @@ describe('keyholes, in the top standoffs behind the corner slots (D235, D244; D1
     expect(mounted(board, { ...keyholes, standoffHeightMm: 14.2 }).genus()).toBeGreaterThan(0);
     expect(() => mounted(board, { ...keyholes, screwMm: 5, standoffHeightMm: 14.9 })).toThrow(/at least 15 mm/);
     expect(mounted(board, { ...keyholes, screwMm: 5, standoffHeightMm: 15 }).genus()).toBeGreaterThan(0);
+    // a 5 mm lock screw's 4 mm head in its recess, behind the 8 mm room, and 2 mm of standoff under it: 14.3 mm
+    const big = { ...keyholes, lockScrews: true, lockScrewMm: 5 };
+    expect(() => mounted(board, { ...big, standoffHeightMm: 14.2 })).toThrow(/at least 14\.3 mm/);
+    expect(mounted(board, { ...big, standoffHeightMm: 14.3 }).genus()).toBeGreaterThan(0);
   });
 
   it('export with no degenerate facet, with lock screws or without, open or closed', () => {

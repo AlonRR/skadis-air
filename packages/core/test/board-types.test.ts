@@ -210,6 +210,7 @@ describe('the solid board type', () => {
     const advanced = solid.settings.filter((s) => s.advanced).map((s) => s.key);
     expect(advanced.sort()).toEqual([
       'cornerRadiusMm',
+      'lockScrewMm', // A248
       'lockScrews',
       'panelHeightMm',
       'panelWidthMm',
@@ -248,6 +249,10 @@ describe('the solid board type', () => {
     expect(name({ screwMm: 3.5, standoffHeightMm: 25 })).toBe('skadis-solid-160x160-screw-3.5mm.stl');
     expect(name({ screwHead: 'keyhole' })).toBe('skadis-solid-160x160-keyholes.stl');
     expect(name({ screwHead: 'keyhole', lockScrews: 'bottom' })).toBe('skadis-solid-160x160-keyholes-lock-screws.stl');
+    expect(name({ screwHead: 'keyhole', lockScrews: 'bottom', lockScrewMm: 4 })).toBe(
+      'skadis-solid-160x160-keyholes-lock-screws-4mm.stl',
+    );
+    expect(name({ screwHead: 'keyhole', lockScrewMm: 4 })).toBe('skadis-solid-160x160-keyholes.stl'); // no lock screws
     expect(name({ lockScrews: 'bottom' })).toBe('skadis-solid-160x160.stl'); // lock screws go only with keyholes
   });
 

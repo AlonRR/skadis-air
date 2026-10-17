@@ -78,6 +78,12 @@ const samples = [
     values: { ...solidAt(80, 80, closed), screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'back' },
   },
   {
+    // a lock screw whose head is wider than the slot: a groove in the slot's sides passes it (A248)
+    name: 'solid-2x2-open-keyholes-lock-screws-4mm',
+    type: solid,
+    values: { ...solidAt(80, 80, open), screwHead: 'keyhole', lockScrews: 'bottom', lockScrewMm: 4, standoffs: 'back' },
+  },
+  {
     name: 'lightened-4x4-keyholes',
     type: lightened,
     values: { ...lightenedAt(160, 160, open), screwHead: 'keyhole', standoffs: 'back' },
