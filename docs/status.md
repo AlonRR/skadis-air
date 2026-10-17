@@ -188,6 +188,13 @@ made in the owner's browser, once it is connected again (T219).
 
 - **D236** The Printables draft (model 1880460) asks "Was AI used to create this model?": "AI-assisted creation" or
   "fully human-made", and warns that a wrong label can remove the model; the draft cannot be published unanswered.
+- **D244** The keyhole standoff behind the corner tile's centre slot (Q243, 17 Oct 2026;
+  [figure](figures/keyhole-behind-slot.svg)), as IKEA's spacer stands behind a slot (D131): 11.25 mm clear of every
+  other slot and hook where panels meet and 9 mm from a closed edge, against D237's 1.28 mm, screws 3 to 5 mm; that
+  slot takes no hook. (a) the standoff closes the slot's back; (b) the slot runs on to the screw head, so it is seen
+  as the board is hung and tightened through the slot; (c) keep D237's place. Recommended: b.
+- **D245** Move the bottom standoffs behind the bottom corner tiles' slots too, the lock screws through those slots
+  as IKEA's are, so the front has no holes of its own. Recommended: yes.
 - **T193** Print slot clips and two small boards to try their pegs: a clip with each grip ("Grip" under
   Advanced: ribs, then lip; `skadis-slot-clip-2-boards-15mm.stl` and `skadis-slot-clip-2-boards-15mm-lip.stl`)
   and two 40 x 40 mm solid boards, one with its right side open and one with its left side open: all four on one
