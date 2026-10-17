@@ -7,7 +7,7 @@ import { makeSolidBoard, solidBoardParams, type SolidBoardParams } from '../src/
 import { loadEngine } from '../src/engine.js';
 import { LATTICE_DEFAULTS, makeLightenedBoard } from '../src/lightened.js';
 import { mountingCuts, mountingParams, type MountingParams } from '../src/mounting.js';
-import { circle } from '../src/rings.js';
+import { circle, stadium } from '../src/rings.js';
 import {
   FLANGE_MM,
   makeSkeletonBoard,
@@ -126,6 +126,22 @@ describe('makeSkeletonBoard (D146, D147, D161)', () => {
     const b = skeleton();
     const full = keep(solid().slice(2.5));
     expect(keep(keep(pads.intersect(full)).subtract(keep(b.slice(2.5)))).area()).toBeLessThan(0.01);
+  });
+
+  it('leaves the plate round the slots the keyhole standoffs stand behind as round any other slot (D250 f)', () => {
+    // round each corner slot of the 160 mm board, inside the plate: the members alone, the standoff no further in
+    const windows = keep(
+      new engine.CrossSection(
+        [20, 140].flatMap((x) => [20, 140].map((y) => stadium(x, y, 17, 26))),
+        'NonZero',
+      ),
+    );
+    const inPlate = (b: Manifold, z: number) => keep(keep(b.slice(z)).intersect(windows)).area();
+    const bare = skeleton({}, {}, { screwHead: 'none' });
+    for (const lockScrews of [false, true]) {
+      const board = skeleton({}, {}, { screwHead: 'keyhole', standoffHeightMm: 20, lockScrews });
+      for (const z of [0.5, 2, 4.5]) expect(inPlate(board, z)).toBeCloseTo(inPlate(bare, z), 1);
+    }
   });
 
   it('leaves no degenerate facet, open or closed, with keyholes or standoffs', () => {

@@ -114,8 +114,19 @@ export function makeSolidBoard(engine: Engine, params: SolidBoardParams, cuts: B
   // What is added goes on before the cuts, so a screw hole runs on through a standoff.
   const added = (cuts.extraSolids?.(engine) ?? []).map((m) => keep(m, solids));
   const whole = keep(face.extrude(t), solids);
-  const plate = cuts.within ? keep(whole.intersect(keep(cuts.within(engine), solids)), solids) : whole;
-  const body = added.length > 0 ? keep(Manifold.union([plate, ...added]), solids) : plate;
+  const within = cuts.within ? keep(cuts.within(engine), solids) : undefined;
+  const plate = within ? keep(whole.intersect(within), solids) : whole;
+  // With the plate kept only inside its members, what is added reaches into the plate only where they are, and only
+  // into their back 0.45 mm, where a member's sides stand upright (the skeleton's I-beams bend at 0.6 mm): a
+  // standoff meets the members and fills no gap between them (D250 f). Up to 0.3 mm it is whole, which keeps its cut
+  // off the members' back face. Cut on that face, or reaching up to the I-beams' slopes, it left degenerate facets.
+  const block = within ? keep(Manifold.cube([width + 2, height + 2, 1000]), solids) : null;
+  const behind = block ? keep(block.translate([-1, -1, 0.3 - 1000]), solids) : null;
+  const flange = block ? keep(block.translate([-1, -1, 0.45 - 1000]), solids) : null;
+  const inFlange = within && flange ? keep(within.intersect(flange), solids) : null;
+  const allowed = behind && inFlange ? keep(Manifold.union(behind, inFlange), solids) : null;
+  const kept = allowed ? added.map((m) => keep(m.intersect(allowed), solids)) : added;
+  const body = kept.length > 0 ? keep(Manifold.union([plate, ...kept]), solids) : plate;
 
   // Every slot is cut whole; at an edge the cut runs past the plate, which leaves the half or quarter.
   const cutters = slotPlaces(p.columns, p.rows, p.sides).map((slot) => {

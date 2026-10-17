@@ -160,24 +160,19 @@ describe('makeLightenedBoard (D141 to D144)', () => {
     expect(uncovered(pads(13 - 0.02), midSlice(lightened({}, {}, none)), midSlice(solid({}, none)))).toBeGreaterThan(1);
   });
 
-  it("keeps the keyhole standoffs' footprints solid, and the pads round the standoffs at the bottom (D244, D190)", () => {
-    // a 4 mm screw's keyhole standoff: 15 x 24 mm, behind each top corner tile's centre slot
-    const pads = (wide: number, long: number) => shape([20, 140].map((x) => stadium(x, 140, wide, long)));
-    const m = { screwHead: 'keyhole', standoffHeightMm: 20 } as const;
-    const [light, full] = [midSlice(lightened({}, {}, m)), midSlice(solid({}, m))];
-    expect(uncovered(pads(15 - 0.02, 24 - 0.02), light, full)).toBeLessThan(0.01);
-    expect(uncovered(pads(21, 30), light, full)).toBeGreaterThan(1); // control: wider is pocket in places
-    // the bottom standoffs need their pads (D190): behind the bottom corner slots (D245), or with lock screws round
-    // them in the corners
-    const low = (wide: number, long: number) => shape([20, 140].map((x) => stadium(x, 20, wide, long)));
-    expect(uncovered(low(15 - 0.02, 24 - 0.02), light, full)).toBeLessThan(0.01);
-    expect(uncovered(low(21, 30), light, full)).toBeGreaterThan(1); // control
-    const bottom = shape([10, 150].map((x) => circle(x, 10, 13 - 0.02)));
-    // with lock screws too, through those slots (A248)
-    const locked = { ...m, lockScrews: true };
-    const lockedLight = midSlice(lightened({}, {}, locked));
-    expect(uncovered(low(15 - 0.02, 24 - 0.02), lockedLight, midSlice(solid({}, locked)))).toBeLessThan(0.01);
-    expect(uncovered(bottom, lockedLight, midSlice(solid({}, locked)))).toBeGreaterThan(1); // no pad in the corner
+  it('leaves the plate round the slots the keyhole standoffs stand behind as round any other slot (D250 f)', () => {
+    // round each corner slot of the 160 mm board, inside the plate: the keyhole board's plate is the bare board's
+    const windows = shape([20, 140].flatMap((x) => [20, 140].map((y) => stadium(x, y, 17, 26))));
+    const inPlate = (b: Manifold, z: number) => keep(keep(b.slice(z)).intersect(windows)).area();
+    const bare = lightened({}, {}, { screwHead: 'none' });
+    for (const lockScrews of [false, true]) {
+      const board = lightened({}, {}, { screwHead: 'keyhole', standoffHeightMm: 20, lockScrews });
+      for (const z of [0.5, 2, 4.5]) expect(inPlate(board, z)).toBeCloseTo(inPlate(bare, z), 1);
+    }
+    // control: a board on round standoffs keeps a pad round each, in the corners (D190)
+    const m = { screwHead: 'none', standoffHeightMm: 20 } as const;
+    const corners = shape([10, 150].flatMap((x) => [10, 150].map((y) => circle(x, y, 13 - 0.02))));
+    expect(uncovered(corners, midSlice(lightened({}, {}, m)), midSlice(solid({}, m)))).toBeLessThan(0.01);
   });
 
   it('keeps the pad round a standoff with no screw hole, and the standoff whole', () => {

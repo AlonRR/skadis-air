@@ -151,13 +151,9 @@ export function mountingPads(m: MountingParams, board: Pick<SolidBoardParams, 'c
   const padMm = screwHole(m.screwMm).countersinkMm + 2 * PAD_MARGIN_MM;
   const [bottom, top] = [screwPlaces(board).slice(0, 2), screwPlaces(board).slice(2)];
   if (m.screwHead !== 'keyhole') return [...bottom, ...top].map(([x, y]) => circle(x, y, padMm));
-  // at the bottom, a pad for a lock screw in the corner, or for a standoff behind the corner slot (D190, D245)
-  // behind the bottom corner slots, lock screws or not (D245, A248)
-  const lowPads =
-    m.standoffHeightMm > 0 || m.lockScrews
-      ? bottomSlotPlaces(board).map((place) => keyholePad(m.screwMm, place, 1))
-      : [];
-  return [...lowPads, ...keyholePlaces(board).map((place) => keyholePad(m.screwMm, place, 1))];
+  // On keyholes every standoff stands behind a corner slot and meets that slot's rim and the webs as they are: no
+  // pad, so those slots look like every other (D250 f).
+  return [];
 }
 
 /**

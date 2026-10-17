@@ -10,6 +10,8 @@ All notable changes to this project are recorded here. The format follows
 
 - The slot clip's ribbed pegs reach the front of a 5 mm board, flush with it; they stopped halfway before. A clip
   starts with a screw, and a screw size other than 4 mm is named `-screw-3.5mm`.
+- On a lightened or skeleton board on keyholes, the slots behind which the standoffs stand keep the same rims as
+  every other slot: no solid pad round them.
 - The design system's v0.5.1: the wide header and the space under each legend and above each note.
 - Keyholes are in the top two standoffs, cut in their wall faces as the slot clip's keyhole is, so the board's
   face is plain and the screws stand about 5 mm out of the wall. Each standoff stands behind a top corner slot,
