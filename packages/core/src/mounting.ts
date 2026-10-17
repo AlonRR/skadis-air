@@ -7,14 +7,15 @@
 // screws and lifts off them, with countersunk lock screws at the bottom as an option. A board on keyholes
 // stands on standoffs, so a hook has room behind it (D190), and the keyholes are cut in the top two standoffs'
 // wall faces, the head sliding behind lips there as on the slot clip, the board's face left plain (D235); each
-// top standoff is the keyhole and its walls, placed where it keeps clear of the slots and hooks (D237).
+// top standoff is the keyhole and its walls, behind its corner tile's centre slot, as IKEA's spacer stands behind
+// a slot, with a pocket that leaves a hook its room behind that slot (D244).
 // Any board type built on the solid board takes these as its third argument (BoardCuts).
-import type { Manifold, Vec2 } from 'manifold-3d';
-import type { BoardCuts, SolidBoardParams } from './board-solid.js';
+import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
+import { type BoardCuts, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from './board-solid.js';
 import type { Engine } from './engine.js';
 import { circle, ringedSolid, stadium } from './rings.js';
 import { defineSettings, type NumberSetting, type Values } from './settings.js';
-import { HOOK_DEPTH_MM, TILE_MM } from './skadis.js';
+import { HOOK_DEPTH_MM, HOOK_DROP_MM, HOOK_WIDTH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 
 export type ScrewHead = 'countersunk' | 'round' | 'keyhole' | 'none';
 
@@ -47,14 +48,11 @@ export const MIN_BEHIND_CHANNEL_MM = 1.2;
 export const MIN_KEYHOLE_STANDOFF_MM = HOOK_DEPTH_MM + 2;
 /** The lips a keyhole's head slides behind, at the wall face of the part it is cut in (C199, D235). */
 export const KEYHOLE_LIPS_MM = 1.5;
-/** A keyhole standoff (D237): the keyhole and 1.5 mm of wall round it, its middle 8.9 mm in from the board's side
- * and 24.25 mm below its top, where it keeps 1.25 mm clear of every slot and every hook's back tab, the sides
- * open or closed, at the same place on every board, so a wall's screws make one pattern. */
-const KEYHOLE_WALL_MM = 1.5;
-const KEYHOLE_INSET_MM = 8.9;
-const KEYHOLE_DROP_MM = 24.25;
-/** The largest screw a keyhole standoff takes: a larger keyhole's standoff would not fit beside the slots (D237). */
-export const MAX_KEYHOLE_SCREW_MM = 4;
+/** A keyhole standoff's wall round its keyhole (D244): 15 x 24 mm for a 4 mm screw, which leaves about 2 mm round
+ * the hook's room behind the slot. */
+const KEYHOLE_WALL_MM = 3;
+/** The room a hook takes behind a board, C99's margin and all (D190): its back tab's depth and 2 mm. */
+const HOOK_ROOM_MM = HOOK_DEPTH_MM + 2;
 
 /** A screw's hole, its 90 degree countersink across the front, and the standoff round it (C83). */
 export function screwHole(screwMm: number): { holeMm: number; countersinkMm: number; standoffDiameterMm: number } {
@@ -99,14 +97,15 @@ export function screwPlaces(board: Pick<SolidBoardParams, 'columns' | 'rows'>): 
 /** How far a pad that nothing may be cut from reaches past a screw's countersink, all round (D144; C83's margin). */
 export const PAD_MARGIN_MM = 2;
 
-/** The middles of a board's two keyholes, in its top corner tiles (D237). */
+/** The middles of a board's two keyholes: its top corner tiles' centre slots, which the standoffs stand behind,
+ * 11.25 mm clear of every other slot and hook where panels meet (D244). */
 export function keyholePlaces(
   board: Pick<SolidBoardParams, 'columns' | 'rows'>,
 ): readonly (readonly [number, number])[] {
   const [width, height] = [TILE_MM * board.columns, TILE_MM * board.rows];
   return [
-    [KEYHOLE_INSET_MM, height - KEYHOLE_DROP_MM],
-    [width - KEYHOLE_INSET_MM, height - KEYHOLE_DROP_MM],
+    [TILE_MM / 2, height - TILE_MM / 2],
+    [width - TILE_MM / 2, height - TILE_MM / 2],
   ];
 }
 
@@ -163,34 +162,51 @@ export function wallKeyholeCutter(
   return cutter;
 }
 
+/**
+ * The outline of the room a hook takes behind the slot whose middle is at (x, y) (D244), which the keyhole standoff
+ * behind it leaves empty: the slot and its chamfer and 1.5 mm more, and below it the hook's back tab, its width and
+ * drop each with C99's 2 mm. The 1.5 mm is past the slot cutter's flare, which reaches 1 mm past the chamfer 1 mm
+ * behind the board: within it the two met on one ring of points and left degenerate facets.
+ */
+function hookRoomOutline(
+  engine: Engine,
+  [x, y]: readonly [number, number],
+  slot: { widthMm: number; heightMm: number; chamferMm: number },
+): CrossSection {
+  const { CrossSection } = engine;
+  const [tabWidth, drop] = [HOOK_WIDTH_MM + 4, HOOK_DROP_MM + 2];
+  const bottom = y - slot.heightMm / 2; // the slot's bottom end, where the hook rests
+  const tab: Vec2[] = [
+    [x - tabWidth / 2, bottom - drop],
+    [x + tabWidth / 2, bottom - drop],
+    [x + tabWidth / 2, y],
+    [x - tabWidth / 2, y],
+  ];
+  return new CrossSection([stadium(x, y, slot.widthMm, slot.heightMm, slot.chamferMm + 1.5), tab], 'NonZero');
+}
+
 /** What the mounting adds to and cuts from a board of this size: BoardCuts for makeSolidBoard. */
 export function mountingCuts(
   m: MountingParams,
-  board: Pick<SolidBoardParams, 'columns' | 'rows' | 'thicknessMm'>,
+  board: Pick<SolidBoardParams, 'columns' | 'rows' | 'thicknessMm'> &
+    Partial<Pick<SolidBoardParams, 'slotClearanceMm' | 'slotChamferMm'>>,
 ): BoardCuts {
   const t = board.thicknessMm;
   const { holeMm, countersinkMm, standoffDiameterMm } = screwHole(m.screwMm);
   const depth = (countersinkMm - holeMm) / 2; // 45 degree walls
   const keyholes = m.screwHead === 'keyhole';
-  // the lips, the head's channel and a roof over it, in the standoff (D235); a hook's room is the more
-  const keyholeDepth = KEYHOLE_LIPS_MM + keyhole(m.screwMm).channelMm + MIN_BEHIND_CHANNEL_MM;
-  const leastStandoff = Math.max(MIN_KEYHOLE_STANDOFF_MM, keyholeDepth);
+  // the lips, the head's channel and a roof over it, then a hook's room behind the slot in front (D235, D244)
+  const leastStandoff = KEYHOLE_LIPS_MM + keyhole(m.screwMm).channelMm + MIN_BEHIND_CHANNEL_MM + HOOK_ROOM_MM;
   if (keyholes && m.standoffHeightMm < leastStandoff - 1e-9) {
     throw new RangeError(
-      'Keyholes stand the board off the wall, so a hook has room behind it: choose standoffs at least ' +
-        `${nice(leastStandoff)} mm tall`,
+      "Keyholes stand the board off the wall, with a hook's room behind the slot in front of each: choose " +
+        `standoffs at least ${nice(leastStandoff)} mm tall`,
     );
   }
-  if (keyholes && m.screwMm > MAX_KEYHOLE_SCREW_MM) {
+  if (keyholes && (board.rows < 2 || board.columns < 2)) {
     throw new RangeError(
-      `Keyholes take screws up to ${MAX_KEYHOLE_SCREW_MM} mm: a larger keyhole's standoff would not fit beside ` +
-        'the slots; choose a smaller screw or other screw holes',
-    );
-  }
-  if (keyholes && board.rows < 2) {
-    throw new RangeError(
-      `Keyholes need a board at least ${2 * TILE_MM} mm tall: on one tile, the keyhole standoffs would stand on ` +
-        'the bottom ones',
+      `Keyholes need a board at least ${2 * TILE_MM} x ${2 * TILE_MM} mm: on one tile, the keyhole standoffs would ` +
+        'meet the bottom ones or each other',
     );
   }
   const countersunk = m.screwHead === 'countersunk' || (keyholes && m.lockScrews);
@@ -215,6 +231,13 @@ export function mountingCuts(
   const cuts: BoardCuts = {};
   const hole = (engine: Engine, [x, y]: readonly [number, number]) =>
     ringedSolid(engine, (grow) => circle(x, y, holeMm, grow), levels);
+  // the slot as this board cuts it, for the hook's room behind the slots the keyhole standoffs stand behind
+  const clearance = board.slotClearanceMm ?? SOLID_BOARD_DEFAULTS.slotClearanceMm;
+  const slot = {
+    widthMm: SLOT_WIDTH_MM + clearance,
+    heightMm: SLOT_HEIGHT_MM + clearance,
+    chamferMm: board.slotChamferMm ?? SOLID_BOARD_DEFAULTS.slotChamferMm,
+  };
   if (keyholes) {
     // the bottom two only with lock screws; the keyholes in the top standoffs' wall faces (D235, D237)
     cuts.extraCutters = (engine: Engine): Manifold[] => [
@@ -232,13 +255,21 @@ export function mountingCuts(
     ];
     const round = (engine: Engine, [x, y]: readonly [number, number]) =>
       ringedSolid(engine, (grow) => circle(x, y, standoffDiameterMm, grow), post);
-    // with keyholes, the top two are the keyholes' standoffs, the keyhole and its walls (D237)
+    // with keyholes, the top two are the keyholes' standoffs, the keyhole and its walls (D244)
+    // Built round the hook's room rather than cut: whole from the foot to the room's ceiling, then the outline less
+    // the room, from 0.5 mm below that ceiling into the plate. Cut, the room's top lay on the board's back face and
+    // edge on edge with the slot's chamfer, which left degenerate facets (D244).
     const pad = (engine: Engine, place: readonly [number, number]) => {
-      const outline = new engine.CrossSection([keyholePad(m.screwMm, place)]);
-      const tall = outline.extrude(m.standoffHeightMm + t / 2);
-      const solid = tall.translate([0, 0, -m.standoffHeightMm]);
-      outline.delete();
-      tall.delete();
+      const whole = new engine.CrossSection([keyholePad(m.screwMm, place)]);
+      const room = hookRoomOutline(engine, place, slot);
+      const walls = whole.subtract(room);
+      const lowTall = whole.extrude(m.standoffHeightMm - HOOK_ROOM_MM);
+      const highTall = walls.extrude(HOOK_ROOM_MM + 0.5 + t / 2);
+      const low = lowTall.translate([0, 0, -m.standoffHeightMm]);
+      const high = highTall.translate([0, 0, -HOOK_ROOM_MM - 0.5]);
+      const solid = engine.Manifold.union(low, high);
+      for (const s of [lowTall, highTall, low, high]) s.delete();
+      for (const c of [whole, room, walls]) c.delete();
       return solid;
     };
     cuts.extraSolids = (engine: Engine): Manifold[] =>
@@ -278,8 +309,8 @@ export const MOUNTING_SETTINGS = defineSettings([
     default: MOUNTING_DEFAULTS.screwHead,
     help:
       'One in each corner, 10 mm in from both edges. A countersunk head keeps the front flat. Keyholes, ' +
-      'in the top two standoffs, let the board drop onto two pan-head screws standing about 5 mm out of the ' +
-      'wall and lift off them; the front stays plain, and a hook has room behind the board.',
+      'in the top two standoffs, behind the top corner slots, let the board drop onto two pan-head screws ' +
+      'standing about 5 mm out of the wall and lift off them; the front stays plain, and hooks still fit those slots.',
   },
   {
     kind: 'choice',

@@ -265,7 +265,7 @@ describe('the solid board type', () => {
     if (keyholes.ok) made.push(keyholes.solid);
     const flat = buildBoard(engine, solid, { ...v, screwHead: 'keyhole' });
     expect(flat.ok).toBe(false);
-    if (!flat.ok) expect(flat.problem).toContain('standoffs at least 8 mm');
+    if (!flat.ok) expect(flat.problem).toContain('standoffs at least 14.2 mm');
   });
 });
 

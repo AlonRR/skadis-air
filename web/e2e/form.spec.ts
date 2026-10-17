@@ -124,7 +124,7 @@ test('offers keyholes, which bring their standoffs, with lock screws under Advan
   // taking the standoffs off again would hang the board flat: a problem, saying why
   await choose(page, 'standoffs', 'none');
   await expect(status).toHaveAttribute('data-state', 'problem');
-  await expect(status).toContainText('standoffs at least 8 mm');
+  await expect(status).toContainText('standoffs at least 14.2 mm');
 });
 
 test('says a countersink too deep for a thin board cannot be made, and makes it with a round head', async ({

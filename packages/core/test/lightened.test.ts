@@ -160,14 +160,13 @@ describe('makeLightenedBoard (D141 to D144)', () => {
     expect(uncovered(pads(13 - 0.02), midSlice(lightened({}, {}, none)), midSlice(solid({}, none)))).toBeGreaterThan(1);
   });
 
-  it("keeps the keyhole standoffs' footprints solid, and the pads round the standoffs at the bottom (D237, D190)", () => {
-    // a 4 mm screw's keyhole standoff: 12 x 21 mm, its middle 8.9 mm in from the side and 24.25 mm below the top
-    const pads = (wide: number, long: number) =>
-      shape([8.9, 160 - 8.9].map((x) => stadium(x, 160 - 24.25, wide, long)));
+  it("keeps the keyhole standoffs' footprints solid, and the pads round the standoffs at the bottom (D244, D190)", () => {
+    // a 4 mm screw's keyhole standoff: 15 x 24 mm, behind each top corner tile's centre slot
+    const pads = (wide: number, long: number) => shape([20, 140].map((x) => stadium(x, 140, wide, long)));
     const m = { screwHead: 'keyhole', standoffHeightMm: 20 } as const;
     const [light, full] = [midSlice(lightened({}, {}, m)), midSlice(solid({}, m))];
-    expect(uncovered(pads(12 - 0.02, 21 - 0.02), light, full)).toBeLessThan(0.01);
-    expect(uncovered(pads(16, 25), light, full)).toBeGreaterThan(1); // control: wider is pocket in places
+    expect(uncovered(pads(15 - 0.02, 24 - 0.02), light, full)).toBeLessThan(0.01);
+    expect(uncovered(pads(21, 30), light, full)).toBeGreaterThan(1); // control: wider is pocket in places
     // the bottom standoffs need their pads, lock screws or not (D190)
     const bottom = shape([10, 150].map((x) => circle(x, 10, 13 - 0.02)));
     expect(uncovered(bottom, light, full)).toBeLessThan(0.01);
