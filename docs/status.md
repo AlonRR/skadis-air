@@ -190,6 +190,14 @@ made in the owner's browser, once it is connected again (T219).
 
 - **D236** The Printables draft (model 1880460) asks "Was AI used to create this model?": "AI-assisted creation" or
   "fully human-made", and warns that a wrong label can remove the model; the draft cannot be published unanswered.
+- **D247** Where a board on standoffs is screwed ([figure](figures/screws-through-slot.svg)): through the corner
+  tile's centre slot into a slot-shaped bore in the standoff behind it, as IKEA holds its spacer (D131), with a 12 mm
+  washer, as an 8 mm pan head rests on only 0.4 mm of the slot's chamfered mouth; the front then has no hole of its
+  own, that slot holds the screw, and the screw may sit 5.6 mm above or below the slot's middle. (a) for every board
+  on standoffs: a keyhole board's lock screws and the four screws of a board with screw holes; (b) only the lock
+  screws; (c) keep the corner holes. Recommended: a.
+- **D242** Keep the two 40 x 40 mm boards in T193's plate, slots and a seam made as the clip expects (recommended),
+  or print the clips alone and try them in boards the owner already has.
 - **T193** Print slot clips and two small boards to try their pegs: a clip with each grip ("Grip" under
   Advanced: ribs, then lip; `skadis-slot-clip-2-boards-15mm.stl` and `skadis-slot-clip-2-boards-15mm-lip.stl`)
   and two 40 x 40 mm solid boards, one with its right side open and one with its left side open: all four on one
