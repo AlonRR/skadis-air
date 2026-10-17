@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1090" viewBox="0 0 1500 1090"><style>
+ .t { font: 600 17px system-ui, sans-serif; fill: #1f2933; }
+ .s { font: 13px system-ui, sans-serif; fill: #3e4c59; }
+ .n { font: 600 13px system-ui, sans-serif; fill: #b42318; }
+ .ok { font: 600 13px system-ui, sans-serif; fill: #1b7f3b; }
+ .board { fill: #eef1f3; stroke: #9aa5b1; } .chamfer { fill: #c3cad1; } .slot { fill: #52606d; }
+ .head { fill: #1f2933; fill-opacity: 0.85; } .cross { fill: none; stroke: #ffffff; stroke-width: 2; }
+ .washer { fill: #9aa5b1; fill-opacity: 0.75; stroke: #52606d; }
+ .wall { fill: #d9d9d9; } .padx { fill: #b7e4c7; stroke: #1b7f3b; } .boardx { fill: #c3cad1; stroke: #616e7c; }
+ .cutx { fill: #ffffff; } .screwx { fill: #1f2933; } .washerx { fill: #9aa5b1; }
+ .dim { stroke: #3e4c59; stroke-width: 1.5; }
+</style><rect width="1500" height="1090" fill="#ffffff"/><text x="30" y="34" class="t" style="font-size:21px">Where a board on standoffs is screwed: a 4 mm screw, to scale</text><text x="30" y="78" class="t">Today: a screw in each corner</text>
+<rect x="30" y="90" width="320" height="320" class="board"/>
+<path d="M 161.2 290.0 L 161.3 291.9 L 161.4 293.8 L 161.8 295.6 L 162.2 297.5 L 162.7 299.3 L 163.4 301.0 L 164.2 302.7 L 165.1 304.4 L 166.1 306.0 L 167.2 307.5 L 168.3 309.0 L 169.6 310.4 L 171.0 311.7 L 172.5 312.8 L 174.0 313.9 L 175.6 314.9 L 177.3 315.8 L 179.0 316.6 L 180.7 317.3 L 182.5 317.8 L 184.4 318.2 L 186.2 318.6 L 188.1 318.7 L 190.0 318.8 L 191.9 318.7 L 193.8 318.6 L 195.6 318.2 L 197.5 317.8 L 199.3 317.3 L 201.0 316.6 L 202.7 315.8 L 204.4 314.9 L 206.0 313.9 L 207.5 312.8 L 209.0 311.7 L 210.4 310.4 L 211.7 309.0 L 212.8 307.5 L 213.9 306.0 L 214.9 304.4 L 215.8 302.7 L 216.6 301.0 L 217.3 299.3 L 217.8 297.5 L 218.2 295.6 L 218.6 293.8 L 218.7 291.9 L 218.8 290.0 L 218.8 210.0 L 218.7 208.1 L 218.6 206.2 L 218.2 204.4 L 217.8 202.5 L 217.3 200.7 L 216.6 199.0 L 215.8 197.3 L 214.9 195.6 L 213.9 194.0 L 212.8 192.5 L 211.7 191.0 L 210.4 189.6 L 209.0 188.3 L 207.5 187.2 L 206.0 186.1 L 204.4 185.1 L 202.7 184.2 L 201.0 183.4 L 199.3 182.7 L 197.5 182.2 L 195.6 181.8 L 193.8 181.4 L 191.9 181.3 L 190.0 181.2 L 188.1 181.3 L 186.2 181.4 L 184.4 181.8 L 182.5 182.2 L 180.7 182.7 L 179.0 183.4 L 177.3 184.2 L 175.6 185.1 L 174.0 186.1 L 172.5 187.2 L 171.0 188.3 L 169.6 189.6 L 168.3 191.0 L 167.2 192.5 L 166.1 194.0 L 165.1 195.6 L 164.2 197.3 L 163.4 199.0 L 162.7 200.7 L 162.2 202.5 L 161.8 204.4 L 161.4 206.2 L 161.3 208.1 L 161.2 210.0 Z" class="chamfer"/>
+<path d="M 169.2 290.0 L 169.2 291.4 L 169.4 292.7 L 169.6 294.1 L 169.9 295.4 L 170.3 296.7 L 170.8 298.0 L 171.3 299.2 L 172.0 300.4 L 172.7 301.6 L 173.5 302.7 L 174.4 303.7 L 175.3 304.7 L 176.3 305.6 L 177.3 306.5 L 178.4 307.3 L 179.6 308.0 L 180.8 308.7 L 182.0 309.2 L 183.3 309.7 L 184.6 310.1 L 185.9 310.4 L 187.3 310.6 L 188.6 310.8 L 190.0 310.8 L 191.4 310.8 L 192.7 310.6 L 194.1 310.4 L 195.4 310.1 L 196.7 309.7 L 198.0 309.2 L 199.2 308.7 L 200.4 308.0 L 201.6 307.3 L 202.7 306.5 L 203.7 305.6 L 204.7 304.7 L 205.6 303.7 L 206.5 302.7 L 207.3 301.6 L 208.0 300.4 L 208.7 299.2 L 209.2 298.0 L 209.7 296.7 L 210.1 295.4 L 210.4 294.1 L 210.6 292.7 L 210.8 291.4 L 210.8 290.0 L 210.8 210.0 L 210.8 208.6 L 210.6 207.3 L 210.4 205.9 L 210.1 204.6 L 209.7 203.3 L 209.2 202.0 L 208.7 200.8 L 208.0 199.6 L 207.3 198.4 L 206.5 197.3 L 205.6 196.3 L 204.7 195.3 L 203.7 194.4 L 202.7 193.5 L 201.6 192.7 L 200.4 192.0 L 199.2 191.3 L 198.0 190.8 L 196.7 190.3 L 195.4 189.9 L 194.1 189.6 L 192.7 189.4 L 191.4 189.2 L 190.0 189.2 L 188.6 189.2 L 187.3 189.4 L 185.9 189.6 L 184.6 189.9 L 183.3 190.3 L 182.0 190.8 L 180.8 191.3 L 179.6 192.0 L 178.4 192.7 L 177.3 193.5 L 176.3 194.4 L 175.3 195.3 L 174.4 196.3 L 173.5 197.3 L 172.7 198.4 L 172.0 199.6 L 171.3 200.8 L 170.8 202.0 L 170.3 203.3 L 169.9 204.6 L 169.6 205.9 L 169.4 207.3 L 169.2 208.6 L 169.2 210.0 Z" class="slot"/>
+<circle cx="110" cy="330" r="34.0" class="chamfer"/>
+<circle cx="110" cy="330" r="32.0" class="head"/>
+<circle cx="110" cy="330" r="16.0" class="cross"/>
+<text x="30" y="508" class="t">Today, from the side</text>
+<rect x="34" y="590" width="36" height="288" class="wall"/>
+<rect x="205" y="590" width="45" height="288" class="boardx"/>
+<rect x="70" y="689" width="135" height="90" class="padx"/>
+<rect x="70" y="713.75" width="180" height="40.5" class="cutx"/>
+<path d="M 250.0 695.8 L 250.0 772.2 L 232.0 754.2 L 232.0 713.8 Z" class="cutx"/>
+<path d="M 250.0 698.0 L 250.0 770.0 L 231.1 752.0 L 231.1 716.0 Z" class="screwx"/>
+<rect x="34" y="716.0" width="198" height="36.0" class="screwx"/>
+<line x1="35.0" y1="580.0" x2="69.0" y2="580.0" class="dim"/>
+<text x="74.0" y="584.0" class="s">wall</text>
+<line x1="71.0" y1="564.0" x2="204.0" y2="564.0" class="dim"/>
+<text x="209.0" y="568.0" class="s">standoff 15</text>
+<line x1="206.0" y1="548.0" x2="249.0" y2="548.0" class="dim"/>
+<text x="254.0" y="552.0" class="s">board 5</text>
+<text x="420" y="78" class="t">Through the slot, as IKEA's spacer is held</text>
+<rect x="420" y="90" width="320" height="320" class="board"/>
+<path d="M 551.2 290.0 L 551.3 291.9 L 551.4 293.8 L 551.8 295.6 L 552.2 297.5 L 552.7 299.3 L 553.4 301.0 L 554.2 302.7 L 555.1 304.4 L 556.1 306.0 L 557.2 307.5 L 558.3 309.0 L 559.6 310.4 L 561.0 311.7 L 562.5 312.8 L 564.0 313.9 L 565.6 314.9 L 567.3 315.8 L 569.0 316.6 L 570.7 317.3 L 572.5 317.8 L 574.4 318.2 L 576.2 318.6 L 578.1 318.7 L 580.0 318.8 L 581.9 318.7 L 583.8 318.6 L 585.6 318.2 L 587.5 317.8 L 589.3 317.3 L 591.0 316.6 L 592.7 315.8 L 594.4 314.9 L 596.0 313.9 L 597.5 312.8 L 599.0 311.7 L 600.4 310.4 L 601.7 309.0 L 602.8 307.5 L 603.9 306.0 L 604.9 304.4 L 605.8 302.7 L 606.6 301.0 L 607.3 299.3 L 607.8 297.5 L 608.2 295.6 L 608.6 293.8 L 608.7 291.9 L 608.8 290.0 L 608.8 210.0 L 608.7 208.1 L 608.6 206.2 L 608.2 204.4 L 607.8 202.5 L 607.3 200.7 L 606.6 199.0 L 605.8 197.3 L 604.9 195.6 L 603.9 194.0 L 602.8 192.5 L 601.7 191.0 L 600.4 189.6 L 599.0 188.3 L 597.5 187.2 L 596.0 186.1 L 594.4 185.1 L 592.7 184.2 L 591.0 183.4 L 589.3 182.7 L 587.5 182.2 L 585.6 181.8 L 583.8 181.4 L 581.9 181.3 L 580.0 181.2 L 578.1 181.3 L 576.2 181.4 L 574.4 181.8 L 572.5 182.2 L 570.7 182.7 L 569.0 183.4 L 567.3 184.2 L 565.6 185.1 L 564.0 186.1 L 562.5 187.2 L 561.0 188.3 L 559.6 189.6 L 558.3 191.0 L 557.2 192.5 L 556.1 194.0 L 555.1 195.6 L 554.2 197.3 L 553.4 199.0 L 552.7 200.7 L 552.2 202.5 L 551.8 204.4 L 551.4 206.2 L 551.3 208.1 L 551.2 210.0 Z" class="chamfer"/>
+<path d="M 559.2 290.0 L 559.2 291.4 L 559.4 292.7 L 559.6 294.1 L 559.9 295.4 L 560.3 296.7 L 560.8 298.0 L 561.3 299.2 L 562.0 300.4 L 562.7 301.6 L 563.5 302.7 L 564.4 303.7 L 565.3 304.7 L 566.3 305.6 L 567.3 306.5 L 568.4 307.3 L 569.6 308.0 L 570.8 308.7 L 572.0 309.2 L 573.3 309.7 L 574.6 310.1 L 575.9 310.4 L 577.3 310.6 L 578.6 310.8 L 580.0 310.8 L 581.4 310.8 L 582.7 310.6 L 584.1 310.4 L 585.4 310.1 L 586.7 309.7 L 588.0 309.2 L 589.2 308.7 L 590.4 308.0 L 591.6 307.3 L 592.7 306.5 L 593.7 305.6 L 594.7 304.7 L 595.6 303.7 L 596.5 302.7 L 597.3 301.6 L 598.0 300.4 L 598.7 299.2 L 599.2 298.0 L 599.7 296.7 L 600.1 295.4 L 600.4 294.1 L 600.6 292.7 L 600.8 291.4 L 600.8 290.0 L 600.8 210.0 L 600.8 208.6 L 600.6 207.3 L 600.4 205.9 L 600.1 204.6 L 599.7 203.3 L 599.2 202.0 L 598.7 200.8 L 598.0 199.6 L 597.3 198.4 L 596.5 197.3 L 595.6 196.3 L 594.7 195.3 L 593.7 194.4 L 592.7 193.5 L 591.6 192.7 L 590.4 192.0 L 589.2 191.3 L 588.0 190.8 L 586.7 190.3 L 585.4 189.9 L 584.1 189.6 L 582.7 189.4 L 581.4 189.2 L 580.0 189.2 L 578.6 189.2 L 577.3 189.4 L 575.9 189.6 L 574.6 189.9 L 573.3 190.3 L 572.0 190.8 L 570.8 191.3 L 569.6 192.0 L 568.4 192.7 L 567.3 193.5 L 566.3 194.4 L 565.3 195.3 L 564.4 196.3 L 563.5 197.3 L 562.7 198.4 L 562.0 199.6 L 561.3 200.8 L 560.8 202.0 L 560.3 203.3 L 559.9 204.6 L 559.6 205.9 L 559.4 207.3 L 559.2 208.6 L 559.2 210.0 Z" class="slot"/>
+<circle cx="580" cy="250" r="48.0" class="washer"/>
+<circle cx="580" cy="250" r="32.0" class="head"/>
+<circle cx="580" cy="250" r="16.0" class="cross"/>
+<text x="420" y="508" class="t">Through the slot, from the side</text>
+<rect x="424" y="590" width="36" height="288" class="wall"/>
+<rect x="595" y="590" width="45" height="288" class="boardx"/>
+<rect x="460" y="626" width="135" height="216" class="padx"/>
+<rect x="460" y="665.6" width="135" height="136.79999999999998" class="cutx"/>
+<rect x="595" y="665.6" width="45" height="136.79999999999998" class="cutx"/>
+<rect x="640" y="680.0" width="9" height="108.0" class="washerx"/>
+<rect x="649" y="698.0" width="28.8" height="72.0" class="screwx"/>
+<rect x="424" y="716.0" width="225" height="36.0" class="screwx"/>
+<line x1="694" y1="683.6" x2="694" y2="784.4" class="dim"/>
+<text x="424" y="906" class="s">The line right of the head: the screw may sit 5.6 mm above</text>
+<text x="424" y="924" class="s">or below the middle of the slot.</text>
+<line x1="425.0" y1="580.0" x2="459.0" y2="580.0" class="dim"/>
+<text x="464.0" y="584.0" class="s">wall</text>
+<line x1="461.0" y1="564.0" x2="594.0" y2="564.0" class="dim"/>
+<text x="599.0" y="568.0" class="s">standoff 15</text>
+<line x1="596.0" y1="548.0" x2="639.0" y2="548.0" class="dim"/>
+<text x="644.0" y="552.0" class="s">board 5</text>
+<text x="830" y="78" class="t">What the head rests on, at the slot</text>
+<rect x="880" y="110" width="200" height="60" class="board"/>
+<rect x="947.6" y="110" width="64.8" height="60" class="chamfer"/>
+<rect x="956.6" y="110" width="46.800000000000004" height="60" class="slot"/>
+<circle cx="980" cy="140" r="36.0" class="head"/>
+<text x="1090" y="135" class="s">an 8 mm pan head alone</text>
+<text x="1090" y="153" class="n">rests on 0.4 mm either side</text>
+<rect x="880" y="230" width="200" height="60" class="board"/>
+<rect x="947.6" y="230" width="64.8" height="60" class="chamfer"/>
+<rect x="956.6" y="230" width="46.800000000000004" height="60" class="slot"/>
+<circle cx="980" cy="260" r="40.5" class="washer"/>
+<text x="1090" y="255" class="s">a 9 mm washer (DIN 125)</text>
+<text x="1090" y="273" class="n">rests on 0.9 mm either side</text>
+<rect x="880" y="350" width="200" height="60" class="board"/>
+<rect x="947.6" y="350" width="64.8" height="60" class="chamfer"/>
+<rect x="956.6" y="350" width="46.800000000000004" height="60" class="slot"/>
+<circle cx="980" cy="380" r="54.0" class="washer"/>
+<text x="1090" y="375" class="s">a 12 mm washer (DIN 9021)</text>
+<text x="1090" y="393" class="ok">rests on 2.4 mm either side</text>
+<text x="830" y="520" class="s">Today (D73, D74): its own countersunk hole 10 mm in from both edges, the head flush, a round</text>
+<text x="830" y="540" class="s">standoff behind it; the corner slot stays free for a hook, and the hole shows on the front.</text>
+<text x="830" y="560" class="s"></text>
+<text x="830" y="580" class="s">Through the slot: the screw goes through the corner tile's centre slot and a bore in the</text>
+<text x="830" y="600" class="s">standoff behind it, as IKEA holds its spacer (D131). The front has no hole of its own and the</text>
+<text x="830" y="620" class="s">standoff is the one D244 and D245 put there; that slot then holds the screw, not a hook.</text>
+<text x="830" y="640" class="s">The slot is 5.2 mm wide, so the head needs something wider to rest on: the slot's 1 mm chamfer</text>
+<text x="830" y="660" class="s">opens its mouth to 7.2 mm, and an 8 mm head rests on 0.4 mm either side. A 12 mm washer</text>
+<text x="830" y="680" class="s">(DIN 9021) rests on 2.4 mm; a 9 mm one (DIN 125) on 0.9. With the bore slot-shaped, the screw</text>
+<text x="830" y="700" class="s">may sit anywhere 5.6 mm above or below the slot's middle, so a hole drilled a little off still</text>
+<text x="830" y="720" class="s">takes the board, and the washer covers the slot.</text></svg>
