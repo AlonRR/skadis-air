@@ -133,6 +133,7 @@ describe('makeSkeletonBoard (D146, D147, D161)', () => {
     const closed = { sides: { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' } } as const;
     expect(degenerateFacets(meshOf(skeleton(closed, {}, { screwHead: 'keyhole', standoffHeightMm: 20 })))).toBe(0);
     expect(degenerateFacets(meshOf(skeleton({}, {}, { standoffHeightMm: 20 })))).toBe(0);
+    expect(degenerateFacets(meshOf(skeleton({}, {}, { screwHead: 'keyhole', standoffHeightMm: 20 })))).toBe(0);
   });
 
   it('is one body at every size from one tile to ten', () => {

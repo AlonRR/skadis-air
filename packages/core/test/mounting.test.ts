@@ -10,7 +10,7 @@ import { stadium } from '../src/rings.js';
 import { ALL_OPEN, type Sides, slotPlaces } from '../src/slots.js';
 import { meshOf } from '../src/stl.js';
 import { degenerateFacets } from './facets.js';
-import { slotClearZone } from './slot-zone.js';
+import { hookRoomZone, slotClearZone } from './slot-zone.js';
 
 const engine = await loadEngine();
 const made: (Manifold | CrossSection)[] = [];
@@ -163,10 +163,8 @@ describe('standoffs on the back (D75)', () => {
       for (const [screwMm, screwHead] of [
         [3, 'countersunk'],
         [5, 'countersunk'],
-        [3, 'keyhole'],
-        [4, 'keyhole'],
       ] as const) {
-        // a 5 mm screw's keyhole needs a board 5.5 mm thick (D157); 4 mm is the largest a 5 mm board takes
+        // keyhole standoffs keep 1.25 mm, as D237 decided: their own test, with the keyholes
         const board = mounted({ columns: 2, rows: 2, sides }, { screwMm, screwHead, standoffHeightMm: 30 });
         // each slot's outline grown by its 1 mm chamfer and 2 mm more, run 30 mm back from the board
         const zone = slotClearZone(engine, { columns: 2, rows: 2, sides }, 2, 30, keep);
@@ -231,11 +229,15 @@ function holesAt(cut: CrossSection, x: number, y: number) {
     .filter((b) => b.maxX - b.minX < 15); // not the board's outline
 }
 
-describe('keyholes (D155 to D158, D190)', () => {
-  // a 4 mm screw: a 4.5 mm slot, a 9 mm entry, a 9 mm slide, a channel 3.5 mm deep from the front (D157);
-  // the board stands on standoffs, so a hook has room behind it (D190)
+describe('keyholes, in the top standoffs (D235, D237; D156, D157, D190)', () => {
+  // a 4 mm screw: a 4.5 mm slot, a 9 mm entry, a 9 mm slide (D157), cut in each top standoff's wall face: 1.5 mm of
+  // lips, then the head's 3.5 mm channel, then a roof; the keyhole's middle 8.9 mm in from the side and 24.25 mm below
+  // the top, in a standoff 12 x 21 mm (D237). On an 80 mm board the middles are at y 55.75, the screw resting at 60.25.
   const board = { columns: 2, rows: 2 } as const;
   const keyholes = { screwHead: 'keyhole', standoffHeightMm: 20 } as const;
+  const foot = -20;
+  const middles = [8.9, 80 - 8.9];
+  const keyholeAt = (cut: CrossSection, x: number) => holesAt(cut, x, 55.75).filter((h) => h.maxX - h.minX < 10);
 
   it('are sized from the screw: the head twice the screw, the entry 1 mm wider, the slide as long (D157)', () => {
     expect(keyhole(4)).toEqual({ slotMm: 4.5, entryMm: 9, slideMm: 9, channelMm: 3.5 });
@@ -244,46 +246,88 @@ describe('keyholes (D155 to D158, D190)', () => {
     expect(k.channelMm).toBeCloseTo(2.7, 9);
   });
 
-  it('go in the top two corners, the screw resting 10 mm in from both edges (D73, D156)', () => {
-    const b = mounted(board, keyholes);
-    const back = keep(b.slice(0.75)); // behind the channel: the entry and the slot
-    for (const x of [10, 70]) {
-      const [hole] = holesAt(back, x, 70 - 4.5);
-      expect(hole?.maxY).toBeCloseTo(70 + 2.25, 2); // the slot's top end, round the resting screw
-      expect(hole?.minY).toBeCloseTo(70 - 9 - 4.5, 2); // the entry's bottom
+  it("leave the board's face plain: nothing is cut from the front (D235)", () => {
+    const face = (m: Partial<MountingParams>) => keep(mounted(board, m).slice(5 - 0.1)).area();
+    expect(face(keyholes)).toBeCloseTo(face({ screwHead: 'none', standoffHeightMm: 20 }), 6);
+    // control: countersunk holes do cut the face
+    expect(face({ screwHead: 'countersunk' })).toBeLessThan(face({ screwHead: 'none' }) - 10);
+  });
+
+  it("cut the entry and the slot through the lips at each top standoff's foot (D235, D237)", () => {
+    const lips = keep(mounted(board, keyholes).slice(foot + 0.75));
+    for (const x of middles) {
+      const [hole] = keyholeAt(lips, x);
+      expect(hole?.maxY).toBeCloseTo(60.25 + 2.25, 2); // the slot's top end, round the resting screw
+      expect(hole?.minY).toBeCloseTo(51.25 - 4.5, 2); // the entry's bottom
       expect((hole?.maxX ?? 0) - (hole?.minX ?? 0)).toBeCloseTo(9, 2);
+      expect((hole?.maxX ?? 0) + (hole?.minX ?? 0)).toBeCloseTo(2 * x, 2);
     }
-    // the bottom corners have nothing
-    expect(holesAt(back, 10, 10)).toEqual([]);
-    expect(holesAt(back, 70, 10)).toEqual([]);
+    // the bottom standoffs have no keyhole: at their foot each is one ring, 10 mm round, nothing cut in it
+    const post = holesAt(lips, 10, 10);
+    expect(post).toHaveLength(1);
+    expect(Math.abs((post[0]?.area ?? 0) - Math.PI * 25) / (Math.PI * 25)).toBeLessThan(0.01);
   });
 
-  it('sink the head in a channel from the front, as wide as the entry (D155)', () => {
-    const front = keep(mounted(board, keyholes).slice(5 - 1.75));
-    const [channel] = holesAt(front, 10, 70 - 4.5);
-    expect(channel?.minY).toBeCloseTo(70 - 9 - 4.5, 2);
-    expect(channel?.maxY).toBeCloseTo(70 + 4.5, 2);
-    // a 9 mm stadium 18 mm long: a 9 x 9 mm middle and a 9 mm circle; 64 segments fall 0.16 % short
-    expect(channel?.area).toBeCloseTo(81 + Math.PI * 4.5 ** 2, 0);
-    // control: behind the channel the hole is narrower than the channel
-    const [behind] = holesAt(keep(mounted(board, keyholes).slice(0.75)), 10, 70 - 4.5);
-    expect(behind?.area ?? 0).toBeLessThan((channel?.area ?? 0) - 30);
+  it('hold the head in a channel as wide as the entry, behind the lips', () => {
+    const channel = keep(mounted(board, keyholes).slice(foot + 1.5 + 1.75));
+    for (const x of middles) {
+      const [hole] = keyholeAt(channel, x);
+      expect(hole?.minY).toBeCloseTo(51.25 - 4.5, 2);
+      expect(hole?.maxY).toBeCloseTo(60.25 + 4.5, 2);
+      // a 9 mm stadium 18 mm long: a 9 x 9 mm middle and a 9 mm circle; 64 segments fall 0.16 % short
+      expect(hole?.area).toBeCloseTo(81 + Math.PI * 4.5 ** 2, 0);
+    }
+    // control: in the lips the hole is narrower than the channel
+    const [lips] = keyholeAt(keep(mounted(board, keyholes).slice(foot + 0.75)), 8.9);
+    expect(lips?.area ?? 0).toBeLessThan(81 + Math.PI * 4.5 ** 2 - 30);
   });
 
-  it('add one through-hole each, and with lock screws two countersunk holes at the bottom (D156)', () => {
+  it('roof the channel: above it each top standoff is whole, 12 x 21 mm, where D237 puts it', () => {
+    const roof = keep(mounted(board, keyholes).slice(foot + 1.5 + 3.5 + 0.5)).toPolygons();
+    const top = roof.filter((ring) => ring.every(([, y]) => y > 40));
+    expect(top).toHaveLength(2); // one ring each, no hole in it
+    const pad = 12 * 9 + Math.PI * 6 ** 2;
+    expect(Math.abs(keep(new engine.CrossSection(top)).area() - 2 * pad) / (2 * pad)).toBeLessThan(0.01);
+    for (const ring of top) {
+      const xs = ring.map(([x]) => x);
+      const ys = ring.map(([, y]) => y);
+      const middle = (Math.min(...xs) + Math.max(...xs)) / 2;
+      expect(middles.some((x) => Math.abs(middle - x) < 0.01)).toBe(true);
+      expect((Math.min(...ys) + Math.max(...ys)) / 2).toBeCloseTo(55.75, 2);
+      expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(12, 1);
+      expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(21, 1);
+    }
+    // the bottom two are round, 10 mm across
+    const bottom = roof.filter((ring) => ring.every(([, y]) => y < 40));
+    expect(keep(new engine.CrossSection(bottom)).area()).toBeCloseTo(2 * Math.PI * 25, 0);
+  });
+
+  it('add no through-hole, and with lock screws two countersunk holes at the bottom (D156)', () => {
     const none = mounted(board, { screwHead: 'none' }).genus();
-    expect(mounted(board, keyholes).genus()).toBe(none + 2);
+    expect(mounted(board, keyholes).genus()).toBe(none);
     const locked = mounted(board, { ...keyholes, lockScrews: true });
-    expect(locked.genus()).toBe(none + 4);
+    expect(locked.genus()).toBe(none + 2);
     const bottom = roundHoles(keep(locked.slice(4.75))).find((h) => h.y < 20);
     expect(bottom?.w).toBeCloseTo(8.5, 2); // countersunk, as D74's holes
     // lock screws mean nothing without keyholes
     expect(mounted(board, { lockScrews: true }).genus()).toBe(none + 4);
   });
 
-  it('refuse a board too thin to keep 1.2 mm behind the channel (D157)', () => {
-    expect(() => mounted({ ...board, thicknessMm: 4.6 }, keyholes)).toThrow(/4\.7 mm/);
-    expect(mounted({ ...board, thicknessMm: 4.7 }, keyholes).genus()).toBeGreaterThan(0);
+  it('take a board of any thickness, as nothing is cut from it (D235): 4.6 mm was refused before', () => {
+    expect(mounted({ ...board, thicknessMm: 4.6 }, keyholes).genus()).toBe(
+      mounted(board, { screwHead: 'none' }).genus(),
+    );
+    expect(mounted({ ...board, thicknessMm: 3 }, keyholes).volume()).toBeGreaterThan(0);
+  });
+
+  it('refuse a screw over 4 mm, whose standoff would not fit beside the slots (D237)', () => {
+    expect(() => mounted(board, { ...keyholes, screwMm: 4.5 })).toThrow(/up to 4 mm/);
+    expect(mounted(board, { ...keyholes, screwMm: 3 }).volume()).toBeGreaterThan(0);
+  });
+
+  it('refuse a board one tile tall, where the keyhole standoffs would stand on the bottom ones (C241)', () => {
+    expect(() => mounted({ columns: 2, rows: 1 }, keyholes)).toThrow(/80 mm tall/);
+    expect(() => mounted({ columns: 2, rows: 1 }, { screwHead: 'countersunk', standoffHeightMm: 20 })).not.toThrow();
   });
 
   it("refuse to hang a board flat, with no standoffs or standoffs under a hook's 8 mm of room (D190, C99)", () => {
@@ -292,23 +336,22 @@ describe('keyholes (D155 to D158, D190)', () => {
     expect(mounted(board, { ...keyholes, standoffHeightMm: 8 }).genus()).toBeGreaterThan(0);
   });
 
-  it('stand on standoffs, the slot running up through each top one to the resting screw, open below (D190)', () => {
-    // A top standoff, 10 mm across round the resting screw, less the slot, 4.5 mm wide, from its foot up to the
-    // screw and round it: the band across the circle's lower half, by integration, and the slot's round end.
-    const [r, a] = [5, 2.25];
-    const band = a * Math.sqrt(r * r - a * a) + r * r * Math.asin(a / r);
-    const top = Math.PI * r * r - band - (Math.PI * a * a) / 2;
-    const posts = 2 * Math.PI * r * r + 2 * top; // the bottom two whole, with no lock screws
-    const b = mounted(board, keyholes);
-    for (const z of [-2, -10, -19.5]) expect(Math.abs(keep(b.slice(z)).area() - posts) / posts).toBeLessThan(0.01);
-    // the slot is open at the foot of the post, toward the entry, so a top post is one piece with no hole in it
-    const rings = keep(b.slice(-10)).toPolygons();
-    const topLeft = rings.filter((ring) => ring.some(([x, y]) => x < 20 && y > 60));
-    expect(topLeft).toHaveLength(1);
-    expect(keep(new engine.CrossSection(topLeft)).area()).toBeCloseTo(top, 0);
-    // control: the same measure finds the bottom left post whole
-    const bottomLeft = rings.filter((ring) => ring.some(([x, y]) => x < 20 && y < 20));
-    expect(keep(new engine.CrossSection(bottomLeft)).area()).toBeCloseTo(Math.PI * r * r, 0);
+  it("keep 1.25 mm clear of every slot and every hook's back tab, open or closed, for 3 and 4 mm screws (D237)", () => {
+    const touched = (sides: Sides, screwMm: number, margin: number) => {
+      const b = mounted({ columns: 2, rows: 2, sides }, { ...keyholes, screwMm });
+      const zone = (m: number) =>
+        keep(
+          slotClearZone(engine, { columns: 2, rows: 2, sides }, m, 30, keep).add(
+            hookRoomZone(engine, { columns: 2, rows: 2, sides }, m, 30, keep),
+          ),
+        );
+      return keep(b.intersect(zone(margin))).volume();
+    };
+    for (const sides of [ALL_OPEN, CLOSED]) {
+      for (const screwMm of [3, 4]) expect(touched(sides, screwMm, 1.25)).toBeLessThan(1e-6);
+    }
+    // control: where panels meet, 1.5 mm reaches a 4 mm screw's standoff, as D237 measured (1.28 mm)
+    expect(touched(ALL_OPEN, 4, 1.5)).toBeGreaterThan(0);
   });
 
   it('export with no degenerate facet, with lock screws or without, open or closed', () => {
@@ -343,7 +386,7 @@ describe('the corner slots stay whole (D131)', () => {
       for (const cornerRadiusMm of [0, 20]) {
         for (const screwMm of [3, 3.5, 4, 4.5, 5]) {
           for (const screwHead of ['countersunk', 'round', 'keyhole'] as const) {
-            // a 5 mm screw's keyhole channel is 4.3 mm deep: a 6 mm board keeps 1.2 mm behind it
+            if (screwHead === 'keyhole' && screwMm > 4) continue; // refused (D237)
             const given = { columns: 2, rows: 2, sides, cornerRadiusMm, thicknessMm: 6 };
             // what is left is rounding where two cuts meet: 1e-7 mm³ measured
             const standoffHeightMm = screwHead === 'keyhole' ? 20 : 0; // keyholes stand off the wall (D190)
@@ -355,8 +398,8 @@ describe('the corner slots stay whole (D131)', () => {
         }
       }
     }
-    expect(checked).toBe(60);
-  }, 60_000); // 60 boards, about 15 s on a busy machine
+    expect(checked).toBe(52);
+  }, 60_000); // 52 boards, about 15 s on a busy machine
 
   it('control: a zone grown 3 mm, past the 0.9 mm left beside a 5 mm screw, is cut into', () => {
     const given = { columns: 2, rows: 2, thicknessMm: 6 };

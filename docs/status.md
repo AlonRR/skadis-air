@@ -109,7 +109,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D147 | **The skeleton's I-beam**: as wide as the rim and web (3 mm, D143) at both faces for 0.6 mm, then a 45 degree taper, so it prints face down with no supports, to a core 1.2 mm wide; the rims and the edge band take the same profile, the screw pads stay full depth; the core width is a setting under "Advanced", refused below 0.8 mm and warned below 1.2 mm | 15 Oct 2026 |
 | D152 | **Next: `mounting-ikea`**, after the design system's v0.3.0 (D153); then `board-skeleton` | 15 Oct 2026 |
 | D153 | **The design system's v0.3.0 is adopted now** (backlog `design-system-v030`): its rules replace the page's local copies; a warning is outlined in the warning colour as well as headed in it, and the buttons under the 3D view wrap to the right on a narrow screen | 15 Oct 2026 |
-| D155 | **A keyhole sinks the screw head in a channel from the front**, 3.5 mm deep for a 4 mm screw, below the face, with 1.5 mm of board behind it ([figure](figures/keyhole.png)) | 15 Oct 2026 |
+| D155 | **A keyhole sinks the screw head in a channel from the front**, 3.5 mm deep for a 4 mm screw, below the face, with 1.5 mm of board behind it ([figure](figures/keyhole.png)); since D235 the channel is in the top standoffs' wall faces, not the board's front, and the figure shows the design before it | 15 Oct 2026 |
 | D156 | **Keyholes go in the top two corners**, so the board lifts straight off its screws; **countersunk lock screws at the bottom two corners are an option** | 15 Oct 2026 |
 | D157 | **A keyhole's sizes follow the screw size**: the head twice the screw, the entry 1 mm wider, the slide as long as the entry, the slot the screw's hole, the channel the head's height and 0.3 mm (9, 9, 4.5 and 3.5 mm for a 4 mm screw); a board that would keep less than 1.2 mm behind the channel is refused, saying so | 15 Oct 2026 |
 | D158 | **Standoffs are refused with keyholes**, as a keyhole hangs the board flat on the wall; on the lightened board the whole keyhole and 2 mm round it stay solid | 15 Oct 2026 |
@@ -133,7 +133,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D187 | **The slot clip sits behind the boards, as deep as the gap the standoffs leave** (20 mm unless set), so the wall holds it on once the boards are up: plain pegs, nothing that bends. Between its pegs it stands 8 mm clear of the boards' back (C99), so a hook fits in every slot the pegs leave free | 16 Oct 2026 |
 | D188 | **For 4 boards the clip is a square ring** through the four whole slots round the point where the corners meet, 40 mm on a side, the slot they share left free | 16 Oct 2026 |
 | D189 | **The pegs are the slot as the board cuts it less a 0.4 mm peg clearance** (4.8 x 14.8 mm; the clearance under Advanced), stopping 2.5 mm short of the front face; the bar is 10 mm wide. On the page under "Connectors" as "Slot clip", for 2 or 4 boards, its depth 20 mm by default, 12 to 40 mm; solid only; saved as `skadis-slot-clip-2-boards-20mm.stl`. The questions' text said boards one above the other take the same clip turned a quarter, which is wrong: the slots stand upright, so they take a clip of their own (C191) | 16 Oct 2026 |
-| D190 | **A board on keyholes stands off the wall on pads at its four corners**, as tall as the standoffs (20 mm unless set, at least 8 mm, C99), the keyholes through the top two, so a hook has room behind it; standoffs then go with keyholes, which reverses D158. When: D191 | 16 Oct 2026 |
+| D190 | **A board on keyholes stands off the wall on pads at its four corners**, as tall as the standoffs (20 mm unless set, at least 8 mm, C99), the keyholes through the top two, so a hook has room behind it; standoffs then go with keyholes, which reverses D158. When: D191; since D235 and D237 the keyholes are cut in the top two standoffs themselves, 12 x 21 mm | 16 Oct 2026 |
 | D191 | **The pads were built at once**, not after T151, which then prints the padded board: every hook measured needs room behind the board, which a flat board does not give | 16 Oct 2026 |
 | D194 | **The clip's pegs grip with friction ribs or a snap lip**, a "Grip" choice under Advanced, ribs unless set: ribs crush as the peg goes in and keep the pegs 2.5 mm long (D189); the lip, on a peg split along its length, springs into the slot's front chamfer and holds firmly, and costs the slot 40 mm above each peg its two-peg hooks | 16 Oct 2026 |
 | D195 | **The clip takes a screw or a keyhole, or neither**: one "Fixing" choice, None, Screw or Keyhole, None unless set. The screw goes through the clip's free half once the first board is up, so the pegs set its place; the keyhole hangs the clip on a screw already in the wall | 16 Oct 2026 |
@@ -151,6 +151,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D222 | **A comma in a number is a decimal point, unless it stands before three digits**, as in "40,000", which could as well be a thousands separator and is refused as unclear; every field is read by the one reader, the library's (the code review, 16 Oct 2026) | 16 Oct 2026 |
 | D223 | **A wall is at most 1 km each way**: a larger size is taken for a slip of the keys and refused | 16 Oct 2026 |
 | D235 | **A keyhole belongs on the standoff, not the board**, the owner's words: "the keyholes are on the panel when they should be on the standoff. the key hole in its current state wont hold onto the wall" (relayed, before T151 was printed). The head will slide behind lips in the top standoffs' wall faces, as the slot clip's keyhole does (C199), and the board's face is left plain; this replaces D155's channel from the front and C198. Where the standoff goes: D237 | 17 Oct 2026 |
+| D237 | **The keyhole standoff goes at one place in every top corner tile** ([figure](figures/keyhole-standoff-options.svg)): the keyhole's middle 8.9 mm in from the side and 24.25 mm below the top, 1.5 mm of wall round it (12 x 21 mm for a 4 mm screw), 1.28 mm clear of every slot and hook's back tab where panels meet and 1.50 mm at a wall's outer corner, less than C83's 2 mm, which no place keeps; a wall's screws make one pattern (option a) | 17 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -187,10 +188,6 @@ made in the owner's browser, once it is connected again (T219).
 
 - **D236** The Printables draft (model 1880460) asks "Was AI used to create this model?": "AI-assisted creation" or
   "fully human-made", and warns that a wrong label can remove the model; the draft cannot be published unanswered.
-- **D237** Where the keyhole standoff goes (D235; [figure](figures/keyhole-standoff-options.svg)): no place keeps
-  2 mm clear of every slot and hook's back tab at a corner where panels meet. Recommended: one place at every
-  corner, the keyhole's middle 8.9 mm in from the side and 24.25 mm below the top, with 1.5 mm walls round it,
-  1.28 mm clear where panels meet and 1.50 mm at a wall's outer corner; 2 mm walls leave 0.78 and 1.00 mm.
 - **T193** Print slot clips and two small boards to try their pegs: a clip with each grip ("Grip" under
   Advanced: ribs, then lip; `skadis-slot-clip-2-boards-15mm.stl` and `skadis-slot-clip-2-boards-15mm-lip.stl`)
   and two 40 x 40 mm solid boards, one with its right side open and one with its left side open: all four on one
@@ -198,13 +195,14 @@ made in the owner's browser, once it is connected again (T219).
   the owner slices (17 Oct 2026). Push a clip's pegs into one board from behind, then the other board onto the
   free pegs. Then say, for each grip, whether the pegs went in, how tight they held, and whether the two boards'
   faces lined up at the seam. The fit is set by "Peg clearance" under Advanced.
-- **T151** (waits on D235 and D237: its hanging steps below are for the old keyhole) Print a lightened board with
-  keyholes and hang it: an 80 x 80 mm one is enough
-  (`skadis-lightened-80x80-keyholes-standoffs-20mm.stl` from the page, "Keyholes" under "Screw holes", which
-  turns the standoffs on), in the filament you choose. Hang it on two 4 mm pan-head screws standing out of the
-  wall so their heads are about 21.5 mm off it, turned in or out until the board hangs snug on its standoffs, and
-  put an IKEA hook in it. Then say whether the rims and webs held, whether the heads went in and sat below the
-  face, whether the screws slid into the standoffs' slots, whether the hook sat straight, and what it weighs.
+- **T151** Print the 80 x 80 mm lightened board on keyholes and hang it: `.check/test-print/skadis-trial-keyhole.stl`
+  (`node scripts/test-print/write-trial-plate.mjs keyhole`; `skadis-lightened-80x80-keyholes-standoffs-15mm.stl` from
+  the page), sent 17 Oct 2026 for the owner to slice. The keyholes are in the top standoffs' wall faces (D235,
+  D237); printed face down, their 1.5 mm lips are a ledge about 2.25 mm wide over the head's channel. Put two 4 mm
+  pan-head screws in the wall 62.2 mm apart and level, their heads standing about 5 mm out (the underside 1.5 to
+  1.8 mm off the wall); push the board on with the heads through the wide entries, let it drop, and put an IKEA
+  hook in it. Then say how the lips printed, whether the heads went in and held behind them, whether the board
+  sat snug and straight, whether the hook sat straight, and what it weighs.
 
 ## Inputs from outside this repository
 

@@ -37,7 +37,7 @@ const lightenedAt = (widthMm, heightMm, sides) => ({ ...defaultValues(lightened.
 // both on one board, and the largest a 250 x 210 mm bed takes (240 x 200 mm); and its mounting
 // (D73 to D75): standoffs with each head, the largest screw at the largest corner radius; the lightened
 // board (D141 to D145) closed all round with standoffs, and at its narrowest rim and webs on the largest
-// board; keyholes (D155 to D158) with lock screws on a closed solid board, and on the lightened board; the
+// board; keyholes (D156, D235, D237) with lock screws on a closed solid board, and on the lightened board; the
 // skeleton board (D146, D147) closed with keyholes, and at its thinnest on the largest board; and the standoff
 // connector at the largest screw and its tallest; the slot clip (D194, D195) with the lip and a screw for 2 boards,
 // and for 4 with a keyhole at the least depth it takes.

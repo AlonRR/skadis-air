@@ -16,7 +16,15 @@
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { SOLID_BOARD_DEFAULTS } from './board-solid.js';
 import type { Engine } from './engine.js';
-import { keyhole, MIN_BEHIND_CHANNEL_MM, MOUNTING_DEFAULTS, screwHole, STANDOFF_DEFAULT_MM } from './mounting.js';
+import {
+  KEYHOLE_LIPS_MM,
+  keyhole,
+  MIN_BEHIND_CHANNEL_MM,
+  MOUNTING_DEFAULTS,
+  screwHole,
+  STANDOFF_DEFAULT_MM,
+  wallKeyholeCutter,
+} from './mounting.js';
 import { circle, ringedSolid, stadium } from './rings.js';
 import { BOARD_THICKNESS_MM, GRID_PITCH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM } from './skadis.js';
 import { TUNNEL_DEPTH_MM } from './standoff.js';
@@ -77,8 +85,6 @@ const LIP_MM = 0.35;
 const LIP_INSIDE_MM = 0.05;
 /** The split peg reaches this close to the front face. */
 const LIP_PEG_SHORT_MM = 0.1;
-/** The keyhole's lips, which hold the screw head in, and its roof over the head's channel (C199). */
-const KEYHOLE_LIPS_MM = 1.5;
 
 /** The slot as the board cuts it at its starting clearance (D40), less the peg clearance. */
 function pegSize(pegClearanceMm: number): [number, number] {
@@ -247,24 +253,6 @@ function lippedPeg(engine: Engine, [x, y]: [number, number], [w, h]: [number, nu
   return part;
 }
 
-/** The keyhole in the clip's wall face (C199): the lips with the entry and the slot, the head's channel above them. */
-function keyholeCutter(engine: Engine, [cx, cy]: [number, number], screwMm: number): Manifold {
-  const { CrossSection, Manifold } = engine;
-  const k = keyhole(screwMm);
-  const [entry, rest] = [cy - k.slideMm / 2, cy + k.slideMm / 2]; // the screw rests at the top, as the clip hangs
-  const lips = new CrossSection(
-    [circle(cx, entry, k.entryMm), stadium(cx, cy, k.slotMm, k.slideMm + k.slotMm)],
-    'NonZero',
-  );
-  const channel = new CrossSection([stadium(cx, cy, k.entryMm, rest - entry + k.entryMm)], 'Positive');
-  const [back, front] = [lips.extrude(KEYHOLE_LIPS_MM + 1), channel.extrude(k.channelMm)];
-  const [low, high] = [back.translate([0, 0, -1]), front.translate([0, 0, KEYHOLE_LIPS_MM])];
-  const cutter = Manifold.union(low, high);
-  for (const m of [back, front, low, high]) m.delete();
-  for (const c of [lips, channel]) c.delete();
-  return cutter;
-}
-
 /** The countersunk hole for the screw, its countersink at the bar's board face (C199). Past that face it goes on
  * 1 mm at the countersink's width, so the two do not meet on one plane, and no wider: the posts beside it stand
  * there, and a wider cone had notched one. */
@@ -334,7 +322,7 @@ export function makeSlotClip(engine: Engine, params: SlotClipParams): Manifold {
   const cutter =
     p.fixing === 'screw'
       ? screwCutter(engine, screwCentre(p.boards), p.screwMm, bar)
-      : keyholeCutter(engine, keyholeCentre(p.boards), p.screwMm);
+      : wallKeyholeCutter(engine, keyholeCentre(p.boards), p.screwMm);
   const part = joined.subtract(cutter);
   for (const m of [joined, cutter]) m.delete();
   return part;

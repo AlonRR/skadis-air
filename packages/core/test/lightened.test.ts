@@ -160,12 +160,13 @@ describe('makeLightenedBoard (D141 to D144)', () => {
     expect(uncovered(pads(13 - 0.02), midSlice(lightened({}, {}, none)), midSlice(solid({}, none)))).toBeGreaterThan(1);
   });
 
-  it('keeps the whole keyhole and 2 mm round it, and the pads round the standoffs at the bottom (D158, D190)', () => {
-    // a 4 mm screw's keyhole: 9 mm wide, its 9 mm slide down from the screw resting at (10, 150) and (150, 150)
-    const pads = (wide: number, long: number) => shape([10, 150].map((x) => stadium(x, 150 - 4.5, wide, long)));
+  it("keeps the keyhole standoffs' footprints solid, and the pads round the standoffs at the bottom (D237, D190)", () => {
+    // a 4 mm screw's keyhole standoff: 12 x 21 mm, its middle 8.9 mm in from the side and 24.25 mm below the top
+    const pads = (wide: number, long: number) =>
+      shape([8.9, 160 - 8.9].map((x) => stadium(x, 160 - 24.25, wide, long)));
     const m = { screwHead: 'keyhole', standoffHeightMm: 20 } as const;
     const [light, full] = [midSlice(lightened({}, {}, m)), midSlice(solid({}, m))];
-    expect(uncovered(pads(13 - 0.02, 22 - 0.02), light, full)).toBeLessThan(0.01);
+    expect(uncovered(pads(12 - 0.02, 21 - 0.02), light, full)).toBeLessThan(0.01);
     expect(uncovered(pads(16, 25), light, full)).toBeGreaterThan(1); // control: wider is pocket in places
     // the bottom standoffs need their pads, lock screws or not (D190)
     const bottom = shape([10, 150].map((x) => circle(x, 10, 13 - 0.02)));
@@ -183,10 +184,14 @@ describe('makeLightenedBoard (D141 to D144)', () => {
     expect(behind(lightened({}, {}, m))).toBeCloseTo(behind(solid({}, m)), 6);
   });
 
-  it('leaves no degenerate facet, open or closed, with standoffs', () => {
+  it('leaves no degenerate facet, open or closed, with standoffs or keyholes', () => {
     expect(degenerateFacets(meshOf(lightened()))).toBe(0);
     const closed = { sides: { left: 'closed', right: 'closed', bottom: 'open', top: 'closed' } } as const;
     expect(degenerateFacets(meshOf(lightened(closed, {}, { standoffHeightMm: 20 })))).toBe(0);
+    // the keyhole standoffs, open and closed: the STL check found 90 on the open board (17 Oct 2026)
+    const keyholes = { screwHead: 'keyhole', standoffHeightMm: 20 } as const;
+    expect(degenerateFacets(meshOf(lightened({}, {}, keyholes)))).toBe(0);
+    expect(degenerateFacets(meshOf(lightened(closed, {}, keyholes)))).toBe(0);
   });
 
   it('is one body at every size from one tile to ten, square or long', () => {

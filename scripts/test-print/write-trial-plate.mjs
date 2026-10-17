@@ -6,9 +6,10 @@
 // its standoffs; each as the page downloads it, laid in rows 10 mm apart, into .check/test-print/. Reads the
 // library's build, so run `npm run build -w skadis-air` first; `npm run trial-plate` does both and checks it.
 //
-//   node scripts/test-print/write-trial-plate.mjs [clips]
+//   node scripts/test-print/write-trial-plate.mjs [clips | keyhole]
 //
-// `clips` writes T193's parts alone, the clips and their two boards, as skadis-trial-clips.stl.
+// `clips` writes T193's parts alone, the clips and their two boards, as skadis-trial-clips.stl; `keyhole` T151's
+// board alone, as skadis-trial-keyhole.stl.
 // One file, as write-test-plate.mjs says why: PrusaSlicer's command line slices each input file on its own.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -39,9 +40,9 @@ const CLIPS = [
   { id: 'solid', given: { widthMm: 40, heightMm: 40, sides: closedBut('left') } },
 ];
 const KEYHOLE = { id: 'lightened', given: { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'back' } }; // T151
-const clipsOnly = process.argv[2] === 'clips';
-const PARTS = clipsOnly ? CLIPS : [KEYHOLE, ...CLIPS];
-const stem = clipsOnly ? 'skadis-trial-clips' : 'skadis-trial-clips-keyhole';
+const only = process.argv[2];
+const PARTS = only === 'clips' ? CLIPS : only === 'keyhole' ? [KEYHOLE] : [KEYHOLE, ...CLIPS];
+const stem = only === 'clips' || only === 'keyhole' ? `skadis-trial-${only}` : 'skadis-trial-clips-keyhole';
 
 const engine = await loadEngine();
 const solids = PARTS.map(({ id, given }) => {

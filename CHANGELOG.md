@@ -8,6 +8,9 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- Keyholes are in the top two standoffs, cut in their wall faces as the slot clip's keyhole is, so the board's
+  face is plain and the screws stand about 5 mm out of the wall; they take screws up to 4 mm, on boards at least
+  80 mm tall. The old keyhole, in the board's front, would not hold on the wall.
 - Standoffs, the standoff connector and the slot clip start at 15 mm deep, not IKEA's 20 mm; any depth can still
   be set.
 
