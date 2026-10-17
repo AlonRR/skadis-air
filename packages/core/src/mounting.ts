@@ -109,6 +109,18 @@ export function keyholePlaces(
   ];
 }
 
+/** The middles of a board's bottom corner tiles' centre slots, which a board on keyholes stands behind at the
+ * bottom too, unless lock screws hold it there (D245). */
+export function bottomSlotPlaces(
+  board: Pick<SolidBoardParams, 'columns' | 'rows'>,
+): readonly (readonly [number, number])[] {
+  const width = TILE_MM * board.columns;
+  return [
+    [TILE_MM / 2, TILE_MM / 2],
+    [width - TILE_MM / 2, TILE_MM / 2],
+  ];
+}
+
 /** A keyhole standoff's outline round a keyhole whose middle is at (x, y): the keyhole and its walls (D237), grown
  * by `grow` all round. */
 export function keyholePad(screwMm: number, [x, y]: readonly [number, number], grow = 0): Vec2[] {
@@ -127,11 +139,13 @@ export function mountingPads(m: MountingParams, board: Pick<SolidBoardParams, 'c
   const padMm = screwHole(m.screwMm).countersinkMm + 2 * PAD_MARGIN_MM;
   const [bottom, top] = [screwPlaces(board).slice(0, 2), screwPlaces(board).slice(2)];
   if (m.screwHead !== 'keyhole') return [...bottom, ...top].map(([x, y]) => circle(x, y, padMm));
-  // at the bottom, a pad for a lock screw or a standoff (D190)
-  return [
-    ...(m.lockScrews || m.standoffHeightMm > 0 ? bottom.map(([x, y]) => circle(x, y, padMm)) : []),
-    ...keyholePlaces(board).map((place) => keyholePad(m.screwMm, place, 1)),
-  ];
+  // at the bottom, a pad for a lock screw in the corner, or for a standoff behind the corner slot (D190, D245)
+  const lowPads = m.lockScrews
+    ? bottom.map(([x, y]) => circle(x, y, padMm))
+    : m.standoffHeightMm > 0
+      ? bottomSlotPlaces(board).map((place) => keyholePad(m.screwMm, place, 1))
+      : [];
+  return [...lowPads, ...keyholePlaces(board).map((place) => keyholePad(m.screwMm, place, 1))];
 }
 
 /**
@@ -256,25 +270,31 @@ export function mountingCuts(
     const round = (engine: Engine, [x, y]: readonly [number, number]) =>
       ringedSolid(engine, (grow) => circle(x, y, standoffDiameterMm, grow), post);
     // with keyholes, the top two are the keyholes' standoffs, the keyhole and its walls (D244)
-    // Built round the hook's room rather than cut: whole from the foot to the room's ceiling, then the outline less
-    // the room, from 0.5 mm below that ceiling into the plate. Cut, the room's top lay on the board's back face and
-    // edge on edge with the slot's chamfer, which left degenerate facets (D244).
+    // The standoff from its foot into the plate, less the hook's room from the room's ceiling up past the standoff's
+    // top, taken out before the standoff joins the plate: the plate fills the room's top, so it stops at the board's
+    // back face and never cuts the plate. Two prisms joined round the room instead shared their outer walls where
+    // they overlapped and left degenerate facets (D244, D245).
     const pad = (engine: Engine, place: readonly [number, number]) => {
-      const whole = new engine.CrossSection([keyholePad(m.screwMm, place)]);
-      const room = hookRoomOutline(engine, place, slot);
-      const walls = whole.subtract(room);
-      const lowTall = whole.extrude(m.standoffHeightMm - HOOK_ROOM_MM);
-      const highTall = walls.extrude(HOOK_ROOM_MM + 0.5 + t / 2);
-      const low = lowTall.translate([0, 0, -m.standoffHeightMm]);
-      const high = highTall.translate([0, 0, -HOOK_ROOM_MM - 0.5]);
-      const solid = engine.Manifold.union(low, high);
-      for (const s of [lowTall, highTall, low, high]) s.delete();
-      for (const c of [whole, room, walls]) c.delete();
+      const outline = new engine.CrossSection([keyholePad(m.screwMm, place)]);
+      const roomOutline = hookRoomOutline(engine, place, slot);
+      const tall = outline.extrude(m.standoffHeightMm + t / 2);
+      const roomTall = roomOutline.extrude(HOOK_ROOM_MM + t / 2 + 1);
+      const whole = tall.translate([0, 0, -m.standoffHeightMm]);
+      const room = roomTall.translate([0, 0, -HOOK_ROOM_MM]);
+      const solid = whole.subtract(room);
+      for (const s of [tall, roomTall, whole, room]) s.delete();
+      for (const c of [outline, roomOutline]) c.delete();
       return solid;
     };
     cuts.extraSolids = (engine: Engine): Manifold[] =>
       keyholes
-        ? [...places.slice(0, 2).map((p) => round(engine, p)), ...keyholePlaces(board).map((p) => pad(engine, p))]
+        ? [
+            // at the bottom, behind the corner slots as at the top (D245); with lock screws, round them in the corners
+            ...(m.lockScrews
+              ? places.slice(0, 2).map((p) => round(engine, p))
+              : bottomSlotPlaces(board).map((p) => pad(engine, p))),
+            ...keyholePlaces(board).map((p) => pad(engine, p)),
+          ]
         : places.map((p) => round(engine, p));
   }
   return cuts;

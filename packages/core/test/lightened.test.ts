@@ -167,10 +167,12 @@ describe('makeLightenedBoard (D141 to D144)', () => {
     const [light, full] = [midSlice(lightened({}, {}, m)), midSlice(solid({}, m))];
     expect(uncovered(pads(15 - 0.02, 24 - 0.02), light, full)).toBeLessThan(0.01);
     expect(uncovered(pads(21, 30), light, full)).toBeGreaterThan(1); // control: wider is pocket in places
-    // the bottom standoffs need their pads, lock screws or not (D190)
+    // the bottom standoffs need their pads (D190): behind the bottom corner slots (D245), or with lock screws round
+    // them in the corners
+    const low = (wide: number, long: number) => shape([20, 140].map((x) => stadium(x, 20, wide, long)));
+    expect(uncovered(low(15 - 0.02, 24 - 0.02), light, full)).toBeLessThan(0.01);
+    expect(uncovered(low(21, 30), light, full)).toBeGreaterThan(1); // control
     const bottom = shape([10, 150].map((x) => circle(x, 10, 13 - 0.02)));
-    expect(uncovered(bottom, light, full)).toBeLessThan(0.01);
-    expect(uncovered(shape([10, 150].map((x) => circle(x, 10, 16))), light, full)).toBeGreaterThan(1); // control
     const locked = { ...m, lockScrews: true };
     expect(uncovered(bottom, midSlice(lightened({}, {}, locked)), midSlice(solid({}, locked)))).toBeLessThan(0.01);
   });

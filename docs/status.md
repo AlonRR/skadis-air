@@ -153,6 +153,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D235 | **A keyhole belongs on the standoff, not the board**, the owner's words: "the keyholes are on the panel when they should be on the standoff. the key hole in its current state wont hold onto the wall" (relayed, before T151 was printed). The head will slide behind lips in the top standoffs' wall faces, as the slot clip's keyhole does (C199), and the board's face is left plain; this replaces D155's channel from the front and C198. Where the standoff goes: D237 | 17 Oct 2026 |
 | D237 | **The keyhole standoff goes at one place in every top corner tile** ([figure](figures/keyhole-standoff-options.svg)): the keyhole's middle 8.9 mm in from the side and 24.25 mm below the top, 1.5 mm of wall round it (12 x 21 mm for a 4 mm screw), 1.28 mm clear of every slot and hook's back tab where panels meet and 1.50 mm at a wall's outer corner, less than C83's 2 mm, which no place keeps; a wall's screws make one pattern (option a); replaced the same day by D244 | 17 Oct 2026 |
 | D244 | **The keyhole standoffs stand behind the top corner tiles' centre slots, and leave a hook its room behind them** ([figure](figures/keyhole-behind-slot.svg), drawn at 13 x 22 mm before C246's 3 mm walls), the owner's "244 a but cut room for hooks": the standoff closes the slot's back, and a pocket in it, the slot and the hook's back tab and 8 mm deep, keeps the slot for a hook; about 10 mm clear of every other slot and hook, screws 3 to 5 mm (Q243: behind a slot, as IKEA's spacer stands) | 17 Oct 2026 |
+| D245 | **A board on keyholes stands behind its bottom corner tiles' centre slots too**, as the top (D244), with a hook's room behind those slots; the owner's "245 move the standoffs". With lock screws the bottom standoffs stay round them in the corners until D247 settles where screws go | 17 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -189,8 +190,6 @@ made in the owner's browser, once it is connected again (T219).
 
 - **D236** The Printables draft (model 1880460) asks "Was AI used to create this model?": "AI-assisted creation" or
   "fully human-made", and warns that a wrong label can remove the model; the draft cannot be published unanswered.
-- **D245** Move the bottom standoffs behind the bottom corner tiles' slots too, the lock screws through those slots
-  as IKEA's are, so the front has no holes of its own. Recommended: yes.
 - **T193** Print slot clips and two small boards to try their pegs: a clip with each grip ("Grip" under
   Advanced: ribs, then lip; `skadis-slot-clip-2-boards-15mm.stl` and `skadis-slot-clip-2-boards-15mm-lip.stl`)
   and two 40 x 40 mm solid boards, one with its right side open and one with its left side open: all four on one
@@ -202,9 +201,10 @@ made in the owner's browser, once it is connected again (T219).
   (`node scripts/test-print/write-trial-plate.mjs keyhole`; `skadis-lightened-80x80-keyholes-standoffs-15mm.stl` from
   the page), sent again 17 Oct 2026 for the owner to slice. The keyholes are in the top standoffs' wall faces,
   behind the top corner slots, with a hook's room behind those slots (D235, D244); printed face down, their 1.5 mm
-  lips are a ledge about 2.25 mm wide over the head's channel. Put two 4 mm pan-head screws in the wall 40 mm apart
+  lips are a ledge about 2.25 mm wide over the head's channel; the bottom standoffs stand behind the bottom corner
+  slots (D245). Put two 4 mm pan-head screws in the wall 40 mm apart
   and level, their heads standing about 5 mm out (the underside 1.5 to 1.8 mm off the wall); push the board on with
-  the heads through the wide entries, let it drop, and put an IKEA hook in each top corner slot and in another.
+  the heads through the wide entries, let it drop, and put an IKEA hook in each corner slot and in another.
   Then say how the lips printed, whether the heads went in and held behind them, whether the board sat snug and
   straight, whether the hooks sat straight, and what it weighs.
 
