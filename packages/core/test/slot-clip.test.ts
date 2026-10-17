@@ -28,9 +28,10 @@ afterAll(() => {
   for (const m of made) m.delete();
 });
 
-// The shapes' figures are worked out for a clip 20 mm deep; the starting depth is tested on its own (D238).
+// The shapes' figures are worked out for a clip 20 mm deep with no screw; the starting depth and fixing are tested
+// on their own (D238, D250 b).
 const clip = (given: Partial<SlotClipParams> = {}) =>
-  keep(makeSlotClip(engine, slotClipParams({ depthMm: 20, ...given })));
+  keep(makeSlotClip(engine, slotClipParams({ depthMm: 20, fixing: 'none', ...given })));
 const within = (actual: number, expected: number) => Math.abs(actual - expected) / expected;
 const round = (v: number[]) => v.map((x) => Math.round(x * 1000) / 1000);
 /** The bounds of each separate outline in a slice, as [minX, maxX, minY, maxY]. */
@@ -64,13 +65,13 @@ const POST = Math.PI * 10 ** 2; // a post, 20 mm across
 const BAR_IN_POST = halfBand(10, 10) + (Math.PI * 25) / 2;
 
 describe('slotClipParams: the starting values', () => {
-  it('are for 2 boards side by side, 15 mm deep, pegs 0.4 mm under the slot with ribs, and no fixing (D238)', () => {
+  it('are for 2 boards side by side, 15 mm deep, pegs 0.4 mm under the slot with ribs, and a screw (D238, D250 b)', () => {
     expect(slotClipParams({})).toEqual({
       boards: '2',
       depthMm: 15,
       pegClearanceMm: 0.4,
       grip: 'ribs',
-      fixing: 'none',
+      fixing: 'screw',
       screwMm: 4,
     });
   });
@@ -113,11 +114,11 @@ describe('slotClipParams: the starting values', () => {
 });
 
 describe('makeSlotClip, for 2 boards side by side', () => {
-  it('is a 10 mm bar between two posts 40 mm apart, a peg on each, 20 mm deep and the pegs 2.5 mm more', () => {
+  it('is a 10 mm bar between two posts 40 mm apart, a peg on each, 20 mm deep and the pegs flush with a 5 mm board (D250 a)', () => {
     const part = clip();
     const box = part.boundingBox();
     expect(round(box.min)).toEqual([-30, -10, 0]);
-    expect(round(box.max)).toEqual([30, 10, 22.5]);
+    expect(round(box.max)).toEqual([30, 10, 25]);
     expect(part.genus()).toBe(0);
   });
 
@@ -133,14 +134,14 @@ describe('makeSlotClip, for 2 boards side by side', () => {
   it('makes the pegs the slot the board cuts less the peg clearance, and chamfers their tips', () => {
     const loose = clip({ pegClearanceMm: 0.2 }); // pegs 5.0 x 15.0 mm
     expect(within(keep(loose.slice(21)).area(), 2 * (5 * 10 + Math.PI * 2.5 ** 2 + RIBS))).toBeLessThan(0.005);
-    const tip = keep(clip().slice(22.49)).area(); // 0.4 mm in all round, near the top, the ribs gone
+    const tip = keep(clip().slice(24.99)).area(); // 0.4 mm in all round, near the top, the ribs gone
     expect(tip).toBeLessThan(2 * (4 * 10 + Math.PI * 2 ** 2) + 1);
     expect(tip).toBeGreaterThan(2 * (4 * 10 + Math.PI * 2 ** 2) - 2);
   });
 
   it('follows the depth asked for', () => {
     const box = clip({ depthMm: 30 }).boundingBox();
-    expect(box.max[2]).toBeCloseTo(32.5, 6);
+    expect(box.max[2]).toBeCloseTo(35, 6); // 30 mm and the 5 mm pegs, flush with the board (D250 a)
   });
 });
 
@@ -171,7 +172,8 @@ function fitsTheSlots(placed: Manifold, board: Board, pegs: [number, number][], 
       return dx > 2.4 && dx < 2.9 && [-4, 0, 4].some((k) => Math.abs(dy - k) < 0.5);
     });
   };
-  return pieces.length > 0 && pieces.every(atARib) && inside.volume() < 0.5 * pegs.length;
+  // six ribs a peg, each about 0.035 mm2 into the slot's straight wall over its 3 mm (D250 a): about 0.63 mm3
+  return pieces.length > 0 && pieces.every(atARib) && inside.volume() < 1 * pegs.length;
 }
 
 /** Whether the clip, fitted, leaves every slot but its own and every hook below them their room, 8 mm deep. */
@@ -214,7 +216,7 @@ describe('makeSlotClip, fitted at a seam (D187)', () => {
   it('one above the other, its pegs one above the other, leaves them their room too (C191)', () => {
     const part = clip({ boards: '2-stacked' });
     expect(round(part.boundingBox().min)).toEqual([-10, -30, 0]);
-    expect(round(part.boundingBox().max)).toEqual([10, 30, 22.5]);
+    expect(round(part.boundingBox().max)).toEqual([10, 30, 25]);
     const board = { columns: 2, rows: 4, sides: ALL_OPEN }; // the seam at y = 80
     for (const x of [20, 60]) {
       const pegs: [number, number][] = [
@@ -235,7 +237,7 @@ describe('makeSlotClip, for 4 boards (D188)', () => {
     const part = clip({ boards: '4' });
     const box = part.boundingBox();
     expect(round(box.min)).toEqual([-30, -30, 0]);
-    expect(round(box.max)).toEqual([30, 30, 22.5]);
+    expect(round(box.max)).toEqual([30, 30, 25]);
     expect(part.genus()).toBe(1);
     // the ring: a 50 mm square with its outer corners rounded to 5 mm, less the 30 mm square inside it
     const ring = 50 * 50 - (4 - Math.PI) * 25 - 30 * 30;

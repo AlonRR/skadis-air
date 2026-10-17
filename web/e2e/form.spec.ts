@@ -183,15 +183,15 @@ test('makes the slot clip for 2 boards either way or for 4, with a fixing and a 
   await ready(page);
   await choose(page, 'boardType', 'slot-clip');
   const status = page.getByTestId('board-status');
-  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-2-boards-15mm.stl');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-2-boards-15mm-screw.stl');
   await expect(status).toContainText('Connector ready');
-  await expect(page.getByTestId('board-size')).toHaveText('60 × 20 × 17.5 mm');
+  await expect(page.getByTestId('board-size')).toHaveText('60 × 20 × 20 mm');
   await choose(page, 'boards', '2-stacked');
-  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-2-boards-stacked-15mm.stl');
-  await expect(page.getByTestId('board-size')).toHaveText('20 × 60 × 17.5 mm');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-2-boards-stacked-15mm-screw.stl');
+  await expect(page.getByTestId('board-size')).toHaveText('20 × 60 × 20 mm');
   await choose(page, 'boards', '4');
-  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-4-boards-15mm.stl');
-  await expect(page.getByTestId('board-size')).toHaveText('60 × 60 × 17.5 mm');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-4-boards-15mm-screw.stl');
+  await expect(page.getByTestId('board-size')).toHaveText('60 × 60 × 20 mm');
   // a screw through its free half, and a lip under Advanced (D194, D195)
   await choose(page, 'fixing', 'screw');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-slot-clip-4-boards-15mm-screw.stl');

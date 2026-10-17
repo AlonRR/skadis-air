@@ -436,13 +436,13 @@ describe('the standoff connector type (D91 to D94)', () => {
 describe('the slot clip connector type (D187 to D189, D194, D195, C191, C199)', () => {
   const slotClip = boardType('slot-clip');
 
-  it('is a connector, listed after the standoff, for 2 boards side by side, 15 mm deep, ribs and no fixing unless set (D238)', () => {
+  it('is a connector, listed after the standoff, for 2 boards side by side, 15 mm deep, ribs and a screw unless set (D238, D250 b)', () => {
     expect(groupOf(slotClip)).toBe('connector');
     const ids = BOARD_TYPES.map((t) => t.id);
     expect(ids.indexOf('slot-clip')).toBe(ids.indexOf('standoff') + 1);
     expect(defaultValues(slotClip.settings)).toEqual({
       boards: '2',
-      fixing: 'none',
+      fixing: 'screw',
       depthMm: 15,
       grip: 'ribs',
       pegClearanceMm: 0.4,
@@ -474,8 +474,8 @@ describe('the slot clip connector type (D187 to D189, D194, D195, C191, C199)', 
     if (!built.ok) throw new Error(built.problem);
     const printed = printedPart(slotClip, built.solid);
     made.push(built.solid, printed);
-    expect(built.solid.genus()).toBe(1);
-    expect(printed.boundingBox().max[2]).toBeCloseTo(27.5, 6);
+    expect(built.solid.genus()).toBe(2); // the ring, and the screw's hole (D250 b)
+    expect(printed.boundingBox().max[2]).toBeCloseTo(30, 6); // 25 mm and the 5 mm pegs (D250 a)
     // the bar is at the bed, only the pegs at the top
     const [low, high] = [printed.slice(1), printed.slice(27)];
     expect(high.area()).toBeLessThan(low.area() / 4);
@@ -500,16 +500,17 @@ describe('the slot clip connector type (D187 to D189, D194, D195, C191, C199)', 
   it('names its file with the boards it joins, its depth, a lip, a fixing, and what differs from the start', () => {
     const name = (given: Record<string, number | string>) =>
       boardFileName(slotClip, { ...defaultValues(slotClip.settings), ...given }, 'stl');
-    expect(name({})).toBe('skadis-slot-clip-2-boards-15mm.stl');
-    expect(name({ boards: '2-stacked' })).toBe('skadis-slot-clip-2-boards-stacked-15mm.stl');
+    expect(name({})).toBe('skadis-slot-clip-2-boards-15mm-screw.stl'); // a screw unless set (D250 b)
+    expect(name({ boards: '2-stacked' })).toBe('skadis-slot-clip-2-boards-stacked-15mm-screw.stl');
     expect(name({ boards: '4', depthMm: 25, pegClearanceMm: 0.3 })).toBe(
-      'skadis-slot-clip-4-boards-25mm-clearance-0.3mm.stl',
+      'skadis-slot-clip-4-boards-25mm-screw-clearance-0.3mm.stl',
     );
-    expect(name({ fixing: 'screw' })).toBe('skadis-slot-clip-2-boards-15mm-screw.stl');
+    expect(name({ fixing: 'none' })).toBe('skadis-slot-clip-2-boards-15mm.stl');
     expect(name({ grip: 'lip', fixing: 'keyhole', screwMm: 3.5 })).toBe(
       'skadis-slot-clip-2-boards-15mm-lip-keyhole-screw-3.5mm.stl',
     );
-    expect(name({ screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-15mm.stl'); // no screw, so no screw size
+    expect(name({ screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-15mm-screw-3.5mm.stl'); // not -screw-screw-
+    expect(name({ fixing: 'none', screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-15mm.stl'); // no screw, no size
   });
 });
 

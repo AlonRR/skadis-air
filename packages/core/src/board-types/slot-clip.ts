@@ -100,6 +100,11 @@ export const SLOT_CLIP = defineBoardType({
     `${BOARDS_IN_NAME[v.boards]}-${v.depthMm}mm` +
     (v.grip === 'lip' ? '-lip' : '') +
     (v.fixing === 'none' ? '' : `-${v.fixing}`) +
-    (v.fixing !== 'none' && v.screwMm !== MOUNTING_DEFAULTS.screwMm ? `-screw-${v.screwMm}mm` : '') +
+    // a screw size other than the start: `-screw-3.5mm` after a screw, `-keyhole-screw-3.5mm` after a keyhole
+    (v.fixing === 'none' || v.screwMm === MOUNTING_DEFAULTS.screwMm
+      ? ''
+      : v.fixing === 'screw'
+        ? `-${v.screwMm}mm`
+        : `-screw-${v.screwMm}mm`) +
     (v.pegClearanceMm === SLOT_CLIP_DEFAULTS.pegClearanceMm ? '' : `-clearance-${v.pegClearanceMm}mm`),
 });

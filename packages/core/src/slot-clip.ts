@@ -50,7 +50,7 @@ export const SLOT_CLIP_DEFAULTS: SlotClipParams = {
   depthMm: STANDOFF_DEFAULT_MM,
   pegClearanceMm: 0.4,
   grip: 'ribs',
-  fixing: 'none',
+  fixing: 'screw', // D250 b
   screwMm: MOUNTING_DEFAULTS.screwMm,
 };
 
@@ -58,9 +58,8 @@ export const SLOT_CLIP_DEFAULTS: SlotClipParams = {
 const BAR_MM = 10;
 /** A post round each peg, where the clip meets the boards (C192). */
 const POST_MM = 20;
-/** The pegs with ribs stop this far short of the front of a 5 mm board (D189). */
-const PEG_SHORT_MM = 2.5;
-const PEG_LENGTH_MM = BOARD_THICKNESS_MM - PEG_SHORT_MM;
+/** The pegs with ribs reach the front of a 5 mm board, flush with it (D250 a); C192 stopped them 2.5 mm short. */
+const PEG_LENGTH_MM = BOARD_THICKNESS_MM;
 /** Round each peg's tip, so it finds its slot (C192). */
 const PEG_CHAMFER_MM = 0.4;
 /** How far the pegs reach down into their posts, so the two are one solid without meeting on a plane. */
