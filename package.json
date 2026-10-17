@@ -13,6 +13,7 @@
     "format:check": "prettier --check \"**/*.{ts,mjs,js}\"",
     "check:stl": "npm run build -w skadis-air && node scripts/checks/write-sample-boards.mjs && bash scripts/checks/stl-check.sh .check/boards/*.stl",
     "test-plate": "npm run build -w skadis-air && node scripts/test-print/write-test-plate.mjs && bash scripts/checks/stl-check.sh .check/test-print/skadis-coupon-seam.stl",
+    "trial-plate": "npm run build -w skadis-air && node scripts/test-print/write-trial-plate.mjs && bash scripts/checks/stl-check.sh .check/test-print/skadis-trial-clips-keyhole.stl",
     "printables": "npm run build -w skadis-air && node scripts/printables/write-files.mjs && bash scripts/checks/stl-check.sh .check/printables/*.stl"
   },
   "engines": {

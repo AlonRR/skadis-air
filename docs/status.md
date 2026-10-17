@@ -182,6 +182,8 @@ made in the owner's browser, once it is connected again (T219).
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 - **T219** Connect the browser extension again, so the draft can be made in your browser.
 
+- **Q233** The trial plate for T193 and T151 (C234) is sliced for the loaded PETG Basic (Q232, 17 Oct 2026),
+  about 4 h: say when the bed is clear and the sheet on, and it is uploaded and started.
 - **T193** Print slot clips and two small boards to try their pegs: a clip with each grip ("Grip" under
   Advanced: ribs, then lip; `skadis-slot-clip-2-boards-20mm.stl` and `skadis-slot-clip-2-boards-20mm-lip.stl`)
   from the page ("Slot clip" under "Connectors"), and two 40 x 40 mm solid boards, one with its right side open and one with its left side
