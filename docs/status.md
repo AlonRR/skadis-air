@@ -150,6 +150,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D214 | **The latest version is released before the upload** | 16 Oct 2026 |
 | D222 | **A comma in a number is a decimal point, unless it stands before three digits**, as in "40,000", which could as well be a thousands separator and is refused as unclear; every field is read by the one reader, the library's (the code review, 16 Oct 2026) | 16 Oct 2026 |
 | D223 | **A wall is at most 1 km each way**: a larger size is taken for a slip of the keys and refused | 16 Oct 2026 |
+| D235 | **A keyhole belongs on the standoff, not the board**, the owner's words: "the keyholes are on the panel when they should be on the standoff. the key hole in its current state wont hold onto the wall" (relayed, before T151 was printed). The head will slide behind lips in the top standoffs' wall faces, as the slot clip's keyhole does (C199), and the board's face is left plain; this replaces D155's channel from the front and C198. Where the standoff goes: D237 | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
 | Q18 | The owner's own plate-connector attempt is **not used**; the seam plate is designed afresh | 12 Oct 2026 |
 
@@ -182,15 +183,21 @@ made in the owner's browser, once it is connected again (T219).
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 - **T219** Connect the browser extension again, so the draft can be made in your browser.
 
-- **Q233** The trial plate for T193 and T151 (C234) is sliced for the loaded PETG Basic (Q232, 17 Oct 2026),
-  about 4 h: say when the bed is clear and the sheet on, and it is uploaded and started.
+- **Q233** The trial plate for T193 and T151 (C234), for the loaded PETG Basic (Q232, 17 Oct 2026): say when the
+  bed is clear and the sheet on, and it is uploaded and started. Its keyhole board is made again first (D235), so
+  the G-code with the old one was deleted.
+- **D236** The Printables draft (model 1880460) asks "Was AI used to create this model?": "AI-assisted creation" or
+  "fully human-made", and warns that a wrong label can remove the model; the draft cannot be published unanswered.
+- **D237** Where the keyhole standoff goes (D235): it cannot keep 2 mm clear of every slot at a corner where panels
+  meet; one place at every corner, 8.9 mm in from the side, keeps 1.25 mm clear with 1.5 mm walls round the keyhole.
 - **T193** Print slot clips and two small boards to try their pegs: a clip with each grip ("Grip" under
   Advanced: ribs, then lip; `skadis-slot-clip-2-boards-20mm.stl` and `skadis-slot-clip-2-boards-20mm-lip.stl`)
   from the page ("Slot clip" under "Connectors"), and two 40 x 40 mm solid boards, one with its right side open and one with its left side
   open, in the filament you choose. Push a clip's pegs into one board from behind, then the other board onto the
   free pegs. Then say, for each grip, whether the pegs went in, how tight they held, and whether the two boards'
   faces lined up at the seam. The fit is set by "Peg clearance" under Advanced.
-- **T151** Print a lightened board with keyholes and hang it: an 80 x 80 mm one is enough
+- **T151** (waits on D235 and D237: its hanging steps below are for the old keyhole) Print a lightened board with
+  keyholes and hang it: an 80 x 80 mm one is enough
   (`skadis-lightened-80x80-keyholes-standoffs-20mm.stl` from the page, "Keyholes" under "Screw holes", which
   turns the standoffs on), in the filament you choose. Hang it on two 4 mm pan-head screws standing out of the
   wall so their heads are about 21.5 mm off it, turned in or out until the board hangs snug on its standoffs, and

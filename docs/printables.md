@@ -1,6 +1,8 @@
 # The Printables model page
 
-The text of the model page on Printables, kept here so it changes with the code (D81, D211 to D214). The page is
+The text of the model page on Printables, kept here so it changes with the code (D81, D211 to D214). Saved as a
+draft, model 1880460, on 17 Oct 2026 (T216): the 13 files, the 7 pictures, this text; the contest is not chosen on the
+model's form, and its question whether AI was used is open (D236). The page is
 entered in the Designer Challenge: Pegboard Wall Organizers (entries close on 22 Oct 2026 at 23:59 UTC). Its files
 come from `npm run printables`, which writes them into `.check/printables/` from the release and checks each one;
 its pictures from `scripts/printables/write-images.mjs`, run against the built page while it is served. The owner adds photos of printed parts and publishes it.
@@ -12,13 +14,13 @@ its pictures from `scripts/printables/write-images.mjs`, run against the built p
 | Name | Skådis Air: IKEA Skadis pegboard generator, parametric, lightweight and tileable, with connectors |
 | Licence | Creative Commons, Public Domain (CC0) (Q213) |
 | Contest | Designer Challenge: Pegboard Wall Organizers |
-| Tags | skadis, ikea skadis, pegboard, parametric, customizable, lightweight, tileable, wall organizer, connector, modular |
+| Tags | skadis, ikea, pegboard, parametric, customizable, lightweight, tileable, wall, organizer, connector, modular (Printables splits a tag at its spaces) |
 
 ## Summary
 
-Pegboards that fit IKEA SKÅDIS hooks and accessories, in any size, made in your browser: solid, lightened or
-skeleton, a single board or a whole wall split into panels your printer takes, with standoffs and slot clips to
-join and hang them.
+At most 120 characters on Printables:
+
+Pegboards for IKEA SKÅDIS hooks, in any size: solid, lightened or skeleton, tiled into walls, with standoffs and clips.
 
 ## Description
 
