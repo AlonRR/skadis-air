@@ -77,6 +77,31 @@ test('lists the makers after the default and custom, and a maker its models (D17
   await expect(models).toBeHidden();
 });
 
+test("puts the maker in a field of its own, the maker's printers or a custom bed in the next, titled for it (D257)", async ({
+  page,
+}) => {
+  await ready(page);
+  const printer = page.getByTestId('printer');
+  const machine = page.getByTestId('printer-machine');
+  await expect(printer.locator('legend')).toHaveText('Printer');
+  await expect(printer.getByRole('radiogroup', { name: 'Printer', exact: true })).toBeVisible();
+  await expect(machine).toBeHidden(); // nothing more to choose on the safe default
+  await expect(printer.getByTestId('bed-note')).toContainText('200 × 200 mm');
+  await choose(page, 'printerBed', 'prusa');
+  // a choice apart from the maker's: the models are not in the maker's field
+  await expect(printer.locator('input[name="printerModel"]')).toHaveCount(0);
+  await expect(machine).toBeVisible();
+  await expect(machine.locator('legend')).toHaveText('Prusa printers');
+  await expect(machine.locator('input[name="printerModel"]')).toHaveCount(6);
+  await expect(machine.getByTestId('bed-note')).toContainText('250 × 210 mm');
+  await choose(page, 'printerBed', 'custom');
+  await expect(machine.locator('legend')).toHaveText('Custom bed');
+  await expect(machine.locator('input[name="bedXMm"]')).toBeVisible();
+  await expect(printer.locator('input[name="bedXMm"]')).toHaveCount(0);
+  await choose(page, 'printerBed', 'default');
+  await expect(machine).toBeHidden();
+});
+
 test("offers the owner's Prusa MK3S+, 250 x 210 mm (D172)", async ({ page }) => {
   await ready(page);
   await choose(page, 'printerBed', 'prusa');

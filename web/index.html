@@ -140,10 +140,11 @@
             </fieldset>
             <div data-testid="board-form"></div>
             <div class="ws-notice ws-notice--warning" data-testid="bed-warning" aria-live="polite"></div>
+            <!-- The printer's maker, a choice of its own (D257), then the maker's printers or the custom bed, titled for
+                it: written by printer.ts (D170) -->
             <fieldset class="ws-fieldset" data-testid="printer">
               <legend>Printer</legend>
-              <div class="ws-label">Printer bed</div>
-              <div class="ws-choice" role="radiogroup" aria-label="Printer bed" data-testid="printer-bed">
+              <div class="ws-choice" role="radiogroup" aria-label="Printer" data-testid="printer-bed">
                 <label class="ws-choice__opt">
                   <input class="ws-choice__input" type="radio" name="printerBed" value="default" checked />
                   <span class="ws-choice__face">Safe default: 200 × 200 mm</span>
@@ -153,9 +154,11 @@
                   <span class="ws-choice__face">Custom</span>
                 </label>
               </div>
-              <!-- A maker's models, written by printer.ts when a maker is chosen (D170) -->
-              <div data-testid="printer-model" hidden></div>
               <p class="ws-note" data-testid="bed-note">Most printers take a board of 200 × 200 mm.</p>
+            </fieldset>
+            <fieldset class="ws-fieldset" data-testid="printer-machine" hidden>
+              <legend></legend>
+              <div data-testid="printer-model" hidden></div>
               <div data-testid="custom-bed" hidden>
                 <label class="ws-label">
                   Bed width (mm)

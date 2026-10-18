@@ -117,7 +117,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D166 | **Every build runs in the background**, so the page always answers while a board is made: the build moves to a web worker, before the next item | 15 Oct 2026 |
 | D167 | **The next items are all four P1 rows offered**: `printer-presets`, then `tiling`, then `download-3mf-zip`, whose zip holds a wall's parts, then `conn-seam-plate`; each asks what a user would see before it is built | 15 Oct 2026 |
 | A168 | **The Manifold speed traps go into `engineering-practices`**, as A140's did | 15 Oct 2026 |
-| D170 | **A printer is chosen by its maker, then its model**: under "Printer bed", the two choices there now and a button for each maker; a maker shows a second row of its models, all as Choice buttons | 15 Oct 2026 |
+| D170 | **A printer is chosen by its maker, then its model**: under "Printer bed", the two choices there now and a button for each maker; a maker shows a second row of its models, all as Choice buttons (the models a field of their own since D257, 18 Oct 2026) | 15 Oct 2026 |
 | D171 | **The chosen printer, or a custom size, is remembered in this browser**, as the theme is | 15 Oct 2026 |
 | D172 | **The list adds the Original Prusa i3 MK3S+, 250 x 210 mm**, from Prusa's page for its 10th Anniversary Edition ("25x21x21 cm") | 15 Oct 2026 |
 | A173 | **A root `LICENSE` names the split and points to `LICENSES/`**, so GitHub shows the repository's licence; raised by an audit of the public repository | 15 Oct 2026 |
@@ -162,6 +162,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D236 | **The Printables draft is labelled "Yes — AI-assisted creation"** (the owner's "236 assisted"); set and saved as a draft 18 Oct 2026, checked after a reload | 18 Oct 2026 |
 | Q221 | **The listing names no filament or settings**: "any, there is no specific settings needed" (the owner); its line reads "Any filament, and no special settings", the files checked at a 0.4 mm nozzle and 0.2 mm layers, in the draft and in [`printables.md`](printables.md) | 18 Oct 2026 |
 | A255 | **The design system's session is told what this page built that it lacks**, a number stepper and a group toggle (D250 c, h), with the theme script as a file and the hidden-list trap (C179, C253); adding them is its decision. Sent 18 Oct 2026 | 18 Oct 2026 |
+| D257 | **The printer's maker is a field of its own**, as boards and connectors are (D256): "Printer", the safe default, Custom and a button for each maker; after it a field titled for the choice, "Prusa printers" with the maker's models and its bed, or "Custom bed" with the width and depth; none on the safe default (the owner: "company should be in a separate box than machine") | 18 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |

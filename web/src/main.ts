@@ -43,6 +43,7 @@ const preview = previewBox ? mountPreview(previewBox, resetButton) : null;
 const sizeLine = document.querySelector<HTMLElement>('[data-testid="board-size"]'); // in the status bar
 const downloadButton = document.querySelector<HTMLButtonElement>('[data-testid="download-stl"]');
 const printerBox = document.querySelector<HTMLElement>('[data-testid="printer"]');
+const machineBox = document.querySelector<HTMLElement>('[data-testid="printer-machine"]'); // its printers (D257)
 const bedWarning = document.querySelector<HTMLElement>('[data-testid="bed-warning"]');
 const printList = document.querySelector<HTMLElement>('[data-testid="print-list"]'); // a wall's panels (D178)
 const formatChoice = document.querySelector<HTMLElement>('[data-testid="file-format"]'); // STL or 3MF (D181)
@@ -61,7 +62,7 @@ function download(id: number, name: string, panel?: number | 'all'): void {
   ask({ kind: 'file', id, format: format(), name, ...(panel === undefined ? {} : { panel }) });
 }
 let current: (() => void) | undefined; // rebuilds the board on show, for a change of printer
-const printer = printerBox ? mountPrinter(printerBox, () => current?.()) : null;
+const printer = printerBox && machineBox ? mountPrinter(printerBox, machineBox, () => current?.()) : null;
 
 const worker = new Worker(new URL('./build-worker.ts', import.meta.url), { type: 'module' });
 // oxlint-disable-next-line unicorn/require-post-message-target-origin -- a Worker's postMessage has no target origin

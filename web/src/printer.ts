@@ -1,7 +1,8 @@
 // The printer bed on the page (backlog items printer-default and printer-presets): the safe default, 200 x 200 mm
 // (D61), a custom size, or a printer from the list (docs/printer-beds.md), all as the design system's Choice
-// buttons (D111): a button for each maker after the two, and a maker's models as a second row (D170). The
-// choice, or the custom size, is remembered in this browser, as the theme is (D171).
+// buttons (D111): a button for each maker after the two (D170), and in a field of their own after it, titled for the
+// choice, the maker's models or the custom size (D257). The choice, or the custom size, is remembered in this
+// browser, as the theme is (D171).
 import { DEFAULT_BED, MAKERS, modelLabel, readTypedNumber, type Bed } from 'skadis-air';
 import { choiceGroup, chosenIn } from './form.js';
 
@@ -9,7 +10,7 @@ const MIN_MM = 50;
 const MAX_MM = 1000;
 const STORE = 'skadis-air-printer';
 
-/** What is remembered: the button chosen under "Printer bed", and the model or the custom size with it. */
+/** What is remembered: the button chosen under "Printer", and the model or the custom size with it. */
 interface Remembered {
   bed: string; // 'default', 'custom' or a maker's id
   model?: string;
@@ -60,20 +61,22 @@ const size = (input: HTMLInputElement | null): number => {
   return typed?.ok ? typed.value : Number.NaN;
 };
 
-export function mountPrinter(box: HTMLElement, changed: () => void): PrinterChoice {
+/** `box` is the maker's field; `machine`, the next, holds its models or the custom size (D257). */
+export function mountPrinter(box: HTMLElement, machine: HTMLElement, changed: () => void): PrinterChoice {
   const list = box.querySelector<HTMLElement>('[data-testid="printer-bed"]');
-  const models = box.querySelector<HTMLElement>('[data-testid="printer-model"]');
   const note = box.querySelector<HTMLElement>('[data-testid="bed-note"]');
-  const custom = box.querySelector<HTMLElement>('[data-testid="custom-bed"]');
-  const x = box.querySelector<HTMLInputElement>('input[name="bedXMm"]');
-  const y = box.querySelector<HTMLInputElement>('input[name="bedYMm"]');
-  const error = box.querySelector<HTMLElement>('[data-testid="bed-error"]');
+  const title = machine.querySelector('legend');
+  const models = machine.querySelector<HTMLElement>('[data-testid="printer-model"]');
+  const custom = machine.querySelector<HTMLElement>('[data-testid="custom-bed"]');
+  const x = machine.querySelector<HTMLInputElement>('input[name="bedXMm"]');
+  const y = machine.querySelector<HTMLInputElement>('input[name="bedYMm"]');
+  const error = machine.querySelector<HTMLElement>('[data-testid="bed-error"]');
   const defaultNote = note?.textContent ?? '';
 
   // A button for each maker, after "Safe default" and "Custom" (D170).
   const makerButtons = choiceGroup(
     'printerBed',
-    'Printer bed',
+    'Printer',
     MAKERS.map((m) => ({ value: m.id, label: m.name })),
     '',
   );
@@ -100,12 +103,18 @@ export function mountPrinter(box: HTMLElement, changed: () => void): PrinterChoi
     models.replaceChildren(choiceGroup('printerModel', `${maker.name} printers`, options, first?.id ?? ''));
   };
 
-  /** The note under the buttons, the custom fields, and what is remembered, from what is chosen. */
+  /** The second field and its title, the note, the custom fields, and what is remembered, from what is chosen. */
   const settle = () => {
     const bed = chosenBed();
+    const maker = makerOf(bed);
+    machine.hidden = maker === undefined && bed !== 'custom'; // nothing more to choose on the safe default
+    if (title) title.textContent = maker ? `${maker.name} printers` : 'Custom bed';
     if (custom) custom.hidden = bed !== 'custom';
     const printer = chosenPrinter();
-    if (note) note.textContent = printer ? `The ${printer.model}'s bed: ${mm(printer)}.` : defaultNote;
+    if (note) {
+      note.textContent = printer ? `The ${printer.model}'s bed: ${mm(printer)}.` : defaultNote;
+      (printer ? models : list)?.after(note); // under the maker's printers, or else under the makers
+    }
     if (bed === 'custom') remember({ bed, xMm: size(x), yMm: size(y) });
     else remember(printer ? { bed, model: printer.id } : { bed });
   };

@@ -17,6 +17,8 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- The printer's maker is a field of its own, "Printer"; the next field, titled for the maker ("Prusa printers")
+  or "Custom bed", holds its models or the custom size.
 - The theme is set by its own script file, before the page is drawn, not by a script written into the page.
 - The slot clip's ribbed pegs reach the front of a 5 mm board, flush with it; they stopped halfway before. A clip
   starts with a screw, and a screw size other than 4 mm is named `-screw-3.5mm`.
