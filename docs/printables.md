@@ -2,8 +2,8 @@
 
 The text of the model page on Printables, kept here so it changes with the code (D81, D211 to D214). Saved as a
 draft, model 1880460, on 17 Oct 2026 (T216): the 13 files, the 7 pictures, this text; the contest is not chosen on the
-model's form, and its question whether AI was used is open (D236). The page is
-entered in the Designer Challenge: Pegboard Wall Organizers (entries close on 22 Oct 2026 at 23:59 UTC). Its files
+model's form, and its question whether AI was used is answered "Yes — AI-assisted creation" (D236, 18 Oct 2026).
+The page is entered in the Designer Challenge: Pegboard Wall Organizers (entries close on 22 Oct 2026 at 23:59 UTC). Its files
 come from `npm run printables`, which writes them into `.check/printables/` from the release and checks each one;
 its pictures from `scripts/printables/write-images.mjs`, run against the built page while it is served. The owner adds photos of printed parts and publishes it.
 
@@ -58,7 +58,7 @@ The files here are ready to print at the page's starting values. For any other s
 
 - Print each file as it comes: the boards face down, so the front is the smooth side on the bed; the connectors
   wall side down. No supports.
-- A 0.4 mm nozzle and 0.2 mm layers. <<CONFIRM: the filament, and anything else from your own prints>>
+- Any filament, and no special settings; the files were checked with a 0.4 mm nozzle and 0.2 mm layers (Q221).
 - The SKÅDIS slots are 5 x 15 mm on a 40 mm grid with a second grid set 20 mm across and up, and the board is 5 mm
   thick; every number and its source is in [the repository's notes on the standard](https://github.com/AlonRR/skadis-air/blob/main/docs/skadis-standard.md).
 

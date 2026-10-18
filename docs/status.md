@@ -159,6 +159,8 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D250 | **The owner's review of the page and the trial print** (17 Oct 2026): (a) the ribbed slot clip's pegs are too short, "they don't reach thru to be flush with the board": they reach the board's front; (b) a slot clip starts with a screw, not none; (c) number fields get arrows for larger and smaller; (d) a wall's list of files collapses and expands, its button beside "Download all"; (e) the design system's latest version is copied (v0.5.1), and checked for these; (f) a board on keyholes does not thicken the slots its standoffs stand behind, as the lightened and skeleton boards showed; (g) the choices are kept when switching between types, in the browser; (h) boards or connectors is a toggle at the top, not one list. Asked too: why the page's head holds an inline script (the theme, set before the page is drawn so a dark screen never flashes light, as the design system asks; it moves to its own file) | 17 Oct 2026 |
 | D242 | **T193's plate is the two slot clips alone**, tried in boards the owner already has: the 40 x 40 mm boards are dropped (the owner's "242 clips only") | 18 Oct 2026 |
 | D256 | **Boards or connectors is a field of its own**, "a separate choice then the type of board or connector" (the owner): "What to make", Boards or Connectors, and after it the type's field, titled "Board" or "Connector" for the one chosen | 18 Oct 2026 |
+| D236 | **The Printables draft is labelled "Yes — AI-assisted creation"** (the owner's "236 assisted"); set and saved as a draft 18 Oct 2026, checked after a reload | 18 Oct 2026 |
+| Q221 | **The listing names no filament or settings**: "any, there is no specific settings needed" (the owner); its line reads "Any filament, and no special settings", the files checked at a 0.4 mm nozzle and 0.2 mm layers, in the draft and in [`printables.md`](printables.md) | 18 Oct 2026 |
 | A255 | **The design system's session is told what this page built that it lacks**, a number stepper and a group toggle (D250 c, h), with the theme script as a file and the hidden-list trap (C179, C253); adding them is its decision. Sent 18 Oct 2026 | 18 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
@@ -188,13 +190,9 @@ Building next: the release and the Printables page (`printables-entry`, D211 to 
 faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`. The draft on Printables is
 made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
 
-- **Q221** Which filament, and which print settings, the listing should name for the printed parts: its
-  `<<CONFIRM: the filament...>>` in [`printables.md`](printables.md).
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 
-- **D236** The Printables draft (model 1880460) asks "Was AI used to create this model?": "AI-assisted creation" or
-  "fully human-made", and warns that a wrong label can remove the model; the draft cannot be published unanswered.
 - **A254** Replace the Printables draft's three slot clip files with ones made at the new defaults (pegs flush
   with the board, a screw first, D250 a and b; their names end `-screw`), and its clip picture: approved for once
   the clips work, the owner's "after we work out the kinks" (18 Oct 2026). Waits on T193.
