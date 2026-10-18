@@ -185,13 +185,12 @@ Building next: the release and the Printables page (`printables-entry`, D211 to 
 
 `v0.2.0` was released and the Printables files and pictures made (16 Oct 2026); a code review then found 15
 faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`. The draft on Printables is
-made in the owner's browser, once it is connected again (T219).
+made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
 
 - **Q221** Which filament, and which print settings, the listing should name for the printed parts: its
   `<<CONFIRM: the filament...>>` in [`printables.md`](printables.md).
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
-- **T219** Connect the browser extension again, so the draft can be made in your browser.
 
 - **D236** The Printables draft (model 1880460) asks "Was AI used to create this model?": "AI-assisted creation" or
   "fully human-made", and warns that a wrong label can remove the model; the draft cannot be published unanswered.
