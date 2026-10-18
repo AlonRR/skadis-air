@@ -8,7 +8,8 @@ All notable changes to this project are recorded here. The format follows
 
 ### Added
 
-- Boards or connectors is a toggle at the top of the form, each showing its own types.
+- Boards or connectors is a toggle at the top of the form, in a field of its own, "What to make"; the next field,
+  titled "Board" or "Connector", shows the types of the one chosen.
 - The choices are kept in the browser: switching between types, or reloading, loses none of them, and a board's
   size goes on to the next board.
 - Arrows beside each number field for larger and smaller, by the setting's own step; the arrow keys do the same.

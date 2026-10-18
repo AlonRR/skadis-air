@@ -34,6 +34,7 @@ const typesOf = (group: string) => BOARD_TYPES.filter((t) => groupOf(t) === grou
 
 const engineStatus = document.querySelector<HTMLElement>('[data-testid="engine-status"]');
 const boardStatus = document.querySelector<HTMLElement>('[data-testid="board-status"]');
+const makeField = document.querySelector<HTMLElement>('[data-testid="what-to-make"]');
 const typeList = document.querySelector<HTMLElement>('[data-testid="board-type"]');
 const formBox = document.querySelector<HTMLElement>('[data-testid="board-form"]');
 const previewBox = document.querySelector<HTMLElement>('[data-testid="preview"]');
@@ -265,13 +266,15 @@ async function start(): Promise<void> {
     preview?.show(null, '');
     return;
   }
-  if (typeList === null) return;
-  // Boards or connectors, a toggle at the top, and under it the types of the group chosen (D250 h; D91, D112).
-  // Every type is one choice, the same name in both groups; each group's list keeps the type last chosen in it.
+  if (makeField === null || typeList === null) return;
+  // Boards or connectors, a field of its own at the top (D256), and under it the types of the group chosen, their
+  // field titled for it (D250 h; D91, D112). Every type is one choice, the same name in both groups; each group's
+  // list keeps the type last chosen in it.
   const groups = [
-    { group: 'board', heading: 'Boards' },
-    { group: 'connector', heading: 'Connectors' },
+    { group: 'board', heading: 'Boards', title: 'Board' },
+    { group: 'connector', heading: 'Connectors', title: 'Connector' },
   ] as const;
+  const typeTitle = typeList.querySelector('legend');
   const startGroup = groups.some((g) => g.group === choices.group) ? (choices.group ?? 'board') : 'board';
   const chosenOf = (group: string) => {
     const kept = choices.types[group];
@@ -279,12 +282,11 @@ async function start(): Promise<void> {
   };
   const toggle = choiceGroup(
     'typeGroup',
-    'Boards or connectors',
+    'What to make',
     groups.map((g) => ({ value: g.group, label: g.heading })),
     startGroup,
   );
-  toggle.dataset['testid'] = 'type-group';
-  typeList.append(toggle);
+  makeField.append(toggle);
   const lists = new Map<string, HTMLElement>();
   for (const { group, heading } of groups) {
     const options = typesOf(group).map((t) => ({ value: t.id, label: t.name }));
@@ -301,24 +303,28 @@ async function start(): Promise<void> {
   // the group shown: its list, and the type last chosen in it, shown
   const showGroup = (group: string) => {
     for (const [g, list] of lists) list.hidden = g !== group;
+    if (typeTitle !== null) typeTitle.textContent = groups.find((g) => g.group === group)?.title ?? 'Board';
     for (const input of toggle.querySelectorAll<HTMLInputElement>('input')) input.checked = input.value === group;
     choices.group = group;
   };
+  makeField.addEventListener('change', (event) => {
+    const input = event.target instanceof HTMLInputElement ? event.target : null;
+    if (input?.name !== 'typeGroup') return;
+    const type = chosenOf(input.value);
+    showGroup(input.value);
+    const option = lists.get(input.value)?.querySelector<HTMLInputElement>(`input[value="${type?.id ?? ''}"]`);
+    if (option) option.checked = true;
+    if (type !== undefined) show(type);
+  });
   typeList.addEventListener('change', (event) => {
     const input = event.target instanceof HTMLInputElement ? event.target : null;
-    if (input?.name === 'typeGroup') {
-      const type = chosenOf(input.value);
-      showGroup(input.value);
-      const option = lists.get(input.value)?.querySelector<HTMLInputElement>(`input[value="${type?.id ?? ''}"]`);
-      if (option) option.checked = true;
-      if (type !== undefined) show(type);
-    } else if (input?.name === 'boardType') {
-      const group = input.dataset['group'] ?? 'board';
-      showGroup(group); // a type chosen in the other group, as a script may, shows that group
-      choices.types[group] = input.value;
-      show(boardType(input.value));
-    }
+    if (input?.name !== 'boardType') return;
+    const group = input.dataset['group'] ?? 'board';
+    showGroup(group); // a type chosen in the other group, as a script may, shows that group
+    choices.types[group] = input.value;
+    show(boardType(input.value));
   });
+  showGroup(startGroup);
   const first = chosenOf(startGroup);
   if (first !== undefined) show(first);
 }

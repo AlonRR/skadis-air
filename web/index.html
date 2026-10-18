@@ -48,10 +48,6 @@
         appearance: none;
         margin: 0;
       }
-      /* Boards or connectors, then the types of the one chosen (D250 h). */
-      [data-testid='type-group'] {
-        margin-bottom: var(--space-3);
-      }
       [data-state='error'],
       [data-state='invalid'],
       [data-state='problem'] {
@@ -134,9 +130,13 @@
           </p>
           <p class="note" data-testid="engine-status" data-state="loading">Starting the geometry engine…</p>
           <form data-testid="board" onsubmit="return false;">
-            <!-- Buttons under "Boards" and "Connectors", written by main.ts from the list of types (D91, D112) -->
+            <!-- Boards or connectors, a choice of its own (D256), then the types of the one chosen, titled for it:
+                both written by main.ts from the list of types (D250 h; D91, D112) -->
+            <fieldset class="ws-fieldset ws-fieldset--choices" data-testid="what-to-make">
+              <legend>What to make</legend>
+            </fieldset>
             <fieldset class="ws-fieldset ws-fieldset--choices" data-testid="board-type">
-              <legend>Board or connector</legend>
+              <legend>Board</legend>
             </fieldset>
             <div data-testid="board-form"></div>
             <div class="ws-notice ws-notice--warning" data-testid="bed-warning" aria-live="polite"></div>

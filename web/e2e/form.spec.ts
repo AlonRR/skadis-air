@@ -142,17 +142,26 @@ test('says a countersink too deep for a thin board cannot be made, and makes it 
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready');
 });
 
-test('puts boards and connectors on a toggle at the top, the types of each under it as buttons (D250 h; D91, D112)', async ({
+test('puts boards or connectors in a field of its own, the types of the one chosen in the next (D256; D250 h)', async ({
   page,
 }) => {
   await ready(page);
+  const make = page.getByTestId('what-to-make');
   const types = page.getByTestId('board-type');
-  const toggle = types.getByRole('radiogroup', { name: 'Boards or connectors' });
+  await expect(make.locator('legend')).toHaveText('What to make');
+  const toggle = make.getByRole('radiogroup', { name: 'What to make' });
   await expect(toggle.locator('.ws-choice__face')).toHaveText(['Boards', 'Connectors']);
+  // a choice apart from the type's: the toggle is not in the type's field
+  await expect(types.locator('input[name="typeGroup"]')).toHaveCount(0);
+  await expect(types.locator('legend')).toHaveText('Board');
   await expect(types.getByRole('radiogroup', { name: 'Boards', exact: true })).toBeVisible();
   const connectors = types.getByRole('radiogroup', { name: 'Connectors', exact: true, includeHidden: true });
   await expect(connectors).toBeHidden();
   await expect(connectors.getByRole('radio', { name: 'Standoff', includeHidden: true })).toHaveValue('standoff');
+  // the type's field is titled for the group chosen
+  await choose(page, 'typeGroup', 'connector');
+  await expect(types.locator('legend')).toHaveText('Connector');
+  await expect(connectors).toBeVisible();
 });
 
 test('makes a standoff from the same form, preview and download as a board (D91 to D94)', async ({ page }) => {

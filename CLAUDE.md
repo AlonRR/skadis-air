@@ -180,7 +180,7 @@ with `PRINTER`, `PRINT_PROFILE` and `FILAMENT`.
 and checks it; `node scripts/test-print/write-test-plate.mjs slotClearanceMm=0.3` reprints the pair at another
 clearance. `npm run trial-plate` writes the slot clips' and the keyhole board's trial (T193, T151) the same way,
 `.check/test-print/skadis-trial-clips-keyhole.stl` (C234); `node scripts/test-print/write-trial-plate.mjs clips`
-writes the two clips alone (D242), and `keyhole` the keyhole board alone. `FILAMENT="<preset>" bash scripts/checks/stl-check.sh <stl>` slices a
+writes the ribbed clip alone (D242), and `keyhole` the keyhole board alone. `FILAMENT="<preset>" bash scripts/checks/stl-check.sh <stl>` slices a
 plate with another filament, the G-code beside it. Slice it with the filament that is **loaded**, which only the
 owner knows: ask, never assume the STL check's ASA. One STL, because PrusaSlicer's command line slices each input
 file on its own (two files and one `-o` left only the second, and `--merge` wrote nothing, 14 Oct 2026). The owner's printer is driven by the 3d-printing

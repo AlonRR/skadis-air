@@ -158,6 +158,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | A248 | **Built as drawn**: the lock screw goes in through the slot, head and all, its head in a recess behind the hook's room; "and if the screw that is desired is larger than the 5mm we cut a groove into the skadis peg walls for the screw to fit thru" (the owner) | 17 Oct 2026 |
 | D250 | **The owner's review of the page and the trial print** (17 Oct 2026): (a) the ribbed slot clip's pegs are too short, "they don't reach thru to be flush with the board": they reach the board's front; (b) a slot clip starts with a screw, not none; (c) number fields get arrows for larger and smaller; (d) a wall's list of files collapses and expands, its button beside "Download all"; (e) the design system's latest version is copied (v0.5.1), and checked for these; (f) a board on keyholes does not thicken the slots its standoffs stand behind, as the lightened and skeleton boards showed; (g) the choices are kept when switching between types, in the browser; (h) boards or connectors is a toggle at the top, not one list. Asked too: why the page's head holds an inline script (the theme, set before the page is drawn so a dark screen never flashes light, as the design system asks; it moves to its own file) | 17 Oct 2026 |
 | D242 | **T193's plate is the two slot clips alone**, tried in boards the owner already has: the 40 x 40 mm boards are dropped (the owner's "242 clips only") | 18 Oct 2026 |
+| D256 | **Boards or connectors is a field of its own**, "a separate choice then the type of board or connector" (the owner): "What to make", Boards or Connectors, and after it the type's field, titled "Board" or "Connector" for the one chosen | 18 Oct 2026 |
 | A255 | **The design system's session is told what this page built that it lacks**, a number stepper and a group toggle (D250 c, h), with the theme script as a file and the hidden-list trap (C179, C253); adding them is its decision. Sent 18 Oct 2026 | 18 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
@@ -197,15 +198,15 @@ made in the owner's browser, once it is connected again (T219, done 17 Oct 2026)
 - **A254** Replace the Printables draft's three slot clip files with ones made at the new defaults (pegs flush
   with the board, a screw first, D250 a and b; their names end `-screw`), and its clip picture: approved for once
   the clips work, the owner's "after we work out the kinks" (18 Oct 2026). Waits on T193.
-- **T193** (printed 17 Oct 2026: the ribbed clip's pegs did not reach the board's front, relayed; D250 a) Print the
-  two slot clips, one with each grip ("Grip" under Advanced: ribs, then lip;
-  `skadis-slot-clip-2-boards-15mm-screw.stl` and `skadis-slot-clip-2-boards-15mm-lip-screw.stl`), with pegs
-  flush with a 5 mm board's front and a screw hole: one plate, `.check/test-print/skadis-trial-clips.stl`
-  (`node scripts/test-print/write-trial-plate.mjs clips`), clips only (D242), which the owner slices (sent
-  18 Oct 2026). A clip's pegs are 40 mm apart, so they go in two neighbouring slots of one row of any board;
-  they are sized for a board printed from the page at its starting slot clearance. Push them in from behind,
-  then say, for each grip, whether the pegs went in, how tight they held, and whether their ends sat flush with
-  the board's front. The fit is set by "Peg clearance" under Advanced.
+- **T193** (printed 17 Oct 2026: the ribbed clip's pegs did not reach the board's front, relayed; D250 a. The
+  ribbed clip printed again 18 Oct 2026, relayed: "I only needed to print the newer ribbed version", as the lip
+  clip's pegs are unchanged) Try the slot clips' pegs: the ribbed clip, `skadis-slot-clip-2-boards-15mm-screw.stl`,
+  its pegs flush with a 5 mm board's front, and the lip clip printed on 17 Oct 2026 ("Grip" under Advanced).
+  `.check/test-print/skadis-trial-clips.stl` (`node scripts/test-print/write-trial-plate.mjs clips`) is the
+  ribbed clip alone (D242). A clip's pegs are 40 mm apart, so they go in two neighbouring slots of one row of
+  any board; they are sized for a board printed from the page at its starting slot clearance. Push them in from
+  behind, then say, for each grip, whether the pegs went in, how tight they held, and whether their ends sat
+  flush with the board's front. The fit is set by "Peg clearance" under Advanced.
 - **T151** Print the 80 x 80 mm lightened board on keyholes and hang it: `.check/test-print/skadis-trial-keyhole.stl`
   (`node scripts/test-print/write-trial-plate.mjs keyhole`; `skadis-lightened-80x80-keyholes-standoffs-15mm.stl` from
   the page), sent again 17 Oct 2026 for the owner to slice. The keyholes are in the top standoffs' wall faces,
