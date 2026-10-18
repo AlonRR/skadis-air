@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2026 Alon A. Rabinowitz
 // SPDX-License-Identifier: MPL-2.0
 //
-// Writes the trial print as one plate (T193, T151; C234): a slot clip with each grip and the two 40 x 40 mm
-// boards they join, one open on its right and one on its left, and an 80 x 80 mm lightened board on keyholes and
-// its standoffs; each as the page downloads it, laid in rows 10 mm apart, into .check/test-print/. Reads the
+// Writes the trial print as one plate (T193, T151; C234): a slot clip with each grip, tried in boards already
+// printed (D242), and an 80 x 80 mm lightened board on keyholes and its standoffs; each as the page downloads it,
+// laid in rows 10 mm apart, into .check/test-print/. Reads the
 // library's build, so run `npm run build -w skadis-air` first; `npm run trial-plate` does both and checks it.
 //
 //   node scripts/test-print/write-trial-plate.mjs [clips | keyhole]
 //
-// `clips` writes T193's parts alone, the clips and their two boards, as skadis-trial-clips.stl; `keyhole` T151's
+// `clips` writes T193's parts alone, the two clips, as skadis-trial-clips.stl; `keyhole` T151's
 // board alone, as skadis-trial-keyhole.stl.
 // One file, as write-test-plate.mjs says why: PrusaSlicer's command line slices each input file on its own.
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -30,14 +30,9 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const out = join(root, '.check', 'test-print');
 const BED = { xMm: 250, yMm: 210 }; // an MK3S's
 const GAP_MM = 10;
-const closedBut = (open) =>
-  Object.fromEntries(['left', 'right', 'bottom', 'top'].map((side) => [side, side === open ? 'open' : 'closed']));
-
 const CLIPS = [
   { id: 'slot-clip', given: { boards: '2', grip: 'ribs' } }, // T193
   { id: 'slot-clip', given: { boards: '2', grip: 'lip' } },
-  { id: 'solid', given: { widthMm: 40, heightMm: 40, sides: closedBut('right') } },
-  { id: 'solid', given: { widthMm: 40, heightMm: 40, sides: closedBut('left') } },
 ];
 const KEYHOLE = { id: 'lightened', given: { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'back' } }; // T151
 const only = process.argv[2];
