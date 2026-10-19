@@ -191,6 +191,18 @@ Building next: the release and the Printables page (`printables-entry`, D211 to 
 faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`. The draft on Printables is
 made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
 
+- **D259** Adopt the design system's v0.6.0 (offered 19 Oct 2026, relayed), as an item of its own,
+  `design-system-v060`: recommended. Its Stepper takes the place of the page's own arrows (C253), its `hidden`
+  hides a Choice without the wrapping div (C179), its `theme-init.js` the page's own (with
+  `data-key="skadis-air-theme"`, so a theme chosen before holds), and every field is a button's height. It also
+  mends `web/public/design-system/README.md`, which names the tag `v0.5.1` and commit `156bf36`, neither on GitHub
+  since the design system's history was rewritten (verified 19 Oct 2026: its tags there are `v0.1.0`, `v0.2.0` and
+  `v0.6.0`, and GitHub finds no commit `156bf36`).
+- **D260** With D259, the design system's Select, its control for a list longer than about seven: here the
+  printer list (9: the safe default, Custom and 7 makers) and Bambu Lab's models (9). Recommended: (a) the Select
+  for the printer list, one row in place of five, and buttons for every maker's models, the same for each maker;
+  (b) the Select for both; (c) buttons for both, as now.
+
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 
@@ -218,6 +230,13 @@ made in the owner's browser, once it is connected again (T219, done 17 Oct 2026)
   straight, whether the hooks sat straight, and what it weighs.
 
 ## Inputs from outside this repository
+
+- The design system's v0.6.0 (D259), from its session on 19 Oct 2026 (relayed): the tag `v0.6.0` on `020baf0`,
+  signed, its CI green in Chromium, WebKit and Firefox, the repository now public; it answers A255 with the Stepper,
+  `hidden` that always hides, `theme-init.js` as a file, the fold button for a row of buttons, and the Select. The
+  steps are its release's "Moving to it", which also lists how the page's own stepping differs from the Stepper's.
+  Its history was rewritten to remove a hostname: `v0.5.0` and `v0.5.1`, which this page copied, are on the owner's
+  Gitea, re-signed, and no longer on GitHub.
 
 - The design system's v0.5.0 (D202), from its cloud session on 16 Oct 2026 (relayed): the tag object 06aec76 on
   38b9cae, signed and verified, its CI green; it supersedes v0.4.0 (on 691bca9). Copy it with
