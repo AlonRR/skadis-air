@@ -7,8 +7,7 @@ parametric-window-sealer's `CLAUDE.md`, which digests the owner's user-global ru
 
 A web page that makes 3D-printable boards and connectors for IKEA's SKÅDIS pegboard system:
 three board types (solid, lightened, skeleton) and two connector types (the standoff and the slot clip),
-built in TypeScript
-on Manifold and run in the browser.
+built in TypeScript on Manifold and run in the browser.
 
 - **`docs/status.md` is the plan and status document.** Read it first. It holds every decision
   with its ID and date, and every open question. Keep it current as work lands.
