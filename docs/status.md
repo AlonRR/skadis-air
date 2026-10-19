@@ -164,6 +164,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | A255 | **The design system's session is told what this page built that it lacks**, a number stepper and a group toggle (D250 c, h), with the theme script as a file and the hidden-list trap (C179, C253); adding them is its decision. Sent 18 Oct 2026 | 18 Oct 2026 |
 | D257 | **The printer's maker is a field of its own**, as boards and connectors are (D256): "Printer", the safe default, Custom and a button for each maker; after it a field titled for the choice, "Prusa printers" with the maker's models and its bed, or "Custom bed" with the width and depth; none on the safe default (the owner: "company should be in a separate box than machine") | 18 Oct 2026 |
 | T193 | **The slot clips tried** (relayed, 19 Oct 2026): "The ribbed version holds to the 2 dot peg and to the Ikea original really well. The clip, clips in but doesn't hold. They are both flush. I think the ribbed version is better." Read as (inferred): the ribbed clip holds well in the fit coupon's slot with 2 dots, 0.1 mm clearance (D67), and in an IKEA board, whose slots are about the page's starting 0.2 mm (D40); the lip clip snaps in but does not hold; both clips' pegs end flush with the board's front, as D250 a asked. The ribs are already the starting grip (D194) | 19 Oct 2026 |
+| A254 | **The Printables draft's slot clips are the new defaults**: its three clip files replaced by `skadis-slot-clip-2-boards-15mm-screw`, `-2-boards-stacked-15mm-screw` and `-4-boards-15mm-screw` (pegs flush, a screw first; 13 of 13 files pass the STL check), and its clip picture by a new one, which Printables puts last as it does not reorder by dragging; saved as a draft, checked after a reload, still unpublished. Approved 18 Oct 2026 for once the clips work, which T193 found | 19 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -213,10 +214,6 @@ made in the owner's browser, once it is connected again (T219, done 17 Oct 2026)
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 
-- **A254** Replace the Printables draft's three slot clip files with ones made at the new defaults (pegs flush
-  with the board, a screw first, D250 a and b; their names end `-screw`), and its clip picture: approved for once
-  the clips work, the owner's "after we work out the kinks" (18 Oct 2026). T193 found the ribbed clip holds and is flush (19 Oct
-  2026), which the three files are, so it goes ahead; the lip, which did not hold, is D261's.
 - **T151** Print the 80 x 80 mm lightened board on keyholes and hang it: `.check/test-print/skadis-trial-keyhole.stl`
   (`node scripts/test-print/write-trial-plate.mjs keyhole`; `skadis-lightened-80x80-keyholes-standoffs-15mm.stl` from
   the page), sent again 17 Oct 2026 for the owner to slice. The keyholes are in the top standoffs' wall faces,
