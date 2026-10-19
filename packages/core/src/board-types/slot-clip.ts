@@ -1,6 +1,7 @@
 // The slot clip as a type on the page (D187 to D189, D194, D195, C191, C199): listed under "Connectors" after
 // the standoff, for 2 boards side by side, 2 one above the other, or 4; its fixing and its depth on the main
-// form, its grip, the peg clearance and the screw size, shared with the boards, under Advanced. It prints as
+// form, the peg clearance and the screw size, shared with the boards, under Advanced; its pegs ribbed, the lip
+// taken out (D261). It prints as
 // built, wall face down, the pegs on top.
 import { MOUNTING_DEFAULTS, SCREW_SIZE_SETTING } from '../mounting.js';
 import { defineSettings } from '../settings.js';
@@ -57,20 +58,6 @@ export const SLOT_CLIP = defineBoardType({
       help: "The gap behind the boards, as the standoffs' height: 15 mm unless set. At least 12 mm, so hooks have room.",
     },
     {
-      kind: 'choice',
-      key: 'grip',
-      label: 'Grip',
-      options: [
-        { value: 'ribs', label: 'Ribs' },
-        { value: 'lip', label: 'Lip' },
-      ],
-      default: SLOT_CLIP_DEFAULTS.grip,
-      help:
-        'Ribs on the pegs press into the slots. A lip on split pegs snaps into the slots of a 5 mm board and holds ' +
-        'harder, but takes the slot above each peg from two-peg hooks.',
-      advanced: true,
-    },
-    {
       kind: 'number',
       key: 'pegClearanceMm',
       label: 'Peg clearance',
@@ -91,14 +78,12 @@ export const SLOT_CLIP = defineBoardType({
         boards: v.boards,
         depthMm: v.depthMm,
         pegClearanceMm: v.pegClearanceMm,
-        grip: v.grip,
         fixing: v.fixing,
         screwMm: v.screwMm,
       }),
     ),
   label: (v) =>
     `${BOARDS_IN_NAME[v.boards]}-${v.depthMm}mm` +
-    (v.grip === 'lip' ? '-lip' : '') +
     (v.fixing === 'none' ? '' : `-${v.fixing}`) +
     // a screw size other than the start: `-screw-3.5mm` after a screw, `-keyhole-screw-3.5mm` after a keyhole
     (v.fixing === 'none' || v.screwMm === MOUNTING_DEFAULTS.screwMm

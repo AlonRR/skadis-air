@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Alon A. Rabinowitz
 // SPDX-License-Identifier: MPL-2.0
 //
-// Writes the trial print as one plate (T193, T151; C234): the slot clip with ribs, tried in boards already printed
-// (D242), the clip with a lip left out as its pegs are unchanged since it was printed (18 Oct 2026), and an
+// Writes the trial print as one plate (T193, T151; C234): the slot clip, its pegs ribbed, tried in boards already
+// printed (D242; the lip it was tried against is taken out, D261), and an
 // 80 x 80 mm lightened board on keyholes and its standoffs; each as the page downloads it, laid in rows 10 mm
 // apart, into .check/test-print/. Reads the library's build, so run `npm run build -w skadis-air` first;
 // `npm run trial-plate` does both and checks it.
@@ -32,7 +32,7 @@ const out = join(root, '.check', 'test-print');
 const BED = { xMm: 250, yMm: 210 }; // an MK3S's
 const GAP_MM = 10;
 const CLIPS = [
-  { id: 'slot-clip', given: { boards: '2', grip: 'ribs' } }, // T193
+  { id: 'slot-clip', given: { boards: '2' } }, // T193
 ];
 const KEYHOLE = { id: 'lightened', given: { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'back' } }; // T151
 const only = process.argv[2];

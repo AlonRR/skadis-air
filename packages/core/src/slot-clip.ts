@@ -10,10 +10,10 @@
 // the standoff is: its wall face on z = 0, the boards' back faces at z = depth, the pegs above that, centred
 // on the point between its pegs.
 //
-// The pegs grip by friction ribs, which crush as they go in, or by a snap lip that springs into the slot's
-// front chamfer (D194, C199); the clip can be screwed to the wall through its free half, or hung on a wall
+// The pegs grip by friction ribs, which crush as they go in (D194, C199); a snap lip that sprang into the slot's
+// front chamfer was taken out, as it did not hold (T193, D261). The clip can be screwed to the wall through its free half, or hung on a wall
 // screw by a keyhole in its wall face (D195, C199).
-import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
+import type { CrossSection, Manifold } from 'manifold-3d';
 import { SOLID_BOARD_DEFAULTS } from './board-solid.js';
 import type { Engine } from './engine.js';
 import {
@@ -31,8 +31,6 @@ import { TUNNEL_DEPTH_MM } from './standoff.js';
 
 /** The boards it joins: 2 side by side, 2 one above the other (C191), or 4 where their corners meet. */
 export type SlotClipBoards = '2' | '2-stacked' | '4';
-/** How its pegs hold in the slots (D194). */
-export type SlotClipGrip = 'ribs' | 'lip';
 /** How it is fixed to the wall, if at all (D195). */
 export type SlotClipFixing = 'none' | 'screw' | 'keyhole';
 
@@ -40,7 +38,6 @@ export interface SlotClipParams {
   boards: SlotClipBoards;
   depthMm: number; // the gap behind the boards, from the wall to their back faces (D187)
   pegClearanceMm: number; // how much smaller each peg is than the slot the board cuts (D189)
-  grip: SlotClipGrip;
   fixing: SlotClipFixing;
   screwMm: number; // the screw's diameter, for a screw or a keyhole (D76)
 }
@@ -49,7 +46,6 @@ export const SLOT_CLIP_DEFAULTS: SlotClipParams = {
   boards: '2',
   depthMm: STANDOFF_DEFAULT_MM,
   pegClearanceMm: 0.4,
-  grip: 'ribs',
   fixing: 'screw', // D250 b
   screwMm: MOUNTING_DEFAULTS.screwMm,
 };
@@ -68,22 +64,11 @@ const PEG_ROOT_MM = 0.5;
 const MIN_BAR_DEPTH_MM = 4;
 /** From the point between its pegs to each peg: half the grid, so each is the nearest whole slot. */
 const HALF_GRID_MM = GRID_PITCH_MM / 2;
-/** The slot's chamfer at each face of the board the clip is made for (D41). */
-const SLOT_CHAMFER_MM = SOLID_BOARD_DEFAULTS.slotChamferMm;
 
 /** A rib (C199): a half-round 0.8 mm across, standing 0.3 mm proud of the peg's side, three along each side. */
 const RIB_MM = 0.8;
 const RIB_PROUD_MM = 0.3;
 const RIB_SPACING_MM = 4;
-/** The lip (C199): the peg split by a slit, its halves rising from a pocket in the post so they bend. */
-const SLIT_MM = 1;
-const POCKET_GAP_MM = 0.8;
-const POCKET_DEPTH_MM = 6;
-/** How far the lip stands past the slot's straight wall, and how far its catch sits inside the chamfer. */
-const LIP_MM = 0.35;
-const LIP_INSIDE_MM = 0.05;
-/** The split peg reaches this close to the front face. */
-const LIP_PEG_SHORT_MM = 0.1;
 
 /** The slot as the board cuts it at its starting clearance (D40), less the peg clearance. */
 function pegSize(pegClearanceMm: number): [number, number] {
@@ -91,8 +76,6 @@ function pegSize(pegClearanceMm: number): [number, number] {
   return [SLOT_WIDTH_MM + cut, SLOT_HEIGHT_MM + cut];
 }
 
-/** Half the slot's width as the board cuts it, between its chamfers. */
-const SLOT_HALF_MM = (SLOT_WIDTH_MM + SOLID_BOARD_DEFAULTS.slotClearanceMm) / 2;
 /** Between the seam and a post, along the bar: where the screw goes, at its middle (C199). */
 const SCREW_GAP_MM = HALF_GRID_MM - POST_MM / 2;
 /** The least space kept between the screw's countersink and the seam or the post. */
@@ -109,7 +92,6 @@ const nice = (n: number) => String(Math.round(n * 100) / 100);
 export function slotClipParams(given: Partial<SlotClipParams>): SlotClipParams {
   const p: SlotClipParams = { ...SLOT_CLIP_DEFAULTS, ...given };
   if (!['2', '2-stacked', '4'].includes(p.boards)) throw new RangeError('A slot clip joins 2 or 4 boards');
-  if (!['ribs', 'lip'].includes(p.grip)) throw new RangeError("A slot clip's pegs grip by ribs or a lip");
   if (!['none', 'screw', 'keyhole'].includes(p.fixing)) {
     throw new RangeError('A slot clip is fixed by a screw or a keyhole, or not at all');
   }
@@ -121,8 +103,8 @@ export function slotClipParams(given: Partial<SlotClipParams>): SlotClipParams {
     );
   }
   if (!(p.pegClearanceMm >= 0)) throw new RangeError('The peg clearance cannot be less than 0 mm');
-  // the tip's chamfer on both sides, and the lip's slit between its halves; a ribbed peg has none
-  if (!(pegSize(p.pegClearanceMm)[0] > 2 * PEG_CHAMFER_MM + (p.grip === 'lip' ? SLIT_MM : 0))) {
+  // the tip's chamfer on both sides
+  if (!(pegSize(p.pegClearanceMm)[0] > 2 * PEG_CHAMFER_MM)) {
     throw new RangeError('The peg clearance leaves no peg');
   }
   if (!(p.screwMm > 0)) throw new RangeError('The screw size must be more than 0 mm');
@@ -212,46 +194,6 @@ function ribbedPeg(engine: Engine, [x, y]: [number, number], [w, h]: [number, nu
   return part;
 }
 
-/**
- * A peg split along its length into two halves that bend (C199), rising from the floor of a pocket in its post,
- * each with a lip on its outer side: a 45 degree ramp from the tip that bends the half in as it passes the slot's
- * straight wall, then a catch at 45 degrees, just inside the slot's front chamfer, which it springs out into.
- */
-function lippedPeg(engine: Engine, [x, y]: [number, number], [w, h]: [number, number], depth: number): Manifold {
-  const { CrossSection, Manifold } = engine;
-  const [floor, top] = [depth - POCKET_DEPTH_MM, depth + BOARD_THICKNESS_MM - LIP_PEG_SHORT_MM];
-  const body = ringedSolid(engine, (grow) => stadium(x, y, w, h, grow), [
-    [floor - PEG_ROOT_MM, 0],
-    [top, 0],
-  ]);
-  // from just below the pocket's floor, so the slit and the floor do not meet on one plane; the post fills it
-  const block = Manifold.cube([SLIT_MM, h + 2, top - floor + 2]);
-  const slit = block.translate([x - SLIT_MM / 2, y - h / 2 - 1, floor - 0.2]);
-  const halves = body.subtract(slit);
-  // the lip, drawn as (outward from the peg's middle, up from the boards' back faces), then laid along the peg
-  const half = w / 2;
-  const front = depth + BOARD_THICKNESS_MM; // the board's front face
-  const chamferFoot = front - SLOT_CHAMFER_MM; // where the slot's straight wall meets its front chamfer
-  const apex: Vec2 = [SLOT_HALF_MM + LIP_MM, chamferFoot + LIP_MM + LIP_INSIDE_MM];
-  const catchFoot = chamferFoot + (half - (SLOT_HALF_MM - LIP_INSIDE_MM)); // 45 degrees down to the peg's side
-  const tipOut = Math.max(half, SLOT_HALF_MM - 0.1);
-  const profile: Vec2[] = [[half - 0.4, catchFoot], [half, catchFoot], apex, [tipOut, top], [half - 0.4, top]];
-  const straight = h - w - 1; // along the slot's straight walls, 0.5 mm short of its round ends
-  const lips: Manifold[] = [];
-  for (const side of [-1, 1]) {
-    // mirrored for the left side, which turns the outline over: NonZero fills it either way round
-    const drawn = new CrossSection([profile.map(([u, v]): Vec2 => [side * u, v])], 'NonZero');
-    const along = drawn.extrude(straight);
-    const turned = along.rotate([90, 0, 0]);
-    lips.push(turned.translate([x, y + straight / 2, 0]));
-    for (const m of [along, turned]) m.delete();
-    drawn.delete();
-  }
-  const part = Manifold.union([halves, ...lips]);
-  for (const m of [body, block, slit, halves, ...lips]) m.delete();
-  return part;
-}
-
 /** The countersunk hole for the screw, its countersink at the bar's board face (C199). Past that face it goes on
  * 1 mm at the countersink's width, so the two do not meet on one plane, and no wider: the posts beside it stand
  * there, and a wider cone had notched one. */
@@ -297,24 +239,9 @@ export function makeSlotClip(engine: Engine, params: SlotClipParams): Manifold {
   const outline = pads.length > 0 ? keep(CrossSection.union([band, ...pads])) : band;
   const posts = keep(CrossSection.union(centres.map(([x, y]) => keep(new CrossSection([circle(x, y, POST_MM)])))));
   const [w, h] = pegSize(p.pegClearanceMm);
-  const solids: Manifold[] = [outline.extrude(bar)];
-  let postSolid = posts.extrude(p.depthMm);
-  if (p.grip === 'lip') {
-    // a pocket round each split peg, so its halves are free to bend over their whole length
-    const pockets = keep(
-      CrossSection.union(centres.map(([x, y]) => keep(new CrossSection([stadium(x, y, w, h, POCKET_GAP_MM)])))),
-    );
-    const deep = pockets.extrude(POCKET_DEPTH_MM + 1);
-    const pocket = deep.translate([0, 0, p.depthMm - POCKET_DEPTH_MM]);
-    const hollowed = postSolid.subtract(pocket);
-    for (const m of [postSolid, deep, pocket]) m.delete();
-    postSolid = hollowed;
-  }
-  solids.push(postSolid);
+  const solids: Manifold[] = [outline.extrude(bar), posts.extrude(p.depthMm)];
   for (const s of sections) s.delete();
-  for (const c of centres) {
-    solids.push(p.grip === 'lip' ? lippedPeg(engine, c, [w, h], p.depthMm) : ribbedPeg(engine, c, [w, h], p.depthMm));
-  }
+  for (const c of centres) solids.push(ribbedPeg(engine, c, [w, h], p.depthMm));
   const joined = Manifold.union(solids);
   for (const m of solids) m.delete();
   if (p.fixing === 'none') return joined;

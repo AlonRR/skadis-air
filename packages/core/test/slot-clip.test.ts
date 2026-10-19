@@ -1,18 +1,12 @@
 // The slot clip (backlog items conn-slot-clip and clip-grip-fixing; D185, D187 to D189, D194, D195, C191, C199):
 // behind a seam, as deep as the gap, a peg in the nearest whole slot of each board; for 4 boards a square ring;
-// its pegs gripping by ribs or a snap lip; fixed by a screw or a keyhole, or not at all. Each claim is measured
+// its pegs gripping by ribs, the snap lip taken out (D261); fixed by a screw or a keyhole, or not at all. Each claim is measured
 // on the solid, and placed behind real boards, their slots chamfered, where it is fitted.
 import type { CrossSection, Manifold } from 'manifold-3d';
 import { afterAll, describe, expect, it } from 'vitest';
 import { makeSolidBoard, solidBoardParams } from '../src/board-solid.js';
 import { loadEngine } from '../src/engine.js';
-import {
-  keyholeClipDepth,
-  makeSlotClip,
-  slotClipParams,
-  type SlotClipGrip,
-  type SlotClipParams,
-} from '../src/slot-clip.js';
+import { keyholeClipDepth, makeSlotClip, slotClipParams, type SlotClipParams } from '../src/slot-clip.js';
 import { ALL_OPEN } from '../src/slots.js';
 import { meshOf } from '../src/stl.js';
 import { degenerateFacets } from './facets.js';
@@ -70,7 +64,6 @@ describe('slotClipParams: the starting values', () => {
       boards: '2',
       depthMm: 15,
       pegClearanceMm: 0.4,
-      grip: 'ribs',
       fixing: 'screw',
       screwMm: 4,
     });
@@ -88,15 +81,21 @@ describe('slotClipParams: the starting values', () => {
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a value the type would not allow
     expect(() => slotClipParams({ boards: '3' as SlotClipParams['boards'] })).toThrow(RangeError);
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a value the type would not allow
-    expect(() => slotClipParams({ grip: 'glue' as SlotClipParams['grip'] })).toThrow(RangeError);
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a value the type would not allow
     expect(() => slotClipParams({ fixing: 'nail' as SlotClipParams['fixing'] })).toThrow(RangeError);
   });
 
-  it('refuses a peg too narrow for its grip: the lip needs room for its slit, the ribs do not', () => {
-    // a 3.5 mm clearance leaves a 1.7 mm peg: enough for ribs and a chamfered tip, too little for the 1 mm slit
+  it('takes a peg as narrow as its chamfered tip allows', () => {
+    // a 3.5 mm clearance leaves a 1.7 mm peg: enough for ribs and a chamfered tip
     expect(slotClipParams({ pegClearanceMm: 3.5 }).pegClearanceMm).toBe(3.5);
-    expect(() => slotClipParams({ pegClearanceMm: 3.5, grip: 'lip' })).toThrow(/no peg/);
+  });
+
+  it('has no grip to choose: the pegs grip by ribs alone, as the lip did not hold (T193, D261)', () => {
+    expect(slotClipParams({})).not.toHaveProperty('grip');
+    // a lip asked for, as a caller written for the lip would, is not a clip with no ribs
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a value the type no longer has
+    const asked = { grip: 'lip' } as Partial<SlotClipParams>;
+    expect(degenerateFacets(meshOf(clip(asked)))).toBe(0);
+    expect(keep(clip(asked).slice(22)).toPolygons()).toHaveLength(2); // whole pegs, not split ones
   });
 
   it('refuses a screw whose countersink is wider than the gap between the seam and a post (C199)', () => {
@@ -157,12 +156,11 @@ type Board = { columns: number; rows: number; sides: typeof ALL_OPEN };
 const boards = (board: Board) => keep(makeSolidBoard(engine, solidBoardParams(board)));
 
 /**
- * What of the clip is in the boards: for ribs, nothing but the ribs, each pressing a little into a slot's long
- * wall at one of its three places (C199); for a lip, nothing at all.
+ * What of the clip is in the boards: nothing but the ribs, each pressing a little into a slot's long wall at one
+ * of its three places (C199).
  */
-function fitsTheSlots(placed: Manifold, board: Board, pegs: [number, number][], grip: SlotClipGrip): boolean {
+function fitsTheSlots(placed: Manifold, board: Board, pegs: [number, number][]): boolean {
   const inside = keep(placed.intersect(boards(board)));
-  if (grip === 'lip') return inside.volume() < NOTHING;
   const pieces = inside.decompose().map(keep);
   const atARib = (piece: Manifold) => {
     const { min, max } = piece.boundingBox();
@@ -177,12 +175,12 @@ function fitsTheSlots(placed: Manifold, board: Board, pegs: [number, number][], 
 }
 
 /** Whether the clip, fitted, leaves every slot but its own and every hook below them their room, 8 mm deep. */
-function roomLeft(placed: Manifold, board: Board, pegs: [number, number][], grip: SlotClipGrip = 'ribs') {
+function roomLeft(placed: Manifold, board: Board, pegs: [number, number][]) {
   const taken = (zone: Manifold) => keep(placed.intersect(zone)).volume();
   return {
     slots: taken(slotClearZone(engine, board, 2, INSIDE, keep, pegs)) < NOTHING,
     hooks: taken(hookRoomZone(engine, board, 2, INSIDE, keep, pegs)) < NOTHING,
-    fitsTheSlots: fitsTheSlots(placed, board, pegs, grip),
+    fitsTheSlots: fitsTheSlots(placed, board, pegs),
     // the control: the same check counting its own slots finds its posts there
     seenAtItsOwnSlots: taken(slotClearZone(engine, board, 2, INSIDE, keep)) > 0,
   };
@@ -210,7 +208,7 @@ describe('makeSlotClip, fitted at a seam (D187)', () => {
 
   it('a peg 1 mm off its place is caught: the fit check sees more than the ribs in the board', () => {
     const off = fitted(clip(), 80, 20, 20, [1, 0]);
-    expect(fitsTheSlots(off, SIDE_BY_SIDE, PEGS_SIDE_BY_SIDE, 'ribs')).toBe(false);
+    expect(fitsTheSlots(off, SIDE_BY_SIDE, PEGS_SIDE_BY_SIDE)).toBe(false);
   });
 
   it('one above the other, its pegs one above the other, leaves them their room too (C191)', () => {
@@ -261,44 +259,9 @@ describe('makeSlotClip, for 4 boards (D188)', () => {
   });
 });
 
-describe('the snap lip (D194, C199)', () => {
-  const lip = () => clip({ grip: 'lip' });
-
-  it('splits each peg in two along its length, reaching to 0.1 mm short of the front of a 5 mm board', () => {
-    const part = lip();
-    expect(part.boundingBox().max[2]).toBeCloseTo(24.9, 6);
-    // 2 mm into the board: two halves for each peg, and nothing else at that height
-    expect(keep(part.slice(22)).toPolygons()).toHaveLength(4);
-    // control: the ribbed pegs are whole there
-    expect(keep(clip().slice(22)).toPolygons()).toHaveLength(2);
-  });
-
-  it('raises the halves from a pocket in each post, so they bend over 10.9 mm and not only where they show', () => {
-    // 3 mm down in the post: each post a ring round its pocket, the two halves standing free inside it
-    const rings = outlines(keep(lip().slice(17)));
-    expect(rings).toHaveLength(8); // per post: its outside, its pocket, two halves
-    const halves = rings.filter(([minX, maxX]) => maxX - minX < 3);
-    expect(halves).toHaveLength(4);
-  });
-
-  it('stands its lips past the slot straight wall, in the front chamfer: 5.7 mm across, 0.3 mm in', () => {
-    // at 4.3 mm into the board each lip is 0.25 mm past the 5.2 mm slot's wall, on the 45 degree catch
-    const wide = outlines(keep(lip().slice(24.3)));
-    const left = wide.filter(([minX]) => minX < 0);
-    const across = Math.max(...left.map(([, maxX]) => maxX)) - Math.min(...left.map(([minX]) => minX));
-    expect(across).toBeCloseTo(5.7, 1);
-  });
-
-  it('fitted, touches nothing; pulled 0.3 mm back, its lips catch on the slot, which holds the boards on', () => {
-    expect(roomLeft(fitted(lip(), 80, 20), SIDE_BY_SIDE, PEGS_SIDE_BY_SIDE, 'lip')).toEqual(ROOM_LEFT);
-    const pulled = fitted(lip(), 80, 20, 20, [0, -0.3]);
-    expect(keep(pulled.intersect(boards(SIDE_BY_SIDE))).volume()).toBeGreaterThan(0.01);
-  });
-});
-
 describe('the ribs (D194, C199)', () => {
   it('fitted, press into the slots only where they stand, and not at all with 0.3 mm more clearance', () => {
-    expect(fitsTheSlots(fitted(clip(), 80, 20), SIDE_BY_SIDE, PEGS_SIDE_BY_SIDE, 'ribs')).toBe(true);
+    expect(fitsTheSlots(fitted(clip(), 80, 20), SIDE_BY_SIDE, PEGS_SIDE_BY_SIDE)).toBe(true);
     // control: 0.3 mm more clearance takes the ribs 0.05 mm off the slot's wall, and nothing is in the board
     const eased = keep(fitted(clip({ pegClearanceMm: 0.7 }), 80, 20).intersect(boards(SIDE_BY_SIDE)));
     expect(eased.volume()).toBeLessThan(NOTHING);
@@ -367,16 +330,14 @@ describe('a keyhole in the clip (D195, C199)', () => {
 });
 
 describe('makeSlotClip exports', () => {
-  it('with no degenerate facet, for each layout, grip and fixing', () => {
+  it('with no degenerate facet, for each layout and fixing', () => {
     let checked = 0;
     for (const layout of ['2', '2-stacked', '4'] as const) {
-      for (const grip of ['ribs', 'lip'] as const) {
-        for (const fixing of ['none', 'screw', 'keyhole'] as const) {
-          expect(degenerateFacets(meshOf(clip({ boards: layout, grip, fixing })))).toBe(0);
-          checked++;
-        }
+      for (const fixing of ['none', 'screw', 'keyhole'] as const) {
+        expect(degenerateFacets(meshOf(clip({ boards: layout, fixing })))).toBe(0);
+        checked++;
       }
     }
-    expect(checked).toBe(18);
+    expect(checked).toBe(9);
   });
 });

@@ -433,7 +433,7 @@ describe('the standoff connector type (D91 to D94)', () => {
   });
 });
 
-describe('the slot clip connector type (D187 to D189, D194, D195, C191, C199)', () => {
+describe('the slot clip connector type (D187 to D189, D194, D195, D261, C191, C199)', () => {
   const slotClip = boardType('slot-clip');
 
   it('is a connector, listed after the standoff, for 2 boards side by side, 15 mm deep, ribs and a screw unless set (D238, D250 b)', () => {
@@ -444,23 +444,23 @@ describe('the slot clip connector type (D187 to D189, D194, D195, C191, C199)', 
       boards: '2',
       fixing: 'screw',
       depthMm: 15,
-      grip: 'ribs',
       pegClearanceMm: 0.4,
       screwMm: 4,
     });
   });
 
-  it('offers 2 boards side by side or one above the other, or 4; no fixing, a screw or a keyhole; ribs or a lip', () => {
+  it('offers 2 boards side by side or one above the other, or 4; no fixing, a screw or a keyhole; ribs alone (D261)', () => {
     const options = (key: string) => {
       const s = slotClip.settings.find((setting) => setting.key === key);
       return s?.kind === 'choice' && s.options.map((o) => o.value);
     };
     expect(options('boards')).toEqual(['2', '2-stacked', '4']);
     expect(options('fixing')).toEqual(['none', 'screw', 'keyhole']);
-    expect(options('grip')).toEqual(['ribs', 'lip']);
-    // the grip, the peg clearance and the screw size under Advanced; the fixing on the main form
+    // no choice of grip: the lip snapped in but did not hold (T193, D261)
+    expect(slotClip.settings.map((s) => s.key)).not.toContain('grip');
+    // the peg clearance and the screw size under Advanced; the fixing on the main form
     const advanced = slotClip.settings.filter((s) => 'advanced' in s && s.advanced === true).map((s) => s.key);
-    expect(advanced).toEqual(['grip', 'pegClearanceMm', 'screwMm']);
+    expect(advanced).toEqual(['pegClearanceMm', 'screwMm']);
   });
 
   it('shares its screw size setting with the board, so the two cannot drift apart', () => {
@@ -497,7 +497,7 @@ describe('the slot clip connector type (D187 to D189, D194, D195, C191, C199)', 
     if (!keyhole.ok) expect(keyhole.problem).toContain('14.2 mm');
   });
 
-  it('names its file with the boards it joins, its depth, a lip, a fixing, and what differs from the start', () => {
+  it('names its file with the boards it joins, its depth, a fixing, and what differs from the start', () => {
     const name = (given: Record<string, number | string>) =>
       boardFileName(slotClip, { ...defaultValues(slotClip.settings), ...given }, 'stl');
     expect(name({})).toBe('skadis-slot-clip-2-boards-15mm-screw.stl'); // a screw unless set (D250 b)
@@ -506,9 +506,8 @@ describe('the slot clip connector type (D187 to D189, D194, D195, C191, C199)', 
       'skadis-slot-clip-4-boards-25mm-screw-clearance-0.3mm.stl',
     );
     expect(name({ fixing: 'none' })).toBe('skadis-slot-clip-2-boards-15mm.stl');
-    expect(name({ grip: 'lip', fixing: 'keyhole', screwMm: 3.5 })).toBe(
-      'skadis-slot-clip-2-boards-15mm-lip-keyhole-screw-3.5mm.stl',
-    );
+    expect(name({ fixing: 'keyhole', screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-15mm-keyhole-screw-3.5mm.stl');
+    expect(name({ grip: 'lip' })).toBe('skadis-slot-clip-2-boards-15mm-screw.stl'); // a lip kept from before: no part of it
     expect(name({ screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-15mm-screw-3.5mm.stl'); // not -screw-screw-
     expect(name({ fixing: 'none', screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-15mm.stl'); // no screw, no size
   });

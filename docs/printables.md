@@ -52,7 +52,7 @@ The files here are ready to print at the page's starting values. For any other s
   and "Download all" gives them in one zip or one 3MF.
 - **Mounting**: countersunk or round-head screw holes in the corners, or keyholes at the top, on standoffs, so the
   board lifts off its screws.
-- **The slot clip's options**: a snap lip in place of the ribs, and a screw or a keyhole to fix it to the wall.
+- **The slot clip's options**: a screw or a keyhole to fix it to the wall, or neither.
 - **Printers**: 30 printers' beds by maker, or your own.
 
 ### Printing

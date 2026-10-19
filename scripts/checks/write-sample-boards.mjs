@@ -39,8 +39,8 @@ const lightenedAt = (widthMm, heightMm, sides) => ({ ...defaultValues(lightened.
 // board (D141 to D145) closed all round with standoffs, and at its narrowest rim and webs on the largest
 // board; keyholes (D156, D235, D237) with lock screws on a closed solid board, and on the lightened board; the
 // skeleton board (D146, D147) closed with keyholes, and at its thinnest on the largest board; and the standoff
-// connector at the largest screw and its tallest; the slot clip (D194, D195) with the lip and a screw for 2 boards,
-// and for 4 with a keyhole at the least depth it takes.
+// connector at the largest screw and its tallest; the slot clip (D195) for 2 boards one above the other with no
+// fixing, and for 4 with a keyhole at the least depth it takes.
 const samples = [
   ...BOARD_TYPES.map((type) => ({ name: `${type.id}-default`, type, values: defaultValues(type.settings) })),
   { name: 'solid-1x1-open', type: solid, values: solidAt(40, 40, open) },
@@ -102,9 +102,9 @@ const samples = [
   { name: 'standoff-2-12mm-screw-3', type: boardType('standoff'), values: { boards: '2', heightMm: 12, screwMm: 3 } },
   { name: 'standoff-4-20mm-screw-5', type: boardType('standoff'), values: { boards: '4', heightMm: 20, screwMm: 5 } },
   {
-    name: 'slot-clip-2-lip-screw',
+    name: 'slot-clip-2-stacked-no-fixing',
     type: boardType('slot-clip'),
-    values: { ...defaultValues(boardType('slot-clip').settings), grip: 'lip', fixing: 'screw' },
+    values: { ...defaultValues(boardType('slot-clip').settings), boards: '2-stacked', fixing: 'none' },
   },
   {
     name: 'slot-clip-4-keyhole-14.5mm',
