@@ -70,6 +70,20 @@ export const SLOT_CLIP = defineBoardType({
       help: 'How much smaller each peg is than the slot the board cuts (5.2 × 15.2 mm at its starting clearance).',
     },
     SCREW_SIZE_SETTING,
+    {
+      kind: 'choice',
+      key: 'screwHead',
+      label: 'Screw head',
+      options: [
+        { value: 'countersunk', label: 'Countersunk' },
+        { value: 'round', label: 'Round head' },
+      ],
+      default: SLOT_CLIP_DEFAULTS.screwHead,
+      help:
+        "For a screw: flush in its countersink, or a round (pan) head sunk in a counterbore below the bar's face, so " +
+        'hooks along the seam keep their room. A round head on a 4 mm screw needs the clip at least 13.4 mm deep.',
+      advanced: true,
+    },
   ]),
   build: (engine, v) =>
     makeSlotClip(
@@ -79,12 +93,14 @@ export const SLOT_CLIP = defineBoardType({
         depthMm: v.depthMm,
         pegClearanceMm: v.pegClearanceMm,
         fixing: v.fixing,
+        screwHead: v.screwHead,
         screwMm: v.screwMm,
       }),
     ),
   label: (v) =>
     `${BOARDS_IN_NAME[v.boards]}-${v.depthMm}mm` +
     (v.fixing === 'none' ? '' : `-${v.fixing}`) +
+    (v.fixing === 'screw' && v.screwHead === 'round' ? '-round-head' : '') +
     // a screw size other than the start: `-screw-3.5mm` after a screw, `-keyhole-screw-3.5mm` after a keyhole
     (v.fixing === 'none' || v.screwMm === MOUNTING_DEFAULTS.screwMm
       ? ''

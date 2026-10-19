@@ -62,8 +62,9 @@ const HEAD_ROOM_MM = 0.4;
 const GROOVE_ROOM_MM = 0.5;
 const UNDER_HEAD_MM = 2;
 
-/** A lock screw's pan head (D157's proportions): twice the screw across, 0.8 times it tall. */
-const lockHead = (lockScrewMm: number) => ({ acrossMm: 2 * lockScrewMm, tallMm: 0.8 * lockScrewMm });
+/** A pan head (D157's proportions): twice the screw across, 0.8 times it tall; a lock screw's, or the slot clip's
+ * round head (D265). */
+export const panHead = (screwMm: number) => ({ acrossMm: 2 * screwMm, tallMm: 0.8 * screwMm });
 
 /** A screw's hole, its 90 degree countersink across the front, and the standoff round it (C83). */
 export function screwHole(screwMm: number): { holeMm: number; countersinkMm: number; standoffDiameterMm: number } {
@@ -220,7 +221,7 @@ export function mountingCuts(
   const keyholes = m.screwHead === 'keyhole';
   // the lips, the head's channel and a roof over it, then a hook's room behind the slot in front (D235, D244); a
   // lock screw's head in its recess behind the room, and some standoff under it (A248)
-  const head = lockHead(m.lockScrewMm);
+  const head = panHead(m.lockScrewMm);
   const recessMm = head.tallMm + 0.3;
   const leastStandoff = Math.max(
     KEYHOLE_LIPS_MM + keyhole(m.screwMm).channelMm + MIN_BEHIND_CHANNEL_MM + HOOK_ROOM_MM,

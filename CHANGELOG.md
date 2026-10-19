@@ -8,6 +8,8 @@ All notable changes to this project are recorded here. The format follows
 
 ### Added
 
+- The slot clip's screw can have a round (pan) head, sunk in a counterbore below the bar's face ("Screw head" under
+  Advanced); countersunk stays the start.
 - Boards or connectors is a toggle at the top of the form, in a field of its own, "What to make"; the next field,
   titled "Board" or "Connector", shows the types of the one chosen.
 - The choices are kept in the browser: switching between types, or reloading, loses none of them, and a board's

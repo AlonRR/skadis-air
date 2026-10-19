@@ -20,6 +20,7 @@ import {
   KEYHOLE_LIPS_MM,
   keyhole,
   MIN_BEHIND_CHANNEL_MM,
+  panHead,
   MOUNTING_DEFAULTS,
   screwHole,
   STANDOFF_DEFAULT_MM,
@@ -33,12 +34,15 @@ import { TUNNEL_DEPTH_MM } from './standoff.js';
 export type SlotClipBoards = '2' | '2-stacked' | '4';
 /** How it is fixed to the wall, if at all (D195). */
 export type SlotClipFixing = 'none' | 'screw' | 'keyhole';
+/** A screw's head: in a countersink, or a round (pan) head in a counterbore (D265). */
+export type SlotClipScrewHead = 'countersunk' | 'round';
 
 export interface SlotClipParams {
   boards: SlotClipBoards;
   depthMm: number; // the gap behind the boards, from the wall to their back faces (D187)
   pegClearanceMm: number; // how much smaller each peg is than the slot the board cuts (D189)
   fixing: SlotClipFixing;
+  screwHead: SlotClipScrewHead; // for a screw (D265)
   screwMm: number; // the screw's diameter, for a screw or a keyhole (D76)
 }
 
@@ -47,6 +51,7 @@ export const SLOT_CLIP_DEFAULTS: SlotClipParams = {
   depthMm: STANDOFF_DEFAULT_MM,
   pegClearanceMm: 0.4,
   fixing: 'screw', // D250 b
+  screwHead: 'countersunk',
   screwMm: MOUNTING_DEFAULTS.screwMm,
 };
 
@@ -83,6 +88,18 @@ function pegSize(pegClearanceMm: number): [number, number] {
 const SCREW_GAP_MM = HALF_GRID_MM - POST_MM / 2;
 /** The least space kept between the screw's countersink and the seam or the post. */
 const SCREW_SPARE_MM = 0.25;
+/** A round head's counterbore (D265): the head and 0.5 mm across, its height and 0.2 mm deep, as the practice sinks
+ * a head below the face, with at least 2 mm of bar under it, five layers, to carry the head. */
+function counterbore(screwMm: number): { acrossMm: number; deepMm: number } {
+  const head = panHead(screwMm);
+  return { acrossMm: head.acrossMm + 0.5, deepMm: head.tallMm + 0.2 };
+}
+const BORE_FLOOR_MM = 2;
+
+/** The least depth a clip with a round head needs: the hooks' room, the counterbore and its floor (D265). */
+export function roundHeadClipDepth(screwMm: number): number {
+  return TUNNEL_DEPTH_MM + counterbore(screwMm).deepMm + BORE_FLOOR_MM;
+}
 
 /** The least depth a clip with a keyhole needs: the hooks' room, the keyhole's lips, the head's channel, a roof. */
 export function keyholeClipDepth(screwMm: number): number {
@@ -111,10 +128,21 @@ export function slotClipParams(given: Partial<SlotClipParams>): SlotClipParams {
     throw new RangeError('The peg clearance leaves no peg');
   }
   if (!(p.screwMm > 0)) throw new RangeError('The screw size must be more than 0 mm');
-  if (p.fixing === 'screw' && screwHole(p.screwMm).countersinkMm > SCREW_GAP_MM - 2 * SCREW_SPARE_MM) {
+  if (!['countersunk', 'round'].includes(p.screwHead)) {
+    throw new RangeError("A slot clip's screw is countersunk or has a round head");
+  }
+  const round = p.screwHead === 'round';
+  const across = round ? counterbore(p.screwMm).acrossMm : screwHole(p.screwMm).countersinkMm;
+  if (p.fixing === 'screw' && across > SCREW_GAP_MM - 2 * SCREW_SPARE_MM) {
     throw new RangeError(
       `A slot clip's screw goes between the seam and a post, ${SCREW_GAP_MM} mm apart: a ${nice(p.screwMm)} mm ` +
-        "screw's countersink is too wide; choose a smaller screw",
+        `screw's ${round ? "head's counterbore" : 'countersink'} is too wide; choose a smaller screw`,
+    );
+  }
+  if (p.fixing === 'screw' && round && p.depthMm < roundHeadClipDepth(p.screwMm) - 1e-9) {
+    throw new RangeError(
+      `A slot clip with a round head on a ${nice(p.screwMm)} mm screw needs to be at least ` +
+        `${nice(roundHeadClipDepth(p.screwMm))} mm deep, to sink the head below the bar`,
     );
   }
   if (p.fixing === 'keyhole' && p.depthMm < keyholeClipDepth(p.screwMm) - 1e-9) {
@@ -201,9 +229,25 @@ function ribbedPeg(engine: Engine, [x, y]: [number, number], [w, h]: [number, nu
 
 /** The countersunk hole for the screw, its countersink at the bar's board face (C199). Past that face it goes on
  * 1 mm at the countersink's width, so the two do not meet on one plane, and no wider: the posts beside it stand
- * there, and a wider cone had notched one. */
-function screwCutter(engine: Engine, [x, y]: [number, number], screwMm: number, bar: number): Manifold {
+ * there, and a wider cone had notched one. A round head's is a counterbore instead (D265), on 1 mm past the face. */
+function screwCutter(
+  engine: Engine,
+  [x, y]: [number, number],
+  screwMm: number,
+  bar: number,
+  head: SlotClipScrewHead,
+): Manifold {
   const { holeMm, countersinkMm } = screwHole(screwMm);
+  if (head === 'round') {
+    const { CrossSection, Manifold } = engine;
+    const bore = counterbore(screwMm);
+    const [hole, wide] = [new CrossSection([circle(x, y, holeMm)]), new CrossSection([circle(x, y, bore.acrossMm)])];
+    const [shaft, cup] = [hole.extrude(bar + 2), wide.extrude(bore.deepMm + 1)];
+    const [low, high] = [shaft.translate([0, 0, -1]), cup.translate([0, 0, bar - bore.deepMm])];
+    const cutter = Manifold.union(low, high);
+    for (const m of [hole, wide, shaft, cup, low, high]) m.delete();
+    return cutter;
+  }
   const sink = (countersinkMm - holeMm) / 2; // 45 degree walls
   return ringedSolid(engine, (grow) => circle(x, y, holeMm, grow), [
     [-1, 0],
@@ -235,7 +279,8 @@ export function makeSlotClip(engine: Engine, params: SlotClipParams): Manifold {
   const pads: CrossSection[] = [];
   if (p.fixing === 'screw') {
     const [x, y] = screwCentre(p.boards);
-    pads.push(keep(new CrossSection([circle(x, y, screwHole(p.screwMm).countersinkMm + 4)])));
+    const across = p.screwHead === 'round' ? counterbore(p.screwMm).acrossMm : screwHole(p.screwMm).countersinkMm;
+    pads.push(keep(new CrossSection([circle(x, y, across + 4)])));
   } else if (p.fixing === 'keyhole') {
     const [x, y] = keyholeCentre(p.boards);
     const k = keyhole(p.screwMm);
@@ -252,7 +297,7 @@ export function makeSlotClip(engine: Engine, params: SlotClipParams): Manifold {
   if (p.fixing === 'none') return joined;
   const cutter =
     p.fixing === 'screw'
-      ? screwCutter(engine, screwCentre(p.boards), p.screwMm, bar)
+      ? screwCutter(engine, screwCentre(p.boards), p.screwMm, bar, p.screwHead)
       : wallKeyholeCutter(engine, keyholeCentre(p.boards), p.screwMm);
   const part = joined.subtract(cutter);
   for (const m of [joined, cutter]) m.delete();

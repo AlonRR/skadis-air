@@ -446,6 +446,7 @@ describe('the slot clip connector type (D187 to D189, D194, D195, D261, C191, C1
       depthMm: 15,
       pegClearanceMm: 0.4,
       screwMm: 4,
+      screwHead: 'countersunk',
     });
   });
 
@@ -458,9 +459,11 @@ describe('the slot clip connector type (D187 to D189, D194, D195, D261, C191, C1
     expect(options('fixing')).toEqual(['none', 'screw', 'keyhole']);
     // no choice of grip: the lip snapped in but did not hold (T193, D261)
     expect(slotClip.settings.map((s) => s.key)).not.toContain('grip');
-    // the peg clearance and the screw size under Advanced; the fixing on the main form
+    // a screw countersunk, or a round head in a counterbore (D265)
+    expect(options('screwHead')).toEqual(['countersunk', 'round']);
+    // the peg clearance, the screw size and its head under Advanced; the fixing on the main form
     const advanced = slotClip.settings.filter((s) => 'advanced' in s && s.advanced === true).map((s) => s.key);
-    expect(advanced).toEqual(['pegClearanceMm', 'screwMm']);
+    expect(advanced).toEqual(['pegClearanceMm', 'screwMm', 'screwHead']);
   });
 
   it('shares its screw size setting with the board, so the two cannot drift apart', () => {
@@ -508,6 +511,12 @@ describe('the slot clip connector type (D187 to D189, D194, D195, D261, C191, C1
     expect(name({ fixing: 'none' })).toBe('skadis-slot-clip-2-boards-15mm.stl');
     expect(name({ fixing: 'keyhole', screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-15mm-keyhole-screw-3.5mm.stl');
     expect(name({ grip: 'lip' })).toBe('skadis-slot-clip-2-boards-15mm-screw.stl'); // a lip kept from before: no part of it
+    // a round head after the screw, before its size; nothing of a head for a keyhole (D265)
+    expect(name({ screwHead: 'round' })).toBe('skadis-slot-clip-2-boards-15mm-screw-round-head.stl');
+    expect(name({ screwHead: 'round', screwMm: 3.5 })).toBe(
+      'skadis-slot-clip-2-boards-15mm-screw-round-head-3.5mm.stl',
+    );
+    expect(name({ screwHead: 'round', fixing: 'keyhole' })).toBe('skadis-slot-clip-2-boards-15mm-keyhole.stl');
     expect(name({ screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-15mm-screw-3.5mm.stl'); // not -screw-screw-
     expect(name({ fixing: 'none', screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-15mm.stl'); // no screw, no size
   });

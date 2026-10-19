@@ -65,6 +65,7 @@ describe('slotClipParams: the starting values', () => {
       depthMm: 15,
       pegClearanceMm: 0.4,
       fixing: 'screw',
+      screwHead: 'countersunk',
       screwMm: 4,
     });
   });
@@ -289,6 +290,28 @@ describe('a screw through the clip (D195, C199)', () => {
     expect(sink[1] - sink[0]).toBeCloseTo(8.8, 1);
   });
 
+  it('sinks a round head in a counterbore, its floor under the head, the head 8 x 3.2 mm for a 4 mm screw (D265)', () => {
+    const part = clip({ fixing: 'screw', screwHead: 'round' });
+    expect(part.genus()).toBe(1);
+    // 1 mm under the bar's board face, 12 mm out: the counterbore, 8.5 mm across round the 8 mm head
+    const bore = only(outlines(keep(part.slice(11))), ([minX, maxX]) => maxX - minX < 10 && maxX - minX > 6);
+    expect(bore[1] - bore[0]).toBeCloseTo(8.5, 1);
+    // 3.4 mm down, the head's height and 0.2 mm, its floor: the 4.5 mm hole again
+    const floor = only(outlines(keep(part.slice(8.5))), ([minX, maxX]) => maxX - minX < 6);
+    expect(floor[1] - floor[0]).toBeCloseTo(4.5, 1);
+  });
+
+  it('refuses a round head where the bar is too thin to sink it, or the bore too wide for its place', () => {
+    // the hooks' 8 mm, the 3.4 mm bore and 2 mm of floor
+    expect(() => slotClipParams({ fixing: 'screw', screwHead: 'round', depthMm: 13 })).toThrow(/13.4 mm/);
+    expect(slotClipParams({ fixing: 'screw', screwHead: 'round', depthMm: 13.5 }).screwHead).toBe('round');
+    // a 4.5 mm screw's bore is 9.5 mm across, the most the 10 mm between seam and post takes; 5 mm's is not
+    expect(slotClipParams({ fixing: 'screw', screwHead: 'round', screwMm: 4.5 }).screwMm).toBe(4.5);
+    expect(() => slotClipParams({ fixing: 'screw', screwHead: 'round', screwMm: 5 })).toThrow(/smaller screw/);
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a value the type would not allow
+    expect(() => slotClipParams({ screwHead: 'hex' as SlotClipParams['screwHead'] })).toThrow(RangeError);
+  });
+
   it("leaves the post beside it whole: the countersink stops at the bar's board face (the review, 16 Oct 2026)", () => {
     // 0.1 mm under the post's foot-to-room step, where the cone had gone on 1 mm past the bar and notched the post
     const at = (part: Manifold) => keep(part.slice(12.9)).area();
@@ -348,5 +371,9 @@ describe('makeSlotClip exports', () => {
       }
     }
     expect(checked).toBe(9);
+    // and a round head in its counterbore, for each layout (D265)
+    for (const layout of ['2', '2-stacked', '4'] as const) {
+      expect(degenerateFacets(meshOf(clip({ boards: layout, fixing: 'screw', screwHead: 'round' })))).toBe(0);
+    }
   });
 });
