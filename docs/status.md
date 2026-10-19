@@ -197,6 +197,28 @@ Building next: the release and the Printables page (`printables-entry`, D211 to 
 faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`. The draft on Printables is
 made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
 
+The connectors' design pass (19 Oct 2026), against the engineering practices of that day:
+[`research/2026-10-19-connectors-design-pass.md`](research/2026-10-19-connectors-design-pass.md).
+
+- **D264** State each screw's length from its stack (its finding 1), beside the screw size and in the Printables
+  text. Recommended: (a) the plastic the screw passes through, "20 mm of board and standoff, plus your wall
+  plug", from the part's own settings; (b) a whole length, taking a 30 mm plug ("a 4 x 50 mm screw"); (c) leave it.
+- **D265** The slot clip's countersunk screw (finding 2). Recommended: (a) the clip takes the boards' "Screw head"
+  choice, countersunk as now or a round head sunk in a counterbore, countersunk staying the start, so the draft's
+  files stay; (b) a round head in a counterbore as the start, the draft's three clip files made again; (c) as now.
+- **D266** A 0.8 mm chamfer round each peg's root, inside the slot's 1 mm back chamfer, so the peg is not a sharp
+  corner on a layer line where a levered board would snap it (finding 3); the fit is unchanged. Recommended:
+  (a) yes, the draft's three clip files made again; (b) no.
+- **D267** The standoff floats behind the board until the first screw is tight (finding 4). Recommended:
+  (a) a 2 mm section of its hole at the board face about 0.85 times the screw, so the screw pushed through the
+  board carries it, tried first on a 1-board coupon; (b) as now, its help text saying to hold it until the first
+  screw is in.
+- **T268** Two checks of the ribbed clip already printed (finding 6): with its pegs in the fit coupon's 3- and
+  4-dot slots (0.2 mm, the page's start, and 0.3 mm), does it hold? And in the IKEA board, pulled out and pushed
+  back three times, does it still hold as well?
+- **A269** Correct the repository's `CLAUDE.md`, which says five connector types; there are two (finding 7).
+  Recommended.
+
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 
