@@ -138,6 +138,15 @@ describe('makeSlotClip, for 2 boards side by side', () => {
     expect(tip).toBeGreaterThan(2 * (4 * 10 + Math.PI * 2 ** 2) - 2);
   });
 
+  it("chamfers each peg's root 0.8 mm, so it is no sharp corner on a layer line (D266)", () => {
+    const part = clip();
+    // 0.4 mm above the post, the peg 0.4 mm wider all round, its ribs inside the chamfer
+    const root = 2 * (5.6 * 10 + Math.PI * 2.8 ** 2);
+    expect(within(keep(part.slice(20.4)).area(), root)).toBeLessThan(0.005);
+    // past 0.8 mm, the peg and its ribs as before
+    expect(within(keep(part.slice(20.85)).area(), 2 * (PEG + RIBS))).toBeLessThan(0.005);
+  });
+
   it('follows the depth asked for', () => {
     const box = clip({ depthMm: 30 }).boundingBox();
     expect(box.max[2]).toBeCloseTo(35, 6); // 30 mm and the 5 mm pegs, flush with the board (D250 a)

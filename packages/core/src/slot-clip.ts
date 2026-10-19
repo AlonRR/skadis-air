@@ -60,6 +60,9 @@ const PEG_LENGTH_MM = BOARD_THICKNESS_MM;
 const PEG_CHAMFER_MM = 0.4;
 /** How far the pegs reach down into their posts, so the two are one solid without meeting on a plane. */
 const PEG_ROOT_MM = 0.5;
+/** A chamfer round each peg's root (D266): no sharp corner on the layer line where the peg meets its post. It fits
+ * inside the slot's 1 mm back chamfer and keeps the 0.2 mm the peg has beside the slot's wall. */
+const ROOT_CHAMFER_MM = 0.8;
 /** The least bar behind the hooks' room, as the standoff's bridge behind its tunnel (C99). */
 const MIN_BAR_DEPTH_MM = 4;
 /** From the point between its pegs to each peg: half the grid, so each is the nearest whole slot. */
@@ -164,11 +167,13 @@ function keyholeCentre(boards: SlotClipBoards): [number, number] {
   return boards === '4' ? [0, HALF_GRID_MM] : [0, 0];
 }
 
-/** A peg with three ribs along each long side, its tip chamfered (C199). */
+/** A peg with three ribs along each long side, its tip chamfered (C199) and its root (D266). */
 function ribbedPeg(engine: Engine, [x, y]: [number, number], [w, h]: [number, number], depth: number): Manifold {
   const top = depth + PEG_LENGTH_MM;
   const peg = ringedSolid(engine, (grow) => stadium(x, y, w, h, grow), [
-    [depth - PEG_ROOT_MM, 0],
+    [depth - PEG_ROOT_MM, ROOT_CHAMFER_MM],
+    [depth, ROOT_CHAMFER_MM],
+    [depth + ROOT_CHAMFER_MM, 0],
     [top - PEG_CHAMFER_MM, 0],
     [top, -PEG_CHAMFER_MM],
   ]);
