@@ -81,16 +81,23 @@ export const previewBackground = (page: Page): Promise<number[]> =>
     return Array.from(ctx.getImageData(2, 2, 1, 1).data.subarray(0, 3));
   });
 
-/** Chooses an option of a Choice by its value, as a click on its button does; a type, in its group first (D250 h). */
+/** Chooses an option of a Choice by its value, as a click on its button does; a type, in its group first (D250 h);
+ * or of a Select, as picking it from the list does (D260). */
 export async function choose(page: Page, name: string, value: string): Promise<void> {
+  const select = page.locator(`select[name="${name}"]`);
+  if ((await select.count()) > 0) {
+    await select.selectOption(value);
+    return;
+  }
   const input = page.locator(`input[name="${name}"][value="${value}"]`);
   const group = name === 'boardType' ? await input.getAttribute('data-group') : null;
   if (group !== null) await page.locator(`input[name="typeGroup"][value="${group}"]`).check();
   await input.check();
 }
 
-/** The option chosen in a Choice, to read its value. */
-export const chosen = (page: Page, name: string): Locator => page.locator(`input[name="${name}"]:checked`);
+/** The option chosen in a Choice, or a Select itself, to read its value. */
+export const chosen = (page: Page, name: string): Locator =>
+  page.locator(`select[name="${name}"], input[name="${name}"]:checked`);
 
 /**
  * Where the preview drew the part, in the canvas's own pixels: the box round every pixel that is not

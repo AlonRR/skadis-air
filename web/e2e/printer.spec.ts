@@ -11,9 +11,7 @@ async function ready(page: Page) {
 test('starts on the safe default bed, 200 x 200 mm, which the starting board fits', async ({ page }) => {
   await ready(page);
   await expect(chosen(page, 'printerBed')).toHaveValue('default');
-  await expect(page.getByTestId('printer-bed').locator('input:checked + .ws-choice__face')).toContainText(
-    '200 × 200 mm',
-  );
+  await expect(page.getByTestId('printer-bed').locator('option:checked')).toContainText('200 × 200 mm');
   await expect(page.getByTestId('bed-warning')).toBeEmpty();
 });
 
@@ -47,9 +45,9 @@ test('says so when the custom bed is not a size it can use', async ({ page }) =>
 // models, as buttons, each with its bed from the maker's site (docs/printer-beds.md).
 test('lists the makers after the default and custom, and a maker its models (D170)', async ({ page }) => {
   await ready(page);
-  const beds = page.getByTestId('printer-bed').locator('input[name="printerBed"]');
+  const beds = page.getByTestId('printer-bed').locator('option');
   await expect(beds).toHaveCount(9);
-  expect(await beds.evaluateAll((inputs) => inputs.map((i) => (i as HTMLInputElement).value))).toEqual([
+  expect(await beds.evaluateAll((options) => options.map((o) => (o as HTMLOptionElement).value))).toEqual([
     'default',
     'custom',
     'prusa',
@@ -84,7 +82,7 @@ test("puts the maker in a field of its own, the maker's printers or a custom bed
   const printer = page.getByTestId('printer');
   const machine = page.getByTestId('printer-machine');
   await expect(printer.locator('legend')).toHaveText('Printer');
-  await expect(printer.getByRole('radiogroup', { name: 'Printer', exact: true })).toBeVisible();
+  await expect(printer.getByRole('combobox', { name: 'Printer', exact: true })).toBeVisible();
   await expect(machine).toBeHidden(); // nothing more to choose on the safe default
   await expect(printer.getByTestId('bed-note')).toContainText('200 × 200 mm');
   await choose(page, 'printerBed', 'prusa');
@@ -100,6 +98,24 @@ test("puts the maker in a field of its own, the maker's printers or a custom bed
   await expect(printer.locator('input[name="bedXMm"]')).toHaveCount(0);
   await choose(page, 'printerBed', 'default');
   await expect(machine).toBeHidden();
+});
+
+test("picks the printer from the design system's Select, every maker's models still buttons (D260)", async ({
+  page,
+}) => {
+  await ready(page);
+  const printer = page.getByTestId('printer');
+  const list = printer.getByRole('combobox', { name: 'Printer', exact: true });
+  // the safe default, Custom and 7 makers: one list, drawn by the design system, in place of 9 buttons
+  await expect(list).toHaveValue('default');
+  await expect(list.locator('xpath=..')).toHaveClass('ws-select');
+  await expect(printer.locator('input[name="printerBed"]')).toHaveCount(0);
+  // the 9 models of Bambu Lab stay buttons, as every maker's do
+  await choose(page, 'printerBed', 'bambu-lab');
+  const machine = page.getByTestId('printer-machine');
+  await expect(machine.locator('legend')).toHaveText('Bambu Lab printers');
+  await expect(machine.getByRole('radio')).toHaveCount(9);
+  await expect(machine.getByTestId('bed-note')).toBeVisible();
 });
 
 test("offers the owner's Prusa MK3S+, 250 x 210 mm (D172)", async ({ page }) => {

@@ -1,7 +1,7 @@
 // The printer bed on the page (backlog items printer-default and printer-presets): the safe default, 200 x 200 mm
-// (D61), a custom size, or a printer from the list (docs/printer-beds.md), all as the design system's Choice
-// buttons (D111): a button for each maker after the two (D170), and in a field of their own after it, titled for the
-// choice, the maker's models or the custom size (D257). The choice, or the custom size, is remembered in this
+// (D61), a custom size, or a printer from the list (docs/printer-beds.md): the two and each maker after them
+// (D170) in the design system's Select (D260), and in a field of their own after it, titled for the choice, the
+// maker's models as its Choice buttons (D111) or the custom size (D257). The choice, or the custom size, is remembered in this
 // browser, as the theme is (D171).
 import { DEFAULT_BED, MAKERS, modelLabel, readTypedNumber, type Bed } from 'skadis-air';
 import { choiceGroup, chosenIn } from './form.js';
@@ -10,7 +10,7 @@ const MIN_MM = 50;
 const MAX_MM = 1000;
 const STORE = 'skadis-air-printer';
 
-/** What is remembered: the button chosen under "Printer", and the model or the custom size with it. */
+/** What is remembered: the option chosen under "Printer", and the model or the custom size with it. */
 interface Remembered {
   bed: string; // 'default', 'custom' or a maker's id
   model?: string;
@@ -63,7 +63,7 @@ const size = (input: HTMLInputElement | null): number => {
 
 /** `box` is the maker's field; `machine`, the next, holds its models or the custom size (D257). */
 export function mountPrinter(box: HTMLElement, machine: HTMLElement, changed: () => void): PrinterChoice {
-  const list = box.querySelector<HTMLElement>('[data-testid="printer-bed"]');
+  const list = box.querySelector<HTMLSelectElement>('select[name="printerBed"]');
   const note = box.querySelector<HTMLElement>('[data-testid="bed-note"]');
   const title = machine.querySelector('legend');
   const models = machine.querySelector<HTMLElement>('[data-testid="printer-model"]');
@@ -73,16 +73,10 @@ export function mountPrinter(box: HTMLElement, machine: HTMLElement, changed: ()
   const error = machine.querySelector<HTMLElement>('[data-testid="bed-error"]');
   const defaultNote = note?.textContent ?? '';
 
-  // A button for each maker, after "Safe default" and "Custom" (D170).
-  const makerButtons = choiceGroup(
-    'printerBed',
-    'Printer',
-    MAKERS.map((m) => ({ value: m.id, label: m.name })),
-    '',
-  );
-  list?.append(...makerButtons.children);
+  // An option for each maker, after "Safe default" and "Custom" (D170).
+  list?.append(...MAKERS.map((m) => new Option(m.name, m.id)));
 
-  const chosenBed = () => (list ? chosenIn(list) : 'default');
+  const chosenBed = () => list?.value ?? 'default';
   const chosenPrinter = () => {
     const maker = makerOf(chosenBed());
     if (maker === undefined || models === null) return undefined;
@@ -113,24 +107,21 @@ export function mountPrinter(box: HTMLElement, machine: HTMLElement, changed: ()
     const printer = chosenPrinter();
     if (note) {
       note.textContent = printer ? `The ${printer.model}'s bed: ${mm(printer)}.` : defaultNote;
-      (printer ? models : list)?.after(note); // under the maker's printers, or else under the makers
+      (printer ? models : list?.closest('.ws-select'))?.after(note); // under the maker's printers, or the list
     }
     if (bed === 'custom') remember({ bed, xMm: size(x), yMm: size(y) });
     else remember(printer ? { bed, model: printer.id } : { bed });
   };
 
-  // What this browser chose before (D171): its button, and its model or its custom size.
+  // What this browser chose before (D171): its option, and its model or its custom size.
   const before = recall();
-  if (before && list) {
-    const button = list.querySelector<HTMLInputElement>(`input[name="printerBed"][value="${CSS.escape(before.bed)}"]`);
-    if (button) {
-      button.checked = true;
-      if (before.bed === 'custom' && x && y && before.xMm !== undefined && before.yMm !== undefined) {
-        x.value = String(before.xMm);
-        y.value = String(before.yMm);
-      }
-      showModels(before.bed, before.model);
+  if (before && list && [...list.options].some((o) => o.value === before.bed)) {
+    list.value = before.bed;
+    if (before.bed === 'custom' && x && y && before.xMm !== undefined && before.yMm !== undefined) {
+      x.value = String(before.xMm);
+      y.value = String(before.yMm);
     }
+    showModels(before.bed, before.model);
   }
   settle();
 

@@ -121,21 +121,23 @@
             </fieldset>
             <div data-testid="board-form"></div>
             <div class="ws-notice ws-notice--warning" data-testid="bed-warning" aria-live="polite"></div>
-            <!-- The printer's maker, a choice of its own (D257), then the maker's printers or the custom bed, titled for
-                it: written by printer.ts (D170) -->
+            <!-- The printer's maker, a choice of its own (D257), as the design system's Select (D260), named by the
+                field's legend; then the maker's printers or the custom bed, titled for it: written by printer.ts (D170) -->
             <fieldset class="ws-fieldset" data-testid="printer">
-              <legend>Printer</legend>
-              <div class="ws-choice" role="radiogroup" aria-label="Printer" data-testid="printer-bed">
-                <label class="ws-choice__opt">
-                  <input class="ws-choice__input" type="radio" name="printerBed" value="default" checked />
-                  <span class="ws-choice__face">Safe default: 200 × 200 mm</span>
-                </label>
-                <label class="ws-choice__opt">
-                  <input class="ws-choice__input" type="radio" name="printerBed" value="custom" />
-                  <span class="ws-choice__face">Custom</span>
-                </label>
-              </div>
-              <p class="ws-note" data-testid="bed-note">Most printers take a board of 200 × 200 mm.</p>
+              <legend id="printer-legend">Printer</legend>
+              <span class="ws-select"
+                ><select
+                  class="ws-input"
+                  name="printerBed"
+                  data-testid="printer-bed"
+                  aria-labelledby="printer-legend"
+                  aria-describedby="bed-note"
+                >
+                  <option value="default" selected>Safe default: 200 × 200 mm</option>
+                  <option value="custom">Custom</option>
+                </select></span
+              >
+              <p class="ws-note" id="bed-note" data-testid="bed-note">Most printers take a board of 200 × 200 mm.</p>
             </fieldset>
             <fieldset class="ws-fieldset" data-testid="printer-machine" hidden>
               <legend></legend>
