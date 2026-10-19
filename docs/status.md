@@ -196,6 +196,9 @@ Building next: the release and the Printables page (`printables-entry`, D211 to 
 faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`. The draft on Printables is
 made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
 
+- **A263** Mend the count under a board's size, which reads "= 1 tiles" at one tile (seen 19 Oct 2026 at a
+  width of 40 mm): "= 1 tile", and "= 2 tiles" from two on, with its test first. Recommended.
+
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 
