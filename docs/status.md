@@ -135,7 +135,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D189 | **The pegs are the slot as the board cuts it less a 0.4 mm peg clearance** (4.8 x 14.8 mm; the clearance under Advanced), stopping 2.5 mm short of the front face; the bar is 10 mm wide. On the page under "Connectors" as "Slot clip", for 2 or 4 boards, its depth 20 mm by default, 12 to 40 mm; solid only; saved as `skadis-slot-clip-2-boards-20mm.stl`. The questions' text said boards one above the other take the same clip turned a quarter, which is wrong: the slots stand upright, so they take a clip of their own (C191) | 16 Oct 2026 |
 | D190 | **A board on keyholes stands off the wall on pads at its four corners**, as tall as the standoffs (20 mm unless set, at least 8 mm, C99), the keyholes through the top two, so a hook has room behind it; standoffs then go with keyholes, which reverses D158. When: D191; since D235 and D237 the keyholes are cut in the top two standoffs themselves, 12 x 21 mm | 16 Oct 2026 |
 | D191 | **The pads were built at once**, not after T151, which then prints the padded board: every hook measured needs room behind the board, which a flat board does not give | 16 Oct 2026 |
-| D194 | **The clip's pegs grip with friction ribs or a snap lip**, a "Grip" choice under Advanced, ribs unless set: ribs crush as the peg goes in and keep the pegs 2.5 mm long (D189); the lip, on a peg split along its length, springs into the slot's front chamfer and holds firmly, and costs the slot 40 mm above each peg its two-peg hooks | 16 Oct 2026 |
+| D194 | **The clip's pegs grip with friction ribs or a snap lip**, a "Grip" choice under Advanced, ribs unless set: ribs crush as the peg goes in and keep the pegs 2.5 mm long (D189); the lip, on a peg split along its length, springs into the slot's front chamfer and holds firmly, and costs the slot 40 mm above each peg its two-peg hooks (the lip taken out by D261, 19 Oct 2026) | 16 Oct 2026 |
 | D195 | **The clip takes a screw or a keyhole, or neither**: one "Fixing" choice, None, Screw or Keyhole, None unless set. The screw goes through the clip's free half once the first board is up, so the pegs set its place; the keyhole hangs the clip on a screw already in the wall | 16 Oct 2026 |
 | D196 | **A wall has no size limit**; at most 1 km each way since D223 | 16 Oct 2026 |
 | D197 | **A large wall is drawn in full detail only where the view needs it**, as games draw large scenes: panels near the camera or zoomed in on in full, up to about 5 million triangles, and the rest as flat plates with their slots drawn on them as a picture, fewer and larger the farther they are | 16 Oct 2026 |
@@ -165,6 +165,9 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D257 | **The printer's maker is a field of its own**, as boards and connectors are (D256): "Printer", the safe default, Custom and a button for each maker; after it a field titled for the choice, "Prusa printers" with the maker's models and its bed, or "Custom bed" with the width and depth; none on the safe default (the owner: "company should be in a separate box than machine") | 18 Oct 2026 |
 | T193 | **The slot clips tried** (relayed, 19 Oct 2026): "The ribbed version holds to the 2 dot peg and to the Ikea original really well. The clip, clips in but doesn't hold. They are both flush. I think the ribbed version is better." Read as (inferred): the ribbed clip holds well in the fit coupon's slot with 2 dots, 0.1 mm clearance (D67), and in an IKEA board, whose slots are about the page's starting 0.2 mm (D40); the lip clip snaps in but does not hold; both clips' pegs end flush with the board's front, as D250 a asked. The ribs are already the starting grip (D194) | 19 Oct 2026 |
 | A254 | **The Printables draft's slot clips are the new defaults**: its three clip files replaced by `skadis-slot-clip-2-boards-15mm-screw`, `-2-boards-stacked-15mm-screw` and `-4-boards-15mm-screw` (pegs flush, a screw first; 13 of 13 files pass the STL check), and its clip picture by a new one, which Printables puts last as it does not reorder by dragging; saved as a draft, checked after a reload, still unpublished. Approved 18 Oct 2026 for once the clips work, which T193 found | 19 Oct 2026 |
+| D259 | **The design system's v0.6.0 is adopted**, as an item of its own (`design-system-v060`): its Stepper in place of the page's own arrows (C253), its `hidden` without the wrapping divs (C179), its `theme-init.js` in place of the page's (keyed `skadis-air-theme`), and its steps from the release's "Moving to it" (the owner's "259 a") | 19 Oct 2026 |
+| D260 | **The printer list is the design system's Select**, one row in place of five: the safe default, Custom and the 7 makers; every maker's models stay buttons, the same for each maker (the owner's "260 a") | 19 Oct 2026 |
+| D261 | **The lip grip is taken out**, as it snaps in but does not hold (T193): the slot clip's pegs grip by ribs alone, and the Printables text loses "a snap lip in place of the ribs" (the owner's "261 a") | 19 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -192,24 +195,6 @@ Building next: the release and the Printables page (`printables-entry`, D211 to 
 `v0.2.0` was released and the Printables files and pictures made (16 Oct 2026); a code review then found 15
 faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`. The draft on Printables is
 made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
-
-- **D259** Adopt the design system's v0.6.0 (offered 19 Oct 2026, relayed), as an item of its own,
-  `design-system-v060`: recommended. Its Stepper takes the place of the page's own arrows (C253), its `hidden`
-  hides a Choice without the wrapping div (C179), its `theme-init.js` the page's own (with
-  `data-key="skadis-air-theme"`, so a theme chosen before holds), and every field is a button's height. It also
-  mends `web/public/design-system/README.md`, which names the tag `v0.5.1` and commit `156bf36`, neither on GitHub
-  since the design system's history was rewritten (verified 19 Oct 2026: its tags there are `v0.1.0`, `v0.2.0` and
-  `v0.6.0`, and GitHub finds no commit `156bf36`).
-- **D260** With D259, the design system's Select, its control for a list longer than about seven: here the
-  printer list (9: the safe default, Custom and 7 makers) and Bambu Lab's models (9). Recommended: (a) the Select
-  for the printer list, one row in place of five, and buttons for every maker's models, the same for each maker;
-  (b) the Select for both; (c) buttons for both, as now.
-
-- **D261** The lip grip snaps in but does not hold (T193, 19 Oct 2026). Recommended: (a) take it out of the page,
-  leaving the ribs, which hold in a printed board and an IKEA one; the lip also costs the slot above each peg its
-  two-peg hooks (D194), and the Printables text loses its line "a snap lip in place of the ribs". What goes with
-  it is a clip made to snap out and in again, as ribs crush as they go in. (b) Make the lip hold, by a deeper catch
-  than its 0.35 mm (C199) or stiffer halves, then print it again and try it. (c) Keep it as it is.
 
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
