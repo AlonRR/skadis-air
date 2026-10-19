@@ -169,6 +169,13 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D260 | **The printer list is the design system's Select**, one row in place of five: the safe default, Custom and the 7 makers; every maker's models stay buttons, the same for each maker (the owner's "260 a"). Built 19 Oct 2026 (C263) | 19 Oct 2026 |
 | D261 | **The lip grip is taken out**, as it snaps in but does not hold (T193): the slot clip's pegs grip by ribs alone, and the Printables text loses "a snap lip in place of the ribs" (the owner's "261 a"). Built in `9c78e56`, the ribbed parts byte for byte as before; the draft's line now reads "a screw or a keyhole to fix it to the wall, or neither", saved and checked after a reload | 19 Oct 2026 |
 | A263 | **One tile is a tile**: the count under a board's size reads "= 1 tile" at one tile, not "= 1 tiles"; a setting's count names its step in both forms (the owner's "263 y") | 19 Oct 2026 |
+| D264 | **Each screw's length is stated from its stack**: beside the screw size, the plastic the screw passes through, "20 mm of board and standoff, plus your wall plug", from the part's own settings, and in the Printables text (the owner's "264 a"; the connectors' design pass, finding 1) | 19 Oct 2026 |
+| D265 | **The slot clip takes a screw head choice**, countersunk as before or a round head sunk in a counterbore, countersunk the start ("265 a"; finding 2) | 19 Oct 2026 |
+| D266 | **A 0.8 mm chamfer round each peg's root**, inside the slot's 1 mm back chamfer; the draft's three clip files made again ("266 a"; finding 3) | 19 Oct 2026 |
+| D267 | **The standoff's hole is tight for 2 mm at the board face**, about 0.85 times the screw, so the screw pushed through the board carries it; tried first on a 1-board coupon ("267 a"; finding 4) | 19 Oct 2026 |
+| T268 | **The ribbed clip gets looser** (relayed, 19 Oct 2026: "it gets looser"), and two ideas are to be tried: "adding small nubs/dots near the top after the lip of the board, assume that it will be a tight squeeze to push the peg in and that the plastic will deform but bounce back"; and "adjusting the clip version we tried previously, to be 2 parts, the clip and a slot fill to stop the clip from changing. The fill is between the clip tungs": the lip clip's split peg locked by a fill in its slit, as an expansion (push-pin) rivet is | 19 Oct 2026 |
+| A269 | **The repository's `CLAUDE.md` names two connector types**, not five ("269 y") | 19 Oct 2026 |
+| D270 | **Finding 5 is fixed on every connector and standoff** (the owner: "fix finding 5, I did mean for you to look at all the connectors and standoffs"), and **the boards get the same design pass** ("also look into the skadis boards") | 19 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -196,28 +203,6 @@ Building next: the release and the Printables page (`printables-entry`, D211 to 
 `v0.2.0` was released and the Printables files and pictures made (16 Oct 2026); a code review then found 15
 faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`. The draft on Printables is
 made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
-
-The connectors' design pass (19 Oct 2026), against the engineering practices of that day:
-[`research/2026-10-19-connectors-design-pass.md`](research/2026-10-19-connectors-design-pass.md).
-
-- **D264** State each screw's length from its stack (its finding 1), beside the screw size and in the Printables
-  text. Recommended: (a) the plastic the screw passes through, "20 mm of board and standoff, plus your wall
-  plug", from the part's own settings; (b) a whole length, taking a 30 mm plug ("a 4 x 50 mm screw"); (c) leave it.
-- **D265** The slot clip's countersunk screw (finding 2). Recommended: (a) the clip takes the boards' "Screw head"
-  choice, countersunk as now or a round head sunk in a counterbore, countersunk staying the start, so the draft's
-  files stay; (b) a round head in a counterbore as the start, the draft's three clip files made again; (c) as now.
-- **D266** A 0.8 mm chamfer round each peg's root, inside the slot's 1 mm back chamfer, so the peg is not a sharp
-  corner on a layer line where a levered board would snap it (finding 3); the fit is unchanged. Recommended:
-  (a) yes, the draft's three clip files made again; (b) no.
-- **D267** The standoff floats behind the board until the first screw is tight (finding 4). Recommended:
-  (a) a 2 mm section of its hole at the board face about 0.85 times the screw, so the screw pushed through the
-  board carries it, tried first on a 1-board coupon; (b) as now, its help text saying to hold it until the first
-  screw is in.
-- **T268** Two checks of the ribbed clip already printed (finding 6): with its pegs in the fit coupon's 3- and
-  4-dot slots (0.2 mm, the page's start, and 0.3 mm), does it hold? And in the IKEA board, pulled out and pushed
-  back three times, does it still hold as well?
-- **A269** Correct the repository's `CLAUDE.md`, which says five connector types; there are two (finding 7).
-  Recommended.
 
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
