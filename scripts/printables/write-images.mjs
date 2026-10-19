@@ -47,7 +47,13 @@ const ready = async (page) => {
     { timeout: 30_000 },
   );
 };
-const choose = (page, name, value) => page.locator(`input[name="${name}"][value="${value}"]`).check({ force: true });
+const choose = async (page, name, value) => {
+  const input = page.locator(`input[name="${name}"][value="${value}"]`);
+  // a type's button is shown once its group is chosen under "What to make" (D256)
+  const group = name === 'boardType' ? await input.getAttribute('data-group') : null;
+  if (group !== null) await page.locator(`input[name="typeGroup"][value="${group}"]`).check({ force: true });
+  await input.check({ force: true });
+};
 
 // One after another, as the design system's screenshots are taken; each in steps, in order.
 const inTurn = (items, step) => items.reduce((done, item) => done.then(() => step(item)), Promise.resolve());
