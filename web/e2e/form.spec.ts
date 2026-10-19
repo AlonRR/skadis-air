@@ -157,6 +157,9 @@ test('puts boards or connectors in a field of its own, the types of the one chos
   await expect(types.getByRole('radiogroup', { name: 'Boards', exact: true })).toBeVisible();
   const connectors = types.getByRole('radiogroup', { name: 'Connectors', exact: true, includeHidden: true });
   await expect(connectors).toBeHidden();
+  // hidden itself, in the field with no box round it, as the design system's v0.6.0 hides it (D259; C179)
+  await expect(connectors).toHaveAttribute('hidden', '');
+  await expect(connectors.locator('xpath=..')).toHaveAttribute('data-testid', 'board-type');
   await expect(connectors.getByRole('radio', { name: 'Standoff', includeHidden: true })).toHaveValue('standoff');
   // the type's field is titled for the group chosen
   await choose(page, 'typeGroup', 'connector');

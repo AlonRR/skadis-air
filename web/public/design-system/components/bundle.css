@@ -2,6 +2,11 @@
 /* The page: class ws-page on <body>. The browser's margin and its own fonts for controls give way to the tokens */
 .ws-page{margin:0;color:var(--ink);background:var(--surface);font:var(--text-body)}
 :where(.ws-page) :where(button,input,select,textarea){font:inherit}
+/* The hidden attribute always hides (D57). The browser's own [hidden]{display:none} is the weakest rule there
+  is, so every class here that sets display beats it. !important, as nothing
+  else can beat the specificity of a rule such as the header's version; hidden=until-found keeps the
+  browser's meaning, a section that find-in-page opens */
+[hidden]:not([hidden=until-found i]){display:none !important}
 .ws-text{font:var(--text-body);color:var(--ink);background:var(--surface);max-width:var(--measure);margin:0 auto;padding:var(--space-6)}
 .ws-fieldset{border:var(--line) solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised);margin:0 0 var(--space-4);padding:var(--space-3) var(--space-4) var(--space-4);min-width:0}
 .ws-fieldset legend{font:var(--text-legend);padding:0 var(--space-1)}
@@ -9,7 +14,10 @@
   margin; a note sits space-1 under the group it explains, so groups keep no bottom margin */
 .ws-fieldset > legend + *{margin-top:0}
 .ws-label{display:block;margin-top:var(--space-3);font:var(--text-body)}
-.ws-input{display:block;min-height:var(--control-h);font:inherit;color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border-strong);border-radius:var(--radius-sm);padding:var(--field-pad-y) var(--field-pad-x);margin-top:var(--space-1);width:100%;box-sizing:border-box}
+/* A field is exactly control-h tall: its block padding is what control-h leaves of its line, control-pad-y,
+  less its border, as a Disclosure summary's is control-pad-y (D68); min-height keeps it so where a browser
+  cannot read lh */
+.ws-input{display:block;min-height:var(--control-h);font:inherit;color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border-strong);border-radius:var(--radius-sm);padding:calc(var(--control-pad-y) - var(--line)) var(--field-pad-x);margin-top:var(--space-1);width:100%;box-sizing:border-box}
 .ws-input[aria-invalid=true]{border-color:var(--error);outline:var(--ring) solid var(--error)}
 .ws-input:disabled{opacity:var(--opacity-disabled)}
 /* A number field is as wide as a number, not as the sidebar */
@@ -19,26 +27,55 @@
 .ws-error{color:var(--error);display:block;font:var(--text-note);min-height:1lh}
 .ws-caps{font:var(--text-label-caps);letter-spacing:var(--text-label-caps-tracking);text-transform:uppercase;color:var(--ink-muted)}
 .ws-btn{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;font:inherit;min-height:var(--control-h);padding:0 var(--space-4);color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border-strong);border-radius:var(--radius-sm);cursor:pointer}
-/* Hover tints what can be used; a disabled control stays as it is, so it never looks usable */
-.ws-btn:hover:not(:disabled){background:var(--action-tint)}
+/* Hover tints what can be used; a disabled control stays as it is, so it never looks usable. A button that
+  must keep its focus while it cannot be used, a Stepper's at a limit, says so with aria-disabled and looks
+  disabled: disabled, the focused button would lose its focus (Firefox drops it to the page, D56). A list,
+  not :is(), so each selector keeps its own weight and the primary button's hover below still wins */
+.ws-btn:hover:not(:disabled,[aria-disabled=true]),.ws-select > .ws-input:hover:not(:disabled,[aria-disabled=true]),.ws-summary:hover:not(:disabled,[aria-disabled=true]),.ws-piece:hover:not(:disabled,[aria-disabled=true]),.ws-tile:hover:not(:disabled,[aria-disabled=true]),.ws-rail__btn:hover:not(:disabled,[aria-disabled=true]),.ws-choice__input:hover:not(:disabled,[aria-disabled=true]) + .ws-choice__face,.ws-sides__btn:hover:not(:disabled,[aria-disabled=true]){background:var(--action-tint)}
+/* Selected: tint, ring and an action border, in ink, as every selected state; only the primary button is
+  filled (D26). The label is bold, but for a PieceMap cell's: there bold says a piece has its own fill, so
+  the chosen radio's dot says it is selected (D47). Before a done step's rule, which keeps its border */
+.ws-piece[aria-pressed=true],.ws-tile[aria-pressed=true],.ws-rail__btn[aria-current=step],.ws-choice__input:checked + .ws-choice__face,.ws-sides__btn[aria-pressed=true]{outline:var(--ring) solid var(--action);background:var(--action-tint);border-color:var(--action);color:var(--ink)}
+.ws-tile[aria-pressed=true],.ws-rail__btn[aria-current=step],.ws-choice__input:checked + .ws-choice__face,.ws-sides__btn[aria-pressed=true]{font-weight:var(--weight-bold)}
 .ws-btn--primary{background:var(--action);color:var(--on-action);border-color:var(--action);font-weight:var(--weight-bold)}
-.ws-btn--primary:hover:not(:disabled){background:var(--action);filter:brightness(.92)}
-.ws-btn:disabled{opacity:var(--opacity-disabled);cursor:not-allowed}
+.ws-btn--primary:hover:not(:disabled,[aria-disabled=true]){background:var(--action);filter:brightness(.92)}
+.ws-btn:is(:disabled,[aria-disabled=true]){opacity:var(--opacity-disabled);cursor:not-allowed}
 .ws-btn--quiet{border-color:transparent;background:transparent}
+/* Stepper (D56): a number field, then two Buttons, ↓ and ↑, in a row. The buttons are control-h tall, as the
+  field is (D68), and stretch to the row, so they line up with it; they are at least control-h wide, a touch
+  target each way on a touch screen; the field gives way on a narrow sidebar. The row keeps the space-1
+  under the label that the field keeps on its own */
+.ws-stepper{display:flex;align-items:stretch;gap:var(--space-1);margin-top:var(--space-1)}
+.ws-stepper > .ws-input{flex:1 1 auto;min-width:0;margin-top:0}
+.ws-stepper__btn{flex:none;min-width:var(--control-h);padding:0 var(--space-2)}
+/* A type=number field in a Stepper keeps no spin buttons of its own beside the arrows: appearance:textfield
+  hides them in Firefox, the pseudo-elements in Chromium and WebKit; neither alone hides all three (measured) */
+.ws-stepper > .ws-input[type=number]{appearance:textfield}
+.ws-stepper > .ws-input::-webkit-inner-spin-button,.ws-stepper > .ws-input::-webkit-outer-spin-button{appearance:none;margin:0}
+/* Select (D69): the native select, a Field's input drawn from tokens, in a span.ws-select that draws its chevron.
+  appearance:none takes the browser's own arrow away, which each engine draws its own way and WebKit at 42.5px
+  tall (measured), and the chevron is a Codicon (chevron-down) from the font, so it is text: it takes ink, and in
+  forced colours the user's text colour, where an image drawn with a background would vanish. It sits in a
+  control-h square at the select's end, over the select, and lets a press through to it; the select keeps that
+  square free of its text. Its alternative text is empty, so a screen reader skips it, as aria-hidden would.
+  The list the browser opens follows the theme through the page's color-scheme */
+.ws-select{display:grid;align-items:center;margin-top:var(--space-1)}
+.ws-select > .ws-input{grid-area:1/1;margin-top:0;appearance:none;padding-inline-end:var(--control-h);cursor:pointer}
+.ws-select::after{content:"\eab4";content:"\eab4" / "";grid-area:1/1;justify-self:end;width:var(--control-h);text-align:center;line-height:1;color:var(--ink);pointer-events:none}
+.ws-select:has(> .ws-input:disabled)::after{opacity:var(--opacity-disabled)}
 /* A row of buttons, as in the Button card; the plan bar and a dialog's menu have their own */
 .ws-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2)}
 /* Links in text: the accent colour, and the focus ring every control has */
 :where(.ws-page,.ws-text,.ws-workbench) a{color:var(--action)}
 :where(.ws-page,.ws-text,.ws-workbench) a:focus-visible{outline:var(--ring) solid var(--action);outline-offset:var(--ring)}
 /* At least control-h tall (a touch target on touch screens), text centred; padding, not display, keeps the marker */
-.ws-summary{cursor:pointer;font:var(--text-legend);padding-block:calc((var(--control-h) - 1lh) / 2)}
-.ws-summary:hover{background:var(--action-tint)}
+.ws-summary{cursor:pointer;font:var(--text-legend);padding-block:var(--control-pad-y)}
 .ws-details{margin:0 0 var(--space-4)}
 .ws-map{display:grid;gap:var(--space-1);margin:var(--space-2) 0 0}
 .ws-piece{font:inherit;min-width:var(--tap);min-height:var(--control-h);padding:var(--space-1);color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border-strong);border-radius:var(--radius-sm);cursor:pointer}
-.ws-piece:hover:not(:disabled){background:var(--action-tint)}
-/* Selected: tint, ring and an action border, as every selected state (D26); bold already says a piece has its own fill */
-.ws-piece[aria-pressed=true]{outline:var(--ring) solid var(--action);background:var(--action-tint);border-color:var(--action)}
+/* Selected, a piece also shows the chosen radio's dot, as it is one of a pick-one (D47); the Choice rules
+  below draw it. The cell's width comes from the grid's columns, so the dot never moves the map */
+.ws-piece[aria-pressed=true]::before{display:inline-block;vertical-align:middle}
 .ws-piece[data-own=yes]{font-weight:var(--weight-bold)}
 /* A dialog keeps space-4 from the screen's edges (its max-width counts its padding and border), and the
   scrim behind it lifts it 3:1 off the page, by its face in light and its border-strong edge in dark (check-contrast.py) */
@@ -57,35 +94,43 @@
 .ws-notice:empty{padding:0;border-width:0;margin:0}
 /* Gallery: a visual picker, a grid of tiles */
 .ws-gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-2);margin:var(--space-2) 0 0}
-.ws-tile{font:inherit;display:grid;gap:var(--space-1);justify-items:center;padding:var(--space-2);color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border-strong);border-radius:var(--radius-sm);cursor:pointer;font:var(--text-label-caps)}
-.ws-tile:hover:not(:disabled){background:var(--action-tint)}
-/* Selected: tint, ring, an action border and a bold label, as every selected state (D26) */
-.ws-tile[aria-pressed=true]{outline:var(--ring) solid var(--action);background:var(--action-tint);border-color:var(--action);font-weight:var(--weight-bold)}
+.ws-tile{display:grid;gap:var(--space-1);justify-items:center;padding:var(--space-2);color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border-strong);border-radius:var(--radius-sm);cursor:pointer;font:var(--text-label-caps)}
 .ws-tile svg{width:100%;height:auto;display:block}
 /* Workbench: header, step rail, sidebar, stage, status bar */
 /* A phone: the stage lays its parts out in the page (display:contents), so the 3D view and the plan
   bar under it stay pinned while the status bar scrolls away with the form (D25) */
-.ws-workbench{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:var(--header-h) var(--stage-phone-h) auto auto 1fr;min-height:100svh;font-family:var(--font-ui);font:var(--text-body);color:var(--ink);background:var(--surface)}
+.ws-workbench{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:var(--header-h) var(--stage-phone-h) auto auto 1fr;min-height:100svh;font:var(--text-body);color:var(--ink);background:var(--surface)}
 .ws-header{grid-column:1/-1;box-sizing:border-box;display:flex;align-items:center;gap:var(--space-2);height:var(--header-h);padding:0 var(--space-3);background:var(--surface-raised);border-bottom:var(--line) solid var(--divider)}
-/* One row on every screen. Below the breakpoint the actions but Undo and Redo sit in a "More…" popover
-  (D28), and check-previews.py fails if the row does not fit. Nothing clips it: a clipping header cut
-  the top and bottom off a focused button's ring */
+/* One row on every screen. Below breakpoint-header the actions but Undo and Redo sit in a "More…" popover
+  (D28), and check-previews.py fails if the row does not fit. Nothing clips it, so a focused button's
+  ring shows whole */
 .ws-header{white-space:nowrap}
 .ws-header__actions:not(:popover-open){display:none}
-.ws-header__actions:popover-open{position:fixed;inset:var(--header-h) var(--space-2) auto auto;margin:0;display:flex;flex-direction:column;align-items:stretch;gap:var(--space-2);padding:var(--space-2);color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border);border-radius:var(--radius-md)}
-/* Below the breakpoint the header tightens to fit a phone: the name in the legend size, smaller gaps;
+/* Open, the More… and View… menus end at the screen's bottom edge and scroll inside: at 400 % zoom on a
+  16:9 screen (320 × 180) neither fits under its button (D41) */
+.ws-header__actions:popover-open{position:fixed;inset:var(--header-h) var(--space-2) auto auto;margin:0;display:flex;flex-direction:column;align-items:stretch;gap:var(--space-2);padding:var(--space-2);color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border);border-radius:var(--radius-md);box-sizing:border-box;max-height:calc(100svh - var(--header-h) - var(--space-2));overflow:auto}
+/* Below breakpoint-header the header tightens to fit a phone: the name in the legend size, smaller gaps;
   narrower still, the name is cut short (its full text stays in the page) rather than the header scroll.
-  These come before the wide-screen rules, which must win (build-tokens.py fails otherwise) */
+  breakpoint-header is wider than the layout's breakpoint, so the whole row waits until it fits
+  beside a whole name (D49). These come before the wide-screen rules,
+  which must win (build-tokens.py fails otherwise) */
 .ws-header .ws-btn{padding:0 var(--space-2)}
 .ws-header__name{font:var(--text-legend);margin:0 auto 0 0;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .ws-header__spacer{display:none}
-@media (min-width:56rem){
+/* Below breakpoint-header the version tag is in More…, after the actions, not in the row: beside the name it
+  cuts a phone's name short (D51). The other copy is display:none, so a screen reader
+  hears one version. A header without More… keeps its version in its row */
+.ws-header:has(.ws-header__more) > .ws-header__version{display:none}
+.ws-header__actions > .ws-header__version{text-align:center}
+@media (min-width:64rem){
   .ws-header{gap:var(--space-3);padding:0 var(--space-4)}
   .ws-header .ws-btn{padding:0 var(--space-3)}
   .ws-header__name{font:var(--text-step);margin:0}
   .ws-header__spacer{display:block;flex:1}
   .ws-header__more{display:none}
   .ws-header__actions,.ws-header__actions:not(:popover-open){position:static;inset:auto;margin:0;display:flex;flex:none;overflow:visible;flex-direction:row;align-items:center;gap:var(--space-3);padding:0;background:transparent;border:0}
+  .ws-header:has(.ws-header__more) > .ws-header__version{display:inline}
+  .ws-header__actions > .ws-header__version{display:none}
 }
 .ws-header__version{font:var(--text-note);color:var(--ink-muted)}
 .ws-stage{display:contents}
@@ -93,14 +138,20 @@
   rather than overlap (D30) */
 .ws-stage__view{position:sticky;top:0;z-index:1;overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr);gap:var(--space-2);min-height:0;padding:var(--space-2);background:var(--surface)}
 .ws-stage__tools{grid-row:1;justify-self:end;z-index:1;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:var(--space-2)}
-/* On a phone or a short screen: Reset view, and View…, a menu under it holding the zoom buttons and the
-  Front, Back and Top choice, so the view stays clear for the fingers that pinch and drag; on a wide
-  screen they are all on show (D36). Where a browser cannot anchor the menu, it opens mid-screen.
-  align-content:start, or WebKit stretches the grid, and the menu, to the screen's height (bug 270334) */
+/* On a phone or a short screen: Reset view, and View…, a menu holding the zoom buttons and the Front,
+  Back and Top choice, so the view stays clear for the fingers that pinch and drag; on a wide screen
+  they are all on show (D36). Open, the menu sits below the view, over the plan bar, its right edge
+  under View…'s, so the part stays in sight while zooming (D42); the tool's script closes it when a
+  view is picked (Workbench README). Where a browser cannot anchor the menu, it opens mid-screen, over
+  the part. align-content:start, or WebKit stretches the grid, and the menu, to the screen's height
+  (bug 270334) */
 .ws-stage__menu:not(:popover-open){display:none}
 .ws-stage__menu:popover-open{display:grid;grid-template-columns:auto auto;justify-content:start;align-content:start;gap:var(--space-2);padding:var(--space-2);color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border);border-radius:var(--radius-md)}
 .ws-stage__menu > .ws-stage__views{grid-column:1/-1;margin:0}
-@supports (position-area:block-end){.ws-stage__menu:popover-open{position-area:block-end span-inline-start;margin:var(--space-2) 0 0}}
+@supports (position-area:block-end){
+  .ws-stage__view{anchor-name:--ws-stage-view}
+  .ws-stage__menu:popover-open{position-anchor:--ws-stage-view;position-area:block-end span-inline-start;margin:var(--space-2) var(--space-2) 0 0;box-sizing:border-box;max-height:calc(100% - var(--space-2));overflow:auto}
+}
 /* Wide: the menu's contents join the row, the choice at the bottom left (D30), and View… goes */
 @media (min-width:56rem){
   .ws-stage__more{display:none}
@@ -123,34 +174,43 @@
   the primary button; the whole sentence stays in the page for a screen reader */
 .ws-plan__line{flex:1 1 0;min-width:0;margin:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
 .ws-plan__actions{display:flex;flex:none;gap:var(--space-2)}
+/* Text for assistive tech only, such as a done step's "done": in the page, not on the screen. Where the bar
+  is one row the primary button shows a short label, "Download...": the rest of it, in ws-plan__long, is
+  hidden from view the same way, so its name stays whole, and the sentence keeps plan-line-min, which
+  check-previews.py holds (D39) */
+.ws-plan__long,.ws-sr{position:absolute;width:var(--line);height:var(--line);overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 /* Pinned, the stage would hide a focused field: scroll the page so a field lands below it */
 :root:has(.ws-workbench){scroll-padding-top:calc(var(--stage-phone-h) + var(--control-h) + 2 * var(--space-3) + var(--line))}
-/* A short or zoomed screen pins nothing */
-@media (max-height:30rem){
+/* A short or zoomed screen pins nothing, and nor does a landscape one too narrow for side by side (D41);
+  side by side, below, re-sets each of these */
+@media (max-height:30rem),(min-aspect-ratio:4/3){
   .ws-workbench{grid-template-rows:var(--header-h) minmax(var(--stage-phone-h),auto) auto auto 1fr}
-  /* Wide but short, the view's controls go back into View… (D36) */
-  .ws-stage__more{display:inline-flex}
-  .ws-stage__menu:not(:popover-open){display:none}
-  .ws-stage__menu > .ws-stage__views{position:static}
   .ws-stage__view{position:relative}
   .ws-plan{position:static}
   :root:has(.ws-workbench){scroll-padding-top:0}
+}
+/* Wide but short, the view's controls go back into View… (D36) */
+@media (max-height:30rem){
+  .ws-stage__more{display:inline-flex}
+  .ws-stage__menu:not(:popover-open){display:none}
+  .ws-stage__menu > .ws-stage__views{position:static}
 }
 .ws-side{display:flex;flex-direction:column;min-width:0;background:var(--surface-raised);border-left:var(--line) solid var(--divider);overflow:auto}
 .ws-rail{display:flex;flex-wrap:wrap;gap:var(--space-1);padding:var(--space-2) var(--space-4);border-bottom:var(--line) solid var(--divider);flex:none}
 /* A step button shows its number and its name ("2 Window"), so the step is seen and announced (D31) */
 .ws-rail__btn{display:inline-flex;align-items:center;gap:var(--icon-gap);font:inherit;white-space:nowrap;height:var(--control-h);padding:0 var(--space-2);color:var(--ink-muted);background:transparent;border:var(--line) solid transparent;border-radius:var(--radius-sm);cursor:pointer}
-.ws-rail__btn:hover:not(:disabled){background:var(--action-tint)}
 .ws-rail__num{font-weight:var(--weight-bold)}
-/* Selected is tint and ring, here as in Choice, Sides, Gallery and PieceMap; the fill is the primary button's (D26) */
-.ws-rail__btn[aria-current=step]{background:var(--action-tint);color:var(--ink);border-color:var(--action);outline:var(--ring) solid var(--action);font-weight:var(--weight-bold)}
 .ws-rail__btn[data-done=yes]{color:var(--ink);border-color:var(--border-strong)}
 .ws-controls{flex:1;min-width:0;padding:var(--space-4)}
 .ws-controls > :first-child{margin-top:0}
 .ws-controls h2{font:var(--text-step);margin:0 0 var(--space-3)}
 .ws-nav{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--space-3);margin-top:var(--space-4)}
-/* Side by side: a wide screen, and any screen at least landscape-ratio wide (a landscape phone) */
-@media (min-width:56rem),(min-aspect-ratio:4/3){
+/* Side by side: a wide screen, and a landscape-ratio screen at least breakpoint-side-min wide (a landscape
+  phone); a narrower landscape screen stacks, as a short screen does, and pins nothing (D41). A short
+  screen goes side by side from breakpoint-side-short, or from breakpoint-side-size-w wide and
+  breakpoint-side-size-h tall, on size alone (D54): smaller, the plan bar wraps in the stage's column and
+  the view falls under 40 % (D52; scripts/sweep-side-by-side.py measures every short screen) */
+@media (min-width:61rem),(min-width:56.5rem) and (min-height:25.5rem),(min-width:56rem) and (min-height:30rem),(min-aspect-ratio:4/3) and (min-width:48rem) and (min-height:30rem){
   .ws-workbench{grid-template-columns:minmax(0,1fr) min(var(--panel-width),50%);grid-template-rows:var(--header-h) calc(100svh - var(--header-h))}
   .ws-stage{display:flex;flex-direction:column;min-width:0;background:var(--surface)}
   .ws-stage__view{position:relative;flex:1}
@@ -159,6 +219,7 @@
     under it, to the right. A long file name breaks rather than widen the page */
   .ws-plan__line{flex:1 1 var(--plan-line-basis);display:block;-webkit-line-clamp:none;overflow:visible}
   .ws-plan__actions{flex:0 1 auto;flex-wrap:wrap;margin-left:auto}
+  .ws-plan__long{position:static;width:auto;height:auto;overflow:visible;clip-path:none}
   .ws-side{height:calc(100svh - var(--header-h))}
   :root:has(.ws-workbench){scroll-padding-top:0}
 }
@@ -169,12 +230,10 @@
 .ws-choice__opt{position:relative;display:inline-flex}
 .ws-choice__input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
 .ws-choice__face{box-sizing:border-box;display:inline-flex;align-items:center;min-height:var(--control-h);padding:0 var(--space-4);color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border-strong);border-radius:var(--radius-sm)}
-.ws-choice__input:hover:not(:disabled) + .ws-choice__face{background:var(--action-tint)}
-.ws-choice__input:checked + .ws-choice__face{background:var(--action-tint);border-color:var(--action);color:var(--ink);outline:var(--ring) solid var(--action);font-weight:var(--weight-bold)}
-.ws-choice__face::before{content:"";flex:none;box-sizing:border-box;width:var(--radio-size);height:var(--radio-size);margin:0 calc(var(--icon-gap) + var(--ring)) 0 var(--ring);border:var(--ring) solid var(--border-strong);border-radius:50%;background:transparent}
+.ws-choice__face::before,.ws-piece[aria-pressed=true]::before{content:"";flex:none;box-sizing:border-box;width:var(--radio-size);height:var(--radio-size);margin:0 calc(var(--icon-gap) + var(--ring)) 0 var(--ring);border:var(--ring) solid var(--border-strong);border-radius:50%;background:transparent}
 .ws-choice__input:hover:not(:disabled) + .ws-choice__face::before{border-color:var(--action)}
 /* The chosen radio: an action dot in an action ring; in forced colours, where the inset shadow goes, a filled circle */
-.ws-choice__input:checked + .ws-choice__face::before{border:var(--ring) solid var(--action);background:var(--action);box-shadow:inset 0 0 0 var(--ring) var(--action-tint)}
+.ws-choice__input:checked + .ws-choice__face::before,.ws-piece[aria-pressed=true]::before{border:var(--ring) solid var(--action);background:var(--action);box-shadow:inset 0 0 0 var(--ring) var(--action-tint)}
 .ws-choice__input:focus-visible + .ws-choice__face{outline:var(--ring) solid var(--action);outline-offset:var(--ring)}
 .ws-choice__input:disabled + .ws-choice__face{opacity:var(--opacity-disabled)}
 /* Fira Code: ligatures on for text (so => and -> join), off for numbers and code; zero is slashed for numbers */
@@ -182,8 +241,6 @@
 .ws-input,.ws-status,.ws-plan__line,code,.ws-num{font-variant-ligatures:none;font-feature-settings:"calt" 0,"zero" 1}
 /* The browser sets these in its own monospace; keep the one family */
 code,kbd,samp,pre{font-family:var(--font-ui)}
-/* Text for assistive tech only, such as a done step's "done": in the page, not on the screen */
-.ws-sr{position:absolute;width:var(--line);height:var(--line);overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 /* Nerd Font icons: decoration beside a text label, always aria-hidden */
 .ws-ic{display:inline-block;margin-right:var(--icon-gap);font-style:normal;line-height:1}
 
@@ -191,8 +248,6 @@ code,kbd,samp,pre{font-family:var(--font-ui)}
 .ws-sides__board{grid-area:2/2;width:100%;height:100%;background:var(--surface-sunken);border:var(--line) dashed var(--border-strong);border-radius:var(--radius-sm)}
 .ws-sides__top{grid-area:1/2}.ws-sides__left{grid-area:2/1}.ws-sides__right{grid-area:2/3}.ws-sides__bottom{grid-area:3/2}
 .ws-sides__btn{display:inline-grid;grid-template-columns:auto auto;column-gap:calc(var(--icon-gap) + var(--ring));align-items:center;justify-content:start;min-height:var(--control-h);padding:0 var(--space-3);font:inherit;color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border-strong);border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap}
-.ws-sides__btn:hover:not(:disabled){background:var(--action-tint)}
-.ws-sides__btn[aria-pressed="true"]{background:var(--action-tint);border-color:var(--action);color:var(--ink);outline:var(--ring) solid var(--action);font-weight:var(--weight-bold)}
 /* A box drawn pressed or not, the size of the radio, so pressing never moves the layout. The gap to the
   label is the button's own, so icon-gap (in em) is measured at the label's size, as beside a radio */
 .ws-sides__btn::before{content:"" / "";grid-area:1/1;box-sizing:border-box;width:var(--radio-size);height:var(--radio-size);margin-left:var(--ring);border:var(--ring) solid var(--border-strong);border-radius:var(--ring)}
@@ -206,12 +261,13 @@ code,kbd,samp,pre{font-family:var(--font-ui)}
 
 /* The status bar's hint: the mouse's by default, the touch screen's on one */
 .ws-hint-touch{display:none}
-/* Touch screens: controls grow to the minimum touch target, and the hint is for fingers */
-@media (pointer:coarse){:root{--control-h:var(--tap)}.ws-hint-fine{display:none}.ws-hint-touch{display:inline}}
+/* Touch screens: the hint is for fingers. Controls grow to the minimum touch target through control-h's
+  touch value, which tokens.css sets */
+@media (pointer:coarse){.ws-hint-fine{display:none}.ws-hint-touch{display:inline}}
 /* Forced colours (Windows High Contrast and the like) keep only the user's system colours: the chosen
   radio's action dot would turn to Canvas and look unchosen, and a step not reached would take a border
   like a done one. In system colours, each state keeps its own look (check-previews.py renders it) */
 @media (forced-colors:active){
-  .ws-choice__input:checked + .ws-choice__face::before{background:CanvasText}
+  .ws-choice__input:checked + .ws-choice__face::before,.ws-piece[aria-pressed=true]::before{background:CanvasText}
   .ws-rail__btn:not([data-done=yes]):not([aria-current=step]){border-color:Canvas}
 }

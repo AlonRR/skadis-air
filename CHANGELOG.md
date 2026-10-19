@@ -25,6 +25,10 @@ All notable changes to this project are recorded here. The format follows
 - On a lightened or skeleton board on keyholes, the slots behind which the standoffs stand keep the same rims as
   every other slot: no solid pad round them.
 - The design system's v0.5.1: the wide header and the space under each legend and above each note.
+- The design system's v0.6.0: the arrows beside a number field are its Stepper, faded and doing nothing at a
+  limit, and a value typed finer than the step keeps its decimals (0.275 less 0.05 is 0.225); every field is a
+  button's height; the View... menu closes once a view is picked; on a phone the download button reads
+  "Download"; the theme is set by the design system's own file.
 - Keyholes are in the top two standoffs, cut in their wall faces as the slot clip's keyhole is, so the board's
   face is plain and the screws stand about 5 mm out of the wall. Each standoff stands behind a top corner slot,
   as IKEA's spacer does, with room cut for a hook behind that slot, and the bottom standoffs stand behind the

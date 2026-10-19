@@ -64,6 +64,9 @@ const warningBox = (key: string) =>
   element('div', { class: 'ws-notice ws-notice--warning', 'data-testid': `warning-${key}`, 'aria-live': 'polite' });
 const note = (text: string, id?: string) => element('p', { class: 'ws-note', ...(id ? { id } : {}) }, text);
 
+/** How many decimals a number is written with. */
+const decimals = (text: string) => (text.split('.')[1] ?? '').length;
+
 function numberField(
   s: NumberSetting,
   changed: () => void,
@@ -92,41 +95,62 @@ function numberField(
     autocomplete: 'off',
   });
   const described = [];
-  // Arrows for larger and smaller (D250 c): a step of the setting's own, onto its steps where it keeps to them,
-  // within its limits, as the arrow keys do in the field. The design system has no stepper: two of its Buttons,
-  // their arrows text from its font's arrows, as an icon never stands alone on a button.
-  const decimals = (String(s.step).split('.')[1] ?? '').length;
-  const stepBy = (sign: 1 | -1) => {
+  // The design system's Stepper (its v0.6.0; D259, after D250 c): the field and two of its Buttons, ↓ and ↑, in
+  // one row. A press, or an arrow key in the field, moves the value by the setting's step, onto its steps where
+  // it keeps to them, and stops at its limits, where that button says so and a press does nothing; a value typed
+  // finer than the step keeps its decimals. The Stepper README's lines, reading the value as every field here
+  // reads it (D222) and starting from the setting's own value when the field holds no number.
+  input.dataset['step'] = String(s.step);
+  input.dataset['min'] = String(s.min);
+  if (s.max !== undefined) input.dataset['max'] = String(s.max);
+  if (s.onStep === true) input.dataset['onStep'] = '';
+  const [low, high] = [s.min, s.max ?? Infinity];
+  const value = () => {
     const typed = readTypedNumber(input.value);
-    const from = typed.ok ? typed.value : s.default;
-    // the steps counted from the least value, as a setting that keeps to them counts them
-    const q = (from - s.min) / s.step;
-    const onto =
-      s.onStep === true ? s.min + (sign > 0 ? Math.floor(q + 1e-9) + 1 : Math.ceil(q - 1e-9) - 1) * s.step : null;
-    const next = Math.min(s.max ?? Infinity, Math.max(s.min, onto ?? from + sign * s.step));
-    input.value = String(Number(next.toFixed(decimals)));
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    return typed.ok ? typed.value : Number.NaN;
   };
-  const arrow = (sign: 1 | -1) => {
-    const name = `${sign > 0 ? 'Larger' : 'Smaller'} ${s.label.toLowerCase()}`;
-    const button = element(
+  const arrow = (sign: 1 | -1) =>
+    element(
       'button',
-      { type: 'button', class: 'ws-btn number-step', 'aria-label': name },
+      {
+        type: 'button',
+        class: 'ws-btn ws-stepper__btn',
+        'aria-label': `${sign > 0 ? 'Larger' : 'Smaller'} ${s.label.toLowerCase()}`,
+      },
       sign > 0 ? '↑' : '↓',
     );
-    button.addEventListener('click', () => stepBy(sign));
-    return button;
+  const [down, up] = [arrow(-1), arrow(1)];
+  const say = () => {
+    const now = value();
+    down.setAttribute('aria-disabled', String(now <= low));
+    up.setAttribute('aria-disabled', String(now >= high));
   };
-  // a number field steps by the arrow keys itself; the decimal keypad's text field is taught to
-  if (input.type !== 'number') {
-    input.addEventListener('keydown', (event) => {
-      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
-      event.preventDefault();
-      stepBy(event.key === 'ArrowUp' ? 1 : -1);
-    });
-  }
-  const row = element('div', { class: 'number-row' });
-  row.append(input, arrow(-1), arrow(1));
+  const move = (sign: 1 | -1) => {
+    const typed = value();
+    const from = Number.isFinite(typed) ? typed : s.default;
+    if (sign > 0 ? from >= high : from <= low) return; // at a limit: its button says so, and nothing moves
+    // the steps counted from the least value, as a setting that keeps to them counts them
+    const q = (from - low) / s.step;
+    const next =
+      s.onStep === true
+        ? low + (sign > 0 ? Math.floor(q + 1e-9) + 1 : Math.ceil(q - 1e-9) - 1) * s.step
+        : from + sign * s.step;
+    const places = Math.max(decimals(String(s.step)), decimals(String(from)));
+    input.value = String(Number(Math.min(high, Math.max(low, next)).toFixed(places)));
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  down.addEventListener('click', () => move(-1));
+  up.addEventListener('click', () => move(1));
+  // the keys are the script's, a text field not stepping by itself; in a number field they stop the browser's own
+  input.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    move(event.key === 'ArrowUp' ? 1 : -1);
+  });
+  input.addEventListener('input', say);
+  say();
+  const row = element('div', { class: 'ws-stepper' });
+  row.append(input, down, up);
   field.append(label, row);
   if (s.count !== undefined) {
     const count = element('p', { class: 'ws-note', id: idOf(s.key, 'count'), 'data-testid': `count-${s.key}` });

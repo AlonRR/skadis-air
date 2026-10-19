@@ -6,9 +6,9 @@
     <title>Skådis Air: SKÅDIS pegboard generator</title>
     <!-- The tab icon (D137): slots in the action colour, dark with the system's dark setting -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <!-- The theme, set before anything is drawn so a dark screen never flashes light (D113): its own file, loaded
-      in turn, not a script in the page (D250) -->
-    <script src="./theme-init.js"></script>
+    <!-- The theme, set before anything is drawn so a dark screen never flashes light (D113): the design system's
+      file, loaded in turn, not a script in the page (D250, D259), from the key the toggle keeps its choice under -->
+    <script src="./design-system/theme-init.js" data-key="skadis-air-theme"></script>
     <!-- The shared design system (D111): its tokens first, then its components; web/public/design-system/README.md -->
     <link rel="stylesheet" href="/design-system/tokens.css" />
     <link rel="stylesheet" href="/design-system/components/bundle.css" />
@@ -26,27 +26,6 @@
         flex: 0 1 auto;
         max-height: 40%;
         overflow-y: auto;
-      }
-      /* A number field's arrows for larger and smaller (D250 c): two of the design system's Buttons beside it. */
-      .number-row {
-        display: flex;
-        gap: var(--space-1);
-      }
-      .number-row .ws-input {
-        flex: 1 1 auto;
-        min-width: 0;
-      }
-      .number-step {
-        flex: 0 0 auto;
-        padding-inline: var(--space-2);
-      }
-      .number-row input[type='number'] {
-        appearance: textfield;
-      }
-      .number-row input[type='number']::-webkit-inner-spin-button,
-      .number-row input[type='number']::-webkit-outer-spin-button {
-        appearance: none;
-        margin: 0;
       }
       [data-state='error'],
       [data-state='invalid'],
@@ -107,7 +86,9 @@
           <span class="ws-plan__actions">
             <button type="button" class="ws-btn ws-btn--primary" data-testid="download-stl" disabled>
               <span class="ws-ic" aria-hidden="true">&#xeac2;</span
-              ><span data-testid="download-label">Download STL</span>
+              ><span data-testid="download-label"
+                >Download<span class="ws-plan__long" data-testid="download-format">&nbsp;STL</span></span
+              >
             </button>
           </span>
         </div>

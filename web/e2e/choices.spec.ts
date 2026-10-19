@@ -57,11 +57,16 @@ test("keeps each type's choices when switching between types, and after a reload
   await expect(width).toHaveValue('240');
 });
 
-test('steps a number field by its arrows and the arrow keys, within its limits (D250 c)', async ({ page }) => {
+test("steps a number field by the design system's Stepper and the arrow keys, within its limits (D250 c, D259)", async ({
+  page,
+}) => {
   await ready(page);
   const width = page.locator('input[name="widthMm"]');
   const larger = page.getByRole('button', { name: 'Larger width', exact: true });
   const smaller = page.getByRole('button', { name: 'Smaller width', exact: true });
+  // the field and its two buttons, ↓ then ↑, in one Stepper row
+  const row = page.locator('.ws-stepper').filter({ has: width });
+  await expect(row.locator('.ws-stepper__btn')).toHaveText(['↓', '↑']);
   await expect(width).toHaveValue('160');
   await larger.click();
   await expect(width).toHaveValue('200'); // by its 40 mm step
@@ -72,19 +77,31 @@ test('steps a number field by its arrows and the arrow keys, within its limits (
   await width.focus();
   await page.keyboard.press('ArrowUp');
   await expect(width).toHaveValue('160');
-  // it stops at its least
+  // it stops at its least, where ↓ says so, and a press on it does nothing
   await width.fill('40');
-  await smaller.click();
+  await expect(smaller).toHaveAttribute('aria-disabled', 'true');
+  await expect(larger).toHaveAttribute('aria-disabled', 'false');
+  await smaller.click({ force: true });
   await expect(width).toHaveValue('40');
   // a fine step: the slot clearance, by 0.05 mm, under Advanced
   await page.getByTestId('advanced').locator('summary').click();
+  const clearance = page.locator('input[name="slotClearanceMm"]');
   await page.getByRole('button', { name: 'Larger slot clearance', exact: true }).click();
-  await expect(page.locator('input[name="slotClearanceMm"]')).toHaveValue('0.25');
+  await expect(clearance).toHaveValue('0.25');
+  // a value typed finer than the step keeps its decimals: 0.275 less 0.05 is 0.225, not 0.23
+  await clearance.fill('0.275');
+  await page.getByRole('button', { name: 'Smaller slot clearance', exact: true }).click();
+  await expect(clearance).toHaveValue('0.225');
 });
 
-test('sets the theme from its own file, with no script written into the page (D250)', async ({ page }) => {
+test("sets the theme from the design system's own file, with no script written into the page (D250, D259)", async ({
+  page,
+}) => {
   await ready(page);
   await expect(page.locator('script:not([src])')).toHaveCount(0);
-  await expect(page.locator('head script[src$="theme-init.js"]')).toHaveCount(1);
+  // the design system's file, first in the head, keyed to where the toggle keeps its choice
+  const init = page.locator('head > script:first-of-type');
+  await expect(init).toHaveAttribute('src', /design-system\/theme-init\.js$/);
+  await expect(init).toHaveAttribute('data-key', 'skadis-air-theme');
   await expect(page.locator('html')).toHaveAttribute('data-theme', /^(light|dark)$/);
 });

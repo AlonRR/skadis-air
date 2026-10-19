@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: MPL-2.0
 #
 # Copy the shared design system's files into web/public/design-system/ from one of its tags, byte for
-# byte as that tag's commit holds them (D111, C116, C119): tokens.css, components/bundle.css and
-# fonts/ with the fonts' licence texts. They are read from the commit's blobs, never from a checkout:
+# byte as that tag's commit holds them (D111, C116, C119): tokens.css, components/bundle.css, fonts/
+# with the fonts' licence texts, and theme-init.js, its theme setter, from v0.6.0 on (D259). They are read from the commit's blobs, never from a checkout:
 # a checkout on Windows can change line endings, and the design system commits some of these files
 # with CRLF and one with a byte-order mark. Each file written is then checked against its blob.
 #
@@ -30,13 +30,13 @@ trap 'rm -rf "$tmp"' EXIT
 git clone -q --bare --depth 1 --branch "$tag" "$repo" "$tmp/ds.git"
 ds() { git -C "$tmp/ds.git" "$@"; }
 commit=$(ds rev-parse "$tag^{commit}")
-mapfile -t files < <(ds ls-tree -r --name-only "$commit" -- tokens.css components/bundle.css fonts)
+mapfile -t files < <(ds ls-tree -r --name-only "$commit" -- tokens.css components/bundle.css fonts theme-init.js)
 [ "${#files[@]}" -gt 0 ] || {
   echo "nothing to copy: $tag has no tokens.css, components/bundle.css or fonts/" >&2
   exit 1
 }
 
-rm -rf "$dest/tokens.css" "$dest/components" "$dest/fonts" # never keep a file the new tag dropped
+rm -rf "$dest/tokens.css" "$dest/components" "$dest/fonts" "$dest/theme-init.js" # never keep a file the new tag dropped
 bad=0
 for f in "${files[@]}"; do
   mkdir -p "$(dirname "$dest/$f")"

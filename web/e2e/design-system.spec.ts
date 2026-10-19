@@ -71,6 +71,21 @@ test.describe('the fonts', () => {
 test.describe('on a phone, 375 px wide, with a touch screen', () => {
   test.use({ viewport: { width: 375, height: 800 }, hasTouch: true, isMobile: true });
 
+  test('the download button drops its format from view, not from its name (D259)', async ({ page }) => {
+    await page.goto('./');
+    await ready(page);
+    const button = page.getByTestId('download-stl');
+    await expect(button).toHaveAccessibleName('Download STL');
+    // hidden from view as the design system hides text for screen readers alone: clipped to a line's width
+    const long = button.locator('.ws-plan__long');
+    await expect(long).toHaveCount(1);
+    const drawn = () => long.evaluate((e) => e.getBoundingClientRect().width);
+    expect(await drawn()).toBeLessThan(2);
+    // control: side by side, on a wide screen, the format shows
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect.poll(drawn).toBeGreaterThan(20);
+  });
+
   // Every control a finger presses, measured on what is drawn: a choice by its button face, since its
   // radio input is invisible on top of it. Advanced is opened, so its fields are measured too.
   const shortControls = (page: Page) =>

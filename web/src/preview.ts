@@ -273,6 +273,13 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
     event.preventDefault(); // the arrows would scroll the page
     act();
   });
+  // The View... menu closes once a view is picked, with the design system's lines (its v0.6.0, Workbench; D259); a
+  // zoom leaves it open, to press again.
+  const menu = views?.closest<HTMLElement>('.ws-stage__menu');
+  menu?.addEventListener('change', (event) => {
+    const picked = event.target instanceof Element && event.target.closest('.ws-stage__views') !== null;
+    if (picked && menu.matches(':popover-open')) menu.hidePopover();
+  });
   // A named view faces that side, framed again to --stage-fit.
   views?.addEventListener('change', (event) => {
     const name = event.target instanceof HTMLInputElement ? event.target.value : '';

@@ -111,4 +111,14 @@ test.describe('on a phone', () => {
     await expect(page.getByTestId('zoom-in')).toBeVisible();
     await expect(page.getByTestId('views')).toBeVisible();
   });
+
+  test('closes the View... menu once a view is picked, and not for a zoom (D259)', async ({ page }) => {
+    await ready(page);
+    const menu = page.getByTestId('view-menu');
+    await page.getByTestId('view-more').click();
+    await page.getByTestId('zoom-in').click();
+    await expect(menu).toBeVisible(); // a zoom leaves it open, to press again
+    await choose(page, 'view', 'back');
+    await expect(menu).toBeHidden();
+  });
 });

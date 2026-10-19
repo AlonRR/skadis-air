@@ -47,11 +47,12 @@ const machineBox = document.querySelector<HTMLElement>('[data-testid="printer-ma
 const bedWarning = document.querySelector<HTMLElement>('[data-testid="bed-warning"]');
 const printList = document.querySelector<HTMLElement>('[data-testid="print-list"]'); // a wall's panels (D178)
 const formatChoice = document.querySelector<HTMLElement>('[data-testid="file-format"]'); // STL or 3MF (D181)
-const downloadLabel = document.querySelector<HTMLElement>('[data-testid="download-label"]');
+// the format, the words the button drops from view on a phone (the design system's v0.6.0; D259)
+const downloadFormat = document.querySelector<HTMLElement>('[data-testid="download-format"]');
 const format = (): 'stl' | '3mf' => (formatChoice && chosenIn(formatChoice) === '3mf' ? '3mf' : 'stl');
 const withFormat = (name: string) => name.replace(/\.(stl|3mf)$/, `.${format()}`);
 formatChoice?.addEventListener('change', () => {
-  if (downloadLabel !== null) downloadLabel.textContent = `Download ${format().toUpperCase()}`;
+  if (downloadFormat !== null) downloadFormat.textContent = `\u00a0${format().toUpperCase()}`;
 });
 
 /** Asks the worker for a file of the build it showed, and saves it under its name (D181 to D183). */
@@ -147,8 +148,7 @@ const printRow = (text: string, label: string, act: () => void, testid: string):
 /** A wall's print list: a line for each kind of panel, its count, its size, its closed sides and its download
  * (D178); the single download goes while it shows. Empty, for one board. */
 function showPanels(id: number, lines: readonly PanelLine[], wallName: string): void {
-  // the design system's buttons set their display, which a hidden attribute does not overrule (C179)
-  if (downloadButton !== null) downloadButton.style.display = lines.length > 0 ? 'none' : '';
+  if (downloadButton !== null) downloadButton.hidden = lines.length > 0;
   if (printList === null) return;
   printList.hidden = lines.length === 0;
   const count = lines.reduce((n, line) => n + line.count, 0);
@@ -293,13 +293,9 @@ async function start(): Promise<void> {
     const options = typesOf(group).map((t) => ({ value: t.id, label: t.name }));
     const list = choiceGroup('boardType', heading, options, group === startGroup ? (chosenOf(group)?.id ?? '') : '');
     for (const input of list.querySelectorAll<HTMLInputElement>('input')) input.dataset['group'] = group;
-    // in a plain box, as the design system's Choice sets its display, which a hidden attribute does not overrule
-    // (C179)
-    const box = document.createElement('div');
-    box.append(list);
-    box.hidden = group !== startGroup;
-    lists.set(group, box);
-    typeList.append(box);
+    list.hidden = group !== startGroup; // hidden as it is, since the design system's v0.6.0 (D259; C179)
+    lists.set(group, list);
+    typeList.append(list);
   }
   // the group shown: its list, and the type last chosen in it, shown
   const showGroup = (group: string) => {
