@@ -13,7 +13,7 @@ export interface NumberSetting {
   max?: number; // none: as large as given (a wall's size, D196)
   step: number; // the control's step
   onStep?: boolean; // the value must be min plus a whole number of steps (a board's size, D15)
-  count?: string; // what one step is called, shown beside the value as a count: '= 6 tiles' (D45)
+  count?: { one: string; other: string }; // what a step is called, beside the value: '= 1 tile', '= 6 tiles' (D45, A263)
   warnOutside?: readonly [number, number]; // a range outside which the value is allowed but warned about
   help?: string;
   advanced?: boolean; // shown under "Advanced", folded away (D48)

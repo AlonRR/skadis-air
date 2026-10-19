@@ -53,6 +53,9 @@ test('takes the size in mm, in 40 mm steps, and shows it in tiles (D45)', async 
   await expect(page.getByTestId('count-widthMm')).toHaveText('= 6 tiles');
   await expect(page.getByTestId('count-heightMm')).toHaveText('= 5 tiles');
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-file-name', 'skadis-solid-240x200.stl');
+  // one tile is a tile (A263)
+  await width.fill('40');
+  await expect(page.getByTestId('count-widthMm')).toHaveText('= 1 tile');
 });
 
 test('refuses a size off the 40 mm steps, and builds nothing from it', async ({ page }) => {

@@ -152,13 +152,14 @@ function numberField(
   const row = element('div', { class: 'ws-stepper' });
   row.append(input, down, up);
   field.append(label, row);
-  if (s.count !== undefined) {
+  const counted = s.count;
+  if (counted !== undefined) {
     const count = element('p', { class: 'ws-note', id: idOf(s.key, 'count'), 'data-testid': `count-${s.key}` });
     described.push(count.id);
     const update = () => {
       const typed = readTypedNumber(input.value);
       const n = typed.ok ? typed.value / s.step : Number.NaN;
-      count.textContent = Number.isInteger(n) && n > 0 ? `= ${n} ${s.count}` : '';
+      count.textContent = Number.isInteger(n) && n > 0 ? `= ${n} ${n === 1 ? counted.one : counted.other}` : '';
     };
     update();
     input.addEventListener('input', update);

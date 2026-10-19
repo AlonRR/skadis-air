@@ -11,7 +11,14 @@ import { defineBoardType } from './define.js';
 
 // One board, or a panel of a wall, is at most 400 mm a side (C51); a wall is any size up to a kilometre each way
 // (D196), past which a size is taken for a slip of the keys (D223).
-const SIZE = { unit: 'mm', min: TILE_MM, max: MAX_WALL_MM, step: TILE_MM, onStep: true, count: 'tiles' } as const;
+const SIZE = {
+  unit: 'mm',
+  min: TILE_MM,
+  max: MAX_WALL_MM,
+  step: TILE_MM,
+  onStep: true,
+  count: { one: 'tile', other: 'tiles' },
+} as const;
 const PANEL = { ...SIZE, max: MAX_PANEL_TILES * TILE_MM, default: MAX_PANEL_TILES * TILE_MM, advanced: true } as const;
 
 /** The solid board's own settings, before the mounting's: its size, thickness, sides and slots. */

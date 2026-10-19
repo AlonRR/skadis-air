@@ -46,6 +46,10 @@ All notable changes to this project are recorded here. The format follows
 - The slot clip's lip grip, which snapped into the slots but did not hold: its pegs grip by ribs alone, and "Grip"
   is gone from Advanced.
 
+### Fixed
+
+- The count under a board's size reads "= 1 tile" at one tile, not "= 1 tiles".
+
 ## [0.2.1] - 2026-10-16
 
 ### Fixed

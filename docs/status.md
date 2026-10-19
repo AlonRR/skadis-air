@@ -168,6 +168,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D259 | **The design system's v0.6.0 is adopted**, as an item of its own (`design-system-v060`): its Stepper in place of the page's own arrows (C253), its `hidden` without the wrapping divs (C179), its `theme-init.js` in place of the page's (keyed `skadis-air-theme`), and its steps from the release's "Moving to it" (the owner's "259 a"). Built 19 Oct 2026 (C262): of its steps, the menu's close, the button's short label and the Stepper applied; the header shows no version, so the version step did not | 19 Oct 2026 |
 | D260 | **The printer list is the design system's Select**, one row in place of five: the safe default, Custom and the 7 makers; every maker's models stay buttons, the same for each maker (the owner's "260 a"). Built 19 Oct 2026 (C263) | 19 Oct 2026 |
 | D261 | **The lip grip is taken out**, as it snaps in but does not hold (T193): the slot clip's pegs grip by ribs alone, and the Printables text loses "a snap lip in place of the ribs" (the owner's "261 a"). Built in `9c78e56`, the ribbed parts byte for byte as before; the draft's line now reads "a screw or a keyhole to fix it to the wall, or neither", saved and checked after a reload | 19 Oct 2026 |
+| A263 | **One tile is a tile**: the count under a board's size reads "= 1 tile" at one tile, not "= 1 tiles"; a setting's count names its step in both forms (the owner's "263 y") | 19 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -195,9 +196,6 @@ Building next: the release and the Printables page (`printables-entry`, D211 to 
 `v0.2.0` was released and the Printables files and pictures made (16 Oct 2026); a code review then found 15
 faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`. The draft on Printables is
 made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
-
-- **A263** Mend the count under a board's size, which reads "= 1 tiles" at one tile (seen 19 Oct 2026 at a
-  width of 40 mm): "= 1 tile", and "= 2 tiles" from two on, with its test first. Recommended.
 
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.

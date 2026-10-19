@@ -16,7 +16,8 @@ A board type is one file and one line in a list (D11, the extension-registry pra
    - `name`: as the page lists it;
    - `settings`: from `defineSettings([...])`, each a `number`, a `sides` or a `choice` setting. A
      number has its unit, starting value, range and step; `onStep` when the value must be on the steps
-     (a board's size), `count` to show it as a count beside the box (`= 6 tiles`), `warnOutside` for
+     (a board's size), `count` to show it as a count beside the box, the step's name in both forms
+     (`{ one: 'tile', other: 'tiles' }`, for `= 1 tile` and `= 6 tiles`), `warnOutside` for
      a range it allows but warns about, `advanced` to fold it under "Advanced" (D48), and `help`. A
      choice has its `options`, each a value and a label, and its starting value, one of them (C82);
    - `build(engine, values)`: the solid, from values typed by the settings above. A combination it
