@@ -52,6 +52,17 @@ export function standoffParams(given: Partial<StandoffParams>): StandoffParams {
   return p;
 }
 
+/** What each screw passes (D264): a board at its starting thickness and this standoff. */
+export function standoffScrews(p: StandoffParams): string {
+  const board = SOLID_BOARD_DEFAULTS.thicknessMm;
+  return (
+    `Each screw passes ${nice(board + p.heightMm)} mm of board and standoff, a ${nice(board)} mm board on this ` +
+    `${nice(p.heightMm)} mm standoff, plus your wall plug.`
+  );
+}
+
+const nice = (n: number) => String(Math.round(n * 100) / 100);
+
 /** Where its holes are, round the point where the boards' corners meet. */
 function holeCentres(boards: StandoffBoards): [number, number][] {
   const i = SCREW_INSET_MM;

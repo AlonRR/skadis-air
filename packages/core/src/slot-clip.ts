@@ -19,6 +19,7 @@ import type { Engine } from './engine.js';
 import {
   KEYHOLE_LIPS_MM,
   keyhole,
+  keyholeScrews,
   MIN_BEHIND_CHANNEL_MM,
   panHead,
   MOUNTING_DEFAULTS,
@@ -152,6 +153,17 @@ export function slotClipParams(given: Partial<SlotClipParams>): SlotClipParams {
     );
   }
   return p;
+}
+
+/** What its screw passes (D264): the bar, or what a round head's counterbore leaves of it; a keyhole's screw stands in
+ * the wall instead. None without a fixing. */
+export function slotClipScrews(p: SlotClipParams): string | undefined {
+  if (p.fixing === 'none') return undefined;
+  if (p.fixing === 'keyhole') return keyholeScrews('The keyhole', p.screwMm);
+  const bar = p.depthMm - TUNNEL_DEPTH_MM;
+  return p.screwHead === 'round'
+    ? `The screw passes ${nice(bar - counterbore(p.screwMm).deepMm)} mm of the clip's bar under its head, plus your wall plug.`
+    : `The screw passes the clip's ${nice(bar)} mm bar, plus your wall plug.`;
 }
 
 /** Where its pegs are, round the point between them. */

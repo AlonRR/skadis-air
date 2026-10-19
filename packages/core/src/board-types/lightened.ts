@@ -2,7 +2,7 @@
 // web under Advanced, then the mounting, so everything the solid board takes it takes the same way. The
 // skeleton board takes its rim and web, and its file name's, from here.
 import { LATTICE_DEFAULTS, latticeParams, makeLightenedBoard, MIN_MEMBER_MM, WARN_MEMBER_MM } from '../lightened.js';
-import { MOUNTING_SETTINGS, mountingLabel, mountingOf } from '../mounting.js';
+import { MOUNTING_SETTINGS, mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
 import { defineSettings, type NumberSetting, type Values } from '../settings.js';
 import { defineBoardType } from './define.js';
 import { BOARD_SETTINGS, boardLabel, boardParamsOf } from './solid.js';
@@ -53,4 +53,5 @@ export const LIGHTENED = defineBoardType({
   build: (engine, v) =>
     makeLightenedBoard(engine, boardParamsOf(v), latticeParams({ rimMm: v.rimMm, webMm: v.webMm }), mountingOf(v)),
   label: (v) => `${boardLabel(v)}${latticeLabel(v)}${mountingLabel(v)}`,
+  screws: (v) => mountingScrews(mountingOf(v), v.thicknessMm),
 });

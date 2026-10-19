@@ -547,3 +547,56 @@ describe('the seam-test pair type (D69)', () => {
     expect(name({ slotClearanceMm: 0.15, thicknessMm: 4.5 })).toBe('skadis-seam-test-4.5mm-0.15.stl');
   });
 });
+
+describe('what each screw passes, from the part itself (D264)', () => {
+  const screws = (id: string, given: Record<string, number | string> = {}) => {
+    const type = boardType(id);
+    return type.screws?.({ ...defaultValues(type.settings), ...given });
+  };
+
+  it("says a board's corner screw passes the board, and its standoffs when it has them", () => {
+    expect(screws('solid')).toBe(
+      "Each corner screw passes the board's 5 mm, plus any standoff behind it and your wall plug.",
+    );
+    expect(screws('lightened', { standoffs: 'back' })).toBe(
+      'Each corner screw passes 20 mm of board and standoff, plus your wall plug.',
+    );
+    expect(screws('skeleton', { standoffs: 'back', standoffHeightMm: 25, screwHead: 'round' })).toBe(
+      'Each corner screw passes 30 mm of board and standoff, plus your wall plug.',
+    );
+    expect(screws('solid', { screwHead: 'none' })).toBeUndefined();
+  });
+
+  it("says where a keyhole's screw stands, and what a lock screw passes", () => {
+    const keyholes = { screwHead: 'keyhole', standoffs: 'back' };
+    expect(screws('solid', keyholes)).toBe(
+      "Each keyhole hangs on a pan-head screw left standing out of the wall, its head's underside 1.5 to 1.8 mm " +
+        'off it, the head 4.7 to 5 mm out.',
+    );
+    expect(screws('solid', { ...keyholes, lockScrews: 'bottom' })).toBe(
+      "Each keyhole hangs on a pan-head screw left standing out of the wall, its head's underside 1.5 to 1.8 mm " +
+        'off it, the head 4.7 to 5 mm out. Each lock screw passes 4.7 mm of standoff under its head, plus your ' +
+        'wall plug.',
+    );
+  });
+
+  it('says what the standoff and the slot clip put under a screw', () => {
+    expect(screws('standoff')).toBe(
+      'Each screw passes 20 mm of board and standoff, a 5 mm board on this 15 mm standoff, plus your wall plug.',
+    );
+    expect(screws('slot-clip')).toBe("The screw passes the clip's 7 mm bar, plus your wall plug.");
+    expect(screws('slot-clip', { screwHead: 'round' })).toBe(
+      "The screw passes 3.6 mm of the clip's bar under its head, plus your wall plug.",
+    );
+    expect(screws('slot-clip', { fixing: 'keyhole' })).toBe(
+      "The keyhole hangs on a pan-head screw left standing out of the wall, its head's underside 1.5 to 1.8 mm off " +
+        'it, the head 4.7 to 5 mm out.',
+    );
+    expect(screws('slot-clip', { fixing: 'none' })).toBeUndefined();
+  });
+
+  it('says nothing for a part with no screw', () => {
+    expect(screws('fit-coupon')).toBeUndefined();
+    expect(screws('seam-test')).toBeUndefined();
+  });
+});

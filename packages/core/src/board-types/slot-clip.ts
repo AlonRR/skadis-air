@@ -5,11 +5,23 @@
 // built, wall face down, the pegs on top.
 import { MOUNTING_DEFAULTS, SCREW_SIZE_SETTING } from '../mounting.js';
 import { defineSettings } from '../settings.js';
-import { makeSlotClip, SLOT_CLIP_DEFAULTS, slotClipParams } from '../slot-clip.js';
+import { makeSlotClip, SLOT_CLIP_DEFAULTS, slotClipParams, slotClipScrews, type SlotClipParams } from '../slot-clip.js';
 import { defineBoardType } from './define.js';
 
 /** How the file name says which boards it joins. */
 const BOARDS_IN_NAME = { '2': '2-boards', '2-stacked': '2-boards-stacked', '4': '4-boards' } as const;
+
+/** The clip's settings as the library takes them, for its build and its screws alike. */
+function paramsOf(v: SlotClipParams): SlotClipParams {
+  return slotClipParams({
+    boards: v.boards,
+    depthMm: v.depthMm,
+    pegClearanceMm: v.pegClearanceMm,
+    fixing: v.fixing,
+    screwHead: v.screwHead,
+    screwMm: v.screwMm,
+  });
+}
 
 export const SLOT_CLIP = defineBoardType({
   id: 'slot-clip',
@@ -85,18 +97,7 @@ export const SLOT_CLIP = defineBoardType({
       advanced: true,
     },
   ]),
-  build: (engine, v) =>
-    makeSlotClip(
-      engine,
-      slotClipParams({
-        boards: v.boards,
-        depthMm: v.depthMm,
-        pegClearanceMm: v.pegClearanceMm,
-        fixing: v.fixing,
-        screwHead: v.screwHead,
-        screwMm: v.screwMm,
-      }),
-    ),
+  build: (engine, v) => makeSlotClip(engine, paramsOf(v)),
   label: (v) =>
     `${BOARDS_IN_NAME[v.boards]}-${v.depthMm}mm` +
     (v.fixing === 'none' ? '' : `-${v.fixing}`) +
@@ -108,4 +109,5 @@ export const SLOT_CLIP = defineBoardType({
         ? `-${v.screwMm}mm`
         : `-screw-${v.screwMm}mm`) +
     (v.pegClearanceMm === SLOT_CLIP_DEFAULTS.pegClearanceMm ? '' : `-clearance-${v.pegClearanceMm}mm`),
+  screws: (v) => slotClipScrews(paramsOf(v)),
 });

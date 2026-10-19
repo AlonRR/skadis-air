@@ -65,6 +65,8 @@ const UNDER_HEAD_MM = 2;
 /** A pan head (D157's proportions): twice the screw across, 0.8 times it tall; a lock screw's, or the slot clip's
  * round head (D265). */
 export const panHead = (screwMm: number) => ({ acrossMm: 2 * screwMm, tallMm: 0.8 * screwMm });
+/** A lock screw's head goes in a recess its height and 0.3 mm deep (A248). */
+const lockRecessMm = (lockScrewMm: number) => panHead(lockScrewMm).tallMm + 0.3;
 
 /** A screw's hole, its 90 degree countersink across the front, and the standoff round it (C83). */
 export function screwHole(screwMm: number): { holeMm: number; countersinkMm: number; standoffDiameterMm: number } {
@@ -95,6 +97,34 @@ export function mountingParams(given: Partial<MountingParams>): MountingParams {
 }
 
 const nice = (n: number) => String(Math.round(n * 100) / 100);
+
+/** Where a keyhole's screw stands (D157, D264): its head's underside on the lips, up to the channel's spare off them,
+ * so a pan head stands out of the wall by that and its own height. */
+export function keyholeScrews(start: string, screwMm: number): string {
+  const head = panHead(screwMm).tallMm;
+  const [near, far] = [KEYHOLE_LIPS_MM, KEYHOLE_LIPS_MM + keyhole(screwMm).channelMm - head];
+  return (
+    `${start} hangs on a pan-head screw left standing out of the wall, its head's underside ${nice(near)} to ` +
+    `${nice(far)} mm off it, the head ${nice(near + head)} to ${nice(far + head)} mm out.`
+  );
+}
+
+/** What each of a board's screws passes (D264): the board, and its standoffs when it has them; a keyhole's screw
+ * stands in the wall instead, and a lock screw passes what the standoff leaves under its head. */
+export function mountingScrews(m: MountingParams, thicknessMm: number): string | undefined {
+  if (m.screwHead === 'none') return undefined;
+  if (m.screwHead === 'keyhole') {
+    const under = m.standoffHeightMm - HOOK_ROOM_MM - lockRecessMm(m.lockScrewMm);
+    const lock = m.lockScrews
+      ? ` Each lock screw passes ${nice(under)} mm of standoff under its head, plus your wall plug.`
+      : '';
+    return keyholeScrews('Each keyhole', m.screwMm) + lock;
+  }
+  if (m.standoffHeightMm > 0) {
+    return `Each corner screw passes ${nice(thicknessMm + m.standoffHeightMm)} mm of board and standoff, plus your wall plug.`;
+  }
+  return `Each corner screw passes the board's ${nice(thicknessMm)} mm, plus any standoff behind it and your wall plug.`;
+}
 
 /** The four screw holes' centres on a board of this size: one in each corner tile (D73). */
 export function screwPlaces(board: Pick<SolidBoardParams, 'columns' | 'rows'>): readonly (readonly [number, number])[] {
@@ -222,7 +252,7 @@ export function mountingCuts(
   // the lips, the head's channel and a roof over it, then a hook's room behind the slot in front (D235, D244); a
   // lock screw's head in its recess behind the room, and some standoff under it (A248)
   const head = panHead(m.lockScrewMm);
-  const recessMm = head.tallMm + 0.3;
+  const recessMm = lockRecessMm(m.lockScrewMm);
   const leastStandoff = Math.max(
     KEYHOLE_LIPS_MM + keyhole(m.screwMm).channelMm + MIN_BEHIND_CHANNEL_MM + HOOK_ROOM_MM,
     m.lockScrews ? HOOK_ROOM_MM + recessMm + UNDER_HEAD_MM : 0,

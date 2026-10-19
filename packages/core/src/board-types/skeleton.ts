@@ -1,6 +1,6 @@
 // The skeleton board as a board type (D146, D147, D161): the lightened board's settings, with the core every
 // member narrows to under Advanced after the web, so the two boards cannot drift apart.
-import { MOUNTING_SETTINGS, mountingLabel, mountingOf } from '../mounting.js';
+import { MOUNTING_SETTINGS, mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
 import { defineSettings } from '../settings.js';
 import { makeSkeletonBoard, MIN_CORE_MM, SKELETON_DEFAULTS, skeletonParams, WARN_CORE_MM } from '../skeleton.js';
 import { defineBoardType } from './define.js';
@@ -41,4 +41,5 @@ export const SKELETON = defineBoardType({
     const core = v.coreMm === SKELETON_DEFAULTS.coreMm ? '' : `-core-${mm(v.coreMm)}mm`;
     return `${boardLabel(v)}${latticeLabel(v)}${core}${mountingLabel(v)}`;
   },
+  screws: (v) => mountingScrews(mountingOf(v), v.thicknessMm),
 });

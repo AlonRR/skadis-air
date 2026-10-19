@@ -2,7 +2,7 @@
 // mounting (D73 to D75) after its own settings. The boards built on it (the lightened board) take its
 // settings, its board and its file name from here, so the two cannot drift apart.
 import { makeSolidBoard, solidBoardParams, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from '../board-solid.js';
-import { MOUNTING_SETTINGS, mountingCuts, mountingLabel, mountingOf } from '../mounting.js';
+import { MOUNTING_SETTINGS, mountingCuts, mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
 import { TILE_MM } from '../skadis.js';
 import { MAX_PANEL_TILES, MAX_WALL_MM } from '../tiling.js';
 import { defineSettings, type Values } from '../settings.js';
@@ -143,4 +143,5 @@ export const SOLID = defineBoardType({
     return makeSolidBoard(engine, params, mountingCuts(mountingOf(v), params));
   },
   label: (v) => `${boardLabel(v)}${mountingLabel(v)}`,
+  screws: (v) => mountingScrews(mountingOf(v), v.thicknessMm),
 });

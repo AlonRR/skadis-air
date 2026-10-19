@@ -23,6 +23,9 @@ export interface BoardType<S extends readonly Setting[]> {
   // Methods, not function properties, so that a type with its own settings is still a board type.
   build(engine: Engine, values: Values<S>): Manifold;
   label(values: Values<S>): string; // the file name after "skadis-<id>-"
+  /** What each screw passes, as a sentence the page shows beside the screw size (D264); none for a part with no
+   * screw. */
+  screws?(values: Values<S>): string | undefined;
 }
 
 export type AnyBoardType = BoardType<readonly Setting[]>;

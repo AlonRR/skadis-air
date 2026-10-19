@@ -3,8 +3,17 @@
 // prints as built, wall face down, so the tunnel of a shared one opens upward and needs no bridging (C101).
 import { MOUNTING_DEFAULTS, SCREW_SIZE_SETTING } from '../mounting.js';
 import { defineSettings } from '../settings.js';
-import { makeStandoff, standoffParams, STANDOFF_DEFAULTS } from '../standoff.js';
+import { makeStandoff, standoffParams, standoffScrews, STANDOFF_DEFAULTS } from '../standoff.js';
 import { defineBoardType } from './define.js';
+
+/** The standoff's settings as the library takes them, for its build and its screws alike. */
+function paramsOf(v: { boards: string; heightMm: number; screwMm: number }) {
+  return standoffParams({
+    boards: v.boards === '4' ? 4 : v.boards === '2' ? 2 : 1,
+    heightMm: v.heightMm,
+    screwMm: v.screwMm,
+  });
+}
 
 export const STANDOFF = defineBoardType({
   id: 'standoff',
@@ -38,16 +47,9 @@ export const STANDOFF = defineBoardType({
     },
     SCREW_SIZE_SETTING,
   ]),
-  build: (engine, v) =>
-    makeStandoff(
-      engine,
-      standoffParams({
-        boards: v.boards === '4' ? 4 : v.boards === '2' ? 2 : 1,
-        heightMm: v.heightMm,
-        screwMm: v.screwMm,
-      }),
-    ),
+  build: (engine, v) => makeStandoff(engine, paramsOf(v)),
   label: (v) =>
     `${v.boards}-board${v.boards === '1' ? '' : 's'}-${v.heightMm}mm` +
     (v.screwMm === MOUNTING_DEFAULTS.screwMm ? '' : `-screw-${v.screwMm}mm`),
+  screws: (v) => standoffScrews(paramsOf(v)),
 });

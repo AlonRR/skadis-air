@@ -8,6 +8,8 @@ All notable changes to this project are recorded here. The format follows
 
 ### Added
 
+- Under the screw size, what each screw passes, from the part's own settings: "20 mm of board and standoff, plus
+  your wall plug", or where a keyhole's screw stands out of the wall.
 - The slot clip's screw can have a round (pan) head, sunk in a counterbore below the bar's face ("Screw head" under
   Advanced); countersunk stays the start.
 - Boards or connectors is a toggle at the top of the form, in a field of its own, "What to make"; the next field,

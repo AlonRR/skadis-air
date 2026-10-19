@@ -170,6 +170,21 @@ test('puts boards or connectors in a field of its own, the types of the one chos
   await expect(connectors).toBeVisible();
 });
 
+test('says beside the screw size what each screw passes, from the part (D264)', async ({ page }) => {
+  await ready(page);
+  await page.getByTestId('advanced').locator('summary').click();
+  // in the screw size's own field
+  const field = page.locator('.field').filter({ has: page.locator('input[name="screwMm"]') });
+  const note = field.getByTestId('screw-note');
+  await expect(note).toHaveText(
+    "Each corner screw passes the board's 5 mm, plus any standoff behind it and your wall plug.",
+  );
+  await choose(page, 'standoffs', 'back');
+  await expect(note).toHaveText('Each corner screw passes 20 mm of board and standoff, plus your wall plug.');
+  await page.locator('input[name="standoffHeightMm"]').fill('25');
+  await expect(note).toContainText('30 mm of board and standoff');
+});
+
 test('makes a standoff from the same form, preview and download as a board (D91 to D94)', async ({ page }) => {
   await ready(page);
   await choose(page, 'boardType', 'standoff');

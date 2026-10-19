@@ -14,6 +14,8 @@ export interface Form {
   read(): Record<string, unknown>;
   /** Shows each problem beside its control; clears the rest. */
   show(errors: readonly Problem[], warnings: readonly Problem[]): void;
+  /** Says under the screw size what each screw passes (D264); nothing when there is no screw. */
+  screws(text: string | undefined): void;
 }
 
 function element<K extends keyof HTMLElementTagNameMap>(
@@ -278,6 +280,10 @@ export function renderForm(
   }
   container.append(main);
   if (advanced.children.length > 2) container.append(advanced); // more than its summary and note
+  // what each screw passes, in the screw size's own field, before its error (D264)
+  const screwNote = element('p', { class: 'ws-note', 'data-testid': 'screw-note', 'aria-live': 'polite' });
+  const screwField = container.querySelector('input[name="screwMm"]')?.closest('.field');
+  screwField?.querySelector('.ws-error')?.before(screwNote);
 
   return {
     read: () => Object.fromEntries([...readers].map(([key, read]) => [key, read()])),
@@ -286,6 +292,9 @@ export function renderForm(
       for (const i of container.querySelectorAll('[aria-invalid]')) i.removeAttribute('aria-invalid');
       for (const e of errors) put(container, 'error', e);
       for (const w of warnings) put(container, 'warning', w);
+    },
+    screws: (text) => {
+      screwNote.textContent = text ?? '';
     },
   };
 }

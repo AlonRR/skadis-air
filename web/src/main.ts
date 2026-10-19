@@ -82,9 +82,19 @@ function setStatus(state: 'building' | 'ready' | 'invalid' | 'problem', text: st
   boardStatus.textContent = text;
 }
 
+/** What each screw passes (D264), or nothing for values the part cannot be made from, which the build then says. */
+function screwsOf(type: AnyBoardType, values: Parameters<AnyBoardType['build']>[1]): string | undefined {
+  try {
+    return type.screws?.(values);
+  } catch {
+    return undefined;
+  }
+}
+
 function rebuild(type: AnyBoardType, form: Form): void {
   const read = readValues(type.settings, form.read());
   form.show(read.ok ? [] : read.errors, read.warnings);
+  if (read.ok) form.screws(screwsOf(type, read.values));
   if (!read.ok) {
     setStatus('invalid', 'Correct the settings marked above to make the board.');
     preview?.show(null, '');
