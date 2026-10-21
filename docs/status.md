@@ -212,6 +212,21 @@ made in the owner's browser, once it is connected again (T219, done 17 Oct 2026)
   (D267): the three 1-board standoffs, 1, 2 or 3 dots on their wall face (pilots 3.2, 3.4 and 3.6 mm): push a 4 mm
   screw through a board's corner hole into each, and say which one the screw carries without stripping.
 
+The boards' design pass (21 Oct 2026), against the same practices as the connectors':
+[`research/2026-10-21-boards-design-pass.md`](research/2026-10-21-boards-design-pass.md), a figure for each finding.
+
+- **D276** The boards' outer edges are square, front and back, the front's the bed edge where the first layer's
+  spread shows (its finding 1). Recommended: (a) a 1 mm chamfer, the family's, round a board's closed edges front
+  and back, and round its own standoffs' wall ends; (b) the front edge only; (c) as now.
+- **D277** The seam butts flat on the front (finding 2). Recommended: (a) a V groove, each open side's front edge
+  chamfered 1 mm, so two boards meet in a 2 mm V and a board alone has the chamfer all round; (b) a smaller V,
+  0.5 mm a side; (c) flush, as now. Either chamfer changes every board file, the draft's seven among them.
+- **D278** The pockets' corners are 1 mm circular rounds where a web meets a rim (finding 3). Recommended: (a) long
+  eased blends there, parabolas as the connectors' are, on the lightened and the skeleton boards; (b) larger
+  circular rounds, 3 mm; (c) as now.
+- **D279** A round head stands 3.2 mm proud of the front (finding 4). Recommended: (a) sink it in a counterbore, as
+  the clip's is, flush, 1.6 mm of board under it; (b) as now.
+
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 

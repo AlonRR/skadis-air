@@ -174,6 +174,11 @@ bash tests/test-stl-check.sh      # the check's controls: an open cube and a deg
 Both need PrusaSlicer (`PSLICER`) and uv; the slicer profiles are scad-check.sh's defaults, overridable
 with `PRINTER`, `PRINT_PROFILE` and `FILAMENT`.
 
+## Figures
+
+`node scripts/figures/shoot.mjs <pass>` draws a design pass's figures, each part the library's own with a finding's
+area in orange, into `.check/figures/<pass>/` (`boards-pass`, 21 Oct 2026); a review copies them into `docs/figures/`.
+
 ## The test print
 
 `npm run test-plate` writes the fit coupon and the seam-test pair as one plate, `.check/test-print/skadis-coupon-seam.stl`,

@@ -1,0 +1,102 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Alon A. Rabinowitz -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+<!-- A design pass figure: the scene named by ?id= from scenes.json, drawn with three.js, its areas pointed at and named (shoot.mjs). -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Design pass figure</title>
+    <style>
+      body { margin: 0; background: #fff; font: 15px/1.4 'Segoe UI', Arial, sans-serif; color: #212529; }
+      #fig { position: relative; width: 1200px; height: 860px; }
+      #labels { position: absolute; left: 0; top: 110px; width: 1200px; height: 700px; pointer-events: none; }
+      #labels text { font: 600 15px 'Segoe UI', Arial, sans-serif; fill: #212529; paint-order: stroke; stroke: #fff;
+        stroke-width: 4px; }
+      #head { position: absolute; left: 28px; top: 20px; right: 28px; }
+      #head h1 { font-size: 22px; margin: 0 0 6px; }
+      #head p { margin: 0; color: #495057; }
+      #legend { position: absolute; left: 28px; bottom: 18px; display: flex; gap: 22px; color: #495057; }
+      #legend span::before { content: ''; display: inline-block; width: 14px; height: 14px; margin-right: 7px;
+        vertical-align: -2px; border-radius: 3px; background: var(--c); opacity: var(--o, 1); }
+      canvas { position: absolute; left: 0; top: 110px; }
+    </style>
+    <script type="importmap">{ "imports": { "three": "/three/build/three.module.js" } }</script>
+  </head>
+  <body>
+    <div id="fig"><div id="head"><h1 id="title"></h1><p id="caption"></p></div><svg id="labels"></svg><div id="legend"></div></div>
+    <script type="module">
+      import * as THREE from 'three';
+      const id = new URLSearchParams(location.search).get('id');
+      const scenes = await (await fetch('scenes.json')).json();
+      const s = scenes.find((x) => x.id === id);
+      document.getElementById('title').textContent = s.title;
+      document.getElementById('caption').innerHTML = s.caption.join('<br>');
+      for (const [text, colour] of s.legend) {
+        const item = document.createElement('span');
+        item.textContent = text;
+        item.style.setProperty('--c', colour);
+        document.getElementById('legend').append(item);
+      }
+      const [W, H] = [1200, 700];
+      const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(1);
+      renderer.setSize(W, H);
+      renderer.setClearColor(0xffffff, 1);
+      document.getElementById('fig').prepend(renderer.domElement);
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(s.camera.fov, W / H, 1, 2000);
+      camera.up.set(0, 0, 1);
+      camera.position.set(...s.camera.position);
+      camera.lookAt(...s.camera.target);
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f96, 1.6));
+      const key = new THREE.DirectionalLight(0xffffff, 1.4);
+      key.position.set(s.camera.position[0] + 30, s.camera.position[1] - 10, s.camera.position[2] + 60);
+      scene.add(key);
+      const fill = new THREE.DirectionalLight(0xffffff, 0.5);
+      fill.position.set(-60, 40, 30);
+      scene.add(fill);
+      for (const m of s.meshes) {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute(m.positions, 3));
+        g.setIndex(m.triangles);
+        const flat = g.toNonIndexed();
+        flat.computeVertexNormals();
+        const see = m.opacity < 1;
+        const material = new THREE.MeshStandardMaterial({
+          color: m.color, roughness: 0.75, metalness: 0, flatShading: true,
+          transparent: see, opacity: m.opacity, depthWrite: !see, side: see ? THREE.DoubleSide : THREE.FrontSide,
+          polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
+        });
+        const mesh = new THREE.Mesh(flat, material);
+        mesh.renderOrder = see ? 2 : 0;
+        scene.add(mesh);
+        if (m.edges) {
+          const dark = new THREE.Color(m.color).multiplyScalar(0.45);
+          const lines = new THREE.LineSegments(new THREE.EdgesGeometry(g, 28), new THREE.LineBasicMaterial({ color: dark, transparent: see, opacity: see ? 0.6 : 1 }));
+          lines.renderOrder = see ? 3 : 1;
+          scene.add(lines);
+        }
+      }
+      renderer.render(scene, camera);
+      // a dot on each area, and its name beside it, joined by a line
+      const svg = document.getElementById('labels');
+      const ns = 'http://www.w3.org/2000/svg';
+      const add = (tag, attrs) => {
+        const e = document.createElementNS(ns, tag);
+        for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+        svg.append(e);
+        return e;
+      };
+      for (const l of s.labels ?? []) {
+        const v = new THREE.Vector3(...l.at).project(camera);
+        const [x, y] = [((v.x + 1) / 2) * W, ((1 - v.y) / 2) * H];
+        const [tx, ty] = [x + l.dx, y + l.dy];
+        add('line', { x1: x, y1: y, x2: tx, y2: ty, stroke: '#212529', 'stroke-width': 1.5 });
+        add('circle', { cx: x, cy: y, r: 5, fill: '#212529', stroke: '#fff', 'stroke-width': 2 });
+        const text = add('text', { x: tx + (l.dx < 0 ? -6 : 6), y: ty + 5, 'text-anchor': l.dx < 0 ? 'end' : 'start' });
+        text.textContent = l.text;
+      }
+      window.done = true;
+    </script>
+  </body>
+</html>
