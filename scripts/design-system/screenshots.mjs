@@ -3,8 +3,8 @@
 //
 // Screenshots of the built page in the states a new version of the design system can change, for a
 // before-and-after comparison with compare-screenshots.py (D153): wide in both themes, each kind of
-// warning shown, a phone, a 320 px screen, and the stage with no WebGL. Each line it prints gives the
-// page's width, so a page wider than its screen shows at once.
+// warning shown, a phone upright and sideways, a short wide screen, a 320 px screen, and the stage with no
+// WebGL. Each line it prints gives the page's width, so a page wider than its screen shows at once.
 //
 //   npm run build -w skadis-air-web && npm run preview -w skadis-air-web -- --port 4199
 //   node scripts/design-system/screenshots.mjs http://127.0.0.1:4199/ .check/screenshots/before
@@ -34,6 +34,9 @@ const states = [
   { name: 'wide-warning-bed', viewport: wide, warnings: true, show: 'bed-warning' },
   { name: 'wide-warning-bed-dark', viewport: wide, warnings: true, show: 'bed-warning', scheme: 'dark' },
   { name: 'phone', device: 'iPhone 13' },
+  { name: 'phone-sideways', device: 'iPhone 13 landscape' }, // side by side from v0.7.0 (D287)
+  { name: 'short-wide', viewport: { width: 1280, height: 360 } }, // the plan bar beside the sidebar, short
+  { name: 'sideways-844', viewport: { width: 844, height: 390 } }, // a large phone's size, held sideways
   { name: 'narrow-320', viewport: { width: 320, height: 700 } },
   { name: 'no-webgl', viewport: wide, args: ['--disable-webgl', '--disable-webgl2', '--disable-3d-apis'] },
 ];

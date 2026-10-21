@@ -2,8 +2,8 @@
 
 Copied unchanged from the owner's shared design system,
 [`AlonRR/printable-parts-design-system`](https://github.com/AlonRR/printable-parts-design-system),
-at its tag `v0.6.0`, commit `020baf0` (19 Oct 2026, D259; first copied at `v0.1.0`, D111, then `v0.2.0`,
-`v0.3.0`, `v0.5.0` with v0.4.0's steps, D202, and `v0.5.1`, D250 e). The design system's history was rewritten
+at its tag `v0.7.0`, commit `3d07f0a` (21 Oct 2026, D287; first copied at `v0.1.0`, D111, then `v0.2.0`,
+`v0.3.0`, `v0.5.0` with v0.4.0's steps, D202, `v0.5.1`, D250 e, and `v0.6.0`, D259). The design system's history was rewritten
 on 19 Oct 2026 to remove a hostname: the tags before `v0.6.0` that this page copied, `v0.5.0` and `v0.5.1`, are
 no longer on GitHub, only on the owner's own forge.
 
@@ -43,6 +43,11 @@ For `v0.6.0`, the same page shot twice came out identical (10 of 10), and after 
 changed: every field 36 px tall with a mouse, 1.3 px less; the number fields' arrows the design system's Stepper;
 the board types a field's own Choice, as close under its legend as "What to make", their box gone now `hidden`
 hides a Choice (C179); and on a phone the download button reads "Download", its sentence given the room.
+For `v0.7.0`, with three states added for it (a phone held sideways, 750 x 342; a short wide screen, 1280 x 360;
+and 844 x 390), the same page shot twice came out identical (13 of 13), and after the copy 10 of 13 changed, where
+its release says: beside the sidebar, in every wide state and the short one, the download button reads "Download",
+its format kept for a screen reader; and 844 x 390 went side by side where it was stacked, its hints cut short.
+The phone upright, the phone sideways at 750 px, still stacked, and the 320 px screen did not change.
 
 Licensing is
 in `REUSE.toml`: the stylesheets are MPL-2.0 like the rest of the page, the fonts

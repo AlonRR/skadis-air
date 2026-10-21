@@ -21,6 +21,9 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- The page takes the design system's v0.7.0: beside the form, the bar under the 3D view keeps one row, its
+  button reading "Download" (its format still read out to a screen reader), and the hints under it are cut
+  short; a phone held sideways, from 800 x 360, shows the 3D view beside the form.
 - The lightened and skeleton boards' pockets turn each corner, where a web meets a rim, the band or a pad, on a
   parabola 3 mm along each side, in place of a 1 mm round; the skeleton's I-beams taper along the curves. They
   keep a little more of the solid board's plastic: 40 % and 32 %, from 39 % and 30 %. The skeleton's STL is larger,

@@ -71,7 +71,7 @@ test.describe('the fonts', () => {
 test.describe('on a phone, 375 px wide, with a touch screen', () => {
   test.use({ viewport: { width: 375, height: 800 }, hasTouch: true, isMobile: true });
 
-  test('the download button drops its format from view, not from its name (D259)', async ({ page }) => {
+  test('the download button drops its format from view, not from its name (D259, D287)', async ({ page }) => {
     await page.goto('./');
     await ready(page);
     const button = page.getByTestId('download-stl');
@@ -81,8 +81,12 @@ test.describe('on a phone, 375 px wide, with a touch screen', () => {
     await expect(long).toHaveCount(1);
     const drawn = () => long.evaluate((e) => e.getBoundingClientRect().width);
     expect(await drawn()).toBeLessThan(2);
-    // control: side by side, on a wide screen, the format shows
+    // and side by side too, since the design system's v0.7.0 keeps the plan bar one row there (D287)
     await page.setViewportSize({ width: 1280, height: 800 });
+    await expect(button).toHaveAccessibleName('Download STL');
+    expect(await drawn()).toBeLessThan(2);
+    // control: the same format, drawn as other text is, is measured as drawn
+    await long.evaluate((e) => e.setAttribute('style', 'position:static;width:auto;height:auto;clip-path:none'));
     await expect.poll(drawn).toBeGreaterThan(20);
   });
 

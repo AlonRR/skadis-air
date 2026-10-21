@@ -183,6 +183,11 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | A280 | **Dependabot's vite bump is taken as the owner's commit** ("280 y"): vite 8.3.3 for the page in `dd27b63`, landed by fast-forward; Dependabot closed #1 itself once `main` had the bump | 21 Oct 2026 |
 | D281 | **The standoff is laid out as the slot clip is** (the owner: "make the layout of the standoff similar to the connector"; "Both"): posts at the screw holes, joined by bars on the wall side, a ring for 4 boards, with the hooks' room open above the bars; and the clip's choices for which boards it holds: 1 board, 2 side by side, 2 one above the other, 4. Built 21 Oct 2026 (C285; [figure](figures/boards-built/g4-standoff-layout.png)) | 21 Oct 2026 |
 | D282 | **A board's open sides may run between the slots**, a choice of its own (the owner: "add a choice to allow the "open" layout to cross in between pegs rather then thru a peg like now"; "Both ways"): where boards stand side by side, the seam runs midway between two slot columns; where one stands above the other, through the web between two slots' ends. Through the slots stays the start | 21 Oct 2026 |
+| D287 | **The design system's `v0.7.0` is adopted** ("287 a"): beside the sidebar the plan bar and the status bar keep one row, the plan's sentence at most two lines beside the download button's short label and the hints cut short, both whole for a screen reader; a short screen goes side by side from one height derived from the tokens, phones held sideways from 800 x 360 among them. Built 21 Oct 2026 (`web/public/design-system/README.md` has the screenshots' count) | 21 Oct 2026 |
+| D288 | **Only an open side moves to run between the slots** ("288 a"; D282): 10 mm right of or above the grid line it ran through, so its seam falls midway between two slot columns, or across the web between two slots' ends; closed sides stay as now, the last slots' ends 12.4 mm from the top and bottom edges. A board with one side of a pair open and the other closed is 10 mm larger or smaller that way, and a wall's panels add up to its size | 21 Oct 2026 |
+| D289 | **No corner screw at a corner whose side runs between the slots** ("289 a"): keyholes on standoffs and lock screws as now, each standoff behind the nearest slot that keeps it inside the board; **and a fixing of lock screws alone**, in place of the keyholes (the owner: "and a version that are lockscrews only instead of keyholes") | 21 Oct 2026 |
+| D290 | **A slot clip for a seam between the slots** ("290 a"): a peg in the nearest slot each side, 10 mm from the seam and a row apart, its bar on the diagonal | 21 Oct 2026 |
+| A291 | **The site is the latest stable release** (the owner: "use the latest stable release as the version of the site"): `v0.3.0` is released, and the page on GitHub Pages is built from the highest `vX.Y.Z` tag on `main`, not from `main`'s newest commit, so what the page makes is what a release holds. Read so by the agent: the deployed page follows the releases, the page itself showing no version | 21 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -223,33 +228,9 @@ The boards' design pass (21 Oct 2026), against the same practices as the connect
 [`research/2026-10-21-boards-design-pass.md`](research/2026-10-21-boards-design-pass.md), a figure for each finding.
 Its answers are built (D276 to D279, D281; C283 to C286), and the Printables draft brought to them on 21 Oct 2026: its
 ten board, coupon and standoff files, all seven pictures in their order, and the standoff's line, saved as a draft
-and checked after a reload. D282's seams between the slots raise the three questions below
-([figure](figures/between-slots.svg), drawn by `scripts/figures/between-slots.py`).
-
-- **D287** The design system's `v0.7.0` (relayed 21 Oct 2026; tag on `3d07f0a`): beside the sidebar the plan bar and
-  the status bar keep one row, the plan's sentence cut to two lines beside the button's short label and the hints
-  cut short, both whole for a screen reader; a short screen goes side by side from one height derived from the
-  tokens, phones held sideways from 800 x 360 among them. Four tokens leave `tokens.css`; this page's own CSS reads
-  none of them (checked), so adopting it is copying two files, with the screenshots compared and the tests run.
-  Recommended: (a) adopt it now; (b) stay on `v0.6.0`.
-- **D288** How a side between the slots is laid (D282). Recommended: (a) only an open side moves, 10 mm right of or
-  above the grid line it ran through, so seams fall between slots and closed sides stay as now, the last slots'
-  ends 12.4 mm from the top and bottom edges; a board with one side of a pair open and the other closed is 10 mm
-  larger or smaller that way, and a wall's panels add up to its size; (b) the whole slot pattern 10 mm across and
-  up, every side between slots, sizes unchanged, and the slots 2.4 mm from the top and bottom edges, closed ones
-  too (the figure, top right).
-- **D289** What fixes a board at a corner whose side runs between slots: a screw 10 mm in from both edges lands on
-  a slot, and the hooks' rooms leave a standoff room only 1 mm off the edge (the figure, bottom left).
-  Recommended: (a) no corner screw there; keyholes on standoffs and lock screws as now, each standoff behind the
-  nearest slot that keeps it inside the board; (b) the screw where a standoff clears every slot and hook, 1 mm off
-  the edge; (c) nothing at such a corner.
-- **D290** Joining boards where they meet between slots: the slot clip's pegs go 20 mm each side of a seam, and
-  such a seam has no slot there (the figure, bottom right). Recommended: (a) a clip with a peg in the nearest slot
-  each side, 10 mm from the seam and a row apart, its bar on the diagonal; (b) pegs in one row, 30 mm one side and
-  10 mm the other; (c) no clip at such a seam, each board held by its own fixing.
-- **A291** Release `v0.3.0` at `main`, so the Printables draft's files, cut on 21 Oct 2026 after D276 to D281, come
-  from a release as `printables.md` says they do (D214): the changelog's Unreleased becomes 0.3.0, a minor version
-  as the library's `StandoffParams.boards` changed and `TUNNEL_WIDTH_MM` is gone. Recommended: yes.
+and checked after a reload. D282's seams between the slots raised D288 to D290
+([figure](figures/between-slots.svg), drawn by `scripts/figures/between-slots.py`), answered on 21 Oct 2026 with
+D287 and A291 (Decisions).
 
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
