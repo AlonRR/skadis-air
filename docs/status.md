@@ -245,6 +245,15 @@ clip (b4).
   draft from there, saved as a draft and checked after a reload. `v0.4.0` reached the page at 15:47 UTC on 21 Oct
   2026 with Chrome closed, and the draft is edited only through the owner's browser, signed in there.
 
+- **D301** Adopt the design system's `v0.8.0` (released 21 Oct 2026; see *Inputs from outside this repository*)?
+  Two of its changes show on this page: the icons sit on their labels' capitals, 0.5 to 1.75 px higher than now (the
+  theme toggle, the view's buttons and the download button); and in the dark theme the board drawn in each Sides
+  control is darker than the panel round it, where now it is the lightest surface. Moving to it is copying
+  `tokens.css` and `components/bundle.css` from the tag (`scripts/design-system/copy-design-system.sh`), then the
+  checks and the screenshots; the page's own code and CSS need nothing. The live page is built from the latest
+  release (A291), so it shows there only with one. (a) adopt it and release `v0.4.1`; (b) adopt it, live with the
+  next release; (c) stay on `v0.7.0`. Recommended: (a), two fixes for a copy and the checks.
+
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 
@@ -260,6 +269,15 @@ clip (b4).
   straight, whether the hooks sat straight, and what it weighs.
 
 ## Inputs from outside this repository
+
+- The design system's v0.8.0 (D301), from its session on 21 Oct 2026 (relayed; the tag checked on GitHub): the tag
+  `v0.8.0` on `47a45a2`, released 18:31 UTC; its CI on `main` passed 8 of 8 jobs (relayed). It answers its owner's
+  A86 and D87 to D91: `--icon-rise` raises `.ws-ic` onto its label's capitals; the dark `surface-sunken` is
+  `#0c1217`, darker than `surface`; the More… menu's items line up and a pick closes it; one ellipsis character in
+  every label; `tokens.css`'s custom properties are what a tool relies on. Its steps for this page: copy `tokens.css`
+  and `components/bundle.css`. Checked here: the page's own code moves no `.ws-ic` and reads no `surface-sunken`
+  or `tokens.json`, has no More… menu, and its labels already end in the character … (View…, Making the board…);
+  the Sides control's board, the design system's own rule, is the one place `surface-sunken` shows.
 
 - The design system's v0.6.0 (D259), from its session on 19 Oct 2026 (relayed): the tag `v0.6.0` on `020baf0`,
   signed, its CI green in Chromium, WebKit and Firefox, the repository now public; it answers A255 with the Stepper,
