@@ -4,7 +4,8 @@
 // wall's face is drawn as flat rectangles with the slot pattern painted on, which costs two triangles each
 // however much wall they cover. The SKÅDIS pattern repeats every 40 mm, and a wall's seams are open, so the
 // pattern runs on across them (D15): one picture of one tile, repeated, stands in for any part of the wall. Its
-// closed outer edges have no slots, so the strips along them stand in plain.
+// closed outer edges have no slots, so the strips along them stand in plain. Where the seams run between the slots
+// (D282, D288 a), each panel's open sides lie 10 mm right of or above its grid lines, and its rectangle with them.
 //
 // No drawing here: given the wall's grid and the camera, it says what to draw, so it can be tested on its own.
 
@@ -29,6 +30,7 @@ export interface WallGrid {
   frontMm: number; // how far the panels' front faces stand out from the wall plane
   closed: { left: boolean; right: boolean; bottom: boolean; top: boolean };
   slot: Slot; // its width decides whether it can be seen; it and its chamfer, how far the plain strips reach
+  shiftMm?: number; // how far an open side lies right of or above its grid line: 10 between the slots, else 0
 }
 
 /** The camera, in the wall's millimetres, and how many pixels a millimetre spans on screen 1 mm away from it:
@@ -77,9 +79,33 @@ function firstReaching(starts: readonly number[], sizes: readonly number[], from
 /** Where the last of a run of columns or rows ends, mm. */
 const runEnd = (starts: readonly number[], sizes: readonly number[]) => (starts.at(-1) ?? 0) + (sizes.at(-1) ?? 0);
 
+/** Where the k-th edge of a run of columns or rows lies, mm, the first its start and the last its end: on the grid
+ * line, or an open one `shift` right of or above it (D288 a); the wall's outer edges are open unless closed. */
+function edgeOf(
+  starts: readonly number[],
+  sizes: readonly number[],
+  k: number,
+  shift: number,
+  closed: [boolean, boolean],
+): number {
+  if (k === 0) return (starts[0] ?? 0) + (closed[0] ? 0 : shift);
+  if (k >= starts.length) return runEnd(starts, sizes) + (closed[1] ? 0 : shift);
+  return (starts[k] ?? 0) + shift;
+}
+const edgeX = (grid: WallGrid, k: number) =>
+  edgeOf(grid.xs, grid.widths, k, grid.shiftMm ?? 0, [grid.closed.left, grid.closed.right]);
+const edgeY = (grid: WallGrid, k: number) =>
+  edgeOf(grid.ys, grid.heights, k, grid.shiftMm ?? 0, [grid.closed.bottom, grid.closed.top]);
+
+/** The wall's face, mm, from its left and bottom edges to its right and top ones. */
+export function wallRect(grid: WallGrid): Rect {
+  return [edgeX(grid, 0), edgeY(grid, 0), edgeX(grid, grid.xs.length), edgeY(grid, grid.ys.length)];
+}
+
 /** The wall's width and height, mm. */
 export function wallSize(grid: WallGrid): [number, number] {
-  return [runEnd(grid.xs, grid.widths), runEnd(grid.ys, grid.heights)];
+  const [x0, y0, x1, y1] = wallRect(grid);
+  return [x1 - x0, y1 - y0];
 }
 
 /** What to draw in full and what stands in for the rest, seen from `eye`. */
@@ -120,10 +146,9 @@ export function chooseDetail(grid: WallGrid, eye: Eye, options: DetailOptions): 
   return { full, standIns, plain };
 }
 
-/** A panel's rectangle on the wall's face. */
+/** A panel's rectangle on the wall's face, where its edges lie. */
 export function panelRect(grid: WallGrid, column: number, row: number): Rect {
-  const [x, y] = [grid.xs[column] ?? 0, grid.ys[row] ?? 0];
-  return [x, y, x + (grid.widths[column] ?? 0), y + (grid.heights[row] ?? 0)];
+  return [edgeX(grid, column), edgeY(grid, row), edgeX(grid, column + 1), edgeY(grid, row + 1)];
 }
 
 /**
@@ -132,42 +157,42 @@ export function panelRect(grid: WallGrid, column: number, row: number): Rect {
  * edges' strips, which stands in with the pattern, and its parts in them, which stand in plain.
  */
 function coverRest(grid: WallGrid, full: readonly [number, number][]): { standIns: Rect[]; plain: Rect[] } {
-  const [width, height] = wallSize(grid);
+  const [left, bottom, right, top] = wallRect(grid);
   const byRow = new Map<number, number[]>();
   for (const [column, row] of full) byRow.set(row, [...(byRow.get(row) ?? []), column]);
   const rest: Rect[] = [];
   let bandFrom: number | null = null;
   const closeBand = (to: number) => {
-    if (bandFrom !== null && to > bandFrom) rest.push([0, bandFrom, width, to]);
+    if (bandFrom !== null && to > bandFrom) rest.push([left, bandFrom, right, to]);
     bandFrom = null;
   };
   for (let row = 0; row < grid.ys.length; row++) {
-    const [y0, y1] = [grid.ys[row] ?? 0, (grid.ys[row] ?? 0) + (grid.heights[row] ?? 0)];
+    const [y0, y1] = [edgeY(grid, row), edgeY(grid, row + 1)];
     const columns = byRow.get(row);
     if (columns === undefined) {
       bandFrom ??= y0;
       continue;
     }
     closeBand(y0);
-    let x = 0;
+    let x = left;
     for (const column of [...columns].sort((a, b) => a - b)) {
-      const [x0, x1] = [grid.xs[column] ?? 0, (grid.xs[column] ?? 0) + (grid.widths[column] ?? 0)];
+      const [x0, x1] = [edgeX(grid, column), edgeX(grid, column + 1)];
       if (x0 > x) rest.push([x, y0, x0, y1]);
       x = x1;
     }
-    if (x < width) rest.push([x, y0, width, y1]);
+    if (x < right) rest.push([x, y0, right, y1]);
   }
-  closeBand(height);
+  closeBand(top);
 
   // how far in from a closed outer edge the slots it leaves out would have reached: half a slot and its chamfer,
   // across a side and along the top or bottom
   const { widthMm, heightMm, chamferMm } = grid.slot;
   const [side, end] = [widthMm / 2 + chamferMm, heightMm / 2 + chamferMm];
   const inner: Rect = [
-    grid.closed.left ? side : 0,
-    grid.closed.bottom ? end : 0,
-    width - (grid.closed.right ? side : 0),
-    height - (grid.closed.top ? end : 0),
+    left + (grid.closed.left ? side : 0),
+    bottom + (grid.closed.bottom ? end : 0),
+    right - (grid.closed.right ? side : 0),
+    top - (grid.closed.top ? end : 0),
   ];
   const standIns: Rect[] = [];
   const plain: Rect[] = [];

@@ -98,6 +98,39 @@ const samples = [
     type: skeleton,
     values: { ...skeletonAt(240, 200, open), rimMm: 1.2, webMm: 1.2, coreMm: 0.8 },
   },
+  // open sides between the slots (D282, D288 a), each corner's fixing where its sides leave room (D289 a)
+  { name: 'solid-3x2-between-open', type: solid, values: { ...solidAt(120, 80, open), seams: 'between' } },
+  {
+    name: 'solid-2x2-between-left-bottom-closed-round-standoffs',
+    type: solid,
+    values: {
+      ...solidAt(80, 80, { ...open, left: 'closed', bottom: 'closed' }),
+      seams: 'between',
+      screwHead: 'round',
+      standoffs: 'back',
+    },
+  },
+  {
+    name: 'lightened-4x4-between-keyholes-lock-screws',
+    type: lightened,
+    values: {
+      ...lightenedAt(160, 160, open),
+      seams: 'between',
+      screwHead: 'keyhole',
+      lockScrews: 'bottom',
+      standoffs: 'back',
+    },
+  },
+  {
+    name: 'skeleton-3x3-between-right-top-closed-keyholes',
+    type: skeleton,
+    values: {
+      ...skeletonAt(120, 120, { ...open, right: 'closed', top: 'closed' }),
+      seams: 'between',
+      screwHead: 'keyhole',
+      standoffs: 'back',
+    },
+  },
   { name: 'standoff-1-40mm-screw-5', type: boardType('standoff'), values: { boards: '1', heightMm: 40, screwMm: 5 } },
   { name: 'standoff-2-12mm-screw-3', type: boardType('standoff'), values: { boards: '2', heightMm: 12, screwMm: 3 } },
   {

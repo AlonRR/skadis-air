@@ -17,7 +17,7 @@ import {
 } from '../src/lightened.js';
 import { mountingCuts, mountingParams, type MountingParams } from '../src/mounting.js';
 import { circle, stadium } from '../src/rings.js';
-import { slotPlaces } from '../src/slots.js';
+import { boardExtent, slotPlaces } from '../src/slots.js';
 import { meshOf } from '../src/stl.js';
 import { degenerateFacets } from './facets.js';
 
@@ -244,4 +244,50 @@ describe('makeLightenedBoard (D141 to D144)', () => {
       expect(parts).toHaveLength(1);
     }
   });
+});
+
+// Open sides between the slots (D282, D288 a): the lattice is the same on the moved board, its band along the edges
+// where they now lie.
+describe('makeLightenedBoard between the slots (D282)', () => {
+  const between = [
+    { left: 'open', right: 'open', bottom: 'open', top: 'open' },
+    { left: 'closed', right: 'open', bottom: 'open', top: 'closed' },
+    { left: 'open', right: 'closed', bottom: 'closed', top: 'open' },
+  ] as const;
+
+  it(`keeps a ${EDGE_BAND_MM} mm band along every edge where it now lies`, () => {
+    for (const sides of between) {
+      const p = { sides, seams: 'between' } as const;
+      const [light, full] = [midSlice(lightened(p), p), midSlice(solid(p), p)];
+      const e = boardExtent(4, 4, sides, 'between');
+      const box = shape([
+        [
+          [e.x0, e.y0],
+          [e.x1, e.y0],
+          [e.x1, e.y1],
+          [e.x0, e.y1],
+        ],
+      ]);
+      const band = (width: number) => keep(box.subtract(keep(box.offset(-width, 'Miter'))));
+      expect(uncovered(band(EDGE_BAND_MM - 0.01), light, full)).toBeLessThan(0.01);
+      // control: a millimetre further in is pocket in places
+      expect(uncovered(band(EDGE_BAND_MM + 1), light, full)).toBeGreaterThan(1);
+    }
+  });
+
+  it('is one body inside the solid board, with about as much of its plastic, and no degenerate facet', () => {
+    for (const sides of between) {
+      const p = { sides, seams: 'between' } as const;
+      const light = lightened(p);
+      const full = solid(p);
+      expect(light.decompose().map(keep)).toHaveLength(1);
+      const share = light.volume() / full.volume();
+      expect(share).toBeGreaterThan(0.35);
+      expect(share).toBeLessThan(0.48);
+      expect(keep(light.subtract(full)).volume()).toBeLessThan(1e-6);
+      expect(degenerateFacets(meshOf(light))).toBe(0);
+    }
+    const keyholes = { screwHead: 'keyhole', standoffHeightMm: 20, lockScrews: true } as const;
+    expect(degenerateFacets(meshOf(lightened({ seams: 'between' }, {}, keyholes)))).toBe(0);
+  }, 30_000);
 });

@@ -37,6 +37,7 @@ export interface Placed {
 export interface WallReply {
   panels: PanelLine[];
   slot: Slot;
+  shiftMm?: number; // how far the panels' open sides lie off their grid lines: 10 between the slots (D288 a)
 }
 
 export interface PanelLine {

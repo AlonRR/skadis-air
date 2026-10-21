@@ -8,7 +8,9 @@
 // stands on standoffs, so a hook has room behind it (D190), and the keyholes are cut in the top two standoffs'
 // wall faces, the head sliding behind lips there as on the slot clip, the board's face left plain (D235); each
 // top standoff is the keyhole and its walls, behind its corner tile's centre slot, as IKEA's spacer stands behind
-// a slot, with a pocket that leaves a hook its room behind that slot (D244).
+// a slot, with a pocket that leaves a hook its room behind that slot (D244). On a board whose open sides run between
+// the slots (D282), a corner one of whose sides does has no screw, which would land on a slot, and each standoff
+// stands behind the slot nearest its corner that keeps it on the board (D289 a).
 // Any board type built on the solid board takes these as its third argument (BoardCuts).
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { type BoardCuts, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from './board-solid.js';
@@ -17,6 +19,7 @@ import type { Engine } from './engine.js';
 import { circle, HALF_STEP, ringedSolid, stadium } from './rings.js';
 import { defineSettings, type NumberSetting, type Values } from './settings.js';
 import { HOOK_DEPTH_MM, HOOK_DROP_MM, HOOK_WIDTH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
+import { ALL_OPEN, boardExtent, type Extent, type Side, slotPlaces } from './slots.js';
 
 export type ScrewHead = 'countersunk' | 'round' | 'keyhole' | 'none';
 
@@ -123,9 +126,23 @@ export function keyholeScrews(start: string, screwMm: number): string {
 }
 
 /** What each of a board's screws passes (D264): the board, and its standoffs when it has them; a keyhole's screw
- * stands in the wall instead, and a lock screw passes what the standoff leaves under its head. */
-export function mountingScrews(m: MountingParams, thicknessMm: number): string | undefined {
+ * stands in the wall instead, and a lock screw passes what the standoff leaves under its head. Between the slots,
+ * which corners keep a screw, of the `cornerScrews` its sides leave it (D289 a). */
+export function mountingScrews(m: MountingParams, thicknessMm: number, cornerScrews = 4): string | undefined {
   if (m.screwHead === 'none') return undefined;
+  if (m.screwHead !== 'keyhole' && cornerScrews === 0) {
+    return (
+      'No corner has a screw: each is on a side between the slots, where a screw would land on a slot. Keyholes hold ' +
+      'such a board.'
+    );
+  }
+  if (m.screwHead !== 'keyhole' && cornerScrews < 4) {
+    const only =
+      cornerScrews === 1
+        ? 'Only the corner whose sides are both closed has a screw.'
+        : `Only the ${cornerScrews} corners whose sides are both closed have a screw.`;
+    return `${only} ${mountingScrews(m, thicknessMm) ?? ''}`;
+  }
   if (m.screwHead === 'keyhole') {
     const under = m.standoffHeightMm - HOOK_ROOM_MM - lockRecessMm(m.lockScrewMm);
     const lock = m.lockScrews
@@ -144,25 +161,70 @@ export function mountingScrews(m: MountingParams, thicknessMm: number): string |
     : `Each corner screw passes the board's ${nice(thicknessMm)} mm, plus any standoff behind it and your wall plug.`;
 }
 
-/** The four screw holes' centres on a board of this size: one in each corner tile (D73). */
-export function screwPlaces(board: Pick<SolidBoardParams, 'columns' | 'rows'>): readonly (readonly [number, number])[] {
-  const [width, height, i] = [TILE_MM * board.columns, TILE_MM * board.rows, SCREW_INSET_MM];
-  return [
-    [i, i],
-    [width - i, i],
-    [i, height - i],
-    [width - i, height - i],
+/** A board as the mounting places things on it: its tiles, and its sides and seams where they move its edges (D288 a);
+ * open all round and through the slots unless given. */
+export type MountingBoard = Pick<SolidBoardParams, 'columns' | 'rows'> &
+  Partial<Pick<SolidBoardParams, 'sides' | 'seams'>>;
+
+const extentOfBoard = (b: MountingBoard): Extent =>
+  boardExtent(b.columns, b.rows, b.sides ?? ALL_OPEN, b.seams ?? 'through');
+/** Whether a side of the board runs between the slots (D282). */
+const runsBetween = (b: MountingBoard, side: Side) => b.seams === 'between' && (b.sides ?? ALL_OPEN)[side] === 'open';
+
+/** The screw holes' centres: one in each corner tile, 10 mm in from both edges (D73), but at a corner one of whose sides
+ * runs between the slots, where it would land on a slot (D289 a). Bottom left, bottom right, top left, top right. */
+export function screwPlaces(board: MountingBoard): readonly (readonly [number, number])[] {
+  const [e, i] = [extentOfBoard(board), SCREW_INSET_MM];
+  const corners: [number, number, Side, Side][] = [
+    [e.x0 + i, e.y0 + i, 'left', 'bottom'],
+    [e.x1 - i, e.y0 + i, 'right', 'bottom'],
+    [e.x0 + i, e.y1 - i, 'left', 'top'],
+    [e.x1 - i, e.y1 - i, 'right', 'top'],
   ];
+  return corners.filter(([, , a, b]) => !runsBetween(board, a) && !runsBetween(board, b)).map(([x, y]) => [x, y]);
 }
 
 /** How far a pad that nothing may be cut from reaches past a screw's countersink, all round (D144; C83's margin). */
 export const PAD_MARGIN_MM = 2;
 
+/**
+ * The slot a standoff at a corner of a board between the slots stands behind (D289 a): the one nearest the corner
+ * whose standoff, a keyhole's and its walls, lies on the board 1 mm in from its edges, clear of their chamfer; of two
+ * as near, the one nearer the corner's bottom or top edge, then its side.
+ */
+function standoffSlot(board: MountingBoard, screwMm: number, [cx, cy]: readonly [number, number]): [number, number] {
+  const e = extentOfBoard(board);
+  const fits = (place: readonly [number, number]) => {
+    const pad = keyholePad(screwMm, place);
+    const [xs, ys] = [pad.map((q) => q[0]), pad.map((q) => q[1])];
+    const m = EDGE_CHAMFER_MM;
+    return (
+      Math.min(...xs) >= e.x0 + m &&
+      Math.max(...xs) <= e.x1 - m &&
+      Math.min(...ys) >= e.y0 + m &&
+      Math.max(...ys) <= e.y1 - m
+    );
+  };
+  const [best] = slotPlaces(board.columns, board.rows, board.sides ?? ALL_OPEN, 'between')
+    .map((s): [number, number] => [s.xMm, s.yMm])
+    .filter(fits)
+    .map((q) => ({ q, d: Math.hypot(q[0] - cx, q[1] - cy), dy: Math.abs(q[1] - cy), dx: Math.abs(q[0] - cx) }))
+    .sort((a, b) => a.d - b.d || a.dy - b.dy || a.dx - b.dx);
+  if (best === undefined) throw new RangeError('The board is too small for a standoff behind a slot at each corner');
+  return best.q;
+}
+
 /** The middles of a board's two keyholes: its top corner tiles' centre slots, which the standoffs stand behind,
- * 11.25 mm clear of every other slot and hook where panels meet (D244). */
+ * 11.25 mm clear of every other slot and hook where panels meet (D244); between the slots, the slot nearest each top
+ * corner that keeps its standoff on the board (D289 a). Left, then right. */
 export function keyholePlaces(
-  board: Pick<SolidBoardParams, 'columns' | 'rows'>,
+  board: MountingBoard,
+  screwMm = MOUNTING_DEFAULTS.screwMm,
 ): readonly (readonly [number, number])[] {
+  if (board.seams === 'between') {
+    const e = extentOfBoard(board);
+    return [standoffSlot(board, screwMm, [e.x0, e.y1]), standoffSlot(board, screwMm, [e.x1, e.y1])];
+  }
   const [width, height] = [TILE_MM * board.columns, TILE_MM * board.rows];
   return [
     [TILE_MM / 2, height - TILE_MM / 2],
@@ -171,10 +233,16 @@ export function keyholePlaces(
 }
 
 /** The middles of a board's bottom corner tiles' centre slots, which a board on keyholes stands behind at the
- * bottom too, unless lock screws hold it there (D245). */
+ * bottom too, unless lock screws hold it there (D245); between the slots, the slot nearest each bottom corner that
+ * keeps its standoff on the board (D289 a). Left, then right. */
 export function bottomSlotPlaces(
-  board: Pick<SolidBoardParams, 'columns' | 'rows'>,
+  board: MountingBoard,
+  screwMm = MOUNTING_DEFAULTS.screwMm,
 ): readonly (readonly [number, number])[] {
+  if (board.seams === 'between') {
+    const e = extentOfBoard(board);
+    return [standoffSlot(board, screwMm, [e.x0, e.y0]), standoffSlot(board, screwMm, [e.x1, e.y0])];
+  }
   const width = TILE_MM * board.columns;
   return [
     [TILE_MM / 2, TILE_MM / 2],
@@ -195,11 +263,10 @@ export function keyholePad(screwMm: number, [x, y]: readonly [number, number], g
  * each top standoff's outline and 1 mm round it (D237), so a pocket's wall and the standoff's do not lie on one
  * another, which left 92 degenerate facets. None where there is neither a hole nor a standoff.
  */
-export function mountingPads(m: MountingParams, board: Pick<SolidBoardParams, 'columns' | 'rows'>): Vec2[][] {
+export function mountingPads(m: MountingParams, board: MountingBoard): Vec2[][] {
   if (m.screwHead === 'none' && m.standoffHeightMm === 0) return [];
   const padMm = screwHole(m.screwMm).countersinkMm + 2 * PAD_MARGIN_MM;
-  const [bottom, top] = [screwPlaces(board).slice(0, 2), screwPlaces(board).slice(2)];
-  if (m.screwHead !== 'keyhole') return [...bottom, ...top].map(([x, y]) => circle(x, y, padMm));
+  if (m.screwHead !== 'keyhole') return screwPlaces(board).map(([x, y]) => circle(x, y, padMm));
   // On keyholes every standoff stands behind a corner slot and meets that slot's rim and the webs as they are: no
   // pad, so those slots look like every other (D250 f).
   return [];
@@ -257,10 +324,21 @@ function hookRoomOutline(
   return new CrossSection([stadium(x, y, slot.widthMm, slot.heightMm, slot.chamferMm + 1.5), tab], 'NonZero');
 }
 
+/** Whether any two standoffs behind slots would meet: their outlines' boxes overlap, or two stand behind one slot. */
+function standoffsMeet(places: readonly (readonly [number, number])[], screwMm: number): boolean {
+  const boxes = places.map((q) => {
+    const pad = keyholePad(screwMm, q);
+    const [xs, ys] = [pad.map((v) => v[0]), pad.map((v) => v[1])];
+    return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+  });
+  return boxes.some((a, i) => boxes.some((b, j) => j > i && a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1));
+}
+
 /** What the mounting adds to and cuts from a board of this size: BoardCuts for makeSolidBoard. */
 export function mountingCuts(
   m: MountingParams,
-  board: Pick<SolidBoardParams, 'columns' | 'rows' | 'thicknessMm'> &
+  board: MountingBoard &
+    Pick<SolidBoardParams, 'thicknessMm'> &
     Partial<Pick<SolidBoardParams, 'slotClearanceMm' | 'slotChamferMm'>>,
 ): BoardCuts {
   const t = board.thicknessMm;
@@ -285,6 +363,13 @@ export function mountingCuts(
     throw new RangeError(
       `Keyholes need a board at least ${2 * TILE_MM} x ${2 * TILE_MM} mm: on one tile, the keyhole standoffs would ` +
         'meet the bottom ones or each other',
+    );
+  }
+  const [tops, bottoms] = keyholes ? [keyholePlaces(board, m.screwMm), bottomSlotPlaces(board, m.screwMm)] : [[], []];
+  if (keyholes && standoffsMeet([...tops, ...bottoms], m.screwMm)) {
+    throw new RangeError(
+      'Keyholes need a larger board: between the slots, two of its standoffs would meet, behind the slots nearest ' +
+        'its corners; open a side, or make it a tile larger',
     );
   }
   const countersunk = m.screwHead === 'countersunk';
@@ -352,8 +437,8 @@ export function mountingCuts(
     };
     // the keyholes in the top standoffs' wall faces (D235, D244); lock screws through the bottom slots (A248)
     cuts.extraCutters = (engine: Engine): Manifold[] => [
-      ...(m.lockScrews ? bottomSlotPlaces(board).flatMap((p) => lockScrew(engine, p)) : []),
-      ...keyholePlaces(board).map((p) => wallKeyholeCutter(engine, p, m.screwMm, -m.standoffHeightMm)),
+      ...(m.lockScrews ? bottoms.flatMap((p) => lockScrew(engine, p)) : []),
+      ...tops.map((p) => wallKeyholeCutter(engine, p, m.screwMm, -m.standoffHeightMm)),
     ];
   } else if (m.screwHead !== 'none') {
     cuts.extraCutters = (engine: Engine): Manifold[] => places.map((p) => hole(engine, p));
@@ -393,8 +478,8 @@ export function mountingCuts(
       keyholes
         ? [
             // at the bottom, behind the corner slots as at the top (D245), the lock screws through them (A248)
-            ...bottomSlotPlaces(board).map((p) => pad(engine, p)),
-            ...keyholePlaces(board).map((p) => pad(engine, p)),
+            ...bottoms.map((p) => pad(engine, p)),
+            ...tops.map((p) => pad(engine, p)),
           ]
         : places.map((p) => round(engine, p));
   }

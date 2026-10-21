@@ -7,7 +7,7 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 import { defaultValues } from '../src/settings.js';
 import { buildBoard, SOLID } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
-import type { Sides } from '../src/slots.js';
+import { boardExtent, type Sides } from '../src/slots.js';
 import { evenSplit, largestPanel, panelCount, panelPlaces, wallPlan } from '../src/tiling.js';
 
 vi.setConfig({ testTimeout: 30_000 });
@@ -162,6 +162,52 @@ describe('wallPlan (D175 to D177)', () => {
     const section = whole.solid.slice(2.5);
     expect(cut(2.5, CLOSED) - section.area()).toBeGreaterThan(20);
     section.delete();
+  });
+});
+
+describe('a wall between the slots (D282, D288)', () => {
+  it('cuts panels that fit the bed with the 10 mm a side moved between the slots adds', () => {
+    const values = wall({ widthMm: 400, heightMm: 400, sides: CLOSED, seams: 'between' });
+    const plan = wallPlan(values, { xMm: 200, yMm: 200 });
+    if (plan === null) throw new Error('a plan');
+    for (const panel of plan.panels) {
+      const e = boardExtent(
+        Number(panel.values['widthMm']) / 40,
+        Number(panel.values['heightMm']) / 40,
+        panel.values['sides'] as Sides,
+        'between',
+      );
+      expect(e.x1 - e.x0).toBeLessThanOrEqual(200);
+      expect(e.y1 - e.y0).toBeLessThanOrEqual(200);
+      expect(panel.values['seams']).toBe('between');
+    }
+    // control: through the slots, the same bed takes 200 mm panels, five tiles
+    expect(wallPlan({ ...values, seams: 'through' }, { xMm: 200, yMm: 200 })?.columns).toEqual([5, 5]);
+    expect(plan.columns).toEqual([4, 3, 3]);
+  });
+
+  it('puts the wall back together: its panels, placed, are the one board of its size under the front', () => {
+    const values = wall({ widthMm: 280, heightMm: 200, sides: CLOSED, screwHead: 'none', seams: 'between' });
+    const plan = wallPlan(values, { xMm: 200, yMm: 200 });
+    if (plan === null) throw new Error('a plan');
+    const cut = (z: number) =>
+      plan.panels.reduce((sum, panel) => {
+        const built = buildBoard(engine, SOLID, panel.values as never);
+        if (!built.ok) throw new Error(built.problem);
+        made.push(built.solid);
+        const section = built.solid.slice(z);
+        const area = section.area();
+        section.delete();
+        return sum + area * panelCount(panel);
+      }, 0);
+    const whole = buildBoard(engine, SOLID, { ...values, panels: 'one' } as never);
+    if (!whole.ok) throw new Error(whole.problem);
+    made.push(whole.solid);
+    for (const z of [0.25, 2.5]) {
+      const section = whole.solid.slice(z);
+      expect(Math.abs(cut(z) - section.area())).toBeLessThan(0.01);
+      section.delete();
+    }
   });
 });
 

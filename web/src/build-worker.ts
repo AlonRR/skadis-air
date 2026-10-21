@@ -5,6 +5,7 @@
 import wasmUrl from 'manifold-3d/manifold.wasm?url';
 import type { Manifold } from 'manifold-3d';
 import {
+  BETWEEN_SHIFT_MM,
   MEDIA_TYPES,
   SLOT_HEIGHT_MM,
   SLOT_WIDTH_MM,
@@ -114,7 +115,8 @@ async function build(request: Extract<Request, { kind: 'build' }>): Promise<void
       }
     }
     const transfer = placed.flatMap((m) => [m.positions.buffer, m.triangles.buffer]);
-    const wallReply = lines ? { wall: { panels: lines, slot: slotOf(read.values) } } : {};
+    const shiftMm = read.values['seams'] === 'between' ? BETWEEN_SHIFT_MM : 0;
+    const wallReply = lines ? { wall: { panels: lines, slot: slotOf(read.values), shiftMm } } : {};
     reply({ kind: 'built', id, ok: true, parts: placed, min, max, ...wallReply }, transfer);
   } catch (error) {
     reply({ kind: 'built', id, ok: false, problem: error instanceof RangeError ? error.message : String(error) });

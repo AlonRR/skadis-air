@@ -7,9 +7,11 @@
 // wall has them (D178). A panel's kind is its column's width and outer sides with its row's height and outer
 // sides, so each kind holds the places of its columns and of its rows, and its copies are every pair of them:
 // a wall of any size plans in the time its columns and rows take, not its panels (backlog item wall-grid; C200).
+// Its seams run between the slots when the board's open sides do (D282): each panel's open sides 10 mm right of or
+// above their grid lines, so a panel can be 10 mm larger than its tiles, and the bed is asked to take that (D288 a).
 import type { Bed } from './printer.js';
 import { TILE_MM } from './skadis.js';
-import type { Side, Sides } from './slots.js';
+import { BETWEEN_SHIFT_MM, type Side, type Sides } from './slots.js';
 
 /** The most tiles a panel has each way: the largest single board (C51). */
 export const MAX_PANEL_TILES = 10;
@@ -28,9 +30,11 @@ export function evenSplit(n: number, most: number): number[] {
 
 const tiles = (mm: number) => Math.min(MAX_PANEL_TILES, Math.floor(mm / TILE_MM));
 
-/** The most whole tiles a panel can have each way on this bed, as the bed lies. */
-export function largestPanel(bed: Bed): { columns: number; rows: number } {
-  return { columns: tiles(bed.xMm), rows: tiles(bed.yMm) };
+/** The most whole tiles a panel can have each way on this bed, as the bed lies; between the slots, with room for the
+ * 10 mm a side moved between them adds (D288 a). */
+export function largestPanel(bed: Bed, seams: unknown = 'through'): { columns: number; rows: number } {
+  const spare = seams === 'between' ? BETWEEN_SHIFT_MM : 0;
+  return { columns: tiles(bed.xMm - spare), rows: tiles(bed.yMm - spare) };
 }
 
 /** One kind of panel: the board values that make it, and where its copies' lower left corners go, in mm: one at
@@ -68,7 +72,7 @@ export function wallPlan(values: Readonly<Record<string, unknown>>, bed: Bed): W
     columns: Math.floor(number(values['panelWidthMm'], MAX_PANEL_TILES * TILE_MM) / TILE_MM),
     rows: Math.floor(number(values['panelHeightMm'], MAX_PANEL_TILES * TILE_MM) / TILE_MM),
   };
-  const bedPanel = largestPanel(bed);
+  const bedPanel = largestPanel(bed, values['seams']);
   if (bedPanel.columns < 1 || bedPanel.rows < 1) throw new RangeError('The bed is too small for a 40 mm tile');
   // As the bed lies, or turned on it: whichever makes fewer panels; as it lies when both make as many.
   const shapes = [bedPanel, { columns: bedPanel.rows, rows: bedPanel.columns }].map((s) => ({

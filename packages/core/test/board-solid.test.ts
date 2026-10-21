@@ -49,6 +49,7 @@ describe('solidBoardParams: the starting values', () => {
       slotClearanceMm: 0.2,
       slotChamferMm: 1,
       cornerRadiusMm: 10,
+      seams: 'through',
     });
   });
 });
@@ -229,5 +230,96 @@ describe('makeSolidBoard', () => {
     expect(() => solidBoardParams({ columns: 1, rows: 1, thicknessMm: 2 })).toThrow(RangeError); // two 1 mm chamfers fill it
     expect(() => solidBoardParams({ columns: 1, rows: 1, cornerRadiusMm: 21 })).toThrow(RangeError);
     expect(() => solidBoardParams({ columns: 1, rows: 1, slotClearanceMm: -5.5 })).toThrow(RangeError);
+    expect(() => solidBoardParams({ columns: 1, rows: 1, seams: 'across' as never })).toThrow(RangeError);
+  });
+});
+
+// Open sides between the slots (D282, D288 a): each open side 10 mm right of or above its grid line, every slot whole.
+describe('makeSolidBoard between the slots (D282, D288)', () => {
+  const sides = (left: string, right: string, bottom: string, top: string) => ({ left, right, bottom, top }) as Sides;
+
+  it('moves only its open sides, 10 mm right or up, and keeps the thickness', () => {
+    for (const [given, min, max] of [
+      [sides('open', 'open', 'open', 'open'), [10, 10], [130, 90]],
+      [CLOSED, [0, 0], [120, 80]],
+      [sides('closed', 'open', 'closed', 'open'), [0, 0], [130, 90]],
+      [sides('open', 'closed', 'open', 'closed'), [10, 10], [120, 80]],
+    ] as const) {
+      const box = board({ columns: 3, rows: 2, sides: given, seams: 'between' }).boundingBox();
+      expect(box.min[0]).toBeCloseTo(min[0], 9);
+      expect(box.min[1]).toBeCloseTo(min[1], 9);
+      expect(box.max[0]).toBeCloseTo(max[0], 9);
+      expect(box.max[1]).toBeCloseTo(max[1], 9);
+      expect(box.max[2]).toBeCloseTo(5, 9);
+    }
+  });
+
+  it('has no half or quarter slot: every slot is a hole through it', () => {
+    const open = board({ columns: 2, rows: 2, seams: 'between' });
+    expect(open.genus()).toBe(slotPlaces(2, 2, ALL_OPEN, 'between').length);
+    expect(open.genus()).toBe(8);
+  });
+
+  // a wall of two boards that meet between the slots, against one closed board its size
+  const pair = (across: boolean) => {
+    const [first, second] = across
+      ? [sides('closed', 'open', 'closed', 'closed'), sides('open', 'closed', 'closed', 'closed')]
+      : [sides('closed', 'closed', 'closed', 'open'), sides('closed', 'closed', 'open', 'closed')];
+    const [columns, rows] = across ? [1, 2] : [2, 1];
+    const a = board({ columns, rows, sides: first, seams: 'between' });
+    const b = keep(
+      board({ columns, rows, sides: second, seams: 'between' }).translate(across ? [40, 0, 0] : [0, 40, 0]),
+    );
+    return keep(a.add(b));
+  };
+
+  for (const across of [true, false]) {
+    const way = across ? 'side by side, midway between two slot columns' : "one above the other, between slots' ends";
+    it(`two boards ${way}, meet in a 2 mm V groove 10 mm off the grid line, and are one board under it`, () => {
+      const wall = pair(across);
+      const front = keep(wall.slice(4.5))
+        .decompose()
+        .map((piece) => keep(piece).bounds())
+        .sort((a, b) => (across ? a.min[0] - b.min[0] : a.min[1] - b.min[1]));
+      expect(front).toHaveLength(2);
+      expect(across ? front[0]?.max[0] : front[0]?.max[1]).toBeCloseTo(49.5, 6);
+      expect(across ? front[1]?.min[0] : front[1]?.min[1]).toBeCloseTo(50.5, 6);
+      expect(keep(wall.slice(2.5)).decompose().map(keep)).toHaveLength(1);
+      // under the groove, the closed board of their size: the same slots, all whole
+      const whole = board({ columns: 2, rows: 2, sides: CLOSED, seams: 'between' });
+      expect(wall.genus()).toBe(whole.genus());
+      for (const z of [0.25, 2.5]) {
+        const [a, b] = [keep(wall.slice(z)).area(), keep(whole.slice(z)).area()];
+        expect(Math.abs(a - b) / b).toBeLessThan(1e-6);
+      }
+    });
+  }
+
+  it('discriminates: two boards through the slots, the same sides, meet on the grid line, through a slot', () => {
+    const a = board({ columns: 1, rows: 2, sides: sides('closed', 'open', 'closed', 'closed') });
+    const b = keep(
+      board({ columns: 1, rows: 2, sides: sides('open', 'closed', 'closed', 'closed') }).translate([40, 0, 0]),
+    );
+    const front = keep(keep(a.add(b)).slice(4.5))
+      .decompose()
+      .map((piece) => keep(piece).bounds())
+      .sort((x, y) => x.min[0] - y.min[0]);
+    expect(front[0]?.max[0]).toBeCloseTo(39.5, 6);
+  });
+
+  it('exports with no degenerate facet, for every side choice and with its corners rounded or square', () => {
+    const states = ['open', 'closed'] as const;
+    for (let m = 0; m < 16; m++) {
+      const given = sides(
+        states[m & 1] ?? 'open',
+        states[(m >> 1) & 1] ?? 'open',
+        states[(m >> 2) & 1] ?? 'open',
+        states[(m >> 3) & 1] ?? 'open',
+      );
+      for (const cornerRadiusMm of [10, 0]) {
+        const mesh = meshOf(board({ columns: 2, rows: 2, sides: given, seams: 'between', cornerRadiusMm }));
+        expect(degenerateFacets(mesh)).toBe(0);
+      }
+    }
   });
 });

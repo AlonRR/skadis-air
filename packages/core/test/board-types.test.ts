@@ -241,6 +241,44 @@ describe('the solid board type', () => {
     expect(boardFileName(solid, closed, 'stl')).toBe('skadis-solid-160x160-closed-left-bottom.stl');
   });
 
+  it('offers open sides through the slots or between them, through unless set (D282)', () => {
+    const seams = solid.settings.find((x) => x.key === 'seams');
+    expect(seams?.kind).toBe('choice');
+    if (seams?.kind !== 'choice') return;
+    expect(seams.options.map((o) => [o.value, o.label])).toEqual([
+      ['through', 'Through the slots'],
+      ['between', 'Between the slots'],
+    ]);
+    expect(seams.default).toBe('through');
+    // right after the sides it moves
+    const keys = solid.settings.map((x) => x.key);
+    expect(keys.indexOf('seams')).toBe(keys.indexOf('sides') + 1);
+  });
+
+  it('builds a board between the slots with its open sides moved, and names it so when a side is open (D288)', () => {
+    const v = defaultValues(solid.settings);
+    const built = buildBoard(engine, solid, { ...v, seams: 'between', screwHead: 'none' });
+    expect(built.ok).toBe(true);
+    if (!built.ok) return;
+    made.push(built.solid);
+    const box = built.solid.boundingBox();
+    expect([box.min[0], box.min[1], box.max[0], box.max[1]].map((n) => Math.round(n * 1e6) / 1e6)).toEqual([
+      10, 10, 170, 170,
+    ]);
+    expect(boardFileName(solid, { ...v, seams: 'between' }, 'stl')).toBe('skadis-solid-160x160-between-slots.stl');
+    const some = {
+      ...v,
+      seams: 'between',
+      sides: { left: 'closed', right: 'open', bottom: 'closed', top: 'open' },
+    } as const;
+    expect(boardFileName(solid, some, 'stl')).toBe('skadis-solid-160x160-closed-left-bottom-between-slots.stl');
+    // closed all round, no side moves: the board and its name are the one through the slots
+    const all = { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' } as const;
+    expect(boardFileName(solid, { ...v, seams: 'between', sides: all }, 'stl')).toBe(
+      'skadis-solid-160x160-closed-left-right-bottom-top.stl',
+    );
+  });
+
   it('adds to the name only the mounting that differs from the starting one (C85)', () => {
     const v = defaultValues(solid.settings);
     const name = (given: Record<string, string | number>) => boardFileName(solid, { ...v, ...given }, 'stl');
@@ -582,6 +620,21 @@ describe('what each screw passes, from the part itself (D264)', () => {
     expect(screws('solid', { screwHead: 'round', thicknessMm: 4 })).toBe(
       "Each corner screw passes the board's 4 mm, plus any standoff behind it and your wall plug.",
     );
+  });
+
+  it('says between the slots which corners keep their screw, and when none does (D289)', () => {
+    const some = { left: 'closed', right: 'open', bottom: 'closed', top: 'closed' };
+    expect(screws('solid', { seams: 'between', sides: some as never })).toBe(
+      "Only the 2 corners whose sides are both closed have a screw. Each corner screw passes the board's 5 mm, plus " +
+        'any standoff behind it and your wall plug.',
+    );
+    expect(screws('lightened', { seams: 'between' })).toBe(
+      'No corner has a screw: each is on a side between the slots, where a screw would land on a slot. Keyholes ' +
+        'hold such a board.',
+    );
+    // closed all round, every corner keeps its screw
+    const closed = { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' };
+    expect(screws('solid', { seams: 'between', sides: closed as never })).toBe(screws('solid'));
   });
 
   it("says where a keyhole's screw stands, and what a lock screw passes", () => {

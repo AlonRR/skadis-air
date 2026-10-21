@@ -7,6 +7,7 @@ import {
   chooseDetail,
   panelRect,
   pixelsAtOneMm,
+  wallRect,
   wallSize,
   type DetailOptions,
   type Eye,
@@ -138,4 +139,51 @@ describe('chooseDetail', () => {
     const far = chooseDetail(grid, eye(500_000, 150_000, 1e9), options());
     expect([far.full, far.standIns.length]).toEqual([[], 1]);
   });
+});
+
+// A wall whose seams run between the slots (D282, D288 a): each panel's open sides 10 mm right of or above its grid
+// lines, the wall's closed outer sides where they were.
+describe('a wall between the slots (D288)', () => {
+  const between = (closed: typeof CLOSED): WallGrid => ({ ...wall(3, 2, 400, closed), shiftMm: 10 });
+
+  it("puts each panel's rectangle where the panel lies, its open sides 10 mm right or up", () => {
+    const open = between(OPEN);
+    expect(panelRect(open, 0, 0)).toEqual([10, 10, 410, 410]);
+    expect(panelRect(open, 2, 1)).toEqual([810, 410, 1210, 810]);
+    expect(wallRect(open)).toEqual([10, 10, 1210, 810]);
+    const closed = between(CLOSED);
+    expect(panelRect(closed, 0, 0)).toEqual([0, 0, 410, 410]);
+    expect(panelRect(closed, 1, 0)).toEqual([410, 0, 810, 410]);
+    expect(panelRect(closed, 2, 1)).toEqual([810, 410, 1200, 800]);
+    expect(wallRect(closed)).toEqual([0, 0, 1200, 800]);
+    expect(wallSize(closed)).toEqual([1200, 800]);
+  });
+
+  it('discriminates: through the slots, no side moves', () => {
+    expect(panelRect(wall(3, 2, 400, OPEN), 0, 0)).toEqual([0, 0, 400, 400]);
+    expect(wallRect(wall(3, 2, 400, OPEN))).toEqual([0, 0, 1200, 800]);
+  });
+
+  for (const [name, closed] of [
+    ['open', OPEN],
+    ['closed', CLOSED],
+  ] as const) {
+    it(`covers the face of a wall ${name} round its edge exactly once, the panels drawn in full where they lie`, () => {
+      const grid = between(closed);
+      const detail = chooseDetail(grid, eye(500, 300, 700), options({ trianglesOf: () => 1e6 }));
+      expect(detail.full.length).toBeGreaterThan(0);
+      const full = detail.full.map(([c, r]) => panelRect(grid, c, r));
+      const [x0, y0, x1, y1] = wallRect(grid);
+      const all = [...detail.standIns, ...detail.plain];
+      expect(area(all) + area(full)).toBeCloseTo((x1 - x0) * (y1 - y0), 6);
+      for (const r of all) {
+        for (const f of full) expect(overlap(r, f)).toBe(0);
+        expect(r[0]).toBeGreaterThanOrEqual(x0);
+        expect(r[1]).toBeGreaterThanOrEqual(y0);
+        expect(r[2]).toBeLessThanOrEqual(x1);
+        expect(r[3]).toBeLessThanOrEqual(y1);
+      }
+      for (const s of detail.standIns) for (const q of detail.plain) expect(overlap(s, q)).toBe(0);
+    });
+  }
 });

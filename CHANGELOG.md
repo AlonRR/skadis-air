@@ -6,6 +6,14 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- "Open sides": a board's open sides can run between the slots, midway between two columns of them or across
+  the plate between two slots' ends, so every slot is whole; through the slots stays the start. A board with
+  one side of a pair open and the other closed is 10 mm larger or smaller that way, and a wall's panels still
+  add up to its size. A corner on such a side has no screw, which would land on a slot; keyhole and bottom
+  standoffs stand behind the slot nearest their corner that keeps them on the board.
+
 ## [0.3.0] - 2026-10-21
 
 ### Added

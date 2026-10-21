@@ -5,7 +5,7 @@ import { LATTICE_DEFAULTS, latticeParams, makeLightenedBoard, MIN_MEMBER_MM, WAR
 import { MOUNTING_SETTINGS, mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
 import { defineSettings, type NumberSetting, type Values } from '../settings.js';
 import { defineBoardType } from './define.js';
-import { BOARD_SETTINGS, boardLabel, boardParamsOf } from './solid.js';
+import { BOARD_SETTINGS, boardLabel, boardParamsOf, cornerScrewsOf } from './solid.js';
 
 const MEMBER = {
   kind: 'number',
@@ -53,5 +53,5 @@ export const LIGHTENED = defineBoardType({
   build: (engine, v) =>
     makeLightenedBoard(engine, boardParamsOf(v), latticeParams({ rimMm: v.rimMm, webMm: v.webMm }), mountingOf(v)),
   label: (v) => `${boardLabel(v)}${latticeLabel(v)}${mountingLabel(v)}`,
-  screws: (v) => mountingScrews(mountingOf(v), v.thicknessMm),
+  screws: (v) => mountingScrews(mountingOf(v), v.thicknessMm, cornerScrewsOf(v)),
 });

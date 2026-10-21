@@ -27,7 +27,7 @@ import {
 import { panelCount, TILE_MM } from 'skadis-air';
 import type { PanelLine, Placed, WallReply } from './build-messages.js';
 import { BOARD, OUTLINE, OUTLINE_ANGLE_DEGREES, STAND_IN } from './preview-scene.js';
-import { chooseDetail, key, pixelsAtOneMm, wallSize, type Rect, type Slot, type WallGrid } from './wall-detail.js';
+import { chooseDetail, key, pixelsAtOneMm, wallRect, type Rect, type Slot, type WallGrid } from './wall-detail.js';
 
 /** How many pixels the picture of the tile the stand-ins repeat has a side. */
 const PICTURE_PX = 256;
@@ -122,7 +122,13 @@ export function standInGeometry(standIns: readonly Rect[], plain: readonly Rect[
 }
 
 /** The wall's grid from its kinds of panel: where their columns and rows are, and which kind each pair is. */
-function gridOf(parts: readonly Placed[], lines: readonly PanelLine[], slot: Slot, front: number): WallGrid {
+function gridOf(
+  parts: readonly Placed[],
+  lines: readonly PanelLine[],
+  slot: Slot,
+  front: number,
+  shiftMm: number,
+): WallGrid {
   const widths = new Map<number, number>();
   const heights = new Map<number, number>();
   const kindsAtX = new Map<number, number[]>();
@@ -153,6 +159,7 @@ function gridOf(parts: readonly Placed[], lines: readonly PanelLine[], slot: Slo
     frontMm: front,
     closed: { left: closed('left'), right: closed('right'), bottom: closed('bottom'), top: closed('top') },
     slot,
+    shiftMm,
   };
 }
 
@@ -184,8 +191,8 @@ export function wallView(parts: readonly Placed[], wall: WallReply, anisotropy: 
     ],
     [Infinity, -Infinity],
   );
-  const grid = gridOf(parts, wall.panels, wall.slot, high);
-  const [width, height] = wallSize(grid);
+  const grid = gridOf(parts, wall.panels, wall.slot, high, wall.shiftMm ?? 0);
+  const [left, bottom, right, top] = wallRect(grid);
   const group = new Group();
   const shown = new Map<string, Group>();
   slotPicture(wall.slot, anisotropy);
@@ -203,7 +210,7 @@ export function wallView(parts: readonly Placed[], wall: WallReply, anisotropy: 
 
   return {
     group,
-    box: new Box3(new Vector3(0, 0, low), new Vector3(width, height, high)),
+    box: new Box3(new Vector3(left, bottom, low), new Vector3(right, top, high)),
     update(camera, heightPx) {
       camera.updateMatrixWorld();
       frustum.setFromProjectionMatrix(viewMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));

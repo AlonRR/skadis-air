@@ -88,6 +88,21 @@ test('opens or closes each side with a toggle placed at that side (D46)', async 
   );
 });
 
+test('lays the open sides between the slots when asked, the board 10 mm larger where only one side moves (D282)', async ({
+  page,
+}) => {
+  await ready(page);
+  const between = page.locator('input[name="seams"][value="between"]');
+  await expect(page.locator('input[name="seams"][value="through"]')).toBeChecked(); // through the slots to start
+  await between.check();
+  const status = page.getByTestId('board-status');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-between-slots.stl');
+  await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 5 mm'); // both sides of each pair moved
+  await page.locator('[data-side="left"]').click();
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-closed-left-between-slots.stl');
+  await expect(page.getByTestId('board-size')).toHaveText('170 × 160 × 5 mm'); // its right side 10 mm out
+});
+
 test('says so when a combination cannot be made, instead of building it', async ({ page }) => {
   await ready(page);
   await page.getByTestId('advanced').locator('summary').click();

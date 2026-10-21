@@ -247,3 +247,40 @@ describe('printed face down, it overhangs nowhere more than 45 degrees (D147)', 
     expect(overhang(keep(Manifold.union(post, shelf)), 5, RISE)).toBeGreaterThan(1);
   });
 });
+
+// Open sides between the slots (D282, D288 a): the same I-beams on the moved board, its band along the edges where
+// they now lie.
+describe('makeSkeletonBoard between the slots (D282)', () => {
+  const between = [
+    { left: 'open', right: 'open', bottom: 'open', top: 'open' },
+    { left: 'closed', right: 'open', bottom: 'open', top: 'closed' },
+  ] as const;
+
+  it('is one body, inside the lightened board, about a third of the solid board, with no degenerate facet', () => {
+    for (const sides of between) {
+      const p = { sides, seams: 'between' } as const;
+      const b = skeleton(p);
+      expect(b.decompose().map(keep)).toHaveLength(1);
+      const light = keep(makeLightenedBoard(engine, params(p), LATTICE_DEFAULTS, mountingParams({})));
+      expect(keep(b.subtract(light)).volume()).toBeLessThan(0.1);
+      // all of it: as wide and as tall as the board, its band reaching the moved edges
+      const [box, full] = [b.boundingBox(), solid(p).boundingBox()];
+      for (const k of [0, 1] as const) {
+        expect(box.min[k]).toBeCloseTo(full.min[k], 6);
+        expect(box.max[k]).toBeCloseTo(full.max[k], 6);
+      }
+      const share = b.volume() / solid(p).volume();
+      expect(share).toBeGreaterThan(0.26);
+      expect(share).toBeLessThan(0.4);
+      expect(degenerateFacets(meshOf(b))).toBe(0);
+    }
+  });
+
+  it('keeps its band an I-beam along an edge moved between the slots: 3 mm at the faces, its core in the middle', () => {
+    const b = skeleton({ seams: 'between' });
+    // the left edge, at x = 10, where the webs from the corner tiles' slots meet outside the board
+    const at = (z: number) => widthAcross(keep(b.slice(z)), [15, 40], [1, 0], 5);
+    expect(at(0.3)).toBeCloseTo(3, 1);
+    expect(at(2.5)).toBeCloseTo(SKELETON_DEFAULTS.coreMm, 1);
+  });
+});

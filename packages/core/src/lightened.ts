@@ -7,7 +7,7 @@
 // pocket cutter through makeSolidBoard's extraCutters, so the slots, the screw holes and the outline are
 // the solid board's own.
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
-import { boardOutline, type BoardCuts, makeSolidBoard, type SolidBoardParams } from './board-solid.js';
+import { boardFace, type BoardCuts, makeSolidBoard, type SolidBoardParams } from './board-solid.js';
 import { blendCorners } from './chamfer.js';
 import type { Engine } from './engine.js';
 import { mountingCuts, mountingPads, type MountingParams } from './mounting.js';
@@ -85,16 +85,15 @@ export function pocketShape(
     made.push(c);
     return c;
   };
-  const [width, height] = [TILE_MM * board.columns, TILE_MM * board.rows];
   const [w, h] = [SLOT_WIDTH_MM + board.slotClearanceMm, SLOT_HEIGHT_MM + board.slotClearanceMm];
   const half = GRID_PITCH_MM / 2;
 
   const contours: Vec2[][] = [];
-  for (const s of slotPlaces(board.columns, board.rows, board.sides)) {
+  for (const s of slotPlaces(board.columns, board.rows, board.sides, board.seams)) {
     contours.push(stadium(s.xMm, s.yMm, w, h, members.rimGrowMm));
   }
-  // Every tile's X, corner to corner through its centre, also where a closed side leaves out the corner's
-  // slot: there the web runs into the edge band.
+  // Every tile's X, corner to corner through its centre, also where a closed side, or an open one between the slots,
+  // leaves out the corner's slot: there the web runs into the edge band.
   for (let i = 0; i < board.columns; i++) {
     for (let j = 0; j < board.rows; j++) {
       const centre: Vec2 = [TILE_MM * i + half, TILE_MM * j + half];
@@ -110,7 +109,7 @@ export function pocketShape(
   }
   contours.push(...pads);
   const kept = keep(new CrossSection(contours, 'NonZero'));
-  const face = keep(new CrossSection([boardOutline(width, height, board.sides, board.cornerRadiusMm)], 'Positive'));
+  const face = keep(new CrossSection([boardFace(board)], 'Positive'));
   const inner = keep(face.offset(-members.bandMm, 'Round'));
   const pockets = keep(inner.subtract(kept));
   // Each sharp corner on a parabola (D278); then shrink and grow back by the same amount, which drops any sliver of

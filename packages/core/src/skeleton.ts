@@ -12,7 +12,7 @@
 // (1 078 facets of no area, 15 Oct 2026), and pockets cut as slabs stacked through the board took 7.2 s for a
 // 160 x 160 mm board, slabs whose faces lie on each other being Manifold's slow case.
 import type { Manifold, Vec2 } from 'manifold-3d';
-import { boardOutline, type BoardCuts, makeSolidBoard, type SolidBoardParams } from './board-solid.js';
+import { boardFace, type BoardCuts, extentOf, makeSolidBoard, type SolidBoardParams } from './board-solid.js';
 import { grownRing } from './chamfer.js';
 import type { Engine } from './engine.js';
 import {
@@ -84,11 +84,11 @@ function alongOf(
   pads: readonly Vec2[][],
 ): Along[][] {
   const [w, h] = [SLOT_WIDTH_MM + board.slotClearanceMm, SLOT_HEIGHT_MM + board.slotClearanceMm];
-  const slots = slotPlaces(board.columns, board.rows, board.sides).map((s): [Vec2, Vec2] => [
+  const slots = slotPlaces(board.columns, board.rows, board.sides, board.seams).map((s): [Vec2, Vec2] => [
     [s.xMm, s.yMm - (h - w) / 2],
     [s.xMm, s.yMm + (h - w) / 2],
   ]);
-  const outline = boardOutline(TILE_MM * board.columns, TILE_MM * board.rows, board.sides, board.cornerRadiusMm);
+  const outline = boardFace(board);
   const rounds = pads.map((ring): [Vec2, number] => {
     const [cx, cy] = ring.reduce(([x, y], [px, py]) => [x + px / ring.length, y + py / ring.length], [0, 0]);
     const [fx, fy] = ring[0] ?? [cx, cy];
@@ -172,7 +172,7 @@ export function skeletonMembers(
 ): Manifold {
   const { Manifold } = engine;
   const t = board.thicknessMm;
-  const [width, height] = [TILE_MM * board.columns, TILE_MM * board.rows];
+  const e = extentOf(board);
   const members = latticeMembers(board, p);
   const shape = pocketShape(engine, board, members, pads);
   const pockets = shape.decompose();
@@ -215,7 +215,7 @@ export function skeletonMembers(
     ];
     return loftedSolid(engine, levels);
   });
-  const slab = Manifold.cube([width + 2.4, height + 2.4, t + 2.4]).translate([-1.2, -1.2, -1.2]);
+  const slab = Manifold.cube([e.x1 - e.x0 + 2.4, e.y1 - e.y0 + 2.4, t + 2.4]).translate([e.x0 - 1.2, e.y0 - 1.2, -1.2]);
   const cut = Manifold.union(lofts);
   const kept = slab.subtract(cut);
   for (const m of [slab, cut, ...lofts]) m.delete();

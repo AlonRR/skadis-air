@@ -5,9 +5,18 @@ import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { afterAll, describe, expect, it } from 'vitest';
 import { makeSolidBoard, solidBoardParams, type SolidBoardParams } from '../src/board-solid.js';
 import { loadEngine } from '../src/engine.js';
-import { keyhole, mountingCuts, mountingParams, type MountingParams } from '../src/mounting.js';
+import {
+  bottomSlotPlaces,
+  keyhole,
+  keyholePad,
+  keyholePlaces,
+  mountingCuts,
+  mountingParams,
+  type MountingParams,
+  screwPlaces,
+} from '../src/mounting.js';
 import { stadium } from '../src/rings.js';
-import { ALL_OPEN, type Sides, slotPlaces } from '../src/slots.js';
+import { ALL_OPEN, boardExtent, type Sides, slotPlaces } from '../src/slots.js';
 import { printPose } from '../src/print-pose.js';
 import { meshOf } from '../src/stl.js';
 import { degenerateFacets } from './facets.js';
@@ -528,5 +537,139 @@ describe('the corner slots stay whole (D131)', () => {
   it('control: a zone grown 3 mm, past the 0.9 mm left beside a 5 mm screw, is cut into', () => {
     const given = { columns: 2, rows: 2, thicknessMm: 6 };
     expect(takenFromSlots(given, { screwMm: 5 }, 3)).toBeGreaterThan(1);
+  });
+});
+
+// A board whose open sides run between the slots (D282, D288 a): no corner screw at a corner one of whose sides runs
+// between them, where a screw 10 mm in lands on a slot; keyholes and lock screws as before, each standoff behind the
+// slot nearest its corner that keeps it on the board (D289 a).
+describe('between the slots (D289)', () => {
+  const states = ['open', 'closed'] as const;
+  const everySides = Array.from({ length: 16 }, (_, m): Sides => ({
+    left: states[m & 1] ?? 'open',
+    right: states[(m >> 1) & 1] ?? 'open',
+    bottom: states[(m >> 2) & 1] ?? 'open',
+    top: states[(m >> 3) & 1] ?? 'open',
+  }));
+  const between = (columns: number, rows: number, sides: Sides) => ({
+    columns,
+    rows,
+    sides,
+    seams: 'between' as const,
+  });
+
+  it('has no corner screw at a corner whose side runs between the slots', () => {
+    expect(screwPlaces(between(3, 2, CLOSED))).toEqual([
+      [10, 10],
+      [110, 10],
+      [10, 70],
+      [110, 70],
+    ]);
+    expect(screwPlaces(between(3, 2, ALL_OPEN))).toEqual([]);
+    expect(screwPlaces(between(3, 2, { ...CLOSED, left: 'open' }))).toEqual([
+      [110, 10],
+      [110, 70],
+    ]);
+    expect(screwPlaces(between(3, 2, { ...CLOSED, top: 'open' }))).toEqual([
+      [10, 10],
+      [110, 10],
+    ]);
+  });
+
+  it('discriminates: through the slots every corner keeps its screw, open or closed', () => {
+    expect(screwPlaces({ columns: 3, rows: 2, sides: ALL_OPEN })).toHaveLength(4);
+    expect(screwPlaces({ columns: 3, rows: 2 })).toHaveLength(4);
+  });
+
+  it('cuts no hole where a corner screw would be on a slot, and the others as before', () => {
+    const given = { columns: 2, rows: 2, seams: 'between', sides: { ...CLOSED, left: 'open' } } as const;
+    const all = { ...given, sides: CLOSED };
+    const oneHole = (plain(all).volume() - mounted(all).volume()) / 4;
+    expect(oneHole).toBeGreaterThan(50);
+    // the two right corners' holes, and nothing at the left ones
+    expect(plain(given).volume() - mounted(given).volume()).toBeCloseTo(2 * oneHole, 3);
+    expect(mounted(given).genus()).toBe(plain(given).genus() + 2);
+  });
+
+  it('stands each keyhole and bottom standoff behind the nearest slot that keeps it on the board, every side choice', () => {
+    for (const sides of everySides) {
+      for (const [columns, rows] of [
+        [3, 3],
+        [4, 3],
+      ] as const) {
+        const board = between(columns, rows, sides);
+        const e = boardExtent(columns, rows, sides, 'between');
+        const slots = slotPlaces(columns, rows, sides, 'between');
+        const fits = ([x, y]: readonly [number, number]) => {
+          const pad = keyholePad(4, [x, y]);
+          const [xs, ys] = [pad.map((q) => q[0]), pad.map((q) => q[1])];
+          return (
+            Math.min(...xs) >= e.x0 + 1 &&
+            Math.max(...xs) <= e.x1 - 1 &&
+            Math.min(...ys) >= e.y0 + 1 &&
+            Math.max(...ys) <= e.y1 - 1
+          );
+        };
+        const ends: [number, number][] = [
+          [e.x0, e.y1],
+          [e.x1, e.y1],
+          [e.x0, e.y0],
+          [e.x1, e.y0],
+        ];
+        const places = [...keyholePlaces(board, 4), ...bottomSlotPlaces(board, 4)];
+        expect(places).toHaveLength(4);
+        places.forEach((place, k) => {
+          const [cx, cy] = ends[k] ?? [0, 0];
+          expect(slots.some((s) => s.xMm === place[0] && s.yMm === place[1])).toBe(true);
+          expect(fits(place)).toBe(true);
+          const distance = ([x, y]: readonly [number, number]) => Math.hypot(x - cx, y - cy);
+          const nearer = slots.filter((s) => distance([s.xMm, s.yMm]) < distance(place) - 1e-9);
+          expect(nearer.filter((s) => fits([s.xMm, s.yMm]))).toEqual([]);
+        });
+      }
+    }
+  });
+
+  it("open all round, the top standoffs stay behind the corner tiles' slots and the bottom ones move up a row", () => {
+    const board = between(3, 3, ALL_OPEN);
+    expect(keyholePlaces(board, 4)).toEqual([
+      [20, 100],
+      [100, 100],
+    ]);
+    expect(bottomSlotPlaces(board, 4)).toEqual([
+      [40, 40],
+      [120, 40],
+    ]);
+  });
+
+  it("discriminates: through the slots, the standoffs stand behind the corner tiles' slots, whatever the sides", () => {
+    for (const sides of everySides) {
+      expect(keyholePlaces({ columns: 3, rows: 3, sides }, 4)).toEqual([
+        [20, 100],
+        [100, 100],
+      ]);
+      expect(bottomSlotPlaces({ columns: 3, rows: 3, sides }, 4)).toEqual([
+        [20, 20],
+        [100, 20],
+      ]);
+    }
+  });
+
+  it('refuses keyholes where two standoffs would stand behind one slot', () => {
+    // 80 mm wide, closed left and right, open at the bottom: both bottom corners' nearest slot is (40, 40)
+    const board = { ...between(2, 2, { ...CLOSED, bottom: 'open' }), thicknessMm: 5 };
+    expect(() => mountingCuts(mountingParams({ screwHead: 'keyhole', standoffHeightMm: 20 }), board)).toThrow(
+      RangeError,
+    );
+  });
+
+  it('builds on keyholes with lock screws, open all round, with no degenerate facet, as it hangs and as it prints', () => {
+    const solid = mounted(
+      { columns: 3, rows: 3, seams: 'between' },
+      { screwHead: 'keyhole', standoffHeightMm: 15, lockScrews: true },
+    );
+    expect(solid.decompose().map(keep)).toHaveLength(1);
+    expect(degenerateFacets(meshOf(solid))).toBe(0);
+    expect(degenerateFacets(meshOf(keep(printPose(solid))))).toBe(0);
   });
 });
