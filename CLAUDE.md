@@ -178,7 +178,8 @@ with `PRINTER`, `PRINT_PROFILE` and `FILAMENT`.
 ## Figures
 
 `node scripts/figures/shoot.mjs <pass>` draws a design pass's figures, each part the library's own with a finding's
-area in orange, into `.check/figures/<pass>/` (`boards-pass`, 21 Oct 2026); a review copies them into `docs/figures/`.
+area in orange, into `.check/figures/<pass>/` (`boards-pass`, 21 Oct 2026; `boards-built` and `between-built`, the answers as built); a
+review copies them into `docs/figures/`. A scene seen from the back sets `camera.up`.
 
 ## The test print
 

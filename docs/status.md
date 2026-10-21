@@ -230,7 +230,18 @@ Its answers are built (D276 to D279, D281; C283 to C286), and the Printables dra
 ten board, coupon and standoff files, all seven pictures in their order, and the standoff's line, saved as a draft
 and checked after a reload. D282's seams between the slots raised D288 to D290
 ([figure](figures/between-slots.svg), drawn by `scripts/figures/between-slots.py`), answered on 21 Oct 2026 with
-D287 and A291 (Decisions).
+D287 and A291 (Decisions). That figure shows the questions, its top right panel D288's (b); what was built, the same
+day (C293 to C295), is drawn from the library in [`figures/between-built/`](figures/between-built/) by
+`node scripts/figures/shoot.mjs between-built`: the seams (b1), the standoffs (b2), lock screws alone (b3) and the
+clip (b4).
+
+- **A296** Release `v0.4.0` at `main`, so the site, which since A291 shows the latest release, gets the open sides
+  between the slots, lock screws alone and the slot clip for such seams (D282, D288 to D290; C293 to C295): the
+  changelog's Unreleased becomes 0.4.0, a minor version as it adds choices. Each new choice starts off, so the files
+  the Printables draft holds are what `v0.3.0` makes. Recommended: yes.
+- **A297** Once the site shows them (after A296), a line in the Printables draft's description for each new choice,
+  saved as a draft and checked after a reload, before the contest closes on 22 Oct 2026 at 23:59 UTC. Recommended:
+  yes.
 
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.

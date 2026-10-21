@@ -45,7 +45,7 @@
       document.getElementById('fig').prepend(renderer.domElement);
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(s.camera.fov, W / H, 1, 2000);
-      camera.up.set(0, 0, 1);
+      camera.up.set(...(s.camera.up ?? [0, 0, 1])); // z up unless a scene seen from the back says otherwise
       camera.position.set(...s.camera.position);
       camera.lookAt(...s.camera.target);
       scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f96, 1.6));
