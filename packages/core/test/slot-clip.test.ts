@@ -59,6 +59,9 @@ const RIBS = 6 * RIB; // three along each long side
 const POST = Math.PI * 10 ** 2; // a post, 20 mm across
 // Where the 10 mm bar runs into a post at its end: the band on the inner side, and the bar's round end.
 const BAR_IN_POST = halfBand(10, 10) + (Math.PI * 25) / 2;
+// The long blend where the bar meets a post (D270): a parabola from 14 mm along the bar to where the post's round is
+// 8 mm out, its area worked out as the ring longBlend draws it, by the shoelace formula, 21 Oct 2026.
+const BLEND = 3.4836;
 
 describe('slotClipParams: the starting values', () => {
   it('are for 2 boards side by side, 15 mm deep, pegs 0.4 mm under the slot with ribs, and a screw (D238, D250 b)', () => {
@@ -126,7 +129,7 @@ describe('makeSlotClip, for 2 boards side by side', () => {
   it('is the bar and the posts at the wall, the posts alone for the 8 mm next to the boards, then the pegs', () => {
     const part = clip();
     const bar = 40 * 10 + Math.PI * 25; // two 10 mm discs and the band between their centres
-    const wall = bar + 2 * POST - 2 * BAR_IN_POST;
+    const wall = bar + 2 * POST - 2 * BAR_IN_POST + 4 * BLEND; // and a long blend each side where it meets a post (D270)
     expect(within(keep(part.slice(6)).area(), wall)).toBeLessThan(0.01);
     expect(within(keep(part.slice(16)).area(), 2 * POST)).toBeLessThan(0.01);
     expect(within(keep(part.slice(21)).area(), 2 * (PEG + RIBS))).toBeLessThan(0.005);
@@ -252,7 +255,7 @@ describe('makeSlotClip, for 4 boards (D188)', () => {
     const ring = 50 * 50 - (4 - Math.PI) * 25 - 30 * 30;
     // at each corner the ring is two 10 mm bands meeting, which cover 25 mm2 twice, and its rounded corner
     const ringInPost = 2 * halfBand(10, 10) - 25 + (Math.PI * 25) / 4;
-    const wall = ring + 4 * POST - 4 * ringInPost;
+    const wall = ring + 4 * POST - 4 * ringInPost + 16 * BLEND; // a long blend each side of each bar at each post (D270)
     expect(within(keep(part.slice(6)).area(), wall)).toBeLessThan(0.01);
     expect(within(keep(part.slice(16)).area(), 4 * POST)).toBeLessThan(0.01);
     expect(within(keep(part.slice(21)).area(), 4 * (PEG + RIBS))).toBeLessThan(0.005);
@@ -392,7 +395,7 @@ describe('a keyhole in the clip (D195, C199)', () => {
     expect(round(channel)).toEqual(round([-4.5, 4.5, -9, 9]));
     // control: the channel takes more from the pad than the lips' opening does, by about 44 mm2
     const part = clip({ fixing: 'keyhole' });
-    expect(keep(part.slice(0.75)).area() - keep(part.slice(3)).area()).toBeGreaterThan(30);
+    expect(keep(part.slice(1.25)).area() - keep(part.slice(3)).area()).toBeGreaterThan(30); // above the chamfer (D270)
   });
 
   it("goes in the middle of the ring's top for 4 boards, and leaves the hooks and the slots their room", () => {
@@ -419,5 +422,54 @@ describe('makeSlotClip exports', () => {
     for (const layout of ['2', '2-stacked', '4'] as const) {
       expect(degenerateFacets(meshOf(clip({ boards: layout, fixing: 'screw', screwHead: 'round' })))).toBe(0);
     }
+  });
+});
+
+describe("how the clip looks (D270; the connectors' design pass, finding 5)", () => {
+  const holds = (part: Manifold, z: number, [x, y]: [number, number]) => {
+    const dot = keep(engine.CrossSection.square([0.02, 0.02], true).translate([x, y]));
+    return keep(keep(part.slice(z)).intersect(dot)).area() > 0;
+  };
+  const strip = keep(engine.CrossSection.square([2, 40], true));
+  const barAcross = (part: Manifold, z: number) => keep(keep(part.slice(z)).intersect(strip)).area() / 2;
+
+  it("chamfers its outside edges 1 mm at the wall, at the bar's face and at the board", () => {
+    const part = clip();
+    // a quarter of a millimetre up from the wall, the whole part 0.75 mm in all round: 58.5 mm long
+    const wall = keep(part.slice(0.25)).bounds();
+    expect(wall.max[0] - wall.min[0]).toBeCloseTo(58.5, 2);
+    // the bar 8.5 mm across there, and under its face at 12 mm, and 10 mm between
+    expect(barAcross(part, 0.25)).toBeCloseTo(8.5, 2);
+    expect(barAcross(part, 11.75)).toBeCloseTo(8.5, 2);
+    expect(barAcross(part, 6)).toBeCloseTo(10, 2);
+    // each post 18.5 mm across a quarter of a millimetre under the board
+    const posts = keep(part.slice(19.75))
+      .toPolygons()
+      .filter((ring) => ring.length > 40);
+    expect(posts).toHaveLength(2);
+    for (const ring of posts) {
+      const xs = ring.map(([x]) => x);
+      expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(18.5, 1);
+    }
+    expect(degenerateFacets(meshOf(part))).toBe(0);
+  });
+
+  it("blends the bar into each post on a long curve, in plan, below the hooks' room", () => {
+    const part = clip();
+    // 12 mm from the right post's centre, the curve stands 5.19 mm out from the bar's middle
+    expect(holds(part, 6, [8, 5.1])).toBe(true);
+    expect(holds(part, 6, [8, 5.3])).toBe(false);
+    expect(holds(part, 6, [-8, -5.1])).toBe(true);
+    // not above the bar, in the hooks' room
+    expect(holds(part, 13, [8, 5.1])).toBe(false);
+  });
+
+  it('blends the bars into the posts for 4 boards too, inside the ring and out', () => {
+    const ring = clip({ boards: '4' });
+    // the top bar, its inner edge at 15 mm: the blend 2 mm into the ring at 8 mm from the top right post
+    expect(holds(ring, 6, [8, 14.9])).toBe(true);
+    expect(holds(ring, 6, [8, 25.1])).toBe(true);
+    expect(holds(ring, 6, [0, 14.9])).toBe(false); // the bar's middle, straight
+    expect(degenerateFacets(meshOf(ring))).toBe(0);
   });
 });

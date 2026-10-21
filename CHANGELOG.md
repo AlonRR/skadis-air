@@ -21,6 +21,9 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- The standoff and the slot clip have a 1 mm chamfer round their outside edges, the wall face's included, and a
+  0.5 mm one at each end of a screw hole; the clip's bar and the 2-board standoff's bridge run into their posts on long
+  curves, and the standoffs' tunnels are chamfered where they meet the board.
 - The slot clip's pegs are chamfered 0.8 mm at their root, where they meet their posts, inside the slot's back
   chamfer, so a levered board does not snap them at a sharp corner.
 - The printer's maker is a field of its own, "Printer", a dropdown list of the safe default, Custom and the 7

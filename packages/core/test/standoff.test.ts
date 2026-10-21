@@ -51,17 +51,17 @@ describe('makeStandoff, for one board', () => {
     expect(box.min.map((v) => Math.round(v * 1000) / 1000)).toEqual([-5, -5, 0]);
     expect(box.max.map((v) => Math.round(v * 1000) / 1000)).toEqual([5, 5, 20]);
     expect(part.genus()).toBe(1);
-    // within 1 %: each circle is drawn with 64 segments
-    const ring = Math.PI * (5 ** 2 - 2.25 ** 2) * 20;
-    expect(Math.abs(part.volume() - ring) / ring).toBeLessThan(0.01);
+    // within 1 %, between its chamfers (D270): each circle is drawn with 64 segments
+    const ring = Math.PI * (5 ** 2 - 2.25 ** 2);
+    expect(Math.abs(keep(part.slice(10)).area() - ring) / ring).toBeLessThan(0.01);
   });
 
   it('follows the screw: the hole 0.5 mm wider, the ring the hole plus 5.5 mm (C83)', () => {
     const part = standoff({ screwMm: 5, heightMm: 25 });
     expect(part.boundingBox().max[0]).toBeCloseTo(5.5, 3);
     expect(part.boundingBox().max[2]).toBeCloseTo(25, 9);
-    const ring = Math.PI * (5.5 ** 2 - 2.75 ** 2) * 25;
-    expect(Math.abs(part.volume() - ring) / ring).toBeLessThan(0.01);
+    const ring = Math.PI * (5.5 ** 2 - 2.75 ** 2);
+    expect(Math.abs(keep(part.slice(12.5)).area() - ring) / ring).toBeLessThan(0.01);
   });
 
   it('behind a corner screw hole, keeps 2 mm clear of every slot, open or closed, at the smallest and largest screws', () => {
@@ -114,8 +114,10 @@ describe('makeStandoff, for 2 boards (D92, D97)', () => {
     const board = keep(part.slice(16)).area(); // in it
     expect(Math.abs(wall - outline) / outline).toBeLessThan(0.01);
     expect(Math.abs(board - (outline - 11.2 * 8.8)) / board).toBeLessThan(0.01);
+    // its edges chamfered 1 mm (D270): a little less than the plain shape, by no more than 5 %
     const volume = outline * 20 - 11.2 * 8.8 * TUNNEL_DEPTH;
-    expect(Math.abs(part.volume() - volume) / volume).toBeLessThan(0.01);
+    expect(part.volume()).toBeLessThan(volume);
+    expect(part.volume() / volume).toBeGreaterThan(0.95);
   });
 
   it('fitted at a seam, at the bottom or the top corners, leaves every slot and every hook its room', () => {
@@ -146,8 +148,10 @@ describe('makeStandoff, for 4 boards (D92, D97)', () => {
     expect(part.genus()).toBe(4);
     const outline = 30 * 30 - (4 - Math.PI) * 25 - 4 * Math.PI * 2.25 ** 2;
     const cross = 2 * 11.2 * 30 - 11.2 ** 2; // the two tunnels, which cross in the middle
+    // its edges chamfered 1 mm (D270): a little less than the plain shape, by no more than 5 %
     const volume = outline * 20 - cross * TUNNEL_DEPTH;
-    expect(Math.abs(part.volume() - volume) / volume).toBeLessThan(0.01);
+    expect(part.volume()).toBeLessThan(volume);
+    expect(part.volume() / volume).toBeGreaterThan(0.95);
   });
 
   it('fitted where four corners meet, either way up, leaves every slot and every hook its room', () => {
@@ -191,5 +195,68 @@ describe("a tight section at the standoff's board face, for the trial (D267)", (
     expect(standoffParams({})).not.toHaveProperty('pilotMm');
     expect(() => standoffParams({ pilotMm: 4.5 })).toThrow(RangeError);
     expect(() => standoffParams({ pilotMm: 0 })).toThrow(RangeError);
+  });
+});
+
+describe("how the standoff looks (D270; the connectors' design pass, finding 5)", () => {
+  /** Each separate outline in a slice, as [minX, maxX, minY, maxY]. */
+  const bounds = (part: Manifold, z: number) =>
+    keep(part.slice(z))
+      .toPolygons()
+      .map((ring) => {
+        const [xs, ys] = [ring.map(([x]) => x), ring.map(([, y]) => y)];
+        return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)] as const;
+      });
+  const widths = (part: Manifold, z: number) =>
+    bounds(part, z)
+      .map(([minX, maxX]) => Math.round((maxX - minX) * 100) / 100)
+      .sort((a, b) => a - b);
+  const holds = (part: Manifold, z: number, [x, y]: [number, number]) => {
+    const dot = keep(engine.CrossSection.square([0.02, 0.02], true).translate([x, y]));
+    return keep(keep(part.slice(z)).intersect(dot)).area() > 0;
+  };
+
+  it('chamfers its outside edges 1 mm at the wall and at the board, and its hole 0.5 mm at each end', () => {
+    const part = standoff();
+    // a quarter of a millimetre in from each face: the ring 8.5 mm across, the hole 5 mm
+    expect(widths(part, 0.25)).toEqual([5, 8.5]);
+    expect(widths(part, 19.75)).toEqual([5, 8.5]);
+    // and between them, as before: 10 mm, the hole 4.5
+    expect(widths(part, 10)).toEqual([4.5, 10]);
+    expect(degenerateFacets(meshOf(part))).toBe(0);
+  });
+
+  it("blends the 2-board standoff's bridge into its posts on a long curve, within C100's margin", () => {
+    const part = standoff({ boards: 2 });
+    // 2 mm in from a post's centre, the curve stands 4.64 mm out: past the 4.4 mm bridge and the post's own 4.58
+    expect(holds(part, 3, [8, 4.6])).toBe(true);
+    expect(holds(part, 3, [8, 4.7])).toBe(false);
+    expect(holds(part, 3, [-8, -4.6])).toBe(true);
+    expect(degenerateFacets(meshOf(part))).toBe(0);
+  });
+
+  it('builds for every screw from 3 to 5 mm and every number of boards, its blends fitted to the posts', () => {
+    for (const boards of [1, 2, 4] as const) {
+      for (const screwMm of [3, 3.5, 4, 4.5, 5]) {
+        const part = standoff({ boards, screwMm });
+        expect(part.genus()).toBe(boards);
+        expect(degenerateFacets(meshOf(part))).toBe(0);
+      }
+    }
+  });
+
+  it("chamfers its tunnels' edges at the board 1 mm; their floors' corners stay square, in the hooks' room", () => {
+    const part = standoff({ boards: 4 });
+    const block = (z: number) => {
+      const found = bounds(part, z).filter(([minX, maxX, minY]) => minX > 0 && minY > 0 && maxX - minX > 6);
+      expect(found).toHaveLength(1);
+      return found[0]?.[0] ?? 0;
+    };
+    // the tunnel's floor is 8 mm under the board, at 12 mm: half a millimetre above it, the tunnel as wide as ever
+    expect(block(12.5)).toBeCloseTo(5.6, 2);
+    expect(block(15)).toBeCloseTo(5.6, 2);
+    // a quarter of a millimetre under the board, the tunnel 0.75 mm wider each side
+    expect(block(19.75)).toBeCloseTo(6.35, 2);
+    expect(degenerateFacets(meshOf(part))).toBe(0);
   });
 });

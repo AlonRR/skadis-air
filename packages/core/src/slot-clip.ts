@@ -27,6 +27,7 @@ import {
   STANDOFF_DEFAULT_MM,
   wallKeyholeCutter,
 } from './mounting.js';
+import { chamferedExtrusion, EDGE_CHAMFER_MM, longBlend, placed } from './chamfer.js';
 import { circle, ringedSolid, stadium } from './rings.js';
 import { BOARD_THICKNESS_MM, GRID_PITCH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM } from './skadis.js';
 import { TUNNEL_DEPTH_MM } from './standoff.js';
@@ -66,6 +67,9 @@ export const SLOT_CLIP_DEFAULTS: SlotClipParams = {
 const BAR_MM = 10;
 /** A post round each peg, where the clip meets the boards (C192). */
 const POST_MM = 20;
+/** Where the bar blends into a post (D270): the curve meets the post's round 8 mm out from the bar's middle, 3 mm past
+ * the bar's side, and leaves the side 14 mm from the post's centre, short of the middle of the 40 mm between posts. */
+const BAR_MEET_MM = 8;
 /** The pegs with ribs reach the front of a 5 mm board, flush with it (D250 a); C192 stopped them 2.5 mm short. */
 const PEG_LENGTH_MM = BOARD_THICKNESS_MM;
 /** Round each peg's tip, so it finds its slot (C192). */
@@ -422,11 +426,38 @@ export function makeSlotClip(engine: Engine, params: SlotClipParams): Manifold {
     const k = keyhole(p.screwMm);
     pads.push(keep(new CrossSection([stadium(x, y, k.entryMm + 4, k.slideMm + k.entryMm + 4)])));
   }
-  const outline = pads.length > 0 ? keep(CrossSection.union([band, ...pads])) : band;
   const posts = keep(CrossSection.union(centres.map(([x, y]) => keep(new CrossSection([circle(x, y, POST_MM)])))));
+  // where each bar meets a post, a long blend in plan each side, at the bar's height, below the hooks' room (D270)
+  const bars: [Vec2, Vec2][] =
+    p.boards === '4'
+      ? centres.map((a, i): [Vec2, Vec2] => [a, centres[(i + 1) % centres.length] ?? a])
+      : [[centres[0] ?? [0, 0], centres[1] ?? [0, 0]]];
+  const blends = bars.flatMap(([a, b]) =>
+    [
+      [a, b],
+      [b, a],
+    ].flatMap(([from, to]) => {
+      const [fx, fy] = from ?? [0, 0];
+      const [tx, ty] = to ?? [0, 0];
+      const length = Math.hypot(tx - fx, ty - fy);
+      const along: Vec2 = [(tx - fx) / length, (ty - fy) / length];
+      return [1, -1].map((side) => {
+        const ring = longBlend({ radiusMm: POST_MM / 2, edgeMm: BAR_MM / 2, meetMm: BAR_MEET_MM, sinkMm: 0.15 });
+        const across: Vec2 = [-along[1] * side, along[0] * side];
+        return keep(new CrossSection([placed(ring, [fx, fy], along, across)], 'NonZero'));
+      });
+    }),
+  );
+  // One footprint for the wall face, the posts in it, so the bed is one face; the posts rise from 1.5 mm inside the
+  // bar, where nothing of the bar's chamfers is, the same outline as the bar's round them (D270)
+  const footprint = keep(CrossSection.union([band, ...pads, posts, ...blends]));
   const [w, h] = pegSize(p.pegClearanceMm);
-  const solids: Manifold[] = [outline.extrude(bar)];
-  let postSolid = posts.extrude(p.depthMm);
+  const edges = { bottomMm: EDGE_CHAMFER_MM, topMm: EDGE_CHAMFER_MM };
+  const solids: Manifold[] = [chamferedExtrusion(engine, footprint, bar, edges)];
+  const rise = bar - 1.5;
+  const risen = chamferedExtrusion(engine, posts, p.depthMm - rise, { bottomMm: 0, topMm: EDGE_CHAMFER_MM });
+  let postSolid = risen.translate([0, 0, rise]);
+  risen.delete();
   if (p.grip === 'lip') {
     // a pocket round each split peg, so its halves are free to bend over their whole length (T268)
     const pockets = keep(

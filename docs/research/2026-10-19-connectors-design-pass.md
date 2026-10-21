@@ -115,7 +115,9 @@ temperature, behind a board, and do not move once mounted.
    out undersize. → **D267**.
 
    ![The standoff's hole at the board face, cut through the hole](../figures/connectors-pass/d267-standoff-loose.png)
-5. **Neither part is chamfered**, and their sections meet at sharp corners: the tunnel's floor and walls, the
+5. **Fixed 21 Oct 2026 (D270, C275)**: both parts chamfered 1 mm, the bars blended into the posts on parabolas, the
+   tunnels chamfered at the board; their floors and the clip's posts stay square in the hooks' room. As found:
+   **Neither part is chamfered**, and their sections meet at sharp corners: the tunnel's floor and walls, the
    2-board bridge into its posts, the clip's bar into its posts. In proportion: the clip is never seen, and the
    standoff only from the side. Two limits force steps here and keep them: the hooks' room above the clip's bar,
    which a blend up the post would fill, and the slot margin that narrowed the 2-board bridge (C100). The practice
