@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-21
+
 ### Added
 
 - Under the screw size, what each screw passes, from the part's own settings: "20 mm of board and standoff, plus
