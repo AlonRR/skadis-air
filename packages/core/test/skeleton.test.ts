@@ -174,9 +174,11 @@ describe('makeSkeletonBoard (D146, D147, D161)', () => {
  */
 function overhang(b: Manifold, t: number, rise: number): number {
   let total = 0;
-  // sections between the faces, never on one: a section at a face is empty or the face itself
+  // sections between the faces, never on one: a section at a face is empty or the face itself. Grown with mitred
+  // corners, as two 45 degree faces that meet at an outside corner, a slot's chamfer and the edge's (D276), grow
+  // there along the mitre; their meeting edge leans at 35 degrees, and no face of either is past 45.
   for (let z = t - rise * 1.5; z > 0; z -= rise) {
-    const below = keep(keep(b.slice(z + rise)).offset(rise + 0.02, 'Round'));
+    const below = keep(keep(b.slice(z + rise)).offset(rise + 0.02, 'Miter'));
     total += keep(keep(b.slice(z)).subtract(below)).area();
   }
   return total;
@@ -188,6 +190,24 @@ const RISE = 0.2;
 describe('printed face down, it overhangs nowhere more than 45 degrees (D147)', () => {
   it('measured a layer at a time, from the front to the back', () => {
     expect(overhang(skeleton(), 5, RISE)).toBeLessThan(0.05);
+  });
+
+  it('control: a face 50 degrees over is caught, and two 45 degree faces meeting at a corner are not', () => {
+    const square = (half: number) =>
+      keep(
+        new engine.CrossSection([
+          [
+            [-half, -half],
+            [half, -half],
+            [half, half],
+            [-half, half],
+          ],
+        ]),
+      );
+    // printed from z = 5 down: a square 2 mm at the bed to 14 mm last, each face 6 mm out over 5, 50 degrees
+    expect(overhang(keep(square(7).extrude(5, 0, 0, [1 / 7, 1 / 7])), 5, RISE)).toBeGreaterThan(1);
+    // 2 mm to 12 mm, each face 5 mm out over 5, 45 degrees, its corners mitred
+    expect(overhang(keep(square(6).extrude(5, 0, 0, [1 / 6, 1 / 6])), 5, RISE)).toBeLessThan(0.05);
   });
 
   it('control: a shelf that juts 2 mm out over one layer is caught', () => {

@@ -129,19 +129,70 @@ describe('makeSolidBoard', () => {
     const [w, h, c, t] = [5.2, 15.2, 1, 5];
     // a 45 degree chamfer of depth c round a convex outline adds P c^2 / 2 + pi c^3 / 3 at each face
     const slot = stadiumArea(w, h) * t + 2 * ((stadiumPerimeter(w, h) * c * c) / 2 + (Math.PI * c ** 3) / 3);
-    const expected = 80 * 80 * t - slotsWorth(slotPlaces(2, 2, ALL_OPEN)) * slot;
+    // the front's edge chamfer (D277), c^2 / 2 a millimetre, along each 80 mm edge less its 30.4 mm of slots: a
+    // quarter, a half and a quarter, 7.6, 15.2 and 7.6 mm long
+    const edges = (4 * (80 - 30.4) * (c * c)) / 2;
+    const expected = 80 * 80 * t - slotsWorth(slotPlaces(2, 2, ALL_OPEN)) * slot - edges;
     const volume = board({ columns: 2, rows: 2 }).volume();
     expect(Math.abs(volume - expected) / expected).toBeLessThan(0.003);
   });
 
-  it('two open tiles side by side are the board of their size: the seam makes whole slots (D15)', () => {
+  it('closed, weighs the plate less its rounded corners, its slots and its edge chamfers, front and back (D276)', () => {
+    const [w, h, c, t, r] = [5.2, 15.2, 1, 5, 10];
+    const slot = stadiumArea(w, h) * t + 2 * ((stadiumPerimeter(w, h) * c * c) / 2 + (Math.PI * c ** 3) / 3);
+    const plate = (120 * 80 - 4 * (r * r - (Math.PI * r * r) / 4)) * t;
+    // round a convex outline a chamfer takes P c^2 / 2 - pi c^3 / 3 at each face: about 381 mm3 here
+    const perimeter = 2 * (120 + 80) - 8 * r + 2 * Math.PI * r;
+    const edges = 2 * ((perimeter * c * c) / 2 - (Math.PI * c ** 3) / 3);
+    const expected = plate - slotsWorth(slotPlaces(3, 2, CLOSED)) * slot - edges;
+    const volume = board({ columns: 3, rows: 2, sides: CLOSED }).volume();
+    expect(Math.abs(volume - expected) / expected).toBeLessThan(0.002);
+  });
+
+  it('chamfers its outer edge 1 mm at the front all round, and at the back only where a side is closed (D276, D277)', () => {
+    const MIXED: Sides = { left: 'closed', right: 'open', bottom: 'open', top: 'closed' };
+    for (const sides of [ALL_OPEN, CLOSED, MIXED]) {
+      const b = board({ columns: 2, rows: 2, sides });
+      // a cut 0.25 mm inside each face: the outline 0.75 mm in where that face is chamfered
+      const inset = (z: number, chamfered: (side: keyof Sides) => boolean) => {
+        const { min, max } = keep(b.slice(z)).bounds();
+        const by = (side: keyof Sides) => (chamfered(side) ? 0.75 : 0);
+        expect(min[0]).toBeCloseTo(by('left'), 6);
+        expect(min[1]).toBeCloseTo(by('bottom'), 6);
+        expect(max[0]).toBeCloseTo(80 - by('right'), 6);
+        expect(max[1]).toBeCloseTo(80 - by('top'), 6);
+      };
+      inset(4.75, () => true);
+      inset(0.25, (side) => sides[side] === 'closed');
+    }
+  });
+
+  it('two open boards side by side meet in a 2 mm V groove on the front, and are one board under it (D277)', () => {
+    const left = board({ columns: 1, rows: 2 });
+    const right = keep(board({ columns: 1, rows: 2 }).translate([40, 0, 0]));
+    const wall = keep(left.add(right));
+    // 0.5 mm under the front the groove is 1 mm wide, and runs the seam's length, through its slots: two pieces
+    const front = keep(wall.slice(4.5))
+      .decompose()
+      .map((piece) => keep(piece).bounds())
+      .sort((a, b) => a.min[0] - b.min[0]);
+    expect(front).toHaveLength(2);
+    expect(front[0]?.max[0]).toBeCloseTo(39.5, 6);
+    expect(front[1]?.min[0]).toBeCloseTo(40.5, 6);
+    expect(keep(wall.slice(2.5)).decompose().map(keep)).toHaveLength(1);
+  });
+
+  it('two open tiles side by side are the board of their size under the front: the seam makes whole slots (D15)', () => {
     const left = board({ columns: 1, rows: 2 });
     const right = keep(board({ columns: 1, rows: 2 }).translate([40, 0, 0]));
     const wall = keep(left.add(right));
     const whole = board({ columns: 2, rows: 2 });
     expect(wall.genus()).toBe(whole.genus());
-    // the same solid, to one part in a million: the union's arithmetic rounds differently
-    expect(Math.abs(wall.volume() - whole.volume()) / whole.volume()).toBeLessThan(1e-6);
+    // the same cut, to one part in a million, from the back up to the groove
+    for (const z of [0.25, 2.5]) {
+      const [a, b] = [keep(wall.slice(z)).area(), keep(whole.slice(z)).area()];
+      expect(Math.abs(a - b) / b).toBeLessThan(1e-6);
+    }
   });
 
   it('discriminates: with the second tile closed at the seam, the wall has less taken out', () => {
@@ -156,6 +207,8 @@ describe('makeSolidBoard', () => {
       { columns: 1, rows: 1 },
       { columns: 2, rows: 2, sides: CLOSED },
       { columns: 2, rows: 1, slotChamferMm: 0 },
+      { columns: 2, rows: 2, sides: { left: 'closed', right: 'open', bottom: 'open', top: 'closed' } as Sides },
+      { columns: 1, rows: 2, sides: { ...CLOSED, right: 'open' } as Sides, cornerRadiusMm: 0 },
     ]) {
       const mesh = meshOf(board(given));
       expect(mesh.triangles.length).toBeGreaterThan(0);

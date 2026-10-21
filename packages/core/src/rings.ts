@@ -25,12 +25,16 @@ export function stadium(x: number, y: number, w: number, h: number, grow = 0): V
 }
 
 /**
- * A circle's outline, counter-clockwise, d across at (x, y), grown by `grow`. Not a stadium of equal
- * width and height: that repeats a point where its two arcs meet, and a repeated point is a degenerate facet.
+ * A circle's outline, counter-clockwise, d across at (x, y), grown by `grow`, its first point `from` radians round.
+ * Not a stadium of equal width and height: that repeats a point where its two arcs meet, and a repeated point is a
+ * degenerate facet.
  */
-export function circle(x: number, y: number, d: number, grow = 0): Vec2[] {
-  return arc(x, y, d / 2 + grow, 0, 2 * Math.PI, CIRCLE_SEGMENTS).slice(0, -1);
+export function circle(x: number, y: number, d: number, grow = 0, from = 0): Vec2[] {
+  return arc(x, y, d / 2 + grow, from, from + 2 * Math.PI, CIRCLE_SEGMENTS).slice(0, -1);
 }
+
+/** Half a step of a circle's points: turned by it, a circle has no point on the lines a corner's arc has its own on. */
+export const HALF_STEP = Math.PI / CIRCLE_SEGMENTS;
 
 /**
  * A closed mesh of rings: `ring(grow)` drawn at each [z, grow] level, from the lowest z up, every ring

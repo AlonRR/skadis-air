@@ -8,6 +8,7 @@ import { loadEngine } from '../src/engine.js';
 import { keyhole, mountingCuts, mountingParams, type MountingParams } from '../src/mounting.js';
 import { stadium } from '../src/rings.js';
 import { ALL_OPEN, type Sides, slotPlaces } from '../src/slots.js';
+import { printPose } from '../src/print-pose.js';
 import { meshOf } from '../src/stl.js';
 import { degenerateFacets } from './facets.js';
 import { hookRoomZone, slotClearZone } from './slot-zone.js';
@@ -171,6 +172,17 @@ describe('standoffs on the back (D75)', () => {
     expect(board.genus()).toBe(plain({ columns: 2, rows: 2 }).genus() + 4);
   });
 
+  it('end in a 1 mm chamfer at the wall, the screw hole in a 0.5 mm one (D276)', () => {
+    const board = mounted({ columns: 2, rows: 2 }, { standoffHeightMm: 20 });
+    // 0.25 mm up from the foot: each 10 mm post 0.75 mm in all round, each 4.5 mm hole 0.25 mm out
+    // to 0.1 mm: a post's points are half a step round, so its box is 0.12 % short of its width
+    const circles = roundHoles(keep(board.slice(-20 + 0.25))).map((c) => Math.round(c.w * 10) / 10);
+    expect(circles.sort((a, b) => a - b)).toEqual([5, 5, 5, 5, 8.5, 8.5, 8.5, 8.5]);
+    // 1.25 mm up, both as they are all the way to the board
+    const above = roundHoles(keep(board.slice(-20 + 1.25))).map((c) => Math.round(c.w * 10) / 10);
+    expect(above.sort((a, b) => a - b)).toEqual([4.5, 4.5, 4.5, 4.5, 10, 10, 10, 10]);
+  });
+
   it('are solid posts where there is no screw hole', () => {
     const board = mounted({ columns: 2, rows: 2 }, { screwHead: 'none', standoffHeightMm: 20 });
     expect(Math.abs(keep(board.slice(-10)).area() - 4 * Math.PI * 25) / (4 * Math.PI * 25)).toBeLessThan(0.01);
@@ -191,6 +203,20 @@ describe('standoffs on the back (D75)', () => {
         // the control: a 4 mm margin reaches the standoffs, so the check can see one near a slot
         const wide = slotClearZone(engine, { columns: 2, rows: 2, sides }, 4, 30, keep);
         expect(keep(board.intersect(wide)).volume()).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("print with no degenerate facet where a standoff stands past a rounded corner's back chamfer (D276)", () => {
+    // a 20 mm corner's back chamfer leaves the back 19 mm round (20, 20); a 5 mm screw's standoff reaches 19.6 mm out
+    for (const cornerRadiusMm of [10, 15, 20]) {
+      for (const screwMm of [3, 4, 5]) {
+        const board = mounted(
+          { columns: 2, rows: 2, sides: CLOSED, cornerRadiusMm },
+          { screwMm, standoffHeightMm: 20 },
+        );
+        const printed = keep(printPose(board));
+        expect(degenerateFacets(meshOf(printed)), `${cornerRadiusMm} mm corner, ${screwMm} mm screw`).toBe(0);
       }
     }
   });
@@ -265,6 +291,8 @@ describe('keyholes, in the top standoffs behind the corner slots (D235, D244; D1
     [60, 20],
   ];
   const pad = 15 * 9 + Math.PI * 7.5 ** 2; // a standoff, 15 x 24 mm for a 4 mm screw
+  // 0.75 mm up from its foot, inside the 1 mm chamfer round its wall face (D276): 0.25 mm in all round
+  const padAtLips = 14.5 * 9 + Math.PI * 7.25 ** 2;
   /** The rings of a cut in the board's bottom half: the bottom standoffs. */
   const lower = (rings: Vec2[][]) => rings.filter((ring) => ring.every(([, y]) => y < 40));
   const keyholeAt = (cut: CrossSection, x: number) => holesAt(cut, x, 60).filter((h) => h.maxX - h.minX < 10);
@@ -296,7 +324,9 @@ describe('keyholes, in the top standoffs behind the corner slots (D235, D244; D1
     // corner tile's centre slot (D245)
     const bottom = lower(lips.toPolygons());
     expect(bottom).toHaveLength(2);
-    expect(Math.abs(keep(new engine.CrossSection(bottom)).area() - 2 * pad) / (2 * pad)).toBeLessThan(0.01);
+    expect(Math.abs(keep(new engine.CrossSection(bottom)).area() - 2 * padAtLips) / (2 * padAtLips)).toBeLessThan(
+      0.002,
+    );
     for (const ring of bottom) {
       const xs = ring.map(([x]) => x);
       const ys = ring.map(([, y]) => y);

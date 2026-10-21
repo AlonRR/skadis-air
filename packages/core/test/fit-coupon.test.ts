@@ -64,8 +64,8 @@ describe('the fit coupon', () => {
   it('has left and right open and top and bottom closed (D68); on one row that leaves square corners', () => {
     const p = fitCouponParams({});
     expect(p.sides).toEqual({ left: 'open', right: 'open', bottom: 'closed', top: 'closed' });
-    // a square corner: the coupon's area near (0, 0) is filled right to the corner
-    const corner = keep(coupon.intersect(keep(engine.Manifold.cube([1, 1, 5])))).volume();
-    expect(corner).toBeCloseTo(5, 6);
+    // a square corner: the coupon's area near (0, 0) is filled right to the corner, between its faces' edge chamfers
+    const corner = keep(coupon.intersect(keep(keep(engine.Manifold.cube([1, 1, 1])).translate([0, 0, 2])))).volume();
+    expect(corner).toBeCloseTo(1, 6);
   });
 });

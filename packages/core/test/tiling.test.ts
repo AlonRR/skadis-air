@@ -7,6 +7,7 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 import { defaultValues } from '../src/settings.js';
 import { buildBoard, SOLID } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
+import type { Sides } from '../src/slots.js';
 import { evenSplit, largestPanel, panelCount, panelPlaces, wallPlan } from '../src/tiling.js';
 
 vi.setConfig({ testTimeout: 30_000 });
@@ -131,31 +132,36 @@ describe('wallPlan (D175 to D177)', () => {
     expect(plan?.rows).toEqual([3]);
   });
 
-  it('puts the wall back together: its panels, placed, are the one board of its size (D15)', () => {
+  it('puts the wall back together: its panels, placed, are the one board of its size under the front (D15)', () => {
     const values = wall({ widthMm: 280, heightMm: 200, sides: CLOSED, screwHead: 'none' });
     const plan = wallPlan(values, { xMm: 200, yMm: 200 });
     if (plan === null) throw new Error('a plan');
-    let volume = 0;
-    for (const panel of plan.panels) {
-      const built = buildBoard(engine, SOLID, panel.values as never);
-      if (!built.ok) throw new Error(built.problem);
-      made.push(built.solid);
-      volume += built.solid.volume() * panelCount(panel);
-    }
+    /** The area of a cut through each panel at this depth, added up over the wall. */
+    const cut = (z: number, sides?: Sides) =>
+      plan.panels.reduce((sum, panel) => {
+        const given = sides === undefined ? panel.values : { ...panel.values, sides, cornerRadiusMm: 0 };
+        const built = buildBoard(engine, SOLID, given as never);
+        if (!built.ok) throw new Error(built.problem);
+        made.push(built.solid);
+        const section = built.solid.slice(z);
+        const area = section.area();
+        section.delete();
+        return sum + area * panelCount(panel);
+      }, 0);
     const whole = buildBoard(engine, SOLID, { ...values, panels: 'one' } as never);
     if (!whole.ok) throw new Error(whole.problem);
     made.push(whole.solid);
-    // the seams are open, half a slot each side: the slots across them are whole, none missing or doubled
-    expect(Math.abs(volume - whole.solid.volume())).toBeLessThan(0.1); // of 255 708 mm³: rounding
-    // control: the same panels with their seams closed leave out the slots along them
-    let closedSeams = 0;
-    for (const panel of plan.panels) {
-      const built = buildBoard(engine, SOLID, { ...panel.values, sides: CLOSED, cornerRadiusMm: 0 } as never);
-      if (!built.ok) throw new Error(built.problem);
-      made.push(built.solid);
-      closedSeams += built.solid.volume() * panelCount(panel);
+    // the seams are open, half a slot each side: the slots across them are whole, none missing or doubled; on the
+    // front the seams are V grooves (D277), so the cuts are taken behind them
+    for (const z of [0.25, 2.5]) {
+      const section = whole.solid.slice(z);
+      expect(Math.abs(cut(z) - section.area())).toBeLessThan(0.01); // of 51 000 mm2: rounding
+      section.delete();
     }
-    expect(closedSeams - volume).toBeGreaterThan(100);
+    // control: the same panels with their seams closed leave out the slots along them
+    const section = whole.solid.slice(2.5);
+    expect(cut(2.5, CLOSED) - section.area()).toBeGreaterThan(20);
+    section.delete();
   });
 });
 

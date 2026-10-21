@@ -66,6 +66,25 @@ describe('chamferedExtrusion', () => {
     expect(keep(part.slice(1e-6)).area()).toBeCloseTo(64 - 36, 3); // the square in to 8 x 8, the hole out to 6 x 6
   });
 
+  it('chamfers each edge by its own amount where a function gives them, its corners mitred to suit (D276)', () => {
+    // the square's bottom edge, along y = 0, left square at the bed, its other three edges chamfered 1 mm
+    const alongBottom = ([, ay]: Vec2, [, by]: Vec2) => (ay === 0 && by === 0 ? 0 : 1);
+    const part = keep(chamferedExtrusion(engine, outline([SQUARE]), 5, { bottomMm: alongBottom, topMm: 0 }));
+    const bed = keep(part.slice(1e-6));
+    expect(bed.area()).toBeCloseTo(8 * 9, 3); // in 1 mm from the left, the right and the top
+    const { min, max } = bed.bounds();
+    for (const [v, at] of [
+      [min[0], 1],
+      [min[1], 0],
+      [max[0], 9],
+      [max[1], 9],
+    ] as const) {
+      expect(v).toBeCloseTo(at, 5);
+    }
+    expect(keep(part.slice(5 - 1e-6)).area()).toBeCloseTo(100, 3);
+    expect(degenerateFacets(meshOf(part))).toBe(0);
+  });
+
   it('extrudes plainly where no chamfer is asked for', () => {
     const part = keep(chamferedExtrusion(engine, outline([SQUARE]), 4, { bottomMm: 0, topMm: 0 }));
     expect(part.volume()).toBeCloseTo(400, 6);

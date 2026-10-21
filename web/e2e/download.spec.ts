@@ -66,7 +66,9 @@ test('downloads the board as an STL named for its type, size and closed sides', 
     return count;
   };
   expect(near(0.01, 3.7)).toBeGreaterThan(0); // the open side's notches, chamfers included
-  expect(near(240 - 3.7, 240 - 0.01)).toBe(0); // the closed side: a plain edge
+  // the closed side: a plain edge but for its 1 mm chamfers, front and back (D276), whose corners lie 1 mm in
+  expect(near(240 - 3.7, 240 - 1.01)).toBe(0);
+  expect(near(240 - 1.01, 240 - 0.99)).toBeGreaterThan(0);
 });
 
 test('offers no download while the settings cannot make a board (the control)', async ({ page }) => {

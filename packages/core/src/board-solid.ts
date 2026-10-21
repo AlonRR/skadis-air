@@ -2,6 +2,7 @@
 // cut through it. It is built as it hangs (C42): x across, y up the wall, its back at z = 0 and its
 // front toward +z; printPose turns it over to print face down (D66).
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
+import { chamferedExtrusion, EDGE_CHAMFER_MM } from './chamfer.js';
 import type { Engine } from './engine.js';
 import { arc, CIRCLE_SEGMENTS, ringedSolid, stadium } from './rings.js';
 export { CIRCLE_SEGMENTS } from './rings.js';
@@ -68,6 +69,31 @@ export function boardOutline(width: number, height: number, sides: Sides, radius
   ];
 }
 
+/** Whether both of an edge's ends lie on one line of the outline, as `at`. */
+const on = (u: number, v: number, at: number) => Math.abs(u - at) < 1e-6 && Math.abs(v - at) < 1e-6;
+
+/** The side of the board's outline an edge runs along, or null for a rounded corner's, which only closed sides have. */
+function sideOf([ax, ay]: Vec2, [bx, by]: Vec2, width: number, height: number): Side | null {
+  if (on(ax, bx, 0)) return 'left';
+  if (on(ax, bx, width)) return 'right';
+  if (on(ay, by, 0)) return 'bottom';
+  if (on(ay, by, height)) return 'top';
+  return null;
+}
+
+/**
+ * The plate, its outer edge chamfered as the family's parts are (D276, D277): at the front all round, so where two
+ * boards meet they make a V groove and a board alone has the chamfer everywhere; at the back only along a closed
+ * side and round a rounded corner, as an open side's back butts its neighbour's over the clip behind them.
+ */
+function plateOf(engine: Engine, face: CrossSection, p: SolidBoardParams, width: number, height: number): Manifold {
+  const atBack = (a: Vec2, b: Vec2) => {
+    const side = sideOf(a, b, width, height);
+    return side === null || p.sides[side] === 'closed' ? EDGE_CHAMFER_MM : 0;
+  };
+  return chamferedExtrusion(engine, face, p.thicknessMm, { bottomMm: atBack, topMm: EDGE_CHAMFER_MM });
+}
+
 /**
  * One slot's cutter as a single closed mesh (ringedSolid): rings of the slot's outline stacked through
  * the plate, grown by c + 1 a millimetre beyond each face and exact at depth c, so the 45 degree
@@ -113,7 +139,7 @@ export function makeSolidBoard(engine: Engine, params: SolidBoardParams, cuts: B
   const face = keep(new CrossSection([boardOutline(width, height, p.sides, p.cornerRadiusMm)], 'Positive'), sections);
   // What is added goes on before the cuts, so a screw hole runs on through a standoff.
   const added = (cuts.extraSolids?.(engine) ?? []).map((m) => keep(m, solids));
-  const whole = keep(face.extrude(t), solids);
+  const whole = keep(plateOf(engine, face, p, width, height), solids);
   const within = cuts.within ? keep(cuts.within(engine), solids) : undefined;
   const plate = within ? keep(whole.intersect(within), solids) : whole;
   // With the plate kept only inside its members, what is added reaches into the plate only where they are, and only

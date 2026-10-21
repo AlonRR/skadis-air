@@ -50,8 +50,11 @@ describe('makeSeamTest', () => {
     const board = keep(makeSolidBoard(engine, solidBoardParams({ columns: 2, rows: 2, sides: CLOSED })));
     expect(board.genus()).toBe(5);
     expect(joined.genus()).toBe(board.genus());
-    // the same solid, to one part in a million: the union's arithmetic rounds differently
-    expect(Math.abs(joined.volume() - board.volume()) / board.volume()).toBeLessThan(1e-6);
+    // the same cut, to one part in a million, from the back up to the front's V groove at the seam (D277)
+    for (const z of [0.25, 2.5]) {
+      const [a, b] = [keep(joined.slice(z)).area(), keep(board.slice(z)).area()];
+      expect(Math.abs(a - b) / b).toBeLessThan(1e-6);
+    }
     // apart, each tile has its two whole slots and half of the seam's
     expect(left.genus() + right.genus()).toBe(4);
   });

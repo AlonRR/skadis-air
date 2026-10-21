@@ -14,7 +14,7 @@ import type { CrossSection, Manifold } from 'manifold-3d';
 import { SOLID_BOARD_DEFAULTS } from './board-solid.js';
 import type { Engine } from './engine.js';
 import { SCREW_INSET_MM, screwHole, STANDOFF_DEFAULT_MM } from './mounting.js';
-import { chamferedExtrusion, EDGE_CHAMFER_MM, longBlend, placed } from './chamfer.js';
+import { chamferedExtrusion, EDGE_CHAMFER_MM, HOLE_MOUTH_MM as MOUTH_MM, longBlend, placed } from './chamfer.js';
 import { circle, ringedSolid } from './rings.js';
 import { HOOK_DEPTH_MM, SLOT_WIDTH_MM } from './skadis.js';
 
@@ -41,8 +41,6 @@ export const TUNNEL_WIDTH_MM =
 const MIN_BRIDGE_MM = 4;
 /** How far down from the board face a tight section reaches (D267). */
 const PILOT_MM = 2;
-/** The chamfer round each end of a screw hole (D270): half the edges', as the wall round the hole is 2.75 mm. */
-const MOUTH_MM = 0.5;
 /** How far past the bridge's side the 2-board standoff's blend meets a post (D270): 0.4 mm, all the margin C100
  * leaves, or two thirds of what the post stands past the bridge where that is less (a 3.5 mm screw's post, 4.75 mm
  * round); no blend where the post stands less than 0.2 mm past it (a 3 mm screw's). */

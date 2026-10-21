@@ -12,8 +12,9 @@
 // Any board type built on the solid board takes these as its third argument (BoardCuts).
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { type BoardCuts, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from './board-solid.js';
+import { chamferedExtrusion, EDGE_CHAMFER_MM, HOLE_MOUTH_MM } from './chamfer.js';
 import type { Engine } from './engine.js';
-import { circle, ringedSolid, stadium } from './rings.js';
+import { circle, HALF_STEP, ringedSolid, stadium } from './rings.js';
 import { defineSettings, type NumberSetting, type Values } from './settings.js';
 import { HOOK_DEPTH_MM, HOOK_DROP_MM, HOOK_WIDTH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 
@@ -306,9 +307,15 @@ export function mountingCuts(
         [back, 0],
         [t + 1, 0],
       ];
+  // through a standoff, the hole's mouth at the wall chamfered 0.5 mm, as the standoff connector's (C275, D276)
+  const mouth: [number, number][] = [
+    [back, HOLE_MOUTH_MM + 1],
+    [-m.standoffHeightMm + HOLE_MOUTH_MM, 0],
+  ];
+  const shaftLevels = m.standoffHeightMm > 0 ? [...mouth, ...levels.slice(1)] : levels;
   const cuts: BoardCuts = {};
   const hole = (engine: Engine, [x, y]: readonly [number, number]) => {
-    const shaft = ringedSolid(engine, (grow) => circle(x, y, holeMm, grow), levels);
+    const shaft = ringedSolid(engine, (grow) => circle(x, y, holeMm, grow), shaftLevels);
     if (bore === null) return shaft;
     const cup = ringedSolid(engine, (grow) => circle(x, y, bore.acrossMm, grow), [
       [t - bore.deepMm, 0],
@@ -352,13 +359,19 @@ export function mountingCuts(
     cuts.extraCutters = (engine: Engine): Manifold[] => places.map((p) => hole(engine, p));
   }
   if (m.standoffHeightMm > 0) {
-    // From the standoff's foot into the middle of the plate, so the two overlap rather than touch.
+    // From the standoff's foot into the middle of the plate, so the two overlap rather than touch; its foot, at the
+    // wall, chamfered as every part's outer edge is (D276).
+    const foot = Math.min(EDGE_CHAMFER_MM, m.standoffHeightMm / 2);
     const post: [number, number][] = [
-      [-m.standoffHeightMm, 0],
+      [-m.standoffHeightMm, -foot],
+      [-m.standoffHeightMm + foot, 0],
       [t / 2, 0],
     ];
+    // its points half a step round, off the diagonal on which a rounded corner's chamfer has its own: where a post
+    // stands past that chamfer, at a 20 mm corner and a 5 mm screw, the two met on one line and left two facets of
+    // no area in the printed part (D276)
     const round = (engine: Engine, [x, y]: readonly [number, number]) =>
-      ringedSolid(engine, (grow) => circle(x, y, standoffDiameterMm, grow), post);
+      ringedSolid(engine, (grow) => circle(x, y, standoffDiameterMm, grow, HALF_STEP), post);
     // with keyholes, the top two are the keyholes' standoffs, the keyhole and its walls (D244)
     // The standoff from its foot into the plate, less the hook's room from the room's ceiling up past the standoff's
     // top, taken out before the standoff joins the plate: the plate fills the room's top, so it stops at the board's
@@ -367,7 +380,7 @@ export function mountingCuts(
     const pad = (engine: Engine, place: readonly [number, number]) => {
       const outline = new engine.CrossSection([keyholePad(m.screwMm, place)]);
       const roomOutline = hookRoomOutline(engine, place, slot);
-      const tall = outline.extrude(m.standoffHeightMm + t / 2);
+      const tall = chamferedExtrusion(engine, outline, m.standoffHeightMm + t / 2, { bottomMm: foot, topMm: 0 });
       const roomTall = roomOutline.extrude(HOOK_ROOM_MM + t / 2 + 1);
       const whole = tall.translate([0, 0, -m.standoffHeightMm]);
       const room = roomTall.translate([0, 0, -HOOK_ROOM_MM]);
