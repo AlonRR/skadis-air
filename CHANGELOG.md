@@ -13,6 +13,9 @@ All notable changes to this project are recorded here. The format follows
   one side of a pair open and the other closed is 10 mm larger or smaller that way, and a wall's panels still
   add up to its size. A corner on such a side has no screw, which would land on a slot; keyhole and bottom
   standoffs stand behind the slot nearest their corner that keeps them on the board.
+- The slot clip for seams between the slots ("Seam"): a peg in the nearest slot each side, 10 mm from the seam and
+  a row apart, its bar on the diagonal, for boards side by side or one above the other; its screw goes past the
+  second board's post.
 - "Lock screws" among the screw holes: a board held by four lock screws, one through a slot at each corner into
   the standoff behind it, in place of keyholes; every slot still takes a hook.
 

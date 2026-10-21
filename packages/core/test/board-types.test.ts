@@ -490,6 +490,7 @@ describe('the slot clip connector type (D187 to D189, D194, D195, D261, C191, C1
     expect(ids.indexOf('slot-clip')).toBe(ids.indexOf('standoff') + 1);
     expect(defaultValues(slotClip.settings)).toEqual({
       boards: '2',
+      seams: 'through',
       fixing: 'screw',
       depthMm: 15,
       pegClearanceMm: 0.4,
@@ -504,6 +505,9 @@ describe('the slot clip connector type (D187 to D189, D194, D195, D261, C191, C1
       return s?.kind === 'choice' && s.options.map((o) => o.value);
     };
     expect(options('boards')).toEqual(['2', '2-stacked', '4']);
+    // for seams through the slots or between them, right after the boards (D290)
+    expect(options('seams')).toEqual(['through', 'between']);
+    expect(slotClip.settings.map((s) => s.key).indexOf('seams')).toBe(1);
     expect(options('fixing')).toEqual(['none', 'screw', 'keyhole']);
     // no choice of grip: the lip snapped in but did not hold (T193, D261)
     expect(slotClip.settings.map((s) => s.key)).not.toContain('grip');
@@ -534,6 +538,15 @@ describe('the slot clip connector type (D187 to D189, D194, D195, D261, C191, C1
     high.delete();
   });
 
+  it('says a clip for 4 boards between the slots is a problem, which clips for 2 along the seams solve (D290)', () => {
+    const built = buildBoard(engine, slotClip, { ...defaultValues(slotClip.settings), seams: 'between', boards: '4' });
+    expect(built.ok).toBe(false);
+    if (!built.ok) expect(built.problem).toContain('clips for 2 boards along');
+    const two = buildBoard(engine, slotClip, { ...defaultValues(slotClip.settings), seams: 'between' });
+    expect(two.ok).toBe(true);
+    if (two.ok) made.push(two.solid);
+  });
+
   it('says a clip too shallow for the hooks room and its bar is a problem', () => {
     const built = buildBoard(engine, slotClip, { ...defaultValues(slotClip.settings), depthMm: 10 });
     expect(built.ok).toBe(false);
@@ -557,6 +570,7 @@ describe('the slot clip connector type (D187 to D189, D194, D195, D261, C191, C1
       'skadis-slot-clip-4-boards-25mm-screw-clearance-0.3mm.stl',
     );
     expect(name({ fixing: 'none' })).toBe('skadis-slot-clip-2-boards-15mm.stl');
+    expect(name({ seams: 'between' })).toBe('skadis-slot-clip-2-boards-between-slots-15mm-screw.stl'); // D290
     expect(name({ fixing: 'keyhole', screwMm: 3.5 })).toBe('skadis-slot-clip-2-boards-15mm-keyhole-screw-3.5mm.stl');
     expect(name({ grip: 'lip' })).toBe('skadis-slot-clip-2-boards-15mm-screw.stl'); // a lip kept from before: no part of it
     // a round head after the screw, before its size; nothing of a head for a keyhole (D265)

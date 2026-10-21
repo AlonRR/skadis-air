@@ -10,6 +10,10 @@
 // the standoff is: its wall face on z = 0, the boards' back faces at z = depth, the pegs above that, centred
 // on the point between its pegs.
 //
+// Where the boards' open sides run between the slots (D282), the clip's pegs go in the nearest slot each side, 10 mm
+// from the seam and a row apart, its bar on the diagonal (D290 a): the same clip joins boards side by side or one above
+// the other, as such a seam runs between the slots both ways; four boards are joined by such clips along their seams.
+//
 // The pegs grip by friction ribs, which crush as they go in (D194, C199); a snap lip that sprang into the slot's
 // front chamfer was taken out, as it did not hold (T193, D261). The clip can be screwed to the wall through its free half, or hung on a wall
 // screw by a keyhole in its wall face (D195, C199).
@@ -28,8 +32,9 @@ import {
   wallKeyholeCutter,
 } from './mounting.js';
 import { chamferedExtrusion, EDGE_CHAMFER_MM, longBlend, placed } from './chamfer.js';
-import { circle, ringedSolid, stadium } from './rings.js';
+import { circle, HALF_STEP, ringedSolid, stadium } from './rings.js';
 import { BOARD_THICKNESS_MM, GRID_PITCH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM } from './skadis.js';
+import { BETWEEN_SHIFT_MM, type Seams } from './slots.js';
 import { TUNNEL_DEPTH_MM } from './standoff.js';
 
 /** The boards it joins: 2 side by side, 2 one above the other (C191), or 4 where their corners meet. */
@@ -46,6 +51,7 @@ export interface SlotClipParams {
   fixing: SlotClipFixing;
   screwHead: SlotClipScrewHead; // for a screw (D265)
   screwMm: number; // the screw's diameter, for a screw or a keyhole (D76)
+  seams: Seams; // where the boards' open sides run: through the slots, or between them (D282, D290 a)
   /** For the trial only (T268): the snap lip on split pegs, to be locked by a fill in the slit (makeSlotFill); ribs
    * unless given. The page's clip never asks for it (D261). */
   grip?: 'ribs' | 'lip';
@@ -61,6 +67,7 @@ export const SLOT_CLIP_DEFAULTS: SlotClipParams = {
   fixing: 'screw', // D250 b
   screwHead: 'countersunk',
   screwMm: MOUNTING_DEFAULTS.screwMm,
+  seams: 'through',
 };
 
 /** The bar's width, as wide as a standoff (D189, C83). */
@@ -136,6 +143,14 @@ const nice = (n: number) => String(Math.round(n * 100) / 100);
 export function slotClipParams(given: Partial<SlotClipParams>): SlotClipParams {
   const p: SlotClipParams = { ...SLOT_CLIP_DEFAULTS, ...given };
   if (!['2', '2-stacked', '4'].includes(p.boards)) throw new RangeError('A slot clip joins 2 or 4 boards');
+  if (!['through', 'between'].includes(p.seams))
+    throw new RangeError("A slot clip's seam runs through the slots or between them");
+  if (p.seams === 'between' && p.boards === '4') {
+    throw new RangeError(
+      'Between the slots, four boards meet where no slot is near the corner: join them by clips for 2 boards along ' +
+        'their seams',
+    );
+  }
   if (!['none', 'screw', 'keyhole'].includes(p.fixing)) {
     throw new RangeError('A slot clip is fixed by a screw or a keyhole, or not at all');
   }
@@ -162,7 +177,7 @@ export function slotClipParams(given: Partial<SlotClipParams>): SlotClipParams {
   }
   const round = p.screwHead === 'round';
   const across = round ? counterbore(p.screwMm).acrossMm : screwHole(p.screwMm).countersinkMm;
-  if (p.fixing === 'screw' && across > SCREW_GAP_MM - 2 * SCREW_SPARE_MM) {
+  if (p.fixing === 'screw' && p.seams === 'through' && across > SCREW_GAP_MM - 2 * SCREW_SPARE_MM) {
     throw new RangeError(
       `A slot clip's screw goes between the seam and a post, ${SCREW_GAP_MM} mm apart: a ${nice(p.screwMm)} mm ` +
         `screw's ${round ? "head's counterbore" : 'countersink'} is too wide; choose a smaller screw`,
@@ -194,8 +209,15 @@ export function slotClipScrews(p: SlotClipParams): string | undefined {
     : `The screw passes the clip's ${nice(bar)} mm bar, plus your wall plug.`;
 }
 
-/** Where its pegs are, round the point between them. */
-function pegCentres(boards: SlotClipBoards): [number, number][] {
+/** Where its pegs are, round the point between them: between the slots, on the diagonal, a row apart (D290 a). */
+function pegCentres(boards: SlotClipBoards, seams: Seams): [number, number][] {
+  if (seams === 'between') {
+    const b = BETWEEN_SHIFT_MM;
+    return [
+      [-b, -b],
+      [b, b],
+    ];
+  }
   const h = HALF_GRID_MM;
   if (boards === '2') {
     return [
@@ -223,14 +245,22 @@ function pegCentres(boards: SlotClipBoards): [number, number][] {
  * boards side by side, above it for boards one above the other, and for 4 boards on the ring's top side, right
  * of the seam, under the top right board, the last to go up.
  */
-function screwCentre(boards: SlotClipBoards): [number, number] {
+function screwCentre(p: Pick<SlotClipParams, 'boards' | 'seams' | 'screwHead' | 'screwMm'>): [number, number] {
+  const { boards } = p;
+  if (p.seams === 'between') {
+    // past the second board's post on the diagonal, as there is no room between the seam and it (D290 a)
+    const across = p.screwHead === 'round' ? counterbore(p.screwMm).acrossMm : screwHole(p.screwMm).countersinkMm;
+    const out = Math.SQRT2 * BETWEEN_SHIFT_MM + POST_MM / 2 + across / 2 + 2 * SCREW_SPARE_MM;
+    return [out * Math.SQRT1_2, out * Math.SQRT1_2];
+  }
   const s = SCREW_GAP_MM / 2;
   if (boards === '2') return [s, 0];
   if (boards === '2-stacked') return [0, s];
   return [s, HALF_GRID_MM];
 }
 
-/** The middle of the keyhole's channel (C199): the clip's middle, or for 4 boards the middle of the ring's top. */
+/** The middle of the keyhole's channel (C199): the clip's middle, or for 4 boards the middle of the ring's top; between
+ * the slots, the middle of its bar, on the seam (D290 a). */
 function keyholeCentre(boards: SlotClipBoards): [number, number] {
   return boards === '4' ? [0, HALF_GRID_MM] : [0, 0];
 }
@@ -338,7 +368,7 @@ function lippedPeg(engine: Engine, [x, y]: [number, number], [w, h]: [number, nu
 export function makeSlotFill(engine: Engine, params: SlotClipParams): Manifold {
   const p = slotClipParams(params);
   if (p.grip !== 'lip') throw new RangeError('A fill is for a clip whose pegs are split for the lip');
-  const [x, y] = pegCentres(p.boards)[0] ?? [0, 0];
+  const [x, y] = pegCentres(p.boards, p.seams)[0] ?? [0, 0];
   const h = pegSize(p.pegClearanceMm)[1];
   const [bottom, front] = [p.depthMm - POCKET_DEPTH_MM, p.depthMm + BOARD_THICKNESS_MM];
   const lead = 0.3;
@@ -394,7 +424,9 @@ function screwCutter(
 export function makeSlotClip(engine: Engine, params: SlotClipParams): Manifold {
   const { CrossSection, Manifold } = engine;
   const p = slotClipParams(params);
-  const centres = pegCentres(p.boards);
+  const centres = pegCentres(p.boards, p.seams);
+  // between the slots, the screw goes past the second board's post, the bar carried on to it (D290 a)
+  const screwOut = p.seams === 'between' && p.fixing === 'screw' ? screwCentre(p) : null;
   const sections: CrossSection[] = [];
   const keep = (s: CrossSection) => {
     sections.push(s);
@@ -404,7 +436,9 @@ export function makeSlotClip(engine: Engine, params: SlotClipParams): Manifold {
 
   // The bar: a band 10 mm wide from peg to peg, with round ends; for 4 boards a square ring through them. A
   // screw or a keyhole widens it into a pad there.
-  const ends = centres.map(([x, y]) => keep(new CrossSection([circle(x, y, BAR_MM)])));
+  const ends = [...centres, ...(screwOut ? [screwOut] : [])].map(([x, y]) =>
+    keep(new CrossSection([circle(x, y, BAR_MM)])),
+  );
   const span = 2 * HALF_GRID_MM;
   const band =
     p.boards === '4'
@@ -412,36 +446,47 @@ export function makeSlotClip(engine: Engine, params: SlotClipParams): Manifold {
       : keep(CrossSection.hull(ends));
   const pads: CrossSection[] = [];
   if (p.fixing === 'screw') {
-    const [x, y] = screwCentre(p.boards);
+    const [x, y] = screwCentre(p);
     const across = p.screwHead === 'round' ? counterbore(p.screwMm).acrossMm : screwHole(p.screwMm).countersinkMm;
     pads.push(keep(new CrossSection([circle(x, y, across + 4)])));
   } else if (p.fixing === 'keyhole') {
     const [x, y] = keyholeCentre(p.boards);
     const k = keyhole(p.screwMm);
-    pads.push(keep(new CrossSection([stadium(x, y, k.entryMm + 4, k.slideMm + k.entryMm + 4)])));
+    const pad = keep(new CrossSection([stadium(x, y, k.entryMm + 4, k.slideMm + k.entryMm + 4)]));
+    // between the slots, its ends would graze the posts round the pegs, a row apart: the hull of it and the bar's ends
+    // meets them squarely (D290 a)
+    pads.push(p.seams === 'between' ? keep(CrossSection.hull([pad, ...ends])) : pad);
   }
-  const posts = keep(CrossSection.union(centres.map(([x, y]) => keep(new CrossSection([circle(x, y, POST_MM)])))));
+  // between the slots, each post's points half a step round, off the diagonal its bar runs on: on it, the bar carried
+  // on to the screw met the post where the post rises, and left four degenerate facets (D290 a)
+  const turn = p.seams === 'between' ? HALF_STEP : 0;
+  const posts = keep(
+    CrossSection.union(centres.map(([x, y]) => keep(new CrossSection([circle(x, y, POST_MM, 0, turn)])))),
+  );
   // where each bar meets a post, a long blend in plan each side, at the bar's height, below the hooks' room (D270)
   const bars: [Vec2, Vec2][] =
     p.boards === '4'
       ? centres.map((a, i): [Vec2, Vec2] => [a, centres[(i + 1) % centres.length] ?? a])
       : [[centres[0] ?? [0, 0], centres[1] ?? [0, 0]]];
-  const blends = bars.flatMap(([a, b]) =>
-    [
+  // each bar both ways, and the bar on to the screw past the second post, from that post alone
+  const directed: [Vec2, Vec2][] = [
+    ...bars.flatMap(([a, b]): [Vec2, Vec2][] => [
       [a, b],
       [b, a],
-    ].flatMap(([from, to]) => {
-      const [fx, fy] = from ?? [0, 0];
-      const [tx, ty] = to ?? [0, 0];
-      const length = Math.hypot(tx - fx, ty - fy);
-      const along: Vec2 = [(tx - fx) / length, (ty - fy) / length];
-      return [1, -1].map((side) => {
-        const ring = longBlend({ radiusMm: POST_MM / 2, edgeMm: BAR_MM / 2, meetMm: BAR_MEET_MM, sinkMm: 0.15 });
-        const across: Vec2 = [-along[1] * side, along[0] * side];
-        return keep(new CrossSection([placed(ring, [fx, fy], along, across)], 'NonZero'));
-      });
-    }),
-  );
+    ]),
+    ...(screwOut ? [[centres[1] ?? [0, 0], screwOut] as [Vec2, Vec2]] : []),
+  ];
+  const blends = directed.flatMap(([from, to]) => {
+    const [fx, fy] = from;
+    const [tx, ty] = to;
+    const length = Math.hypot(tx - fx, ty - fy);
+    const along: Vec2 = [(tx - fx) / length, (ty - fy) / length];
+    return [1, -1].map((side) => {
+      const ring = longBlend({ radiusMm: POST_MM / 2, edgeMm: BAR_MM / 2, meetMm: BAR_MEET_MM, sinkMm: 0.15 });
+      const across: Vec2 = [-along[1] * side, along[0] * side];
+      return keep(new CrossSection([placed(ring, [fx, fy], along, across)], 'NonZero'));
+    });
+  });
   // One footprint for the wall face, the posts in it, so the bed is one face; the posts rise from 1.5 mm inside the
   // bar, where nothing of the bar's chamfers is, the same outline as the bar's round them (D270)
   const footprint = keep(CrossSection.union([band, ...pads, posts, ...blends]));
@@ -475,7 +520,7 @@ export function makeSlotClip(engine: Engine, params: SlotClipParams): Manifold {
   if (p.fixing === 'none') return joined;
   const cutter =
     p.fixing === 'screw'
-      ? screwCutter(engine, screwCentre(p.boards), p.screwMm, bar, p.screwHead)
+      ? screwCutter(engine, screwCentre(p), p.screwMm, bar, p.screwHead)
       : wallKeyholeCutter(engine, keyholeCentre(p.boards), p.screwMm);
   const part = joined.subtract(cutter);
   for (const m of [joined, cutter]) m.delete();

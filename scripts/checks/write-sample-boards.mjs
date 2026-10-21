@@ -155,6 +155,23 @@ const samples = [
     type: boardType('slot-clip'),
     values: { ...defaultValues(boardType('slot-clip').settings), boards: '2-stacked', fixing: 'none' },
   },
+  // between the slots, on the diagonal (D290 a)
+  {
+    name: 'slot-clip-between-screw',
+    type: boardType('slot-clip'),
+    values: { ...defaultValues(boardType('slot-clip').settings), seams: 'between' },
+  },
+  {
+    name: 'slot-clip-between-keyhole-5mm-20mm',
+    type: boardType('slot-clip'),
+    values: {
+      ...defaultValues(boardType('slot-clip').settings),
+      seams: 'between',
+      fixing: 'keyhole',
+      screwMm: 5,
+      depthMm: 20,
+    },
+  },
   {
     name: 'slot-clip-4-keyhole-14.5mm',
     type: boardType('slot-clip'),

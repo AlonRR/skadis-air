@@ -1,5 +1,6 @@
 // The slot clip as a type on the page (D187 to D189, D194, D195, C191, C199): listed under "Connectors" after
-// the standoff, for 2 boards side by side, 2 one above the other, or 4; its fixing and its depth on the main
+// the standoff, for 2 boards side by side, 2 one above the other, or 4, at seams through the slots or between them
+// (D290); its fixing and its depth on the main
 // form, the peg clearance and the screw size, shared with the boards, under Advanced; its pegs ribbed, the lip
 // taken out (D261). It prints as
 // built, wall face down, the pegs on top.
@@ -15,6 +16,7 @@ const BOARDS_IN_NAME = { '2': '2-boards', '2-stacked': '2-boards-stacked', '4': 
 function paramsOf(v: SlotClipParams): SlotClipParams {
   return slotClipParams({
     boards: v.boards,
+    seams: v.seams,
     depthMm: v.depthMm,
     pegClearanceMm: v.pegClearanceMm,
     fixing: v.fixing,
@@ -43,6 +45,20 @@ export const SLOT_CLIP = defineBoardType({
       ],
       default: SLOT_CLIP_DEFAULTS.boards,
       help: "A peg goes in each board's nearest whole slot, 20 mm from the seam; the slots along the seam stay free.",
+    },
+    {
+      kind: 'choice',
+      key: 'seams',
+      label: 'Seam',
+      options: [
+        { value: 'through', label: 'Through the slots' },
+        { value: 'between', label: 'Between the slots' },
+      ],
+      default: SLOT_CLIP_DEFAULTS.seams,
+      help:
+        "As the boards' open sides run. Between the slots, a peg goes in the nearest slot each side, 10 mm from the " +
+        'seam and a row apart, the bar on the diagonal: the same clip joins boards side by side or one above the ' +
+        "other, and four boards by such clips along their seams. Its screw goes past the second board's post.",
     },
     {
       kind: 'choice',
@@ -99,7 +115,7 @@ export const SLOT_CLIP = defineBoardType({
   ]),
   build: (engine, v) => makeSlotClip(engine, paramsOf(v)),
   label: (v) =>
-    `${BOARDS_IN_NAME[v.boards]}-${v.depthMm}mm` +
+    `${BOARDS_IN_NAME[v.boards]}${v.seams === 'between' ? '-between-slots' : ''}-${v.depthMm}mm` +
     (v.fixing === 'none' ? '' : `-${v.fixing}`) +
     (v.fixing === 'screw' && v.screwHead === 'round' ? '-round-head' : '') +
     // a screw size other than the start: `-screw-3.5mm` after a screw, `-keyhole-screw-3.5mm` after a keyhole

@@ -72,6 +72,7 @@ describe('slotClipParams: the starting values', () => {
       fixing: 'screw',
       screwHead: 'countersunk',
       screwMm: 4,
+      seams: 'through',
     });
   });
 
@@ -164,7 +165,7 @@ const fitted = (part: Manifold, x: number, y: number, depth = 20, shift: [number
 const ROOM = 8; // the hook's 6 mm behind the board and the 2 mm margin (C99)
 const [INSIDE, BEYOND] = [ROOM - 0.05, ROOM + 0.5];
 const NOTHING = 1e-6; // mm3: an intersection empty but for the arithmetic's rounding
-type Board = { columns: number; rows: number; sides: typeof ALL_OPEN };
+type Board = { columns: number; rows: number; sides: typeof ALL_OPEN; seams?: 'through' | 'between' };
 
 /** The boards themselves, as the solid board builds them: 5 mm thick, each slot 5.2 x 15.2 mm, chamfered. */
 const boards = (board: Board) => keep(makeSolidBoard(engine, solidBoardParams(board)));
@@ -471,5 +472,101 @@ describe("how the clip looks (D270; the connectors' design pass, finding 5)", ()
     expect(holds(ring, 6, [8, 25.1])).toBe(true);
     expect(holds(ring, 6, [0, 14.9])).toBe(false); // the bar's middle, straight
     expect(degenerateFacets(meshOf(ring))).toBe(0);
+  });
+});
+
+// Where the boards' open sides run between the slots (D282): a peg in the nearest slot each side, 10 mm from the seam
+// and a row apart, its bar on the diagonal (D290 a).
+describe('makeSlotClip, between the slots (D290)', () => {
+  const between = (given: Partial<SlotClipParams> = {}) => clip({ seams: 'between', ...given });
+  /** The pegs' outlines, cut 2.5 mm into the board. */
+  const pegsOf = (part: Manifold, depth = 20) =>
+    outlines(keep(part.slice(depth + 2.5))).map(([x0, x1, y0, y1]) => [(x0 + x1) / 2, (y0 + y1) / 2]);
+
+  it('puts its pegs 10 mm each side of the seam and a row apart, on the diagonal', () => {
+    const at = (part: Manifold) =>
+      pegsOf(part)
+        .map(([x, y]) => `${Math.round(x ?? 0)},${Math.round(y ?? 0)}`)
+        .sort();
+    expect(at(between())).toEqual(['-10,-10', '10,10']);
+    // control: through the slots, 20 mm each side, in a row
+    expect(at(clip())).toEqual(['-20,0', '20,0']);
+  });
+
+  it('is the same clip for boards side by side and one above the other', () => {
+    const [a, b] = [between({ boards: '2' }), between({ boards: '2-stacked' })];
+    expect(within(a.volume(), b.volume())).toBeLessThan(1e-9);
+    expect(keep(a.subtract(b)).volume()).toBeLessThan(1e-6);
+  });
+
+  it('is refused for 4 boards, which clips along their seams join', () => {
+    expect(() => slotClipParams({ seams: 'between', boards: '4' })).toThrow(/clips for 2 boards along/);
+  });
+
+  const SIDE: Board = { columns: 4, rows: 2, sides: ALL_OPEN, seams: 'between' }; // two 2 x 2 boards, the seam at x = 90
+  const UP: Board = { columns: 2, rows: 4, sides: ALL_OPEN, seams: 'between' }; // one above the other, the seam at y = 90
+
+  it('fitted side by side, leaves every other slot and every hook its room', () => {
+    const pegs: [number, number][] = [
+      [80, 40],
+      [100, 60],
+    ];
+    expect(roomLeft(fitted(between(), 90, 50), SIDE, pegs)).toEqual(ROOM_LEFT);
+  });
+
+  it('fitted one above the other, leaves them their room too', () => {
+    const pegs: [number, number][] = [
+      [40, 80],
+      [60, 100],
+    ];
+    expect(roomLeft(fitted(between(), 50, 90), UP, pegs)).toEqual(ROOM_LEFT);
+  });
+
+  it('a peg 1 mm off its place is caught', () => {
+    const pegs: [number, number][] = [
+      [80, 40],
+      [100, 60],
+    ];
+    expect(fitsTheSlots(fitted(between(), 90, 50, 20, [1, 0]), SIDE, pegs)).toBe(false);
+  });
+
+  it("takes its screw past the second board's post, where that board, which goes up second, leaves it reached", () => {
+    const part = between({ fixing: 'screw' });
+    // the hole, 4.5 mm for a 4 mm screw, cut at the wall face
+    const holes = outlines(keep(part.slice(0.5))).filter(([x0, x1]) => Math.abs(x1 - x0 - 4.5) < 0.05);
+    expect(holes).toHaveLength(1);
+    const [x0, x1, y0, y1] = holes[0] ?? [0, 0, 0, 0];
+    const at = (10 * Math.SQRT2 + 10 + 4.5 + 0.5) * Math.SQRT1_2; // past the post and the countersink, 0.5 mm spare
+    expect((x0 + x1) / 2).toBeCloseTo(at, 3);
+    expect((y0 + y1) / 2).toBeCloseTo(at, 3);
+    expect(
+      roomLeft(fitted(part, 90, 50), SIDE, [
+        [80, 40],
+        [100, 60],
+      ]).slots,
+    ).toBe(true);
+    expect(
+      roomLeft(fitted(part, 90, 50), SIDE, [
+        [80, 40],
+        [100, 60],
+      ]).hooks,
+    ).toBe(true);
+  });
+
+  it('takes a keyhole in the middle of its bar, on the seam', () => {
+    const part = between({ fixing: 'keyhole' });
+    const lips = outlines(keep(part.slice(0.75))).filter(([x0, x1]) => x1 - x0 < 10 && x1 - x0 > 4);
+    expect(lips.length).toBeGreaterThan(0);
+    for (const [x0, x1] of lips) expect((x0 + x1) / 2).toBeCloseTo(0, 3);
+  });
+
+  it('exports with no degenerate facet, with each fixing', () => {
+    for (const fixing of ['none', 'screw', 'keyhole'] as const) {
+      for (const screwHead of ['countersunk', 'round'] as const) {
+        const part = between({ fixing, screwHead });
+        expect(part.decompose().map(keep)).toHaveLength(1);
+        expect(degenerateFacets(meshOf(part))).toBe(0);
+      }
+    }
   });
 });
