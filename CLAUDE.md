@@ -131,6 +131,7 @@ printed from them may be used, changed, shared or sold for any purpose, with no 
 bash tests/test-hooks.sh          # the kit's controls for both hooks, end to end through git
 bash tests/test-yamllint.sh       # .yamllint.yaml passes this repo's YAML, refuses broken YAML
 bash tests/test-workflow.sh       # the CI and Pages workflows against the kit's first-run bugs, their rules and actionlint, with controls
+bash tests/test-latest-release.sh # the release the page is built from: the highest vX.Y.Z on main (A291), with controls
 pre-commit run --all-files        # the hooks; run by hand before EVERY commit (see below)
 uvx --from "reuse[charset-normalizer]" reuse lint   # every file has a licence and a copyright notice
 ```

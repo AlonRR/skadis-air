@@ -15,8 +15,9 @@
 #   3. pre-commit was installed with pip; the house rule is uv.
 # and 4, this repo's: the npm workspace's checks and the browser test run in CI.
 # And .github/workflows/pages.yml (D103, 15 Oct 2026), to actionlint and to 5, its rules: it is
-# skipped while the repository is private, deploys only a commit the checks passed, builds that
-# commit, and may deploy to Pages but never write to the repository (C135).
+# skipped while the repository is private, runs only after a checks run on main succeeded, builds
+# the latest stable release on main whose commit the checks passed, not main's newest commit (A291,
+# C292), and may deploy to Pages but never write to the repository (C135).
 #
 # The controls: the same checks run against copies of the workflow, each with one of those
 # bugs put back, and each copy must FAIL. A check that cannot fail is not a check.
@@ -77,7 +78,12 @@ pages_checks() {
   check "5. skipped while the repository is private" present '!github\.event\.repository\.private'
   check "5. it runs when a checks run on main ends" present 'workflows:[[:space:]]*\[checks\]'
   check "5. ... and deploys only if that run succeeded" present "workflow_run\.conclusion == 'success'"
-  check "5. it builds the commit the checks passed" present 'ref:[[:space:]]+\$\{\{ github\.event\.workflow_run\.head_sha'
+  check "5. it fetches every tag" present 'fetch-depth:[[:space:]]*0([[:space:]]|$)'
+  check "5. it finds the latest stable release with the tested script" present 'run:[[:space:]]+bash scripts/release/latest-release\.sh'
+  check "5. ... whose commit the checks passed" present 'checks\.yml/runs\?head_sha=\$\{?sha\}?&status=success'
+  check "5. ... which it may read" present 'actions:[[:space:]]*read([[:space:]]|$)'
+  check "5. it builds that release, not main's newest commit" present 'git checkout --detach "\$\{\{ steps\.release\.outputs\.sha \}\}"'
+  check "5. ... and nothing before it" absent 'workflow_run\.head_sha|github\.sha'
   check "5. the locked dependencies are installed (npm ci)" present 'run:[[:space:]]+npm ci$'
   check "5. it builds the page" present 'run:[[:space:]]+npm run build -w skadis-air-web$'
   check "5. it uploads the built site" present 'path:[[:space:]]+web/out/site$'
@@ -122,7 +128,12 @@ control "pre-commit through pip" "$REAL" checks 's|run: uvx pre-commit@4.6.2 run
 control "no browser test" "$REAL" checks '/run: npm run test:browser -w skadis-air-web/d'
 control "pages deployed while private" "$PAGES" pages_checks 's/!github\.event\.repository\.private &&//'
 control "pages deployed after failed checks" "$PAGES" pages_checks "s/ || github.event.workflow_run.conclusion == 'success'//"
-control "pages built from main, not the checked commit" "$PAGES" pages_checks '/workflow_run\.head_sha/d'
+control "pages built from main's newest commit" "$PAGES" pages_checks '/git checkout --detach/d'
+control "pages built from the checked commit, not the release" "$PAGES" pages_checks 's|ref: main$|ref: ${{ github.event.workflow_run.head_sha }}|'
+control "pages deploys a release the checks never passed" "$PAGES" pages_checks '/status=success/d'
+control "pages finds the release some other way" "$PAGES" pages_checks 's|bash scripts/release/latest-release.sh|git describe --tags --abbrev=0|'
+control "pages fetches no tags" "$PAGES" pages_checks 's/fetch-depth: 0 /fetch-depth: 1 /'
+control "pages cannot read the checks' runs" "$PAGES" pages_checks 's/      actions: read /      actions: none /'
 control "pages may write to the repository" "$PAGES" pages_checks 's/contents: read$/contents: write/'
 control "pages uploads the wrong folder" "$PAGES" pages_checks 's|path: web/out/site|path: web/out|'
 

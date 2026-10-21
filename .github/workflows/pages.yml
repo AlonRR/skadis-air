@@ -2,9 +2,13 @@
 #
 # Publishes the page on GitHub Pages (D103, 15 Oct 2026), at https://alonrr.github.io/skadis-air/.
 #
-# It deploys only a commit the checks workflow passed: it runs when a `checks` run on main ends,
-# and only if that run succeeded, then builds that same commit (C135). A manual run deploys main
-# as it is.
+# It deploys the latest stable release, not main's newest commit (A291, C292): it runs when a
+# `checks` run on main ends, and only if that run succeeded (C135), finds the highest tag vX.Y.Z on
+# main with scripts/release/latest-release.sh, refuses it unless a checks run passed on its commit,
+# and builds that commit. A manual run does the same. A tag's own push is not a trigger: the
+# github-pages environment deploys only from main, and a run started by a tag runs on the tag. So a
+# release reaches the page with the main push that goes with it: push the tag first, or in the same
+# push as main, or the run finds the release before it.
 #
 # Skipped while the repository is private: Pages needs it public and switched on (Settings ->
 # Pages -> Source: GitHub Actions), both the owner's, and a skipped run is not a red one (C135).
@@ -35,6 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: read     # to see that the checks passed on the release's commit
       pages: write      # to deploy to Pages
       id-token: write   # to prove the deployment comes from this workflow
     environment:
@@ -43,7 +48,22 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}   # the commit the checks passed
+          ref: main
+          fetch-depth: 0   # every commit and tag, to find the latest release on main
+      - id: release
+        name: Find the latest stable release
+        run: bash scripts/release/latest-release.sh | tee -a "$GITHUB_OUTPUT"
+      - name: Refuse it unless the checks passed on its commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          sha: ${{ steps.release.outputs.sha }}
+        run: |
+          runs="repos/$GITHUB_REPOSITORY/actions/workflows/checks.yml/runs?head_sha=${sha}&status=success"
+          passed=$(gh api "$runs" --jq .total_count)
+          echo "checks runs passed on $sha: $passed"
+          [ "$passed" -gt 0 ]
+      - name: Check out the release
+        run: git checkout --detach "${{ steps.release.outputs.sha }}"
       - uses: actions/setup-node@v7
         with:
           node-version: "22"

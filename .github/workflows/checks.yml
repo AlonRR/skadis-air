@@ -48,11 +48,12 @@ jobs:
           # runner's own. The identity job below checks what the push actually carries.
           SKIP: house-identity
         run: uvx pre-commit@4.6.2 run --all-files --show-diff-on-failure
-      - name: The hooks, the YAML config and this workflow, each with its controls
+      - name: The hooks, the YAML config, the workflows and the release the page is built from, each with its controls
         run: |
           bash tests/test-hooks.sh
           bash tests/test-yamllint.sh
           bash tests/test-workflow.sh
+          bash tests/test-latest-release.sh
 
   identity:
     # Every commit this run brought in must carry the expected author AND committer. The

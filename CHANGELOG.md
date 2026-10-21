@@ -21,6 +21,8 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- The page at <https://alonrr.github.io/skadis-air/> is the latest release, built from its tag, where it was
+  `main`'s newest commit: what it makes is what a release holds.
 - The page takes the design system's v0.7.0: beside the form, the bar under the 3D view keeps one row, its
   button reading "Download" (its format still read out to a screen reader), and the hints under it are cut
   short; a phone held sideways, from 800 x 360, shows the 3D view beside the form.
