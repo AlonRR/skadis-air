@@ -65,6 +65,18 @@ const UNDER_HEAD_MM = 2;
 /** A pan head (D157's proportions): twice the screw across, 0.8 times it tall; a lock screw's, or the slot clip's
  * round head (D265). */
 export const panHead = (screwMm: number) => ({ acrossMm: 2 * screwMm, tallMm: 0.8 * screwMm });
+/** A round head's counterbore (D265, D279): the head and 0.5 mm across, its height and 0.2 mm deep, as the practice
+ * sinks a head below the face; the slot clip's and the boards' alike. */
+export function counterbore(screwMm: number): { acrossMm: number; deepMm: number } {
+  const head = panHead(screwMm);
+  return { acrossMm: head.acrossMm + 0.5, deepMm: head.tallMm + 0.2 };
+}
+/** A round head's counterbore on a board this thick, or null where it would leave less board under it than a
+ * countersink must, and the head stands on the front instead, a step the thickness forces (D279). */
+function sunkRound(m: Pick<MountingParams, 'screwHead' | 'screwMm'>, thicknessMm: number) {
+  const bore = counterbore(m.screwMm);
+  return m.screwHead === 'round' && thicknessMm - bore.deepMm >= MIN_PLAIN_HOLE_MM ? bore : null;
+}
 /** A lock screw's head goes in a recess its height and 0.3 mm deep (A248). */
 const lockRecessMm = (lockScrewMm: number) => panHead(lockScrewMm).tallMm + 0.3;
 
@@ -120,10 +132,15 @@ export function mountingScrews(m: MountingParams, thicknessMm: number): string |
       : '';
     return keyholeScrews('Each keyhole', m.screwMm) + lock;
   }
+  const bore = sunkRound(m, thicknessMm);
+  const board = thicknessMm - (bore?.deepMm ?? 0);
   if (m.standoffHeightMm > 0) {
-    return `Each corner screw passes ${nice(thicknessMm + m.standoffHeightMm)} mm of board and standoff, plus your wall plug.`;
+    const under = bore ? ' under its head' : '';
+    return `Each corner screw passes ${nice(board + m.standoffHeightMm)} mm of board and standoff${under}, plus your wall plug.`;
   }
-  return `Each corner screw passes the board's ${nice(thicknessMm)} mm, plus any standoff behind it and your wall plug.`;
+  return bore
+    ? `Each corner screw passes ${nice(board)} mm of board under its head, plus any standoff behind it and your wall plug.`
+    : `Each corner screw passes the board's ${nice(thicknessMm)} mm, plus any standoff behind it and your wall plug.`;
 }
 
 /** The four screw holes' centres on a board of this size: one in each corner tile (D73). */
@@ -276,6 +293,7 @@ export function mountingCuts(
         'thick; choose a round head or a smaller screw',
     );
   }
+  const bore = sunkRound(m, t); // a round head sunk in a counterbore, flush with the front (D279)
   const places = screwPlaces(board);
   const back = -m.standoffHeightMm - 1; // through the standoffs too, and a millimetre beyond
   const levels: [number, number][] = countersunk
@@ -289,8 +307,17 @@ export function mountingCuts(
         [t + 1, 0],
       ];
   const cuts: BoardCuts = {};
-  const hole = (engine: Engine, [x, y]: readonly [number, number]) =>
-    ringedSolid(engine, (grow) => circle(x, y, holeMm, grow), levels);
+  const hole = (engine: Engine, [x, y]: readonly [number, number]) => {
+    const shaft = ringedSolid(engine, (grow) => circle(x, y, holeMm, grow), levels);
+    if (bore === null) return shaft;
+    const cup = ringedSolid(engine, (grow) => circle(x, y, bore.acrossMm, grow), [
+      [t - bore.deepMm, 0],
+      [t + 1, 0],
+    ]);
+    const both = engine.Manifold.union(shaft, cup);
+    for (const s of [shaft, cup]) s.delete();
+    return both;
+  };
   // the slot as this board cuts it, for the hook's room behind the slots the keyhole standoffs stand behind
   const clearance = board.slotClearanceMm ?? SOLID_BOARD_DEFAULTS.slotClearanceMm;
   const slot = {
@@ -389,7 +416,8 @@ export const MOUNTING_SETTINGS = defineSettings([
     ],
     default: MOUNTING_DEFAULTS.screwHead,
     help:
-      'One in each corner, 10 mm in from both edges. A countersunk head keeps the front flat. Keyholes, ' +
+      'One in each corner, 10 mm in from both edges. A countersunk head keeps the front flat, and a round head is sunk ' +
+      'in a counterbore, flush too, where the board leaves 1 mm under it. Keyholes, ' +
       'in the top two standoffs, behind the top corner slots, let the board drop onto two pan-head screws ' +
       'standing about 5 mm out of the wall and lift off them; the front stays plain, and hooks still fit those slots.',
   },

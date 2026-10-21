@@ -176,6 +176,13 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | T268 | **The ribbed clip gets looser** (relayed, 19 Oct 2026: "it gets looser"), and two ideas are to be tried: "adding small nubs/dots near the top after the lip of the board, assume that it will be a tight squeeze to push the peg in and that the plastic will deform but bounce back"; and "adjusting the clip version we tried previously, to be 2 parts, the clip and a slot fill to stop the clip from changing. The fill is between the clip tungs": the lip clip's split peg locked by a fill in its slit, as an expansion (push-pin) rivet is. Both built for the trial 21 Oct 2026, not on the page (C273); T274 tries them | 19 Oct 2026 |
 | A269 | **The repository's `CLAUDE.md` names two connector types**, not five ("269 y") | 19 Oct 2026 |
 | D270 | **Finding 5 is fixed on every connector and standoff** (the owner: "fix finding 5, I did mean for you to look at all the connectors and standoffs"), and **the boards get the same design pass** ("also look into the skadis boards"). Finding 5 built for the standoff and the slot clip 21 Oct 2026 (C275); the boards' own standoffs go with the boards' pass | 19 Oct 2026 |
+| D276 | **A 1 mm chamfer round a board's closed edges, front and back, and round its own standoffs' wall ends**, the family's chamfer (the owner's "276 a"; the boards' design pass, finding 1) | 21 Oct 2026 |
+| D277 | **A V groove where boards meet**: each open side's front edge chamfered 1 mm, so two boards meet in a 2 mm V and a board alone has the chamfer all round; every board file changes, the draft's seven among them ("277 a"). The owner: "this one might need special attention due to it cutting pegs": an open side runs through a slot column, and the groove meets the half slots' own chamfers there | 21 Oct 2026 |
+| D278 | **Long eased blends at the pockets' corners**, parabolas as the connectors' are, where a web meets a rim, on the lightened and the skeleton boards ("278 a"; finding 3) | 21 Oct 2026 |
+| D279 | **A board's round head is sunk in a counterbore**, flush with the front, as the clip's is ("279 a"; finding 4). Built 21 Oct 2026 (C283) | 21 Oct 2026 |
+| A280 | **Dependabot's vite bump is taken as the owner's commit** ("280 y"): vite 8.3.3 for the page in `dd27b63`, landed by fast-forward; Dependabot closed #1 itself once `main` had the bump | 21 Oct 2026 |
+| D281 | **The standoff is laid out as the slot clip is** (the owner: "make the layout of the standoff similar to the connector"; "Both"): posts at the screw holes, joined by bars on the wall side, a ring for 4 boards, with the hooks' room open above the bars; and the clip's choices for which boards it holds: 1 board, 2 side by side, 2 one above the other, 4 | 21 Oct 2026 |
+| D282 | **A board's open sides may run between the slots**, a choice of its own (the owner: "add a choice to allow the "open" layout to cross in between pegs rather then thru a peg like now"; "Both ways"): where boards stand side by side, the seam runs midway between two slot columns; where one stands above the other, through the web between two slots' ends. Through the slots stays the start | 21 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -214,22 +221,6 @@ made in the owner's browser, once it is connected again (T219, done 17 Oct 2026)
 
 The boards' design pass (21 Oct 2026), against the same practices as the connectors':
 [`research/2026-10-21-boards-design-pass.md`](research/2026-10-21-boards-design-pass.md), a figure for each finding.
-
-- **D276** The boards' outer edges are square, front and back, the front's the bed edge where the first layer's
-  spread shows (its finding 1). Recommended: (a) a 1 mm chamfer, the family's, round a board's closed edges front
-  and back, and round its own standoffs' wall ends; (b) the front edge only; (c) as now.
-- **D277** The seam butts flat on the front (finding 2). Recommended: (a) a V groove, each open side's front edge
-  chamfered 1 mm, so two boards meet in a 2 mm V and a board alone has the chamfer all round; (b) a smaller V,
-  0.5 mm a side; (c) flush, as now. Either chamfer changes every board file, the draft's seven among them.
-- **D278** The pockets' corners are 1 mm circular rounds where a web meets a rim (finding 3). Recommended: (a) long
-  eased blends there, parabolas as the connectors' are, on the lightened and the skeleton boards; (b) larger
-  circular rounds, 3 mm; (c) as now.
-- **D279** A round head stands 3.2 mm proud of the front (finding 4). Recommended: (a) sink it in a counterbore, as
-  the clip's is, flush, 1.6 mm of board under it; (b) as now.
-
-- **A280** Dependabot's pull request #1 bumps vite from 8.3.2 to 8.3.3; its checks fail on the identity job, by
-  design, as Dependabot authors the commit (its push run passed). Recommended: take the same bump as a commit of
-  the owner's identity, landed by fast-forward as every change is, and close #1 on GitHub.
 
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.

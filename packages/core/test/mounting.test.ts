@@ -112,9 +112,25 @@ describe('screw holes (D73, D74)', () => {
     expect(back?.w).toBeCloseTo(4.5, 2);
   });
 
-  it('discriminates: a round head is 4.5 mm across at the front as at the back', () => {
-    const [front] = roundHoles(keep(mounted({ columns: 1, rows: 1 }, { screwHead: 'round' }).slice(4.75)));
-    expect(front?.w).toBeCloseTo(4.5, 2);
+  it('sinks a round head in a counterbore at the front, flush: 8.5 mm across, 3.4 mm deep, for a 4 mm screw (D279)', () => {
+    const round = mounted({ columns: 1, rows: 1 }, { screwHead: 'round' });
+    const [bore] = roundHoles(keep(round.slice(3)));
+    expect(bore?.w).toBeCloseTo(8.5, 2);
+    // control: a countersink is 5 mm across there, 2 mm from the front
+    const [sink] = roundHoles(keep(mounted({ columns: 1, rows: 1 }).slice(3)));
+    expect(sink?.w).toBeCloseTo(5, 2);
+    // under the bore, 1.6 mm of board, the plain hole
+    const [floor] = roundHoles(keep(round.slice(1)));
+    expect(floor?.w).toBeCloseTo(4.5, 2);
+  });
+
+  it('leaves a round head on the front where the board is too thin to sink it over 1 mm, a step it cannot avoid', () => {
+    // a 5 mm screw's head, 4.2 mm deep with its spare, would leave 0.8 mm of a 5 mm board: its hole is plain
+    const [front] = roundHoles(keep(mounted({ columns: 1, rows: 1 }, { screwHead: 'round', screwMm: 5 }).slice(4.75)));
+    expect(front?.w).toBeCloseTo(5.5, 2);
+    // a 4.5 mm screw's, 3.8 mm deep, leaves 1.2 mm: sunk
+    const [sunk] = roundHoles(keep(mounted({ columns: 1, rows: 1 }, { screwHead: 'round', screwMm: 4.5 }).slice(4.75)));
+    expect(sunk?.w).toBeCloseTo(9.5, 2);
   });
 
   it('takes out what four holes and their countersinks work out to by hand', () => {
@@ -123,7 +139,9 @@ describe('screw holes (D73, D74)', () => {
     const round = base - mounted({ columns: 1, rows: 1 }, { screwHead: 'round' }).volume();
     // within 1 %: each circle is drawn with 64 segments, about 0.16 % short of its area
     expect(Math.abs(sunk - 4 * (cylinder(2.25, 5) + countersink(2.25, 2.25))) / sunk).toBeLessThan(0.01);
-    expect(Math.abs(round - 4 * cylinder(2.25, 5)) / round).toBeLessThan(0.01);
+    // a round head's: the hole, and its counterbore round it, 8.5 mm across and 3.4 mm deep (D279)
+    const bore = cylinder(4.25, 3.4) - cylinder(2.25, 3.4);
+    expect(Math.abs(round - 4 * (cylinder(2.25, 5) + bore)) / round).toBeLessThan(0.01);
   });
 
   it('with no screw holes, is the plain board', () => {

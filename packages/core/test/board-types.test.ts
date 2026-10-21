@@ -561,10 +561,23 @@ describe('what each screw passes, from the part itself (D264)', () => {
     expect(screws('lightened', { standoffs: 'back' })).toBe(
       'Each corner screw passes 20 mm of board and standoff, plus your wall plug.',
     );
-    expect(screws('skeleton', { standoffs: 'back', standoffHeightMm: 25, screwHead: 'round' })).toBe(
+    expect(screws('skeleton', { standoffs: 'back', standoffHeightMm: 25 })).toBe(
       'Each corner screw passes 30 mm of board and standoff, plus your wall plug.',
     );
     expect(screws('solid', { screwHead: 'none' })).toBeUndefined();
+  });
+
+  it('says a round head sunk in its counterbore leaves the screw less board to pass (D279)', () => {
+    expect(screws('skeleton', { standoffs: 'back', standoffHeightMm: 25, screwHead: 'round' })).toBe(
+      'Each corner screw passes 26.6 mm of board and standoff under its head, plus your wall plug.',
+    );
+    expect(screws('solid', { screwHead: 'round' })).toBe(
+      'Each corner screw passes 1.6 mm of board under its head, plus any standoff behind it and your wall plug.',
+    );
+    // a board too thin to sink the head: it stands on the front, and the screw passes the whole board
+    expect(screws('solid', { screwHead: 'round', thicknessMm: 4 })).toBe(
+      "Each corner screw passes the board's 4 mm, plus any standoff behind it and your wall plug.",
+    );
   });
 
   it("says where a keyhole's screw stands, and what a lock screw passes", () => {

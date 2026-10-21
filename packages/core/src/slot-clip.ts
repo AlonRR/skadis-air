@@ -19,9 +19,9 @@ import type { Engine } from './engine.js';
 import {
   KEYHOLE_LIPS_MM,
   keyhole,
+  counterbore,
   keyholeScrews,
   MIN_BEHIND_CHANNEL_MM,
-  panHead,
   MOUNTING_DEFAULTS,
   screwHole,
   STANDOFF_DEFAULT_MM,
@@ -118,12 +118,6 @@ function pegSize(pegClearanceMm: number): [number, number] {
 const SCREW_GAP_MM = HALF_GRID_MM - POST_MM / 2;
 /** The least space kept between the screw's countersink and the seam or the post. */
 const SCREW_SPARE_MM = 0.25;
-/** A round head's counterbore (D265): the head and 0.5 mm across, its height and 0.2 mm deep, as the practice sinks
- * a head below the face, with at least 2 mm of bar under it, five layers, to carry the head. */
-function counterbore(screwMm: number): { acrossMm: number; deepMm: number } {
-  const head = panHead(screwMm);
-  return { acrossMm: head.acrossMm + 0.5, deepMm: head.tallMm + 0.2 };
-}
 const BORE_FLOOR_MM = 2;
 
 /** The least depth a clip with a round head needs: the hooks' room, the counterbore and its floor (D265). */
