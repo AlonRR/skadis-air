@@ -292,6 +292,11 @@ describe('the solid board type', () => {
     );
     expect(name({ screwHead: 'keyhole', lockScrewMm: 4 })).toBe('skadis-solid-160x160-keyholes.stl'); // no lock screws
     expect(name({ lockScrews: 'bottom' })).toBe('skadis-solid-160x160.stl'); // lock screws go only with keyholes
+    // lock screws alone (D289), their size where it is not the starting one
+    expect(name({ screwHead: 'lock', standoffs: 'back' })).toBe('skadis-solid-160x160-lock-screws-standoffs-15mm.stl');
+    expect(name({ screwHead: 'lock', lockScrewMm: 4, screwMm: 3.5, standoffs: 'back' })).toBe(
+      'skadis-solid-160x160-lock-screws-4mm-standoffs-15mm.stl',
+    );
   });
 
   it('offers keyholes, which stand on standoffs, and says keyholes without them are a problem (D156, D190)', () => {
@@ -301,6 +306,7 @@ describe('the solid board type', () => {
       'Countersunk',
       'Round head',
       'Keyholes',
+      'Lock screws',
       'None',
     ]);
     const keyholes = buildBoard(engine, solid, { ...v, screwHead: 'keyhole', standoffs: 'back' });
@@ -647,6 +653,15 @@ describe('what each screw passes, from the part itself (D264)', () => {
       "Each keyhole hangs on a pan-head screw left standing out of the wall, its head's underside 1.5 to 1.8 mm " +
         'off it, the head 4.7 to 5 mm out. Each lock screw passes 4.7 mm of standoff under its head, plus your ' +
         'wall plug.',
+    );
+  });
+
+  it('says what each lock screw passes, with lock screws alone (D289)', () => {
+    expect(screws('solid', { screwHead: 'lock', standoffs: 'back' })).toBe(
+      'Each lock screw passes 4.7 mm of standoff under its head, plus your wall plug.',
+    );
+    expect(screws('skeleton', { screwHead: 'lock', standoffs: 'back', seams: 'between' })).toBe(
+      'Each lock screw passes 4.7 mm of standoff under its head, plus your wall plug.',
     );
   });
 

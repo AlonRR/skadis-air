@@ -149,6 +149,16 @@ test('offers keyholes, which bring their standoffs, with lock screws under Advan
   await expect(status).toContainText('standoffs at least 14.2 mm');
 });
 
+test('offers lock screws alone, which bring their standoffs as keyholes do (D289)', async ({ page }) => {
+  await ready(page);
+  const status = page.getByTestId('board-status');
+  await choose(page, 'screwHead', 'lock');
+  await expect(chosen(page, 'standoffs')).toHaveValue('back');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-lock-screws-standoffs-15mm.stl');
+  await expect(status).toHaveAttribute('data-state', 'ready');
+  await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 20 mm');
+});
+
 test('says a countersink too deep for a thin board cannot be made, and makes it with a round head', async ({
   page,
 }) => {

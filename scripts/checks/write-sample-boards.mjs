@@ -131,6 +131,17 @@ const samples = [
       standoffs: 'back',
     },
   },
+  // lock screws alone, through a slot at each corner (D289)
+  {
+    name: 'solid-2x2-closed-lock-screws-4mm',
+    type: solid,
+    values: { ...solidAt(80, 80, closed), screwHead: 'lock', lockScrewMm: 4, standoffs: 'back' },
+  },
+  {
+    name: 'skeleton-3x3-between-lock-screws',
+    type: skeleton,
+    values: { ...skeletonAt(120, 120, open), seams: 'between', screwHead: 'lock', standoffs: 'back' },
+  },
   { name: 'standoff-1-40mm-screw-5', type: boardType('standoff'), values: { boards: '1', heightMm: 40, screwMm: 5 } },
   { name: 'standoff-2-12mm-screw-3', type: boardType('standoff'), values: { boards: '2', heightMm: 12, screwMm: 3 } },
   {

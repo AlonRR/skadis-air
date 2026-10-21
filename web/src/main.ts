@@ -240,9 +240,11 @@ function show(type: AnyBoardType): void {
     if (chosenIn(formBox.querySelector('[aria-label="Panels"]') ?? formBox) !== 'split') return;
     for (const side of formBox.querySelectorAll<HTMLButtonElement>('[data-side][aria-pressed="false"]')) side.click();
   });
-  // A board on keyholes stands on standoffs, so a hook has room behind it (D190): keyholes turn them on.
+  // A board on keyholes stands on standoffs, so a hook has room behind it (D190): keyholes turn them on, and lock
+  // screws alone, which go into them (D289).
   formBox.querySelector('[role="radiogroup"][aria-label="Screw holes"]')?.addEventListener('change', () => {
-    if (chosenIn(formBox.querySelector('[aria-label="Screw holes"]') ?? formBox) !== 'keyhole') return;
+    const head = chosenIn(formBox.querySelector('[aria-label="Screw holes"]') ?? formBox);
+    if (head !== 'keyhole' && head !== 'lock') return;
     formBox.querySelector<HTMLInputElement>('[aria-label="Standoffs"] input[value="back"]:not(:checked)')?.click();
   });
   rebuild(type, form);

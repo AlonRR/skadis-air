@@ -673,3 +673,69 @@ describe('between the slots (D289)', () => {
     expect(degenerateFacets(meshOf(keep(printPose(solid))))).toBe(0);
   });
 });
+
+// Lock screws alone, in place of the keyholes (D289; the owner: "and a version that are lockscrews only instead of
+// keyholes"): a standoff behind a slot at each of the four corners, where the keyholes' and the bottom ones stand, a
+// lock screw through each slot into its standoff, its head behind the hook's room, so the slot still takes a hook.
+describe('lock screws alone (D289)', () => {
+  const lock = { screwHead: 'lock', standoffHeightMm: 15 } as const;
+
+  it('stand the board on four standoffs behind the corner slots, a lock screw through each', () => {
+    const solid = mounted({ columns: 3, rows: 3 }, lock);
+    expect(solid.decompose().map(keep)).toHaveLength(1);
+    // at the wall, 0.5 mm in: each standoff's lock screw hole, 3 mm across for a 2.5 mm screw, and nothing else
+    const holes = roundHoles(keep(solid.slice(-15 + 0.5)));
+    expect(holes.map((h) => `${Math.round(h.x)},${Math.round(h.y)} ${Math.round(h.w * 10) / 10}`).sort()).toEqual([
+      '100,100 3',
+      '100,20 3',
+      '20,100 3',
+      '20,20 3',
+    ]);
+  });
+
+  it('discriminates: keyholes with lock screws at the bottom have lock screw holes only at the bottom', () => {
+    const solid = mounted({ columns: 3, rows: 3 }, { screwHead: 'keyhole', standoffHeightMm: 15, lockScrews: true });
+    const holes = roundHoles(keep(solid.slice(-15 + 0.5))).filter((h) => Math.abs(h.w - 3) < 0.2);
+    expect(holes.map((h) => Math.round(h.y))).toEqual([20, 20]);
+  });
+
+  it('stand where the keyhole and bottom standoffs would, between the slots too', () => {
+    const solid = mounted({ columns: 3, rows: 3, seams: 'between' }, lock);
+    const holes = roundHoles(keep(solid.slice(-15 + 0.5)));
+    expect(holes.map((h) => `${Math.round(h.x)},${Math.round(h.y)}`).sort()).toEqual([
+      '100,100',
+      '120,40',
+      '20,100',
+      '40,40',
+    ]);
+  });
+
+  it("need standoffs tall enough for the hook's room, the head and some standoff under it", () => {
+    expect(() => mountingCuts(mountingParams({ screwHead: 'lock' }), { columns: 3, rows: 3, thicknessMm: 5 })).toThrow(
+      /standoffs at least 12.3 mm/,
+    );
+    expect(() =>
+      mountingCuts(mountingParams({ screwHead: 'lock', standoffHeightMm: 12.3 }), {
+        columns: 3,
+        rows: 3,
+        thicknessMm: 5,
+      }),
+    ).not.toThrow();
+  });
+
+  it('stand on the same standoffs whatever the screw size, which names no screw of theirs', () => {
+    const [small, large] = [3, 5].map((screwMm) => mounted({ columns: 3, rows: 3 }, { ...lock, screwMm }));
+    expect(Math.abs((small?.volume() ?? 0) - (large?.volume() ?? 1))).toBeLessThan(1e-6);
+    // control: keyholes follow it, their entry and standoffs sized from the screw
+    const [k3, k5] = [3, 5].map((screwMm) =>
+      mounted({ columns: 3, rows: 3 }, { screwHead: 'keyhole', standoffHeightMm: 20, screwMm }),
+    );
+    expect(Math.abs((k3?.volume() ?? 0) - (k5?.volume() ?? 0))).toBeGreaterThan(10);
+  });
+
+  it('leave no degenerate facet, as the board hangs and as it prints', () => {
+    const solid = mounted({ columns: 3, rows: 3 }, { ...lock, lockScrewMm: 4 });
+    expect(degenerateFacets(meshOf(solid))).toBe(0);
+    expect(degenerateFacets(meshOf(keep(printPose(solid))))).toBe(0);
+  });
+});
