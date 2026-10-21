@@ -247,6 +247,10 @@ clip (b4).
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 
+- **A300** Upload the PETG Basic trial plate's G-code (`skadis-trial-grips-keyhole.gcode`, T274 and T151) to the
+  printer with the 3d-printing repository's `upload_resume.py`, which uploads and never starts a print, nor
+  overwrites a file there; starting it stays the owner's, each time. Recommended: yes, if PETG Basic is loaded.
+
 - **T151** Print the 80 x 80 mm lightened board on keyholes and hang it: on T274's PETG Basic plate (21 Oct 2026), or
   alone, `.check/test-print/skadis-trial-keyhole.stl` (`node scripts/test-print/write-trial-plate.mjs keyhole`; `skadis-lightened-80x80-keyholes-standoffs-15mm.stl` from
   the page), sent again 17 Oct 2026 for the owner to slice. The keyholes are in the top standoffs' wall faces,
