@@ -227,6 +227,10 @@ The boards' design pass (21 Oct 2026), against the same practices as the connect
 - **D279** A round head stands 3.2 mm proud of the front (finding 4). Recommended: (a) sink it in a counterbore, as
   the clip's is, flush, 1.6 mm of board under it; (b) as now.
 
+- **A280** Dependabot's pull request #1 bumps vite from 8.3.2 to 8.3.3; its checks fail on the identity job, by
+  design, as Dependabot authors the commit (its push run passed). Recommended: take the same bump as a commit of
+  the owner's identity, landed by fast-forward as every change is, and close #1 on GitHub.
+
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 
