@@ -190,6 +190,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | A291 | **The site is the latest stable release** (the owner: "use the latest stable release as the version of the site"): `v0.3.0` is released, and the page on GitHub Pages is built from the highest `vX.Y.Z` tag on `main`, not from `main`'s newest commit, so what the page makes is what a release holds. Read so by the agent: the deployed page follows the releases, the page itself showing no version. Built 21 Oct 2026 (C292) | 21 Oct 2026 |
 | A296 | **`v0.4.0` is released** ("296 y"), so the site gets the open sides between the slots, lock screws alone and the slot clip for such seams (D282, D288 to D290; C293 to C295); a minor version, as it adds choices. Each new choice starts off, so the Printables draft's files stay what `v0.3.0` makes. Released 21 Oct 2026 | 21 Oct 2026 |
 | A297 | **The Printables draft's description gets a line for each new choice** ("297 y"), once the site shows them: open sides between the slots, lock screws alone and the clip for such seams; saved as a draft only and checked after a reload. Waits on T298, the browser | 21 Oct 2026 |
+| A300 | **The PETG Basic trial plate is uploaded and started** ("300 upload and start the print"): T274's grips and T151's keyhole board, `skadis-trial-petg.gcode`, uploaded by the 3d-printing repository's `upload_resume.py` to a READY printer and started by its `start_print.py`, which read back PRINTING, 4 h 40 min left, at 16:40 UTC on 21 Oct 2026 | 21 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -219,7 +220,7 @@ faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`
 made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
 
 - **T274** Print the trial grips and try them: on one plate with T151's board, sliced for PETG Basic (the owner,
-  21 Oct 2026: "274 151 create a plate for petg basic"): `.check/test-print/skadis-trial-grips-keyhole.stl` and its
+  21 Oct 2026: "274 151 create a plate for petg basic"), printing since 16:40 UTC that day (A300): `.check/test-print/skadis-trial-grips-keyhole.stl` and its
   `.gcode` (`FILAMENT="PETG Basic NPETG087-ZX" npm run trial-plate`; 10 parts, 4 h 40 min, 50.55 g, 240 °C and a
   75 °C bed); or alone, `.check/test-print/skadis-trial-grips.stl` (`node scripts/test-print/write-trial-plate.mjs
   grips`; 9 parts). For the slot clip (T268): the three
@@ -246,10 +247,6 @@ clip (b4).
 
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
-
-- **A300** Upload the PETG Basic trial plate's G-code (`skadis-trial-grips-keyhole.gcode`, T274 and T151) to the
-  printer with the 3d-printing repository's `upload_resume.py`, which uploads and never starts a print, nor
-  overwrites a file there; starting it stays the owner's, each time. Recommended: yes, if PETG Basic is loaded.
 
 - **T151** Print the 80 x 80 mm lightened board on keyholes and hang it: on T274's PETG Basic plate (21 Oct 2026), or
   alone, `.check/test-print/skadis-trial-keyhole.stl` (`node scripts/test-print/write-trial-plate.mjs keyhole`; `skadis-lightened-80x80-keyholes-standoffs-15mm.stl` from
