@@ -2,7 +2,8 @@
 
 The text of the model page on Printables, kept here so it changes with the code (D81, D211 to D214). Saved as a
 draft, model 1880460, on 17 Oct 2026 (T216): the 13 files, the 7 pictures, this text (its slot clip files and
-picture made again on 19 Oct 2026, A254); the contest is not chosen on the
+picture made again on 19 Oct 2026, A254; its standoff and slot clip files, their pictures and the page's
+picture again on 21 Oct 2026, with the screws' line, D264, D266, D270); the contest is not chosen on the
 model's form, and its question whether AI was used is answered "Yes — AI-assisted creation" (D236, 18 Oct 2026).
 The page is entered in the Designer Challenge: Pegboard Wall Organizers (entries close on 22 Oct 2026 at 23:59 UTC). Its files
 come from `npm run printables`, which writes them into `.check/printables/` from the release and checks each one;
@@ -60,6 +61,8 @@ The files here are ready to print at the page's starting values. For any other s
 - Print each file as it comes: the boards face down, so the front is the smooth side on the bed; the connectors
   wall side down. No supports.
 - Any filament, and no special settings; the files were checked with a 0.4 mm nozzle and 0.2 mm layers (Q221).
+- Screws: 4 mm. A board's corner screw passes its 5 mm and the standoff behind it, 20 mm in all with the standoffs
+  here, plus your wall plug; a slot clip's screw passes its 7 mm bar, plus your wall plug (D264).
 - The SKÅDIS slots are 5 x 15 mm on a 40 mm grid with a second grid set 20 mm across and up, and the board is 5 mm
   thick; every number and its source is in [the repository's notes on the standard](https://github.com/AlonRR/skadis-air/blob/main/docs/skadis-standard.md).
 
