@@ -189,7 +189,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D290 | **A slot clip for a seam between the slots** ("290 a"): a peg in the nearest slot each side, 10 mm from the seam and a row apart, its bar on the diagonal. Built 21 Oct 2026 (C295): a "Seam" choice on the clip | 21 Oct 2026 |
 | A291 | **The site is the latest stable release** (the owner: "use the latest stable release as the version of the site"): `v0.3.0` is released, and the page on GitHub Pages is built from the highest `vX.Y.Z` tag on `main`, not from `main`'s newest commit, so what the page makes is what a release holds. Read so by the agent: the deployed page follows the releases, the page itself showing no version. Built 21 Oct 2026 (C292) | 21 Oct 2026 |
 | A296 | **`v0.4.0` is released** ("296 y"), so the site gets the open sides between the slots, lock screws alone and the slot clip for such seams (D282, D288 to D290; C293 to C295); a minor version, as it adds choices. Each new choice starts off, so the Printables draft's files stay what `v0.3.0` makes. Released 21 Oct 2026 | 21 Oct 2026 |
-| A297 | **The Printables draft's description gets a line for each new choice** ("297 y"), once the site shows them: open sides between the slots, lock screws alone and the clip for such seams; saved as a draft only and checked after a reload | 21 Oct 2026 |
+| A297 | **The Printables draft's description gets a line for each new choice** ("297 y"), once the site shows them: open sides between the slots, lock screws alone and the clip for such seams; saved as a draft only and checked after a reload. Waits on T298, the browser | 21 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -236,6 +236,10 @@ D287 and A291 (Decisions). That figure shows the questions, its top right panel 
 day (C293 to C295), is drawn from the library in [`figures/between-built/`](figures/between-built/) by
 `node scripts/figures/shoot.mjs between-built`: the seams (b1), the standoffs (b2), lock screws alone (b3) and the
 clip (b4).
+
+- **T298** Open Chrome with its Claude extension connected, and say so: A297's three lines go into the Printables
+  draft from there, saved as a draft and checked after a reload. `v0.4.0` reached the page at 15:47 UTC on 21 Oct
+  2026 with Chrome closed, and the draft is edited only through the owner's browser, signed in there.
 
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
