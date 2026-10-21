@@ -31,7 +31,8 @@ applies to them in full.
   `<<CONFIRM>>` as IKEA's (D39). **Edge band, rims and webs** 3 mm; **pocket corners** rounded 1 mm; the skeleton's
   core 1.2 mm, its flanges 0.6 mm deep (verified: code).
 - **Sliced**, the 240 x 200 mm boards: perimeters and infill only, **no gap fill** in any of the three (verified:
-  sliced): the 3 mm members and the 1.2 mm cores take whole lines. About 8 h 16 min and 66 g for the lightened
+  sliced). Corrected the same day: the profile's perimeter generator is Arachne, which varies its lines' widths to
+  fill a member and never writes gap fill, so this could not have found any; it says nothing of whole lines. About 8 h 16 min and 66 g for the lightened
   board, 8 h 57 min and 67 g the skeleton, 8 h 53 min and 115 g the solid (ASA at the check's profile).
 - **Corner screw holes** 10 mm in from both edges, 4.5 mm across for a 4 mm screw, countersunk 90 degrees to 9 mm,
   2.25 mm deep, leaving 2.75 mm of plain hole (verified: code). The edge rule, at least max(d, 2t) = max(4.5, 10) =
@@ -123,6 +124,7 @@ the board is levered off the wall (finding 6).
   offered, and D279 asks to sink it.
 - **The corner hole's edge distance** is at the rule's limit from its centre; the board is clamped flat, not pulled
   toward its edge.
-- **No gap fill** in any member (verified: sliced), so the widths need no change for the slicer.
+- **No gap fill** in any member (verified: sliced), so the widths need no change for the slicer. Corrected: under
+  Arachne no slice has gap fill (above); the members print as perimeters and infill.
 - **Warping**: a closed corner is rounded 10 mm, the practice's plan-view radius; an open corner stays square to tile.
 - **The keyholes' lips** are T151's to answer.
