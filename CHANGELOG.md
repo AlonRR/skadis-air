@@ -23,7 +23,8 @@ All notable changes to this project are recorded here. The format follows
 
 - The lightened and skeleton boards' pockets turn each corner, where a web meets a rim, the band or a pad, on a
   parabola 3 mm along each side, in place of a 1 mm round; the skeleton's I-beams taper along the curves. They
-  keep a little more of the solid board's plastic: 40 % and 32 %, from 39 % and 30 %.
+  keep a little more of the solid board's plastic: 40 % and 32 %, from 39 % and 30 %. The skeleton's STL is larger,
+  7.5 MB at 240 x 200 mm where it was about 4 MB, after the points its straight walls do not need are taken out.
 - The standoff has the slot clip's shape and choices: a post over each screw hole, joined only on the wall side by a
   bar as wide, a square ring for 4 boards; for 1 board, 2 side by side, 2 one above the other, or 4. In the library,
   `StandoffParams.boards` takes `'1'`, `'2'`, `'2-stacked'` or `'4'`, in place of 1, 2 or 4. `TUNNEL_WIDTH_MM` is no
