@@ -247,6 +247,9 @@ and checked after a reload. D282's seams between the slots raise the three quest
   such a seam has no slot there (the figure, bottom right). Recommended: (a) a clip with a peg in the nearest slot
   each side, 10 mm from the seam and a row apart, its bar on the diagonal; (b) pegs in one row, 30 mm one side and
   10 mm the other; (c) no clip at such a seam, each board held by its own fixing.
+- **A291** Release `v0.3.0` at `main`, so the Printables draft's files, cut on 21 Oct 2026 after D276 to D281, come
+  from a release as `printables.md` says they do (D214): the changelog's Unreleased becomes 0.3.0, a minor version
+  as the library's `StandoffParams.boards` changed and `TUNNEL_WIDTH_MM` is gone. Recommended: yes.
 
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
