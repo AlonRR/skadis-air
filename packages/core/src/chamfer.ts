@@ -48,6 +48,58 @@ const edgesOf = (rings: readonly Vec2[][]): [Vec2, Vec2][] =>
   rings.flatMap((ring) => ring.map((p, i): [Vec2, Vec2] => [p, ring[(i + 1) % ring.length] ?? p]));
 
 /**
+ * A ring's points, each moved to where its two edges meet once each edge is moved in parallel by its own amount,
+ * `amounts[i]` the edge from point i to the next: into the region on the ring's left where an amount is positive,
+ * out of it where negative. Refuses a move that turns an edge round, more than the ring takes there.
+ */
+export function movedRing(ring: readonly Vec2[], amounts: readonly number[]): Vec2[] {
+  const n = ring.length;
+  const at = (i: number): Vec2 => ring[((i % n) + n) % n] ?? [0, 0];
+  const by = (i: number) => amounts[((i % n) + n) % n] ?? 0;
+  const to = ring.map((p, i): Vec2 => {
+    const [n1, n2] = [left(at(i - 1), p), left(p, at(i + 1))];
+    const [d1, d2] = [by(i - 1), by(i)];
+    // the point v from p that lies d1 in from the edge before and d2 in from the one after
+    const det = n1[0] * n2[1] - n1[1] * n2[0];
+    if (Math.abs(det) < 1e-9) return [p[0] + d1 * n1[0], p[1] + d1 * n1[1]]; // on a straight line: both alike
+    return [p[0] + (d1 * n2[1] - d2 * n1[1]) / det, p[1] + (n1[0] * d2 - n2[0] * d1) / det];
+  });
+  for (let i = 0; i < n; i++) {
+    const [a, b] = [at(i), at(i + 1)];
+    const [a2, b2] = [to[i] ?? a, to[(i + 1) % n] ?? b];
+    if ((b[0] - a[0]) * (b2[0] - a2[0]) + (b[1] - a[1]) * (b2[1] - a2[1]) <= 0) {
+      throw new RangeError(`A ${Math.abs(by(i))} mm move is larger than the outline takes`);
+    }
+  }
+  return to;
+}
+
+/**
+ * A ring's points, each moved by its own amount along the mitre of its two edges, `amounts[i]` point i's: into the
+ * region on the ring's left where positive, out of it where negative. Where a point's two edges are moved alike it is
+ * where they meet, as movedRing puts it; where the amount changes along a curve, the curve moves smoothly, where
+ * movedRing, meeting two near-straight-on edges moved by different amounts, would put their meeting far off.
+ * Refuses a move that turns an edge round.
+ */
+export function grownRing(ring: readonly Vec2[], amounts: readonly number[]): Vec2[] {
+  const n = ring.length;
+  const at = (i: number): Vec2 => ring[((i % n) + n) % n] ?? [0, 0];
+  const to = ring.map((p, i): Vec2 => {
+    const [n1, n2] = [left(at(i - 1), p), left(p, at(i + 1))];
+    const k = (amounts[i] ?? 0) / (1 + n1[0] * n2[0] + n1[1] * n2[1]);
+    return [p[0] + k * (n1[0] + n2[0]), p[1] + k * (n1[1] + n2[1])];
+  });
+  for (let i = 0; i < n; i++) {
+    const [a, b] = [at(i), at(i + 1)];
+    const [a2, b2] = [to[i] ?? a, to[(i + 1) % n] ?? b];
+    if ((b[0] - a[0]) * (b2[0] - a2[0]) + (b[1] - a[1]) * (b2[1] - a2[1]) <= 0) {
+      throw new RangeError(`A ${Math.abs(amounts[i] ?? 0)} mm move is larger than the outline takes`);
+    }
+  }
+  return to;
+}
+
+/**
  * Each point of the outline moved into the solid: to where its two edges, each moved in parallel by its own amount,
  * meet. The solid lies left of every ring as an outline gives them, its outer rings anticlockwise and its holes
  * clockwise. Refuses a move that turns an edge round, which is a chamfer larger than the outline takes there.
@@ -55,24 +107,14 @@ const edgesOf = (rings: readonly Vec2[][]): [Vec2, Vec2][] =>
 function mitres(rings: readonly Vec2[][], by: EdgeMm): Map<string, Vec2> {
   const moved = new Map<string, Vec2>();
   for (const ring of rings) {
-    const n = ring.length;
-    const at = (i: number): Vec2 => ring[((i % n) + n) % n] ?? [0, 0];
-    const to = ring.map((p, i): Vec2 => {
-      const [n1, n2] = [left(at(i - 1), p), left(p, at(i + 1))];
-      const [d1, d2] = [by(at(i - 1), p), by(p, at(i + 1))];
-      // the point v from p that lies d1 in from the edge before and d2 in from the one after
-      const det = n1[0] * n2[1] - n1[1] * n2[0];
-      if (Math.abs(det) < 1e-9) return [p[0] + d1 * n1[0], p[1] + d1 * n1[1]]; // on a straight line: both alike
-      return [p[0] + (d1 * n2[1] - d2 * n1[1]) / det, p[1] + (n1[0] * d2 - n2[0] * d1) / det];
-    });
-    const movedAt = (i: number): Vec2 => to[((i % n) + n) % n] ?? [0, 0];
-    for (let i = 0; i < n; i++) {
-      const [a, b, a2, b2] = [at(i), at(i + 1), movedAt(i), movedAt(i + 1)];
-      if ((b[0] - a[0]) * (b2[0] - a2[0]) + (b[1] - a[1]) * (b2[1] - a2[1]) <= 0) {
-        throw new RangeError(`A ${by(a, b)} mm chamfer is larger than the outline takes`);
-      }
-      moved.set(key(a), a2);
+    const amounts = ring.map((p, i) => by(p, ring[(i + 1) % ring.length] ?? p));
+    let to: Vec2[];
+    try {
+      to = movedRing(ring, amounts);
+    } catch {
+      throw new RangeError(`A ${Math.max(...amounts)} mm chamfer is larger than the outline takes`);
     }
+    ring.forEach((p, i) => moved.set(key(p), to[i] ?? p));
   }
   return moved;
 }
@@ -171,4 +213,94 @@ export function longBlend({
     return [round * Math.cos(a), round * Math.sin(a)];
   });
   return [...curve, ...arc];
+}
+
+/** A corner turning by more than this is blended; the rounds a part draws as polygons turn less at each point. */
+const SHARP_TURN = (15 * Math.PI) / 180;
+/** How far along its sides, at most, a blend reaches before the next corner: short of halfway, so two never meet. */
+const LEG_SHARE = 0.45;
+/** The points a blend is drawn with. */
+const BLEND_STEPS = 8;
+
+/** Where a ring's way turns at each point, left positive, in radians. */
+function turns(ring: readonly Vec2[]): number[] {
+  const n = ring.length;
+  const at = (i: number): Vec2 => ring[((i % n) + n) % n] ?? [0, 0];
+  return ring.map((b, i) => {
+    const [a, c] = [at(i - 1), at(i + 1)];
+    const [ux, uy, vx, vy] = [b[0] - a[0], b[1] - a[1], c[0] - b[0], c[1] - b[1]];
+    return Math.atan2(ux * vy - uy * vx, ux * vx + uy * vy);
+  });
+}
+
+/** One ring with its sharp corners blended: see blendCorners. */
+function blendRing(ring: readonly Vec2[], legMm: number): Vec2[] {
+  const n = ring.length;
+  const at = (i: number): Vec2 => ring[((i % n) + n) % n] ?? [0, 0];
+  const along = [0];
+  for (let i = 1; i <= n; i++)
+    along.push((along[i - 1] ?? 0) + Math.hypot(at(i)[0] - at(i - 1)[0], at(i)[1] - at(i - 1)[1]));
+  const perimeter = along[n] ?? 0;
+  const turn = turns(ring);
+  const stops = turn.flatMap((t, i) => (Math.abs(t) > SHARP_TURN ? [i] : []));
+  if (!stops.some((i) => (turn[i] ?? 0) > 0)) return [...ring];
+  const wrap = (d: number) => ((d % perimeter) + perimeter) % perimeter;
+  /** How far round the ring to the next corner: all the way round where it is the only one. */
+  const gap = (d: number) => (d > 1e-9 ? d : perimeter);
+  /** The point `d` along the ring, and the way the ring runs there. */
+  const pointAt = (d: number): [Vec2, Vec2] => {
+    const x = wrap(d);
+    let i = 0;
+    while (i < n - 1 && (along[i + 1] ?? 0) <= x) i++;
+    const [a, b] = [at(i), at(i + 1)];
+    const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const k = (x - (along[i] ?? 0)) / length;
+    return [
+      [a[0] + k * (b[0] - a[0]), a[1] + k * (b[1] - a[1])],
+      [(b[0] - a[0]) / length, (b[1] - a[1]) / length],
+    ];
+  };
+  // each convex corner's blend: [where it starts along the ring, how far it runs, its points]
+  const blends = stops.flatMap((c, k): [number, number, Vec2[]][] => {
+    if ((turn[c] ?? 0) <= 0) return [];
+    const m = stops.length;
+    const [before, after] = [stops[(k - 1 + m) % m] ?? c, stops[(k + 1) % m] ?? c];
+    const legIn = Math.min(legMm, LEG_SHARE * gap(wrap((along[c] ?? 0) - (along[before] ?? 0))));
+    const legOut = Math.min(legMm, LEG_SHARE * gap(wrap((along[after] ?? 0) - (along[c] ?? 0))));
+    const start = (along[c] ?? 0) - legIn;
+    const [[p0, d0], [p2, d2]] = [pointAt(start), pointAt((along[c] ?? 0) + legOut)];
+    // the control point: where the ways at the two ends meet, so the parabola leaves each tangent to its side
+    const det = d0[0] * d2[1] - d0[1] * d2[0];
+    const [gx, gy] = [p2[0] - p0[0], p2[1] - p0[1]];
+    const t = (gx * d2[1] - gy * d2[0]) / det;
+    const u = (d0[0] * gy - d0[1] * gx) / det;
+    const control: Vec2 = Math.abs(det) > 1e-9 && t > 0 && u > 0 ? [p0[0] + t * d0[0], p0[1] + t * d0[1]] : at(c);
+    const points = Array.from({ length: BLEND_STEPS + 1 }, (_, j): Vec2 => {
+      const s = j / BLEND_STEPS;
+      const [w0, w1, w2] = [(1 - s) ** 2, 2 * (1 - s) * s, s ** 2];
+      return [w0 * p0[0] + w1 * control[0] + w2 * p2[0], w0 * p0[1] + w1 * control[1] + w2 * p2[1]];
+    });
+    return [[wrap(start), legIn + legOut, points]];
+  });
+  const within = (d: number, [from, span]: [number, number, Vec2[]]) => wrap(d - from) <= span + 1e-6;
+  const pieces: [number, Vec2[]][] = [
+    ...ring.flatMap((p, i): [number, Vec2[]][] =>
+      blends.some((b) => within(along[i] ?? 0, b) || wrap((along[i] ?? 0) - b[0]) > perimeter - 1e-6)
+        ? []
+        : [[along[i] ?? 0, [p]]],
+    ),
+    ...blends.map(([from, , points]): [number, Vec2[]] => [from, points]),
+  ];
+  return pieces.sort((a, b) => a[0] - b[0]).flatMap(([, points]) => points);
+}
+
+/**
+ * An outline's rings with each sharp corner of the region on their left (D278), an outer ring anticlockwise and a
+ * hole clockwise as an outline gives them, run on a long eased curve: a parabola, as the practice asks, drawn as a
+ * quadratic Bezier from `legMm` back along one side to `legMm` on along the other, tangent to each, its control
+ * point where the two sides' ways meet; for two straight sides that is the corner itself. Each leg is held short of
+ * halfway to the next corner. Corners the other way, the region's inside corners, are left as they are.
+ */
+export function blendCorners(rings: readonly Vec2[][], legMm: number): Vec2[][] {
+  return rings.map((ring) => blendRing(ring, legMm));
 }

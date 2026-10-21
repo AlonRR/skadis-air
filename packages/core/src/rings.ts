@@ -37,6 +37,40 @@ export function circle(x: number, y: number, d: number, grow = 0, from = 0): Vec
 export const HALF_STEP = Math.PI / CIRCLE_SEGMENTS;
 
 /**
+ * A closed mesh lofted through levels, at each `z` the same rings with their points moved, so every level has the
+ * same points in the same order: an outline of any shape, holes and all, its ends triangulated, its sides joined
+ * point to point between levels. The rings are as an outline gives them, the solid on their left.
+ */
+export function loftedSolid(engine: Engine, levels: readonly [number, readonly Vec2[][]][]): Manifold {
+  const first = levels[0]?.[1] ?? [];
+  const sizes = first.map((ring) => ring.length);
+  const perLevel = sizes.reduce((a, b) => a + b, 0);
+  const positions = new Float32Array(
+    levels.flatMap(([z, rings]) => rings.flatMap((ring) => ring.flatMap(([x, y]) => [x, y, z]))),
+  );
+  const triangles: number[] = [];
+  const caps = engine.triangulate(first.map((ring) => [...ring]));
+  const top = (levels.length - 1) * perLevel;
+  for (const [a, b, c] of caps) {
+    triangles.push(a, c, b); // the bottom, facing down
+    triangles.push(top + a, top + b, top + c); // the top, facing up
+  }
+  let start = 0;
+  for (const n of sizes) {
+    for (let level = 0; level < levels.length - 1; level++) {
+      const at = (l: number, i: number) => l * perLevel + start + (i % n);
+      for (let i = 0; i < n; i++) {
+        triangles.push(at(level, i), at(level, i + 1), at(level + 1, i + 1));
+        triangles.push(at(level, i), at(level + 1, i + 1), at(level + 1, i));
+      }
+    }
+    start += n;
+  }
+  const mesh = new engine.Mesh({ numProp: 3, vertProperties: positions, triVerts: new Uint32Array(triangles) });
+  return new engine.Manifold(mesh);
+}
+
+/**
  * A closed mesh of rings: `ring(grow)` drawn at each [z, grow] level, from the lowest z up, every ring
  * with the same number of points. Built as one mesh rather than as cones and prisms joined by a union:
  * those meet exactly along an outline, and the cut left near-duplicate corners there, 440 degenerate

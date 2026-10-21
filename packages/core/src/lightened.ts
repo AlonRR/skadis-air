@@ -8,6 +8,7 @@
 // the solid board's own.
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { boardOutline, type BoardCuts, makeSolidBoard, type SolidBoardParams } from './board-solid.js';
+import { blendCorners } from './chamfer.js';
 import type { Engine } from './engine.js';
 import { mountingCuts, mountingPads, type MountingParams } from './mounting.js';
 import { stadium } from './rings.js';
@@ -26,7 +27,10 @@ export const EDGE_BAND_MM = 3;
 export const MIN_MEMBER_MM = 1.2;
 /** Below this a rim or web is made, with a warning (D145). */
 export const WARN_MEMBER_MM = 2;
-/** Each pocket's corners are rounded to this radius, so no web meets a rim in a sharp notch. */
+/** Each pocket's sharp corners run on a parabola this far along both sides (D278), so a web runs on into a rim on
+ * a long eased curve, as the practice asks, not on a short round; held short of halfway to the next corner. */
+export const BLEND_LEG_MM = 3;
+/** What is left of a pocket narrower than twice this is dropped: too narrow to print. */
 export const POCKET_CORNER_MM = 1;
 
 /** The lattice asked for, with the starting values filled in, refused when a member is under the minimum. */
@@ -109,9 +113,13 @@ export function pocketShape(
   const face = keep(new CrossSection([boardOutline(width, height, board.sides, board.cornerRadiusMm)], 'Positive'));
   const inner = keep(face.offset(-members.bandMm, 'Round'));
   const pockets = keep(inner.subtract(kept));
-  // Round the pockets' corners: shrink, then grow back by the same amount, which also drops any sliver
-  // of pocket too narrow to print.
-  const rounded = keep(pockets.offset(-POCKET_CORNER_MM, 'Round')).offset(POCKET_CORNER_MM, 'Round');
+  // Each sharp corner on a parabola (D278); then shrink and grow back by the same amount, which drops any sliver of
+  // pocket too narrow to print and leaves the blends, wider than that, as they are. Growing back adds an arc's points
+  // at each of a blend's, which doubled the build's time: the points within 5 microns of the line through their
+  // neighbours are taken out again.
+  const blended = keep(new CrossSection(blendCorners(pockets.toPolygons(), BLEND_LEG_MM), 'Positive'));
+  const opened = keep(keep(blended.offset(-POCKET_CORNER_MM, 'Round')).offset(POCKET_CORNER_MM, 'Round'));
+  const rounded = opened.simplify(0.005);
   for (const c of made) c.delete();
   return rounded;
 }

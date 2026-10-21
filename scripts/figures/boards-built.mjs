@@ -117,5 +117,33 @@ export function build(kit) {
       meshes: [...split(two, bars), ...split(four, bars)],
     });
   }
+  // G5: the pockets' corners on long eased curves (D278), the lightened board at the front and the skeleton cut
+  {
+    const light = built('lightened', { widthMm: 80, heightMm: 80 });
+    const bone = built('skeleton', { widthMm: 80, heightMm: 80 }).translate([90, 0, 0]);
+    const cut = box(80, 180, -1, 81, T / 2, T + 1); // the skeleton's front half taken off, to show its middle
+    // round the corners of the pocket right of the 20 mm slot, where each web meets the rim
+    const near = box(25.5, 33, 13, 27, -1, T + 1);
+    const nearBone = near.translate([90, 0, 0]);
+    const kept = bone.subtract(cut);
+    scenes.push({
+      id: 'g5-pocket-blends',
+      title: 'Lightened and skeleton boards · pocket corners on long eased curves (D278)',
+      caption: [
+        'Where a web meets a rim, each pocket turns on a parabola 3 mm along each side (orange), not a 1 mm round. The',
+        "skeleton, cut through its middle, right: the curve narrows with the I-beam's taper, through the board.",
+      ],
+      legend: [
+        ["a pocket's blended corners", COLOURS.orange],
+        ['lightened board, front; skeleton, cut at its middle', COLOURS.grey],
+      ],
+      camera: { position: [85, -60, 150], target: [85, 34, 0], fov: 34 },
+      labels: [
+        { text: 'lightened: the front', at: [29, 20, T], dx: -80, dy: -90 },
+        { text: 'skeleton: its middle', at: [119, 20, T / 2], dx: 80, dy: -90 },
+      ],
+      meshes: [...split(light, near), ...split(kept, nearBone)],
+    });
+  }
   return scenes;
 }

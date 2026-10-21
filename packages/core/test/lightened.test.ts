@@ -40,6 +40,10 @@ const solid = (p: BoardGiven = {}, m: Partial<MountingParams> = {}) =>
 const midSlice = (b: Manifold, p: BoardGiven = {}) => keep(b.slice(params(p).thicknessMm / 2));
 const shape = (contours: [number, number][][]) => keep(new engine.CrossSection(contours, 'NonZero'));
 
+/** Whether a section holds the point: a 0.02 mm square there is not all pocket. */
+const holds = (s: CrossSection, [x, y]: [number, number]) =>
+  keep(s.intersect(keep(keep(engine.CrossSection.square([0.02, 0.02], true)).translate([x, y])))).area() > 0;
+
 /** The area of `zone`, within the solid board's slice, that the lightened board's slice leaves open. */
 function uncovered(zone: CrossSection, light: CrossSection, full: CrossSection): number {
   return keep(keep(zone.intersect(full)).subtract(light)).area();
@@ -83,6 +87,39 @@ describe('makeLightenedBoard (D141 to D144)', () => {
     expect(front).toBeLessThan(middle);
     expect(back).toBeLessThan(middle);
     expect(front / middle).toBeGreaterThan(0.85);
+  });
+
+  it('runs each web into a rim on a long eased curve, a parabola 3 mm along each side, not a 1 mm round (D278)', () => {
+    const light = midSlice(lightened());
+    /** Whether the plastic reaches `d` mm from a pocket's corner, along the line halfway between its two sides. */
+    const reaches = (corner: [number, number], sides: [[number, number], [number, number]], d: number) => {
+      const [[ax, ay], [bx, by]] = sides;
+      const length = Math.hypot(ax + bx, ay + by);
+      return holds(light, [corner[0] + (d * (ax + bx)) / length, corner[1] + (d * (ay + by)) / length]);
+    };
+    const r = Math.SQRT1_2;
+    // The 20 mm slot's rim, its straight right side at x = 26.6 mm, meets the lower side of the web up and to the
+    // right, 1.5 mm off its middle: a corner of 135 degrees, where a 1 mm round stood 0.08 mm out and the parabola
+    // stands 0.57 mm out.
+    const straight: [number, number] = [26.6, 20 + 6.6 - 1.5 * Math.SQRT2];
+    const downAndUp: [[number, number], [number, number]] = [
+      [0, -1],
+      [r, r],
+    ];
+    expect(reaches(straight, downAndUp, 0.3)).toBe(true);
+    expect(reaches(straight, downAndUp, 0.5)).toBe(true);
+    expect(reaches(straight, downAndUp, 0.7)).toBe(false);
+    // The same web's upper side meets the rim's round top end, 6.6 mm round (20, 25): a corner of about 72 degrees,
+    // where a 1 mm round stood 0.70 mm out and the parabola stands about 1.2 mm out.
+    // the side, (20, 20) + a (1, 1) + k (-1, 1), meets the round where (a - k)^2 + (a + k - 5)^2 = 6.6^2
+    const k = 1.5 * r;
+    const a = (10 + Math.sqrt(100 + 8 * (6.6 ** 2 - k ** 2 - (5 - k) ** 2))) / 4;
+    const round: [number, number] = [20 + a - k, 20 + a + k];
+    expect(Math.hypot(round[0] - 20, round[1] - 25)).toBeCloseTo(6.6, 3);
+    const along: [number, number] = [-(round[1] - 25) / 6.6, (round[0] - 20) / 6.6]; // the round's way, leftwards
+    const sides: [[number, number], [number, number]] = [[r, r], along];
+    expect(reaches(round, sides, 0.95)).toBe(true);
+    expect(reaches(round, sides, 1.6)).toBe(false);
   });
 
   it("keeps about a third of the solid board's plastic (D142: about 36 % by the 2D sketch)", () => {

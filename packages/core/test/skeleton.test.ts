@@ -116,6 +116,30 @@ describe('makeSkeletonBoard (D146, D147, D161)', () => {
     expect(rimAt(b, 4)).toBeCloseTo(3.6, 1);
   });
 
+  it("blends its pockets' corners at both faces as the lightened board's, the blend widening with them inside (D278)", () => {
+    const b = skeleton();
+    // the corner where the 20 mm slot's rim, its straight side at x = 26.6 mm, meets the lower side of the web up and
+    // to the right; the line halfway between the two, into the pocket
+    const corner: Vec2 = [26.6, 20 + 6.6 - 1.5 * Math.SQRT2];
+    const into: Vec2 = [Math.cos(Math.PI / 8), -Math.sin(Math.PI / 8)];
+    const holds = (z: number, d: number) => {
+      const dot = keep(
+        keep(engine.CrossSection.square([0.02, 0.02], true)).translate([
+          corner[0] + d * into[0],
+          corner[1] + d * into[1],
+        ]),
+      );
+      return keep(keep(b.slice(z)).intersect(dot)).area() > 0;
+    };
+    // at both faces the parabola stands 0.57 mm out from the corner, as the lightened board's
+    for (const z of [0.3, 4.7]) {
+      expect(holds(z, 0.4)).toBe(true);
+      expect(holds(z, 0.7)).toBe(false);
+    }
+    // through the middle the pocket has widened into the web and the rim, and the blend with them
+    expect(holds(2.5, 0.4)).toBe(false);
+  });
+
   it('keeps its screw pads full depth', () => {
     const pads = keep(
       new engine.CrossSection(

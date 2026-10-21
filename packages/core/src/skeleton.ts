@@ -1,22 +1,31 @@
-// The skeleton board (backlog item board-skeleton; D146, D147, D161): the lightened board's lattice, every
+// The skeleton board (backlog item board-skeleton; D146, D147, D161, D278): the lightened board's lattice, every
 // member an I-beam, as the ultralight boards Q12 chose have them. Each rim, web and the edge band is as wide as
 // the lightened board's at both faces for 0.6 mm, then narrows at 45 degrees towards a 1.2 mm core: the webs,
 // narrowing from both sides, reach it; a rim, from one side, stays 2.1 mm through a 5 mm board (D161); the band,
 // from its inner side, reaches it at the middle. The screw pads stay full depth. Printed face down, no face
 // overhangs more than 45 degrees.
 //
-// The members are built as solids and joined, and what they leave of the face is cut as one pocket cutter
-// through makeSolidBoard's extraCutters: a web is one bar along each diagonal line of the grid, its I-profile
-// run along the line; a rim is rings of the slot's outline stacked through the board (rings.ts); the band is a
-// bar along each edge with half the profile; the pads are prisms. Pockets cut as slabs stacked through the
-// board took 7.2 s for a 160 x 160 mm board, as slabs whose faces lie on each other are Manifold's slow case
-// (15 Oct 2026).
-import type { Manifold, Mat4, Vec2 } from 'manifold-3d';
-import { type BoardCuts, makeSolidBoard, type SolidBoardParams } from './board-solid.js';
+// The members are a slab less the pockets, and the pockets are the lightened board's at both faces, their corners
+// blended (D278), each widening through the board into the members round it, edge by edge: one mesh a pocket,
+// lofted through the depths where its sides bend. Built so, a blend's taper follows its curve, and nothing meets
+// on a plane: the members built as solids and joined, as they were until D278, needed their bends staggered
+// (1 078 facets of no area, 15 Oct 2026), and pockets cut as slabs stacked through the board took 7.2 s for a
+// 160 x 160 mm board, slabs whose faces lie on each other being Manifold's slow case.
+import type { Manifold, Vec2 } from 'manifold-3d';
+import { boardOutline, type BoardCuts, makeSolidBoard, type SolidBoardParams } from './board-solid.js';
+import { grownRing } from './chamfer.js';
 import type { Engine } from './engine.js';
-import { bothCuts, EDGE_BAND_MM, LATTICE_DEFAULTS, latticeParams, type LatticeParams } from './lightened.js';
+import {
+  bothCuts,
+  LATTICE_DEFAULTS,
+  latticeMembers,
+  latticeParams,
+  type LatticeParams,
+  type Members,
+  pocketShape,
+} from './lightened.js';
 import { mountingCuts, mountingPads, type MountingParams } from './mounting.js';
-import { ringedSolid, stadium } from './rings.js';
+import { loftedSolid } from './rings.js';
 import { SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import { slotPlaces } from './slots.js';
 
@@ -27,12 +36,6 @@ export interface SkeletonParams extends LatticeParams {
 export const SKELETON_DEFAULTS: SkeletonParams = { ...LATTICE_DEFAULTS, coreMm: 1.2 }; // D147
 /** How deep the full width runs in from each face before the taper (D147). */
 export const FLANGE_MM = 0.6;
-/**
- * How much deeper a web's flange runs than a rim's, and the band's than a web's: where two kinds of member bend at
- * one depth, the edges where they bend meet, and the join left 1 078 facets of no area in a 160 x 160 mm board
- * (15 Oct 2026). 0.03 mm is far below what a printer draws.
- */
-const KINK_STAGGER_MM = 0.03;
 /** The narrowest core made: two lines of a 0.4 mm nozzle (D147). */
 export const MIN_CORE_MM = 0.8;
 /** Below this a core is made, with a warning (D147). */
@@ -50,130 +53,173 @@ export function skeletonParams(given: Partial<SkeletonParams>): SkeletonParams {
   return p;
 }
 
+/** What a pocket's edge runs along: a member, which it widens into through the board, or a blend between two. */
+type Along = 'web' | 'rim' | 'band' | 'pad' | null;
+
+/** How near an edge's middle must lie to a member's side to run along it, mm: the polygons' rounding is less. */
+const ON_SIDE_MM = 0.05;
+
+/** Whether a distance is the one a member's side lies at. */
+const near = (d: number, at: number) => Math.abs(d - at) < ON_SIDE_MM;
+
+/** The distance from a point to the segment from a to b. */
+function toSegment([px, py]: Vec2, [ax, ay]: Vec2, [bx, by]: Vec2): number {
+  const [dx, dy] = [bx - ax, by - ay];
+  const length2 = dx * dx + dy * dy;
+  const k = length2 === 0 ? 0 : Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / length2));
+  return Math.hypot(px - ax - k * dx, py - ay - k * dy);
+}
+
+/** The distance from a value to the nearest multiple of the grid's pitch. */
+const offGrid = (v: number) => Math.abs(v - TILE_MM * Math.round(v / TILE_MM));
+
 /**
- * A member's width at each depth through a board `t` thick, as [depth, half-width] from the front face to the
- * back, `beyond` mm past each face: `face` at both faces for the flange, then 45 degrees towards `core`,
- * reaching it if the board is deep enough, else meeting the other face's taper at the middle.
+ * Which member each edge of a pocket's rings runs along, by where its middle lies: a web's side, on the grid's
+ * diagonals; a rim, round a slot; the band, inside the outline; a pad, round a screw. A blend lies along none.
  */
-function profile(face: number, core: number, t: number, beyond: number, flange: number): [number, number][] {
-  const [f, half] = [Math.min(flange, t / 2), t / 2];
-  const taper = face - core;
-  const middle: [number, number][] =
-    f + taper < half - 1e-9
-      ? [
-          [f + taper, core],
-          [t - f - taper, core],
-        ]
-      : [[half, face - (half - f)]];
-  return [[-beyond, face], [f, face], ...middle, [t - f, face], [t + beyond, face]];
-}
-
-/** A web's cross-section, (across, depth), counter-clockwise: the I-profile, centred on the web's line. */
-function webSection(p: SkeletonParams, t: number, beyond: number): Vec2[] {
-  const right = profile(p.webMm / 2, p.coreMm / 2, t, beyond, FLANGE_MM + KINK_STAGGER_MM).map(([z, w]): Vec2 => [
-    w,
-    z,
+function alongOf(
+  rings: readonly Vec2[][],
+  board: SolidBoardParams,
+  members: Members,
+  pads: readonly Vec2[][],
+): Along[][] {
+  const [w, h] = [SLOT_WIDTH_MM + board.slotClearanceMm, SLOT_HEIGHT_MM + board.slotClearanceMm];
+  const slots = slotPlaces(board.columns, board.rows, board.sides).map((s): [Vec2, Vec2] => [
+    [s.xMm, s.yMm - (h - w) / 2],
+    [s.xMm, s.yMm + (h - w) / 2],
   ]);
-  const left: Vec2[] = []; // down the left side
-  for (const [w, z] of right) left.unshift([-w, z]);
-  return [...right, ...left];
+  const outline = boardOutline(TILE_MM * board.columns, TILE_MM * board.rows, board.sides, board.cornerRadiusMm);
+  const rounds = pads.map((ring): [Vec2, number] => {
+    const [cx, cy] = ring.reduce(([x, y], [px, py]) => [x + px / ring.length, y + py / ring.length], [0, 0]);
+    const [fx, fy] = ring[0] ?? [cx, cy];
+    return [[cx, cy], Math.hypot(fx - cx, fy - cy)];
+  });
+  return rings.map((ring) =>
+    ring.map((a, i): Along => {
+      const b = ring[(i + 1) % ring.length] ?? a;
+      const m: Vec2 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      const web = Math.min(offGrid(m[0] - m[1]), offGrid(m[0] + m[1])) / Math.SQRT2;
+      if (near(web, members.webMm / 2)) return 'web';
+      if (slots.some(([s0, s1]) => near(toSegment(m, s0, s1) - w / 2, members.rimGrowMm))) return 'rim';
+      const edge = Math.min(...outline.map((p, k) => toSegment(m, p, outline[(k + 1) % outline.length] ?? p)));
+      if (near(edge, members.bandMm)) return 'band';
+      if (rounds.some(([c, r]) => near(Math.hypot(m[0] - c[0], m[1] - c[1]), r))) return 'pad';
+      return null;
+    }),
+  );
 }
 
-/** The band's cross-section, (in from the edge, depth): half the profile, its outer face at the edge. */
-function bandSection(p: SkeletonParams, t: number, beyond: number): Vec2[] {
-  const inner = profile(EDGE_BAND_MM, p.coreMm, t, beyond, FLANGE_MM + 2 * KINK_STAGGER_MM).map(([z, w]): Vec2 => [
-    w,
-    z,
-  ]);
-  return [...inner, [-1, t + beyond], [-1, -beyond]];
+/**
+ * How far into its member each edge's pocket widens at most, through the middle of the board: a web from each side
+ * to its core, the band from its inner side to its core, a rim from its outer side to its core, a pad not at all. A
+ * blend widens as the members it runs between do, from one to the other along its length; one from a pad not at all.
+ */
+function widening(
+  rings: readonly Vec2[][],
+  along: readonly Along[][],
+  p: SkeletonParams,
+  members: Members,
+): number[][] {
+  const most: Record<Exclude<Along, null>, number> = {
+    web: (members.webMm - p.coreMm) / 2,
+    rim: members.rimGrowMm - p.coreMm,
+    band: members.bandMm - p.coreMm,
+    pad: 0,
+  };
+  return rings.map((ring, r) => {
+    const kinds = along[r] ?? [];
+    const n = ring.length;
+    const known = kinds.map((k) => (k === null ? null : most[k]));
+    if (known.every((v) => v === null)) return known.map(() => most.band);
+    const lengths = ring.map((a, i) => {
+      const b = ring[(i + 1) % n] ?? a;
+      return Math.hypot(b[0] - a[0], b[1] - a[1]);
+    });
+    const starts = lengths.reduce<number[]>((s, l, i) => [...s, (s[i] ?? 0) + l], [0]);
+    const perimeter = starts[n] ?? 0;
+    const wrap = (d: number) => ((d % perimeter) + perimeter) % perimeter;
+    return known.map((v, i) => {
+      if (v !== null) return v;
+      let [before, after] = [i, i];
+      do before = (before - 1 + n) % n;
+      while (known[before] === null);
+      do after = (after + 1) % n;
+      while (known[after] === null);
+      // from the end of the edge before to the start of the edge after, by where this edge's middle lies
+      const from = (starts[before] ?? 0) + (lengths[before] ?? 0);
+      const span = wrap((starts[after] ?? 0) - from) || perimeter;
+      const k = wrap((starts[i] ?? 0) + (lengths[i] ?? 0) / 2 - from) / span;
+      // a blend from a pad is the pad's, full depth: it leaves the pad tangent, and any widening would cut into it
+      if (kinds[before] === 'pad' || kinds[after] === 'pad') return 0;
+      const [a, b] = [known[before] ?? 0, known[after] ?? 0];
+      return a + (b - a) * Math.min(1, k);
+    });
+  });
 }
 
-/** A section run along the line from `a` to `b`: across it to the left of the direction of travel, depth up. */
-function bar(engine: Engine, section: Vec2[], [ax, ay]: Vec2, [bx, by]: Vec2): Manifold {
-  const length = Math.hypot(bx - ax, by - ay);
-  const [dx, dy] = [(bx - ax) / length, (by - ay) / length];
-  const prism = new engine.CrossSection([section], 'Positive').extrude(length);
-  // extruded: x across, y depth, z along; turned so across is (-dy, dx), depth is up and along is (dx, dy)
-  const turn: Mat4 = [-dy, dx, 0, 0, 0, 0, 1, 0, dx, dy, 0, 0, ax, ay, 0, 1];
-  const placed = prism.transform(turn);
-  prism.delete();
-  return placed;
-}
-
-/** How far short of a tile's corner its webs stop: inside the corner's slot, so two tiles' webs never meet end to end. */
-const WEB_SHORT_MM = 0.5;
-
-/** The skeleton's members as one solid, reaching past both faces and past the outline. */
+/**
+ * The skeleton's members as one solid, reaching past both faces and past the outline: a slab less its pockets. Each
+ * pocket is the lightened board's at both faces, its sharp corners blended (D278), and widens through the board into
+ * the members round it, at 45 degrees from the flange, each edge until its member's core is reached or the board's
+ * middle: the I-beams of D147, the blends' taper following their curve. Each pocket is one mesh, lofted through the
+ * depths where its sides bend; built so, nothing meets on a plane.
+ */
 export function skeletonMembers(
   engine: Engine,
   board: SolidBoardParams,
   p: SkeletonParams,
   pads: readonly Vec2[][],
 ): Manifold {
-  const { Manifold, CrossSection } = engine;
+  const { Manifold } = engine;
   const t = board.thicknessMm;
   const [width, height] = [TILE_MM * board.columns, TILE_MM * board.rows];
-  const [w, h] = [SLOT_WIDTH_MM + board.slotClearanceMm, SLOT_HEIGHT_MM + board.slotClearanceMm];
-  // Each kind reaches its own distance past the faces, so no two kinds' end faces lie on one plane.
-  const solids: Manifold[] = [];
-  // a rim: 3 mm outside the chamfer at the faces, measured from the slot's drawn edge (D143)
-  const rim = profile(board.slotChamferMm + p.rimMm, p.coreMm, t, 1, FLANGE_MM);
-  const rimOf = (x: number, y: number) => ringedSolid(engine, (grow) => stadium(x, y, w, h, grow), rim);
-  const web = webSection(p, t, 1.1);
-  const half = TILE_MM / 2;
-  const reach = half * Math.SQRT2 - WEB_SHORT_MM;
-  // Tile by tile: the centre slot's rim and the four webs out from it, joined, then the tiles and the rims of the
-  // slots between them. Joined all at once, webs crossing many rims took 9 s for a 400 x 400 mm board (C163).
-  for (let i = 0; i < board.columns; i++) {
-    for (let j = 0; j < board.rows; j++) {
-      const [cx, cy] = [TILE_MM * i + half, TILE_MM * j + half];
-      const tile = [rimOf(cx, cy)];
-      for (const [dx, dy] of [
-        [-1, -1],
-        [1, -1],
-        [1, 1],
-        [-1, 1],
-      ] as const) {
-        const end: Vec2 = [cx + (dx * reach) / Math.SQRT2, cy + (dy * reach) / Math.SQRT2];
-        tile.push(bar(engine, web, [cx, cy], end));
-      }
-      solids.push(Manifold.union(tile));
-      for (const m of tile) m.delete();
-    }
-  }
-  for (const slot of slotPlaces(board.columns, board.rows, board.sides)) {
-    if (slot.xMm % TILE_MM === 0) solids.push(rimOf(slot.xMm, slot.yMm)); // a slot on the 40 mm grid, between tiles
-  }
-  const band = bandSection(p, t, 1.2);
-  const edges: [Vec2, Vec2][] = [
-    [
-      [-1, 0],
-      [width + 1, 0],
-    ],
-    [
-      [width, -1],
-      [width, height + 1],
-    ],
-    [
-      [width + 1, height],
-      [-1, height],
-    ],
-    [
-      [0, height + 1],
-      [0, -1],
-    ],
-  ];
-  for (const [a, b] of edges) solids.push(bar(engine, band, a, b));
-  if (pads.length > 0) {
-    const outlines = new CrossSection([...pads], 'NonZero');
-    const prism = outlines.extrude(t + 2.6);
-    solids.push(prism.translate([0, 0, -1.3]));
-    prism.delete();
-    outlines.delete();
-  }
-  const members = Manifold.union(solids);
-  for (const m of solids) m.delete();
-  return members;
+  const members = latticeMembers(board, p);
+  const shape = pocketShape(engine, board, members, pads);
+  const pockets = shape.decompose();
+  shape.delete();
+  const f = Math.min(FLANGE_MM, t / 2);
+  const middle = t / 2 - f; // how far a taper reaches by the middle
+  const lofts = pockets.map((pocket) => {
+    const rings = pocket.toPolygons();
+    pocket.delete();
+    const most = widening(rings, alongOf(rings, board, members, pads), p, members);
+    // where the members bend: the flange, each kind's core, the middle; a blend, between two kinds, runs straight
+    // from one of these depths to the next, less than 45 degrees, so the pocket keeps a few rings, not one a blend
+    // edge (6 s and 500 000 facets for a 160 mm board, against 0.85 s)
+    const cores = [members.webMm / 2 - p.coreMm / 2, members.bandMm - p.coreMm, members.rimGrowMm - p.coreMm];
+    const bends = [...new Set(cores.filter((d) => d > 1e-6 && d < middle - 1e-6))].sort((a, b) => a - b);
+    const depths = [0, ...bends, middle];
+    const reach = [
+      ...depths.map((d) => f + d),
+      // and back out to the other face, the middle once
+      ...depths.slice(0, -1).map((_, i, all) => t - f - (all[all.length - 1 - i] ?? 0)),
+    ];
+    const levels: [number, Vec2[][]][] = [
+      [-1.5, rings],
+      ...reach.map((z): [number, Vec2[][]] => {
+        const into = Math.max(0, Math.min(z - f, t - f - z));
+        return [
+          z,
+          rings.map((ring, r) => {
+            // each point by the mean of its two edges' widening, so it changes smoothly along a blend
+            const edges = most[r] ?? [];
+            const points = edges.map((m, i) => (m + (edges[(i - 1 + edges.length) % edges.length] ?? m)) / 2);
+            return grownRing(
+              ring,
+              points.map((m) => -Math.min(m, into)),
+            );
+          }),
+        ];
+      }),
+      [t + 1.5, rings],
+    ];
+    return loftedSolid(engine, levels);
+  });
+  const slab = Manifold.cube([width + 2.4, height + 2.4, t + 2.4]).translate([-1.2, -1.2, -1.2]);
+  const cut = Manifold.union(lofts);
+  const kept = slab.subtract(cut);
+  for (const m of [slab, cut, ...lofts]) m.delete();
+  return kept;
 }
 
 /** What the skeleton keeps of the solid board: the plate only where its members are (BoardCuts.within). */
