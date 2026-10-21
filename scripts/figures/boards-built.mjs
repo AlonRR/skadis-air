@@ -92,5 +92,30 @@ export function build(kit) {
       meshes: split(board, outer),
     });
   }
+  // G4: the standoff in the slot clip's shape (D281), for 2 boards and for 4, as it prints, wall face down
+  {
+    const two = built('standoff', { boards: '2' }).translate([-26, 0, 0]);
+    const four = built('standoff', { boards: '4' }).translate([22, 0, 0]);
+    const bars = box(-60, 60, -30, 30, -1, 15 - 8); // up to the hooks' room, 8 mm under the boards
+    scenes.push({
+      id: 'g4-standoff-layout',
+      title: "Standoff · the slot clip's shape, for 2 boards and for 4 (D281)",
+      caption: [
+        'A post over each corner screw hole, the whole 15 mm; on the wall side a bar as wide joins them (orange), for 4',
+        'boards a square ring. Next to the boards only the posts reach them, so hooks keep their room, as at the clip.',
+      ],
+      legend: [
+        ['the bars, on the wall side', COLOURS.orange],
+        ['the posts', COLOURS.grey],
+      ],
+      camera: { position: [10, -80, 70], target: [0, 0, 6], fov: 34 },
+      labels: [
+        { text: '2 boards', at: [-26, -5, 15], dx: -60, dy: -60 },
+        { text: '4 boards: a ring', at: [22, -15, 7], dx: 60, dy: 60 },
+        { text: "the hooks' room", at: [22, 0, 11], dx: 80, dy: -90 },
+      ],
+      meshes: [...split(two, bars), ...split(four, bars)],
+    });
+  }
   return scenes;
 }

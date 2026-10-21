@@ -17,8 +17,9 @@ describe('startingValues', () => {
 
   it('carries no value the type does not take: an option it lacks, or a number outside its limits', () => {
     const standoff = boardType('standoff');
-    // a slot clip's "2 boards, one above the other" is no standoff's
-    expect(startingValues(standoff, {}, { boards: '2-stacked' })['boards']).toBeUndefined();
+    // a standoff's "1 board, at a corner" is no slot clip's; "2 boards, one above the other" is both's (D281)
+    expect(startingValues(boardType('slot-clip'), {}, { boards: '1' })['boards']).toBeUndefined();
+    expect(startingValues(standoff, {}, { boards: '2-stacked' })['boards']).toBe('2-stacked');
     expect(startingValues(standoff, {}, { boards: '4' })['boards']).toBe('4');
     // a board's height of 160 mm is not a standoff's, at most 40
     expect(startingValues(standoff, {}, { heightMm: '160' })['heightMm']).toBeUndefined();

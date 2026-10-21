@@ -27,20 +27,21 @@ const CLOSED: Sides = { left: 'closed', right: 'closed', bottom: 'closed', top: 
 
 describe('standoffParams: the starting values', () => {
   it('are 15 mm tall (D238; IKEA spacers are 20 mm, D94) for a 4 mm screw (D76)', () => {
-    expect(standoffParams({})).toEqual({ boards: 1, heightMm: 15, screwMm: 4 });
+    expect(standoffParams({})).toEqual({ boards: '1', heightMm: 15, screwMm: 4 });
   });
 
   it('refuses what cannot be made', () => {
     expect(() => standoffParams({ heightMm: 0 })).toThrow(RangeError);
     expect(() => standoffParams({ screwMm: 0 })).toThrow(RangeError);
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a value the type would not allow
-    expect(() => standoffParams({ boards: 3 as StandoffParams['boards'] })).toThrow(RangeError);
+    expect(() => standoffParams({ boards: '3' as StandoffParams['boards'] })).toThrow(RangeError);
   });
 
   it('refuses a shared standoff too short for its tunnel and a bridge behind it (C99)', () => {
-    expect(() => standoffParams({ boards: 2, heightMm: 11.5 })).toThrow(/12 mm/);
-    expect(standoffParams({ boards: 4, heightMm: 12 }).heightMm).toBe(12);
-    expect(standoffParams({ boards: 1, heightMm: 3 }).heightMm).toBe(3);
+    expect(() => standoffParams({ boards: '2', heightMm: 11.5 })).toThrow(/12 mm/);
+    expect(() => standoffParams({ boards: '2-stacked', heightMm: 11.5 })).toThrow(/12 mm/);
+    expect(standoffParams({ boards: '4', heightMm: 12 }).heightMm).toBe(12);
+    expect(standoffParams({ boards: '1', heightMm: 3 }).heightMm).toBe(3);
   });
 });
 
@@ -94,28 +95,30 @@ const TUNNEL_DEPTH = 8; // the hook's 6 mm behind the board and the 2 mm margin
 const [INSIDE, BEYOND] = [TUNNEL_DEPTH - 0.05, TUNNEL_DEPTH + 0.5];
 const NOTHING = 1e-6; // mm3: an intersection that is empty but for the arithmetic's rounding
 
-describe('makeStandoff, for 2 boards (D92, D97)', () => {
-  it('has two holes 20 mm apart, in two rings 10 mm across joined by an 8.8 mm bridge (C100)', () => {
-    const part = standoff({ boards: 2 });
+/** How far a measure is from the figure worked out, as a part of the figure. */
+const off = (measured: number, figure: number) => Math.abs(measured - figure) / figure;
+const HOLE = Math.PI * 2.25 ** 2; // a 4.5 mm hole
+const POST = Math.PI * 5 ** 2; // a post 10 mm across
+
+describe("makeStandoff, for 2 boards, in the slot clip's shape (D92, D97, D281)", () => {
+  it('has a post 10 mm across over each of two holes 20 mm apart, joined by a bar as wide', () => {
+    const part = standoff({ boards: '2' });
     const box = part.boundingBox();
     expect(box.min.map((v) => Math.round(v * 1000) / 1000)).toEqual([-15, -5, 0]);
     expect(box.max.map((v) => Math.round(v * 1000) / 1000)).toEqual([15, 5, 20]);
     expect(part.genus()).toBe(2);
   });
 
-  it('is joined across the seam only on the wall side: an 11.2 mm tunnel, 8 mm deep, at its board face', () => {
-    const part = standoff({ boards: 2 });
-    // Two discs of radius 5 at x = +-10 and the bridge, 20 x 8.8 mm, between their centres: the bridge
-    // covers the inner half of each disc's band |y| <= 4.4, whose area is worked out by integration.
-    const y = 4.4;
-    const band = 2 * (y * Math.sqrt(25 - y * y) + 25 * Math.asin(y / 5));
-    const outline = 20 * 8.8 + 2 * Math.PI * 25 - band - 2 * Math.PI * 2.25 ** 2;
-    const wall = keep(part.slice(6)).area(); // behind the tunnel
-    const board = keep(part.slice(16)).area(); // in it
-    expect(Math.abs(wall - outline) / outline).toBeLessThan(0.01);
-    expect(Math.abs(board - (outline - 11.2 * 8.8)) / board).toBeLessThan(0.01);
+  it('is joined only on the wall side: the bar 12 mm deep, the posts alone in the 8 mm next to the boards', () => {
+    const part = standoff({ boards: '2' });
+    const bar = 20 * 10 + POST - 2 * HOLE; // a stadium 30 x 10 mm round the two holes
+    const posts = 2 * (POST - HOLE);
+    expect(off(keep(part.slice(6)).area(), bar)).toBeLessThan(0.01);
+    const top = keep(part.slice(16));
+    expect(off(top.area(), posts)).toBeLessThan(0.01);
+    expect(top.decompose().map(keep)).toHaveLength(2);
     // its edges chamfered 1 mm (D270): a little less than the plain shape, by no more than 5 %
-    const volume = outline * 20 - 11.2 * 8.8 * TUNNEL_DEPTH;
+    const volume = bar * (20 - TUNNEL_DEPTH) + posts * TUNNEL_DEPTH;
     expect(part.volume()).toBeLessThan(volume);
     expect(part.volume() / volume).toBeGreaterThan(0.95);
   });
@@ -123,33 +126,40 @@ describe('makeStandoff, for 2 boards (D92, D97)', () => {
   it('fitted at a seam, at the bottom or the top corners, leaves every slot and every hook its room', () => {
     const board = { columns: 4, rows: 2, sides: ALL_OPEN }; // two 2 x 2 boards side by side (D15)
     for (const y of [10, 70]) {
-      const placed = fitted(standoff({ boards: 2 }), 80, y, 20);
+      const placed = fitted(standoff({ boards: '2' }), 80, y, 20);
       expect(keep(placed.intersect(slotClearZone(engine, board, 2, INSIDE, keep))).volume()).toBeLessThan(NOTHING);
       expect(keep(placed.intersect(hookRoomZone(engine, board, 2, INSIDE, keep))).volume()).toBeLessThan(NOTHING);
-      // the control: deeper than the tunnel, the check finds the bridge behind the seam's slot column
+      // the control: deeper than the bar's top, the check finds the bar behind the seam's slot column
       expect(keep(placed.intersect(slotClearZone(engine, board, 2, BEYOND, keep))).volume()).toBeGreaterThan(0);
     }
   });
 
-  it('turned a quarter turn for a horizontal seam, leaves them their room too', () => {
+  it('comes for 2 boards one above the other: the same, a quarter turn round, for a horizontal seam', () => {
+    const [side, stacked] = [standoff({ boards: '2' }), standoff({ boards: '2-stacked' })];
+    const box = stacked.boundingBox();
+    expect(box.min.map((v) => Math.round(v * 1000) / 1000)).toEqual([-5, -15, 0]);
+    expect(box.max.map((v) => Math.round(v * 1000) / 1000)).toEqual([5, 15, 20]);
+    expect(stacked.volume()).toBeCloseTo(side.volume(), 3);
     const board = { columns: 2, rows: 4, sides: ALL_OPEN };
-    const placed = fitted(standoff({ boards: 2 }), 10, 80, 20, 90);
+    const placed = fitted(stacked, 10, 80, 20);
     expect(keep(placed.intersect(slotClearZone(engine, board, 2, INSIDE, keep))).volume()).toBeLessThan(NOTHING);
     expect(keep(placed.intersect(hookRoomZone(engine, board, 2, INSIDE, keep))).volume()).toBeLessThan(NOTHING);
   });
 });
 
-describe('makeStandoff, for 4 boards (D92, D97)', () => {
-  it('has four holes on a 20 mm square in a rounded square 30 x 30 mm, and a tunnel each way', () => {
-    const part = standoff({ boards: 4 });
+describe("makeStandoff, for 4 boards, in the slot clip's shape (D92, D97, D281)", () => {
+  it('has a post over each of four holes on a 20 mm square, joined by a square ring on the wall side', () => {
+    const part = standoff({ boards: '4' });
     const box = part.boundingBox();
     expect(box.min.map((v) => Math.round(v * 1000) / 1000)).toEqual([-15, -15, 0]);
     expect(box.max.map((v) => Math.round(v * 1000) / 1000)).toEqual([15, 15, 20]);
-    expect(part.genus()).toBe(4);
-    const outline = 30 * 30 - (4 - Math.PI) * 25 - 4 * Math.PI * 2.25 ** 2;
-    const cross = 2 * 11.2 * 30 - 11.2 ** 2; // the two tunnels, which cross in the middle
-    // its edges chamfered 1 mm (D270): a little less than the plain shape, by no more than 5 %
-    const volume = outline * 20 - cross * TUNNEL_DEPTH;
+    expect(part.genus()).toBe(5); // the ring, and a hole through each post
+    // the ring: the rounded square 30 x 30 mm round the posts, less the 10 x 10 mm square inside the bars
+    const ring = 30 * 30 - (4 - Math.PI) * 25 - 10 * 10 - 4 * HOLE;
+    const posts = 4 * (POST - HOLE);
+    expect(off(keep(part.slice(6)).area(), ring)).toBeLessThan(0.01);
+    expect(off(keep(part.slice(16)).area(), posts)).toBeLessThan(0.01);
+    const volume = ring * (20 - TUNNEL_DEPTH) + posts * TUNNEL_DEPTH;
     expect(part.volume()).toBeLessThan(volume);
     expect(part.volume() / volume).toBeGreaterThan(0.95);
   });
@@ -157,15 +167,17 @@ describe('makeStandoff, for 4 boards (D92, D97)', () => {
   it('fitted where four corners meet, either way up, leaves every slot and every hook its room', () => {
     const board = { columns: 4, rows: 4, sides: ALL_OPEN }; // four 2 x 2 boards
     for (const turn of [0, 90]) {
-      const placed = fitted(standoff({ boards: 4 }), 80, 80, 20, turn);
+      const placed = fitted(standoff({ boards: '4' }), 80, 80, 20, turn);
       expect(keep(placed.intersect(slotClearZone(engine, board, 2, INSIDE, keep))).volume()).toBeLessThan(NOTHING);
       expect(keep(placed.intersect(hookRoomZone(engine, board, 2, INSIDE, keep))).volume()).toBeLessThan(NOTHING);
       expect(keep(placed.intersect(slotClearZone(engine, board, 2, BEYOND, keep))).volume()).toBeGreaterThan(0);
     }
   });
 
-  it('exports with no degenerate facet, for 2 and 4 boards', () => {
-    for (const boards of [2, 4] as const) expect(degenerateFacets(meshOf(standoff({ boards })))).toBe(0);
+  it('exports with no degenerate facet, for 2 boards either way and 4', () => {
+    for (const boards of ['2', '2-stacked', '4'] as const) {
+      expect(degenerateFacets(meshOf(standoff({ boards })))).toBe(0);
+    }
   });
 });
 
@@ -226,37 +238,25 @@ describe("how the standoff looks (D270; the connectors' design pass, finding 5)"
     expect(degenerateFacets(meshOf(part))).toBe(0);
   });
 
-  it("blends the 2-board standoff's bridge into its posts on a long curve, within C100's margin", () => {
-    const part = standoff({ boards: 2 });
-    // 2 mm in from a post's centre, the curve stands 4.64 mm out: past the 4.4 mm bridge and the post's own 4.58
-    expect(holds(part, 3, [8, 4.6])).toBe(true);
-    expect(holds(part, 3, [8, 4.7])).toBe(false);
-    expect(holds(part, 3, [-8, -4.6])).toBe(true);
+  it("chamfers the bar's top 1 mm in the hooks' room, and each post's top at the board (D281)", () => {
+    const part = standoff({ boards: '2' });
+    // the bar's top is 8 mm under the board, at 12 mm: a quarter of a millimetre under it, 0.75 mm in each side
+    expect(holds(part, 11.75, [0, 4.2])).toBe(true);
+    expect(holds(part, 11.75, [0, 4.3])).toBe(false);
+    expect(holds(part, 12.25, [0, 0])).toBe(false); // nothing of the bar above it, between the posts
+    // a quarter of a millimetre under the board, each post 8.5 mm across, its hole 5
+    expect(widths(part, 19.75)).toEqual([5, 5, 8.5, 8.5]);
     expect(degenerateFacets(meshOf(part))).toBe(0);
   });
 
-  it('builds for every screw from 3 to 5 mm and every number of boards, its blends fitted to the posts', () => {
-    for (const boards of [1, 2, 4] as const) {
+  it('builds for every screw from 3 to 5 mm and every choice of boards', () => {
+    const genus = { '1': 1, '2': 2, '2-stacked': 2, '4': 5 } as const;
+    for (const boards of ['1', '2', '2-stacked', '4'] as const) {
       for (const screwMm of [3, 3.5, 4, 4.5, 5]) {
         const part = standoff({ boards, screwMm });
-        expect(part.genus()).toBe(boards);
+        expect(part.genus()).toBe(genus[boards]);
         expect(degenerateFacets(meshOf(part))).toBe(0);
       }
     }
-  });
-
-  it("chamfers its tunnels' edges at the board 1 mm; their floors' corners stay square, in the hooks' room", () => {
-    const part = standoff({ boards: 4 });
-    const block = (z: number) => {
-      const found = bounds(part, z).filter(([minX, maxX, minY]) => minX > 0 && minY > 0 && maxX - minX > 6);
-      expect(found).toHaveLength(1);
-      return found[0]?.[0] ?? 0;
-    };
-    // the tunnel's floor is 8 mm under the board, at 12 mm: half a millimetre above it, the tunnel as wide as ever
-    expect(block(12.5)).toBeCloseTo(5.6, 2);
-    expect(block(15)).toBeCloseTo(5.6, 2);
-    // a quarter of a millimetre under the board, the tunnel 0.75 mm wider each side
-    expect(block(19.75)).toBeCloseTo(6.35, 2);
-    expect(degenerateFacets(meshOf(part))).toBe(0);
   });
 });

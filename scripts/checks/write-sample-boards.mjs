@@ -100,6 +100,11 @@ const samples = [
   },
   { name: 'standoff-1-40mm-screw-5', type: boardType('standoff'), values: { boards: '1', heightMm: 40, screwMm: 5 } },
   { name: 'standoff-2-12mm-screw-3', type: boardType('standoff'), values: { boards: '2', heightMm: 12, screwMm: 3 } },
+  {
+    name: 'standoff-2-stacked-25mm-screw-4.5',
+    type: boardType('standoff'),
+    values: { boards: '2-stacked', heightMm: 25, screwMm: 4.5 },
+  },
   { name: 'standoff-4-20mm-screw-5', type: boardType('standoff'), values: { boards: '4', heightMm: 20, screwMm: 5 } },
   {
     name: 'slot-clip-2-stacked-no-fixing',

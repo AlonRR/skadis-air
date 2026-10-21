@@ -400,10 +400,13 @@ describe('the standoff connector type (D91 to D94)', () => {
     expect(screw(standoff)).toBe(screw(boardType('solid')));
   });
 
-  it('comes for 2 and 4 boards (D92), and prints as built, wall face down, so its tunnel needs no bridging', () => {
+  it('comes for 2 boards either way and 4 (D92, D281), and prints as built, wall face down, the posts on top', () => {
+    const choice = standoff.settings.find((s) => s.key === 'boards');
+    expect(choice?.kind === 'choice' ? choice.options.map((o) => o.value) : []).toEqual(['1', '2', '2-stacked', '4']);
     for (const [boards, genus] of [
       ['2', 2],
-      ['4', 4],
+      ['2-stacked', 2],
+      ['4', 5],
     ] as const) {
       const built = buildBoard(engine, standoff, { boards, heightMm: 20, screwMm: 4 });
       if (!built.ok) throw new Error(built.problem);
@@ -430,6 +433,7 @@ describe('the standoff connector type (D91 to D94)', () => {
     expect(name({})).toBe('skadis-standoff-1-board-15mm.stl');
     expect(name({ heightMm: 25, screwMm: 3.5 })).toBe('skadis-standoff-1-board-25mm-screw-3.5mm.stl');
     expect(name({ boards: '4' })).toBe('skadis-standoff-4-boards-15mm.stl');
+    expect(name({ boards: '2-stacked' })).toBe('skadis-standoff-2-boards-stacked-15mm.stl');
   });
 });
 

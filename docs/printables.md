@@ -41,7 +41,8 @@ The files here are ready to print at the page's starting values. For any other s
 - **Fit coupon**: four slots at four clearances, told apart by dots. Print it first and try a hook in each, to find
   the clearance your printer needs; the page takes it as "Slot clearance" under Advanced.
 - **Standoff** for 1, 2 and 4 boards: a 15 mm spacer between the boards and the wall (IKEA's are 20 mm), so hooks have
-  room behind the board. The shared ones leave a tunnel along the seam, so a hook fits there too.
+  room behind the board. The shared ones are a post at each screw hole, joined only on the wall side, as the slot clip
+  is, so a hook fits next to the boards there too; the one for 2 boards serves boards one above the other turned.
 - **Slot clip** for 2 boards side by side, 2 one above the other, and 4 where their corners meet: it joins boards
   behind a seam by pegs in their slots, so it needs no screw holes. It is as deep as the gap behind the boards, so
   the wall holds it on; ribs on the pegs press into the slots.

@@ -21,6 +21,7 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- The standoff has the slot clip's shape and choices: a post over each screw hole, joined only on the wall side by a bar as wide, a square ring for 4 boards; for 1 board, 2 side by side, 2 one above the other, or 4. In the library, `StandoffParams.boards` takes `'1'`, `'2'`, `'2-stacked'` or `'4'`, in place of 1, 2 or 4.
 - A board's outer edge is chamfered 1 mm, the connectors' chamfer: at the front all round, so two boards meet in a V groove, and at the back where a side is closed. Its own standoffs are chamfered 1 mm at the wall, their screw holes 0.5 mm.
 - A board's round head is sunk in a counterbore, flush with the front, where the board leaves 1 mm under it; it stood on the front before. The screw note counts the board under the head.
 - The standoff and the slot clip have a 1 mm chamfer round their outside edges, the wall face's included, and a

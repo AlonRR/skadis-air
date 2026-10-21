@@ -1,18 +1,17 @@
-// The standoff connector as a type on the page (D91 to D94, D97): listed under "Connectors", for 1, 2 or
-// 4 boards, its height on the main form and the screw size, shared with the board, under Advanced. It
-// prints as built, wall face down, so the tunnel of a shared one opens upward and needs no bridging (C101).
+// The standoff connector as a type on the page (D91 to D94, D97, D281): listed under "Connectors", for 1 board, 2
+// side by side or one above the other, or 4, as the slot clip; its height on the main form and the screw size, shared
+// with the board, under Advanced. It prints as built, wall face down, the posts of a shared one on top (C101).
 import { MOUNTING_DEFAULTS, SCREW_SIZE_SETTING } from '../mounting.js';
 import { defineSettings } from '../settings.js';
-import { makeStandoff, standoffParams, standoffScrews, STANDOFF_DEFAULTS } from '../standoff.js';
+import { makeStandoff, standoffParams, standoffScrews, STANDOFF_DEFAULTS, type StandoffParams } from '../standoff.js';
 import { defineBoardType } from './define.js';
 
+/** How the file name says which boards it serves. */
+const BOARDS_IN_NAME = { '1': '1-board', '2': '2-boards', '2-stacked': '2-boards-stacked', '4': '4-boards' } as const;
+
 /** The standoff's settings as the library takes them, for its build and its screws alike. */
-function paramsOf(v: { boards: string; heightMm: number; screwMm: number }) {
-  return standoffParams({
-    boards: v.boards === '4' ? 4 : v.boards === '2' ? 2 : 1,
-    heightMm: v.heightMm,
-    screwMm: v.screwMm,
-  });
+function paramsOf(v: Pick<StandoffParams, 'boards' | 'heightMm' | 'screwMm'>) {
+  return standoffParams({ boards: v.boards, heightMm: v.heightMm, screwMm: v.screwMm });
 }
 
 export const STANDOFF = defineBoardType({
@@ -28,11 +27,14 @@ export const STANDOFF = defineBoardType({
       label: 'For',
       options: [
         { value: '1', label: '1 board, at a corner' },
-        { value: '2', label: '2 boards, where two corners meet' },
+        { value: '2', label: '2 boards, side by side' },
+        { value: '2-stacked', label: '2 boards, one above the other' },
         { value: '4', label: '4 boards, where four corners meet' },
       ],
-      default: '1',
-      help: 'For 2 or 4 boards, a tunnel next to the boards, along the seam, leaves hooks their room.',
+      default: STANDOFF_DEFAULTS.boards,
+      help:
+        "A post goes behind each board's corner screw hole. For 2 or 4 boards the posts are joined on the wall " +
+        'side only, so hooks keep their room next to the boards.',
     },
     {
       kind: 'number',
@@ -49,7 +51,7 @@ export const STANDOFF = defineBoardType({
   ]),
   build: (engine, v) => makeStandoff(engine, paramsOf(v)),
   label: (v) =>
-    `${v.boards}-board${v.boards === '1' ? '' : 's'}-${v.heightMm}mm` +
+    `${BOARDS_IN_NAME[v.boards]}-${v.heightMm}mm` +
     (v.screwMm === MOUNTING_DEFAULTS.screwMm ? '' : `-screw-${v.screwMm}mm`),
   screws: (v) => standoffScrews(paramsOf(v)),
 });
