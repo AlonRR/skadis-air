@@ -172,8 +172,8 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D264 | **Each screw's length is stated from its stack**: beside the screw size, the plastic the screw passes through, "20 mm of board and standoff, plus your wall plug", from the part's own settings, and in the Printables text (the owner's "264 a"; the connectors' design pass, finding 1). Built on the page 19 Oct 2026 (C272); the Printables text with the draft's files |  19 Oct 2026 |
 | D265 | **The slot clip takes a screw head choice**, countersunk as before or a round head sunk in a counterbore, countersunk the start ("265 a"; finding 2). Built 19 Oct 2026 (C271) | 19 Oct 2026 |
 | D266 | **A 0.8 mm chamfer round each peg's root**, inside the slot's 1 mm back chamfer; the draft's three clip files made again ("266 a"; finding 3). Built 19 Oct 2026 | 19 Oct 2026 |
-| D267 | **The standoff's hole is tight for 2 mm at the board face**, about 0.85 times the screw, so the screw pushed through the board carries it; tried first on a 1-board coupon ("267 a"; finding 4) | 19 Oct 2026 |
-| T268 | **The ribbed clip gets looser** (relayed, 19 Oct 2026: "it gets looser"), and two ideas are to be tried: "adding small nubs/dots near the top after the lip of the board, assume that it will be a tight squeeze to push the peg in and that the plastic will deform but bounce back"; and "adjusting the clip version we tried previously, to be 2 parts, the clip and a slot fill to stop the clip from changing. The fill is between the clip tungs": the lip clip's split peg locked by a fill in its slit, as an expansion (push-pin) rivet is | 19 Oct 2026 |
+| D267 | **The standoff's hole is tight for 2 mm at the board face**, about 0.85 times the screw, so the screw pushed through the board carries it; tried first on a 1-board coupon ("267 a"; finding 4). Built for the trial 21 Oct 2026, not on the page (C273); T274 tries it | 19 Oct 2026 |
+| T268 | **The ribbed clip gets looser** (relayed, 19 Oct 2026: "it gets looser"), and two ideas are to be tried: "adding small nubs/dots near the top after the lip of the board, assume that it will be a tight squeeze to push the peg in and that the plastic will deform but bounce back"; and "adjusting the clip version we tried previously, to be 2 parts, the clip and a slot fill to stop the clip from changing. The fill is between the clip tungs": the lip clip's split peg locked by a fill in its slit, as an expansion (push-pin) rivet is. Both built for the trial 21 Oct 2026, not on the page (C273); T274 tries them | 19 Oct 2026 |
 | A269 | **The repository's `CLAUDE.md` names two connector types**, not five ("269 y") | 19 Oct 2026 |
 | D270 | **Finding 5 is fixed on every connector and standoff** (the owner: "fix finding 5, I did mean for you to look at all the connectors and standoffs"), and **the boards get the same design pass** ("also look into the skadis boards") | 19 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
@@ -203,6 +203,14 @@ Building next: the release and the Printables page (`printables-entry`, D211 to 
 `v0.2.0` was released and the Printables files and pictures made (16 Oct 2026); a code review then found 15
 faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`. The draft on Printables is
 made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
+
+- **T274** Print the trial grips and try them: `.check/test-print/skadis-trial-grips.stl` (`node
+  scripts/test-print/write-trial-plate.mjs grips`; 9 parts, about 2 h 36 min). For the slot clip (T268): the three
+  ribbed clips with nubs, told apart by 1, 2 or 3 dots under the bar (nubs 0.35, 0.45 and 0.55 mm proud), and the
+  clip with split, lipped pegs, with a fill pushed into each peg's slit from the board's front once the clip is home.
+  Say for each whether it went in, held, and how it came out, and whether the fills stayed in. For the standoff
+  (D267): the three 1-board standoffs, 1, 2 or 3 dots on their wall face (pilots 3.2, 3.4 and 3.6 mm): push a 4 mm
+  screw through a board's corner hole into each, and say which one the screw carries without stripping.
 
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.

@@ -6,7 +6,9 @@ import type { CrossSection, Manifold } from 'manifold-3d';
 import { afterAll, describe, expect, it } from 'vitest';
 import { makeSolidBoard, solidBoardParams } from '../src/board-solid.js';
 import { loadEngine } from '../src/engine.js';
-import { keyholeClipDepth, makeSlotClip, slotClipParams, type SlotClipParams } from '../src/slot-clip.js';
+import { boardType } from '../src/board-types/index.js';
+import { defaultValues } from '../src/settings.js';
+import { keyholeClipDepth, makeSlotClip, makeSlotFill, slotClipParams, type SlotClipParams } from '../src/slot-clip.js';
 import { ALL_OPEN } from '../src/slots.js';
 import { meshOf } from '../src/stl.js';
 import { degenerateFacets } from './facets.js';
@@ -90,13 +92,12 @@ describe('slotClipParams: the starting values', () => {
     expect(slotClipParams({ pegClearanceMm: 3.5 }).pegClearanceMm).toBe(3.5);
   });
 
-  it('has no grip to choose: the pegs grip by ribs alone, as the lip did not hold (T193, D261)', () => {
+  it("has no grip on the page: ribs alone, as the lip did not hold (T193, D261); the lip is the trial's (T268)", () => {
     expect(slotClipParams({})).not.toHaveProperty('grip');
-    // a lip asked for, as a caller written for the lip would, is not a clip with no ribs
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a value the type no longer has
-    const asked = { grip: 'lip' } as Partial<SlotClipParams>;
-    expect(degenerateFacets(meshOf(clip(asked)))).toBe(0);
-    expect(keep(clip(asked).slice(22)).toPolygons()).toHaveLength(2); // whole pegs, not split ones
+    // a lip kept in a browser from before is not passed on by the page's clip, which builds whole pegs
+    const type = boardType('slot-clip');
+    const built = keep(type.build(engine, { ...defaultValues(type.settings), depthMm: 20, grip: 'lip' }));
+    expect(keep(built.slice(22)).toPolygons()).toHaveLength(2);
   });
 
   it('refuses a screw whose countersink is wider than the gap between the seam and a post (C199)', () => {
@@ -275,6 +276,49 @@ describe('the ribs (D194, C199)', () => {
     // control: 0.3 mm more clearance takes the ribs 0.05 mm off the slot's wall, and nothing is in the board
     const eased = keep(fitted(clip({ pegClearanceMm: 0.7 }), 80, 20).intersect(boards(SIDE_BY_SIDE)));
     expect(eased.volume()).toBeLessThan(NOTHING);
+  });
+});
+
+describe("the trial's grips (T268)", () => {
+  /** The left peg's outline at a height: [minX, maxX]. */
+  const peg = (part: Manifold, z: number) =>
+    only(outlines(keep(part.slice(z))), ([minX, maxX]) => maxX < -15 && maxX - minX < 8);
+
+  it("puts nubs on the ribbed pegs, wholly past the slot's straight wall, in its front chamfer", () => {
+    const nubbed = clip({ nubMm: 0.45 });
+    // 4.5 mm into the board, 0.5 mm into its front chamfer: the peg and two nubs a side, 0.45 mm proud
+    const at = peg(nubbed, 24.5);
+    expect(at[1] - at[0]).toBeCloseTo(4.8 + 2 * 0.45, 1);
+    // at the chamfer's foot, 4 mm in, no nub yet: the peg and its ribs, as without them
+    const foot = peg(nubbed, 24);
+    expect(foot[1] - foot[0]).toBeCloseTo(4.8 + 2 * 0.3, 1);
+    expect(degenerateFacets(meshOf(nubbed))).toBe(0);
+  });
+
+  it('splits each peg for the lip, the halves in a pocket, as before D261', () => {
+    const lipped = clip({ grip: 'lip' });
+    expect(keep(lipped.slice(22)).toPolygons()).toHaveLength(4); // two halves a peg
+    expect(degenerateFacets(meshOf(lipped))).toBe(0);
+  });
+
+  it("makes a fill for the lip clip's slit, 1.2 mm thick, from the pocket's floor to the board's front", () => {
+    const p = slotClipParams({ grip: 'lip', depthMm: 20 });
+    const fill = keep(makeSlotFill(engine, p));
+    const { min, max } = fill.boundingBox();
+    expect(round([max[0] - min[0], max[1] - min[1], max[2] - min[2]])).toEqual([1.2, 14.8, 11]);
+    expect(round([(min[0] + max[0]) / 2, min[2], max[2]])).toEqual([-20, 14, 25]);
+    // in its slit it spreads the halves 0.1 mm each way: a little of it in the clip, all of it in the slot
+    const spread = keep(fill.intersect(clip({ grip: 'lip' }))).volume();
+    expect(spread).toBeGreaterThan(0.5);
+    expect(spread).toBeLessThan(2 * 0.1 * 14.8 * 11);
+    expect(keep(fitted(fill, 80, 20).intersect(boards(SIDE_BY_SIDE))).volume()).toBeLessThan(NOTHING);
+    expect(degenerateFacets(meshOf(fill))).toBe(0);
+  });
+
+  it('refuses nubs on a split peg, and a fill for a clip without one', () => {
+    expect(() => slotClipParams({ grip: 'lip', nubMm: 0.3 })).toThrow(RangeError);
+    expect(() => slotClipParams({ nubMm: -0.1 })).toThrow(RangeError);
+    expect(() => makeSlotFill(engine, slotClipParams({}))).toThrow(RangeError);
   });
 });
 

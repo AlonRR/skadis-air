@@ -23,6 +23,9 @@ export interface StandoffParams {
   boards: StandoffBoards; // how many boards' corners it serves (D92)
   heightMm: number; // how far it holds the boards off the wall (D94)
   screwMm: number; // the screw's diameter (D76)
+  /** For the trial only (D267): the top 2 mm of each hole this wide, so the screw pushed through the board cuts into
+   * it and carries the standoff; none unless given. */
+  pilotMm?: number;
 }
 
 export const STANDOFF_DEFAULTS: StandoffParams = { boards: 1, heightMm: STANDOFF_DEFAULT_MM, screwMm: 4 };
@@ -35,6 +38,8 @@ export const TUNNEL_WIDTH_MM =
   SLOT_WIDTH_MM + SOLID_BOARD_DEFAULTS.slotClearanceMm + 2 * (SOLID_BOARD_DEFAULTS.slotChamferMm + ROOM_MARGIN_MM);
 /** The least bridge behind a tunnel, on the wall side (C99). */
 const MIN_BRIDGE_MM = 4;
+/** How far down from the board face a tight section reaches (D267). */
+const PILOT_MM = 2;
 
 /** A standoff's settings, with the starting values filled in, refused when they cannot make one. */
 export function standoffParams(given: Partial<StandoffParams>): StandoffParams {
@@ -42,6 +47,9 @@ export function standoffParams(given: Partial<StandoffParams>): StandoffParams {
   if (![1, 2, 4].includes(p.boards)) throw new RangeError('A standoff serves 1, 2 or 4 boards');
   if (!(p.heightMm > 0)) throw new RangeError('The standoff must be more than 0 mm tall');
   if (!(p.screwMm > 0)) throw new RangeError('The screw size must be more than 0 mm');
+  if (p.pilotMm !== undefined && !(p.pilotMm > 0 && p.pilotMm < screwHole(p.screwMm).holeMm)) {
+    throw new RangeError("A standoff's tight section must be narrower than its hole");
+  }
   const least = TUNNEL_DEPTH_MM + MIN_BRIDGE_MM;
   if (p.boards > 1 && p.heightMm < least) {
     throw new RangeError(
@@ -81,6 +89,23 @@ function holeCentres(boards: StandoffBoards): [number, number][] {
   ];
 }
 
+/** The standoff's body with a tight section at the top of each hole (D267): the hole, then the pilot for 2 mm. */
+function piloted(engine: Engine, p: StandoffParams, outline: CrossSection): Manifold {
+  const { CrossSection, Manifold } = engine;
+  const { holeMm } = screwHole(p.screwMm);
+  const centres = holeCentres(p.boards);
+  const tight = Math.min(PILOT_MM, p.heightMm);
+  const shafts = centres.map(([x, y]) => new CrossSection([circle(x, y, holeMm)]));
+  const pilots = centres.map(([x, y]) => new CrossSection([circle(x, y, p.pilotMm ?? holeMm)]));
+  const low = shafts.map((s) => s.extrude(p.heightMm - tight + 1).translate([0, 0, -1]));
+  const high = pilots.map((s) => s.extrude(tight + 2).translate([0, 0, p.heightMm - tight - 0.5]));
+  const cut = Manifold.union([...low, ...high]);
+  const whole = outline.extrude(p.heightMm);
+  const body = whole.subtract(cut);
+  for (const m of [...shafts, ...pilots, ...low, ...high, cut, whole]) m.delete();
+  return body;
+}
+
 export function makeStandoff(engine: Engine, params: StandoffParams): Manifold {
   const { CrossSection, Manifold } = engine;
   const p = standoffParams(params);
@@ -101,7 +126,8 @@ export function makeStandoff(engine: Engine, params: StandoffParams): Manifold {
       ? keep(CrossSection.union([...posts, keep(CrossSection.square([2 * SCREW_INSET_MM, bridge], true))]))
       : keep(CrossSection.hull(posts));
   const holes = keep(CrossSection.union(centres.map(([x, y]) => keep(new CrossSection([circle(x, y, holeMm)])))));
-  const body = keep(outline.subtract(holes)).extrude(p.heightMm);
+  const body =
+    p.pilotMm === undefined ? keep(outline.subtract(holes)).extrude(p.heightMm) : piloted(engine, p, outline);
   for (const s of sections) s.delete();
   if (p.boards === 1) return body;
 

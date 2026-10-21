@@ -164,3 +164,32 @@ describe('makeStandoff, for 4 boards (D92, D97)', () => {
     for (const boards of [2, 4] as const) expect(degenerateFacets(meshOf(standoff({ boards })))).toBe(0);
   });
 });
+
+describe("a tight section at the standoff's board face, for the trial (D267)", () => {
+  const width = (part: Manifold, z: number) => {
+    const holes = keep(part.slice(z))
+      .toPolygons()
+      .filter((ring) => {
+        const xs = ring.map(([x]) => x);
+        return Math.max(...xs) - Math.min(...xs) < 6;
+      });
+    expect(holes).toHaveLength(1);
+    const xs = (holes[0] ?? []).map(([x]) => x);
+    return Math.max(...xs) - Math.min(...xs);
+  };
+
+  it('narrows the hole to the pilot asked for, for its top 2 mm only, so the screw cuts into it there', () => {
+    const tight = standoff({ pilotMm: 3.4 });
+    expect(width(tight, 19)).toBeCloseTo(3.4, 1);
+    expect(width(tight, 17)).toBeCloseTo(4.5, 1);
+    // control: without one, the hole is 4.5 mm all the way
+    expect(width(standoff(), 19)).toBeCloseTo(4.5, 1);
+    expect(degenerateFacets(meshOf(tight))).toBe(0);
+  });
+
+  it('has none unless asked, and refuses one no narrower than the hole', () => {
+    expect(standoffParams({})).not.toHaveProperty('pilotMm');
+    expect(() => standoffParams({ pilotMm: 4.5 })).toThrow(RangeError);
+    expect(() => standoffParams({ pilotMm: 0 })).toThrow(RangeError);
+  });
+});
