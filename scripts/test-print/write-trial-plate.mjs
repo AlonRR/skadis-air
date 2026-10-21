@@ -104,7 +104,7 @@ const grips = [
   ...PILOTS.map((pilotMm, k) => ({
     name: `standoff, pilot ${pilotMm.toFixed(2)} mm (D267)`,
     solid: dotted(
-      makeStandoff(engine, standoffParams({ boards: 1, pilotMm })),
+      makeStandoff(engine, standoffParams({ boards: '1', pilotMm })),
       [90, 130, 170].map((a) => [3.6 * Math.cos((a * Math.PI) / 180), 3.6 * Math.sin((a * Math.PI) / 180)]),
       k + 1,
       1,

@@ -218,8 +218,11 @@ Building next: the release and the Printables page (`printables-entry`, D211 to 
 faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`. The draft on Printables is
 made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
 
-- **T274** Print the trial grips and try them: `.check/test-print/skadis-trial-grips.stl` (`node
-  scripts/test-print/write-trial-plate.mjs grips`; 9 parts, about 2 h 36 min). For the slot clip (T268): the three
+- **T274** Print the trial grips and try them: on one plate with T151's board, sliced for PETG Basic (the owner,
+  21 Oct 2026: "274 151 create a plate for petg basic"): `.check/test-print/skadis-trial-grips-keyhole.stl` and its
+  `.gcode` (`FILAMENT="PETG Basic NPETG087-ZX" npm run trial-plate`; 10 parts, 4 h 40 min, 50.55 g, 240 °C and a
+  75 °C bed); or alone, `.check/test-print/skadis-trial-grips.stl` (`node scripts/test-print/write-trial-plate.mjs
+  grips`; 9 parts). For the slot clip (T268): the three
   ribbed clips with nubs, told apart by 1, 2 or 3 dots under the bar (nubs 0.35, 0.45 and 0.55 mm proud), and the
   clip with split, lipped pegs, with a fill pushed into each peg's slit from the board's front once the clip is home.
   Say for each whether it went in, held, and how it came out, and whether the fills stayed in. For the standoff
@@ -244,8 +247,8 @@ clip (b4).
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 
-- **T151** Print the 80 x 80 mm lightened board on keyholes and hang it: `.check/test-print/skadis-trial-keyhole.stl`
-  (`node scripts/test-print/write-trial-plate.mjs keyhole`; `skadis-lightened-80x80-keyholes-standoffs-15mm.stl` from
+- **T151** Print the 80 x 80 mm lightened board on keyholes and hang it: on T274's PETG Basic plate (21 Oct 2026), or
+  alone, `.check/test-print/skadis-trial-keyhole.stl` (`node scripts/test-print/write-trial-plate.mjs keyhole`; `skadis-lightened-80x80-keyholes-standoffs-15mm.stl` from
   the page), sent again 17 Oct 2026 for the owner to slice. The keyholes are in the top standoffs' wall faces,
   behind the top corner slots, with a hook's room behind those slots (D235, D244); printed face down, their 1.5 mm
   lips are a ledge about 2.25 mm wide over the head's channel; the bottom standoffs stand behind the bottom corner

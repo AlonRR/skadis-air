@@ -13,7 +13,9 @@
 #   2. the secrets job downloaded releases/latest/download/..., which is a 404 - release assets
 #      carry the version in their names. And `curl` without -f saved the 404 page.
 #   3. pre-commit was installed with pip; the house rule is uv.
-# and 4, this repo's: the npm workspace's checks and the browser test run in CI.
+# and 4, this repo's: the npm workspace's checks and the browser test run in CI; and 6, the print plates' and the
+# Printables files' scripts write their files there, which nothing else ran (C299: the trial plate broke unseen when
+# the standoff's boards became text, D281).
 # And .github/workflows/pages.yml (D103, 15 Oct 2026), to actionlint and to 5, its rules: it is
 # skipped while the repository is private, runs only after a checks run on main succeeded, builds
 # the latest stable release on main whose commit the checks passed, not main's newest commit (A291,
@@ -68,6 +70,7 @@ checks() {
     check "4. it runs npm run $script" present "run:[[:space:]]+npm run $script\$"
   done
   check "4. it runs the unit tests of every workspace" present 'run:[[:space:]]+npm test --workspaces$'
+  check "6. it writes the print plates and the Printables files" present 'run:[[:space:]]+npm run plates$'
   return "$failed"
 }
 
@@ -126,6 +129,7 @@ control "an unversioned betterleaks download" "$REAL" checks 's|releases/downloa
 control "curl without -f" "$REAL" checks 's/curl -fsSLO/curl -sSLO/'
 control "pre-commit through pip" "$REAL" checks 's|run: uvx pre-commit@4.6.2 run|run: pip install pre-commit \&\& pre-commit run|'
 control "no browser test" "$REAL" checks '/run: npm run test:browser -w skadis-air-web/d'
+control "no print plates" "$REAL" checks '/run: npm run plates/d'
 control "pages deployed while private" "$PAGES" pages_checks 's/!github\.event\.repository\.private &&//'
 control "pages deployed after failed checks" "$PAGES" pages_checks "s/ || github.event.workflow_run.conclusion == 'success'//"
 control "pages built from main's newest commit" "$PAGES" pages_checks '/git checkout --detach/d'

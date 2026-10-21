@@ -118,6 +118,8 @@ jobs:
         run: npm test --workspaces
       - name: Build the page
         run: npm run build -w skadis-air-web
+      - name: Write the print plates and the Printables files (C299; their slicer check stays local)
+        run: npm run plates
       - name: Install the Chromium this Playwright version expects
         working-directory: web
         run: npx playwright install --with-deps chromium

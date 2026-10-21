@@ -143,7 +143,8 @@ many files, as the hooks see only what is staged. The kit's commit-msg hook begi
 commit 226de1d (12 Oct 2026); before that pre-commit could not start it on Windows and every commit was refused.
 
 **CI** (A102, 14 Oct 2026): `.github/workflows/checks.yml` runs every pre-commit hook, the identity of every pushed
-commit, a full-history secret scan, and the npm workspace's checks with the browser test, on each push to GitHub.
+commit, a full-history secret scan, and the npm workspace's checks with the browser test, and writes the print plates
+and the Printables files without slicing them (`npm run plates`, C299), on each push to GitHub.
 It reads the repository variables `EXPECT_EMAIL` and `EXPECT_NAME`. A red run is a problem to fix, not a gate that
 held: a direct push to `main` is not stopped by it. `npm run check:stl` stays local.
 `.github/workflows/pages.yml` (D103, 15 Oct 2026) publishes the page on GitHub Pages after a green checks run on `main`,
@@ -187,7 +188,8 @@ review copies them into `docs/figures/`. A scene seen from the back sets `camera
 and checks it; `node scripts/test-print/write-test-plate.mjs slotClearanceMm=0.3` reprints the pair at another
 clearance. `npm run trial-plate` writes the keyhole board's trial and the trial grips (T151, T268, D267) the same way,
 `.check/test-print/skadis-trial-grips-keyhole.stl` (C234, C273); `node scripts/test-print/write-trial-plate.mjs grips`
-writes the slot clip's and the standoff's trial grips alone, and `keyhole` the keyhole board alone. `FILAMENT="<preset>" bash scripts/checks/stl-check.sh <stl>` slices a
+writes the slot clip's and the standoff's trial grips alone, and `keyhole` the keyhole board alone; `npm run plates`
+writes all three sets, test plate, trial plate and Printables files, unsliced, as CI does (C299). `FILAMENT="<preset>" bash scripts/checks/stl-check.sh <stl>` slices a
 plate with another filament, the G-code beside it. Slice it with the filament that is **loaded**, which only the
 owner knows: ask, never assume the STL check's ASA. One STL, because PrusaSlicer's command line slices each input
 file on its own (two files and one `-o` left only the second, and `--merge` wrote nothing, 14 Oct 2026). The owner's printer is driven by the 3d-printing
