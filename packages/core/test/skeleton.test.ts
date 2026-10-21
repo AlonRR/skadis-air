@@ -140,6 +140,12 @@ describe('makeSkeletonBoard (D146, D147, D161)', () => {
     expect(holds(2.5, 0.4)).toBe(false);
   });
 
+  it('keeps no point a straight wall does not need, so its file is no larger than its shape asks', () => {
+    const b = skeleton();
+    const simpler = keep(b.simplify(1e-6));
+    expect(simpler.numTri()).toBe(b.numTri());
+  });
+
   it('keeps its screw pads full depth', () => {
     const pads = keep(
       new engine.CrossSection(

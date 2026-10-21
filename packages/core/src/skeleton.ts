@@ -252,5 +252,10 @@ export function makeSkeletonBoard(
   mounting: MountingParams,
 ): Manifold {
   const cuts = bothCuts(mountingCuts(mounting, board), skeletonCuts(board, p, mountingPads(mounting, board)));
-  return withoutHollows(engine, makeSolidBoard(engine, board, cuts));
+  const made = withoutHollows(engine, makeSolidBoard(engine, board, cuts));
+  // without the points the pockets' rings leave on straight walls, where a member's side stands upright between two
+  // of its bends: 191 344 facets to 149 028 for a 240 x 200 mm board, the solid itself unchanged (D278)
+  const simple = made.simplify(1e-6);
+  made.delete();
+  return simple;
 }
