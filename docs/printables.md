@@ -3,7 +3,8 @@
 The text of the model page on Printables, kept here so it changes with the code (D81, D211 to D214). Saved as a
 draft, model 1880460, on 17 Oct 2026 (T216): the 13 files, the 7 pictures, this text (its slot clip files and
 picture made again on 19 Oct 2026, A254; its standoff and slot clip files, their pictures and the page's
-picture again on 21 Oct 2026, with the screws' line, D264, D266, D270); the contest is not chosen on the
+picture again on 21 Oct 2026, with the screws' line, D264, D266, D270; and again that day, after D276 to D281, its ten
+board, coupon and standoff files, all seven pictures and the standoff's line); the contest is not chosen on the
 model's form, and its question whether AI was used is answered "Yes — AI-assisted creation" (D236, 18 Oct 2026).
 The page is entered in the Designer Challenge: Pegboard Wall Organizers (entries close on 22 Oct 2026 at 23:59 UTC). Its files
 come from `npm run printables`, which writes them into `.check/printables/` from the release and checks each one;

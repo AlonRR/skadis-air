@@ -221,6 +221,32 @@ made in the owner's browser, once it is connected again (T219, done 17 Oct 2026)
 
 The boards' design pass (21 Oct 2026), against the same practices as the connectors':
 [`research/2026-10-21-boards-design-pass.md`](research/2026-10-21-boards-design-pass.md), a figure for each finding.
+Its answers are built (D276 to D279, D281; C283 to C286), and the Printables draft brought to them on 21 Oct 2026: its
+ten board, coupon and standoff files, all seven pictures in their order, and the standoff's line, saved as a draft
+and checked after a reload. D282's seams between the slots raise the three questions below
+([figure](figures/between-slots.svg), drawn by `scripts/figures/between-slots.py`).
+
+- **D287** The design system's `v0.7.0` (relayed 21 Oct 2026; tag on `3d07f0a`): beside the sidebar the plan bar and
+  the status bar keep one row, the plan's sentence cut to two lines beside the button's short label and the hints
+  cut short, both whole for a screen reader; a short screen goes side by side from one height derived from the
+  tokens, phones held sideways from 800 x 360 among them. Four tokens leave `tokens.css`; this page's own CSS reads
+  none of them (checked), so adopting it is copying two files, with the screenshots compared and the tests run.
+  Recommended: (a) adopt it now; (b) stay on `v0.6.0`.
+- **D288** How a side between the slots is laid (D282). Recommended: (a) only an open side moves, 10 mm right of or
+  above the grid line it ran through, so seams fall between slots and closed sides stay as now, the last slots'
+  ends 12.4 mm from the top and bottom edges; a board with one side of a pair open and the other closed is 10 mm
+  larger or smaller that way, and a wall's panels add up to its size; (b) the whole slot pattern 10 mm across and
+  up, every side between slots, sizes unchanged, and the slots 2.4 mm from the top and bottom edges, closed ones
+  too (the figure, top right).
+- **D289** What fixes a board at a corner whose side runs between slots: a screw 10 mm in from both edges lands on
+  a slot, and the hooks' rooms leave a standoff room only 1 mm off the edge (the figure, bottom left).
+  Recommended: (a) no corner screw there; keyholes on standoffs and lock screws as now, each standoff behind the
+  nearest slot that keeps it inside the board; (b) the screw where a standoff clears every slot and hook, 1 mm off
+  the edge; (c) nothing at such a corner.
+- **D290** Joining boards where they meet between slots: the slot clip's pegs go 20 mm each side of a seam, and
+  such a seam has no slot there (the figure, bottom right). Recommended: (a) a clip with a peg in the nearest slot
+  each side, 10 mm from the seam and a row apart, its bar on the diagonal; (b) pegs in one row, 30 mm one side and
+  10 mm the other; (c) no clip at such a seam, each board held by its own fixing.
 
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
