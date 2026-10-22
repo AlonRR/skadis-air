@@ -13,7 +13,30 @@ it out of every contest**: on 22 Oct 2026 the model page's Contests button liste
 Challenge: Pegboard Wall Organizers among them, with "This model cannot be added to the contest. According to the
 rules, only non-AI-generated models can be entered." (Q309), so the page is in none. Its files
 come from `npm run printables`, which writes them into `.check/printables/` from the release and checks each one;
-its pictures from `scripts/printables/write-images.mjs`, run against the built page while it is served. The owner adds photos of printed parts and publishes it.
+the picture of the page from `scripts/printables/write-images.mjs`, run against the built page while it is served, and
+the others from `scripts/printables/write-gallery.mjs` (the owner, 22 Oct 2026: "add images of features and board types
+to the printables page, use a better img for the main image", then "use a gifs also"). The owner adds photos of
+printed parts and publishes it.
+
+## Pictures
+
+In this order, the first the cover; each part the library's own, the feature a picture is about in orange, under a
+title in the page's font (`node scripts/printables/write-gallery.mjs .check/printables-gallery`, after `npm run build
+-w skadis-air`; ffmpeg makes the GIFs):
+
+| Picture | What it shows |
+| --- | --- |
+| `cover.png` | Skådis Air: the solid, lightened and skeleton boards side by side, as they hang |
+| `board-types.png` | The three kinds at 240 x 200 mm, each one's plastic against the solid board's, measured |
+| `turntable.gif` | The lightened board on keyholes, turning: the pockets, then the standoffs behind |
+| `skeleton-ibeam.png` | The skeleton board cut open: each member an I-beam |
+| `wall-together.gif` | Four panels of a wall coming together, half a slot each side of a seam |
+| `between-slots.png` | Four boards meeting between the slots, every slot whole |
+| `mounting.png` | From the back: keyholes on standoffs, and lock screws |
+| `slot-clip-in.gif` | A slot clip going into the slots behind a seam |
+| `standoffs.png` | The standoffs for 1, 2 and 4 boards |
+| `fit-coupon.png` | The fit coupon |
+| `page.png` | The page, from `write-images.mjs` |
 
 ## Settings
 

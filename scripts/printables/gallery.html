@@ -1,0 +1,132 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Alon A. Rabinowitz -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+<!-- A picture for the Printables page: the scene named by ?id= from scenes.json, drawn with three.js under its title, -->
+<!-- in the page's own font and colours (write-gallery.mjs). window.draw(k) draws an animation's frame k. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Printables picture</title>
+    <style>
+      @font-face { font-family: 'FiraCode Nerd Font'; src: url('/fonts/FiraCodeNF.woff2') format('woff2'); font-weight: 400; }
+      @font-face { font-family: 'FiraCode Nerd Font'; src: url('/fonts/FiraCodeNF-Bold.woff2') format('woff2'); font-weight: 700; }
+      body { margin: 0; font-family: 'FiraCode Nerd Font', monospace; color: #16222c; }
+      #fig { position: relative; width: 1600px; height: 1200px; overflow: hidden;
+        background: linear-gradient(180deg, #f8fafb 0%, #e8ecef 100%); }
+      #head { position: absolute; left: 72px; right: 72px; top: 56px; }
+      #head h1 { font-size: 54px; font-weight: 700; margin: 0 0 14px; letter-spacing: -0.5px; }
+      #head p { font-size: 27px; line-height: 1.4; margin: 0; color: #5a6773; }
+      #head .bar { width: 72px; height: 8px; border-radius: 4px; background: #f76707; margin-bottom: 26px; }
+      #fig.hero #head h1 { font-size: 96px; margin-bottom: 18px; }
+      #fig.hero #head p { font-size: 32px; }
+      #foot { position: absolute; right: 72px; bottom: 34px; font-size: 22px; color: #5a6773; }
+      #foot b { color: #16222c; }
+      canvas, #labels { position: absolute; left: 0; top: 0; }
+      #labels text { font: 700 26px 'FiraCode Nerd Font', monospace; fill: #16222c; paint-order: stroke; stroke: #fff;
+        stroke-width: 7px; stroke-linejoin: round; }
+      #labels text.tag { font-size: 30px; }
+    </style>
+    <script type="importmap">{ "imports": { "three": "/three/build/three.module.js" } }</script>
+  </head>
+  <body>
+    <div id="fig">
+      <div id="head"><div class="bar"></div><h1 id="title"></h1><p id="caption"></p></div>
+      <svg id="labels" width="1600" height="1200"></svg>
+      <div id="foot"><b>Skådis Air</b> · alonrr.github.io/skadis-air</div>
+    </div>
+    <script type="module">
+      import * as THREE from 'three';
+      await document.fonts.load("700 54px 'FiraCode Nerd Font'");
+      await document.fonts.load("400 27px 'FiraCode Nerd Font'");
+      const id = new URLSearchParams(location.search).get('id');
+      const scenes = await (await fetch('scenes.json')).json();
+      const s = scenes.find((x) => x.id === id);
+      document.getElementById('title').textContent = s.title;
+      if (s.hero) document.getElementById('fig').classList.add('hero');
+      document.getElementById('caption').innerHTML = s.caption.join('<br>');
+      const [W, H] = [1600, 1200];
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(1);
+      renderer.setSize(W, H);
+      renderer.setClearColor(0x000000, 0);
+      document.getElementById('fig').insertBefore(renderer.domElement, document.getElementById('labels'));
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(s.camera.fov, W / H, 1, 4000);
+      // the scene is drawn in the part below the title: its middle moved down by `drop` of the picture's height
+      camera.setViewOffset(W, H, 0, -H * (s.camera.drop ?? 0.08), W, H);
+      // lit from the camera, so a scene that turns stays lit from the front
+      scene.add(camera);
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f96, 1.5));
+      const key = new THREE.DirectionalLight(0xffffff, 1.5);
+      key.position.set(-0.6, 0.8, 1);
+      camera.add(key);
+      const fill = new THREE.DirectionalLight(0xffffff, 0.45);
+      fill.position.set(0.8, -0.2, 0.6);
+      camera.add(fill);
+      const groups = new Map();
+      for (const m of s.meshes) {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute(m.positions, 3));
+        g.setIndex(m.triangles);
+        const flat = g.toNonIndexed();
+        flat.computeVertexNormals();
+        const material = new THREE.MeshStandardMaterial({
+          color: m.color, roughness: 0.7, metalness: 0, flatShading: true,
+          polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
+        });
+        const holder = new THREE.Group();
+        holder.add(new THREE.Mesh(flat, material));
+        if (m.edges) {
+          const dark = new THREE.Color(m.color).multiplyScalar(0.5);
+          holder.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, 28), new THREE.LineBasicMaterial({ color: dark })));
+        }
+        scene.add(holder);
+        const name = m.group ?? '';
+        groups.set(name, [...(groups.get(name) ?? []), holder]);
+      }
+      const svg = document.getElementById('labels');
+      const ns = 'http://www.w3.org/2000/svg';
+      const add = (tag, attrs) => {
+        const e = document.createElementNS(ns, tag);
+        for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+        svg.append(e);
+        return e;
+      };
+      const place = (c) => {
+        camera.up.set(...(c.up ?? [0, 1, 0]));
+        camera.position.set(...c.position);
+        camera.lookAt(...c.target);
+        camera.updateMatrixWorld();
+      };
+      // a label: a dot on the part and its name beside it, joined by a line; a tag: a name centred on its point
+      const label = (l) => {
+        const v = new THREE.Vector3(...l.at).project(camera);
+        const [x, y] = [((v.x + 1) / 2) * W, ((1 - v.y) / 2) * H];
+        if (l.tag) {
+          add('text', { x, y, 'text-anchor': 'middle', class: 'tag' }).textContent = l.text;
+          return;
+        }
+        const [tx, ty] = [x + l.dx, y + l.dy];
+        add('line', { x1: x, y1: y, x2: tx, y2: ty, stroke: '#16222c', 'stroke-width': 2.5 });
+        add('circle', { cx: x, cy: y, r: 8, fill: '#f76707', stroke: '#fff', 'stroke-width': 3 });
+        const text = add('text', { x: tx + (l.dx < 0 ? -10 : 10), y: ty + 9, 'text-anchor': l.dx < 0 ? 'end' : 'start' });
+        text.textContent = l.text;
+      };
+      // frame k of an animation: its camera, and how far each named group has moved
+      window.draw = (k) => {
+        const f = s.frames?.[k] ?? {};
+        place(f.camera ?? s.camera);
+        for (const [name, holders] of groups) {
+          const at = f.groups?.[name] ?? [0, 0, 0];
+          for (const h of holders) h.position.set(...at);
+        }
+        renderer.render(scene, camera);
+        svg.replaceChildren();
+        if (!s.frames) for (const l of s.labels ?? []) label(l);
+      };
+      window.frames = s.frames?.length ?? 0;
+      window.draw(0);
+      window.done = true;
+    </script>
+  </body>
+</html>
