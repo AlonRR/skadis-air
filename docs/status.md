@@ -191,6 +191,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | A296 | **`v0.4.0` is released** ("296 y"), so the site gets the open sides between the slots, lock screws alone and the slot clip for such seams (D282, D288 to D290; C293 to C295); a minor version, as it adds choices. Each new choice starts off, so the Printables draft's files stay what `v0.3.0` makes. Released 21 Oct 2026 | 21 Oct 2026 |
 | A297 | **The Printables draft's description gets a line for each new choice** ("297 y"), once the site shows them: open sides between the slots, lock screws alone and the clip for such seams; saved as a draft only and checked after a reload. Waits on T298, the browser | 21 Oct 2026 |
 | A300 | **The PETG Basic trial plate is uploaded and started** ("300 upload and start the print"): T274's grips and T151's keyhole board, `skadis-trial-petg.gcode`, uploaded by the 3d-printing repository's `upload_resume.py` to a READY printer and started by its `start_print.py`, which read back PRINTING, 4 h 40 min left, at 16:40 UTC on 21 Oct 2026 | 21 Oct 2026 |
+| D301 | **The design system's `v0.8.0` is adopted, and released as `v0.4.1`** ("301 a"): each icon sits on its label's capitals, 0.5 to 1.75 px higher, and in the dark theme the board drawn in "Sides" is darker than the panel round it. Built 22 Oct 2026 (`web/public/design-system/README.md` has the screenshots' count) | 22 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -220,7 +221,10 @@ faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`
 made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
 
 - **T274** Print the trial grips and try them: on one plate with T151's board, sliced for PETG Basic (the owner,
-  21 Oct 2026: "274 151 create a plate for petg basic"), printing since 16:40 UTC that day (A300): `.check/test-print/skadis-trial-grips-keyhole.stl` and its
+  21 Oct 2026: "274 151 create a plate for petg basic"), started at 16:40 UTC that day (A300). That print failed
+  on 22 Oct 2026 near Z 3.2 mm: one of the three 1-board standoffs came off the bed, and the owner took it and
+  T151's board off the plate, then dropped the rescue ("forget about rescuing the print"); it is to be printed
+  again: `.check/test-print/skadis-trial-grips-keyhole.stl` and its
   `.gcode` (`FILAMENT="PETG Basic NPETG087-ZX" npm run trial-plate`; 10 parts, 4 h 40 min, 50.55 g, 240 °C and a
   75 °C bed); or alone, `.check/test-print/skadis-trial-grips.stl` (`node scripts/test-print/write-trial-plate.mjs
   grips`; 9 parts). For the slot clip (T268): the three
@@ -245,15 +249,6 @@ clip (b4).
   draft from there, saved as a draft and checked after a reload. `v0.4.0` reached the page at 15:47 UTC on 21 Oct
   2026 with Chrome closed, and the draft is edited only through the owner's browser, signed in there.
 
-- **D301** Adopt the design system's `v0.8.0` (released 21 Oct 2026; see *Inputs from outside this repository*)?
-  Two of its changes show on this page: the icons sit on their labels' capitals, 0.5 to 1.75 px higher than now (the
-  theme toggle, the view's buttons and the download button); and in the dark theme the board drawn in each Sides
-  control is darker than the panel round it, where now it is the lightest surface. Moving to it is copying
-  `tokens.css` and `components/bundle.css` from the tag (`scripts/design-system/copy-design-system.sh`), then the
-  checks and the screenshots; the page's own code and CSS need nothing. The live page is built from the latest
-  release (A291), so it shows there only with one. (a) adopt it and release `v0.4.1`; (b) adopt it, live with the
-  next release; (c) stay on `v0.7.0`. Recommended: (a), two fixes for a copy and the checks.
-
 - **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
   least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
 
@@ -266,11 +261,24 @@ clip (b4).
   and level, their heads standing about 5 mm out (the underside 1.5 to 1.8 mm off the wall); push the board on with
   the heads through the wide entries, let it drop, and put an IKEA hook in each corner slot and in another.
   Then say how the lips printed, whether the heads went in and held behind them, whether the board sat snug and
-  straight, whether the hooks sat straight, and what it weighs.
+  straight, whether the hooks sat straight, and what it weighs. Before it is printed again, D306: the owner, 22 Oct
+  2026, "the width of the keyhole section is wider than the light frame".
+
+- **D306** (T151) The keyhole standoff is wider than the lightened board's frame round its slot: 15.0 x 24.0 mm,
+  where the rim round the slot is 13.2 x 23.2 mm, so from 1 mm behind the board it stands 0.9 mm past the frame each
+  side, about 24 mm² of each standoff with no plate in front of it (measured 22 Oct 2026 by slicing T151's board from
+  the library). All four standoffs are that shape, on the skeleton board too. (a) The standoff takes the frame's
+  outline, 13.2 x 23.2 mm at the 3 mm rim, flush with it, so every slot still looks alike: 2.1 mm of wall beside the
+  keyhole (now 3) and 1.5 mm beside the hook's room (now 2.4), and a little less plastic; with a rim set under about
+  2.7 mm (Advanced), too narrow to hold it, the frame grows round those four slots only. (b) The frame widens round
+  every slot on a board on keyholes or lock screws, a 4.4 mm rim for 3, holding the standoff with 0.5 mm to spare;
+  every slot alike, but 11 % more plastic at 80 x 80 mm and 21 % at 200 x 200 mm. (c) A wider frame only round the
+  four slots with standoffs, 17 x 26 mm, the look D250 (f) took out. Recommended: (a), the fix as the owner put it,
+  D250 (f)'s look kept, no added plastic; T151's hanging then tries the thinner walls.
 
 ## Inputs from outside this repository
 
-- The design system's v0.8.0 (D301), from its session on 21 Oct 2026 (relayed; the tag checked on GitHub): the tag
+- The design system's v0.8.0 (D301, adopted 22 Oct 2026), from its session on 21 Oct 2026 (relayed; the tag checked on GitHub): the tag
   `v0.8.0` on `47a45a2`, released 18:31 UTC; its CI on `main` passed 8 of 8 jobs (relayed). It answers its owner's
   A86 and D87 to D91: `--icon-rise` raises `.ws-ic` onto its label's capitals; the dark `surface-sunken` is
   `#0c1217`, darker than `surface`; the More… menu's items line up and a pick closes it; one ellipsis character in

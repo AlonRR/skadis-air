@@ -2,8 +2,8 @@
 
 Copied unchanged from the owner's shared design system,
 [`AlonRR/printable-parts-design-system`](https://github.com/AlonRR/printable-parts-design-system),
-at its tag `v0.7.0`, commit `3d07f0a` (21 Oct 2026, D287; first copied at `v0.1.0`, D111, then `v0.2.0`,
-`v0.3.0`, `v0.5.0` with v0.4.0's steps, D202, `v0.5.1`, D250 e, and `v0.6.0`, D259). The design system's history was rewritten
+at its tag `v0.8.0`, commit `47a45a2` (22 Oct 2026, D301; first copied at `v0.1.0`, D111, then `v0.2.0`,
+`v0.3.0`, `v0.5.0` with v0.4.0's steps, D202, `v0.5.1`, D250 e, `v0.6.0`, D259, and `v0.7.0`, D287). The design system's history was rewritten
 on 19 Oct 2026 to remove a hostname: the tags before `v0.6.0` that this page copied, `v0.5.0` and `v0.5.1`, are
 no longer on GitHub, only on the owner's own forge.
 
@@ -48,6 +48,10 @@ and 844 x 390), the same page shot twice came out identical (13 of 13), and afte
 its release says: beside the sidebar, in every wide state and the short one, the download button reads "Download",
 its format kept for a screen reader; and 844 x 390 went side by side where it was stacked, its hints cut short.
 The phone upright, the phone sideways at 750 px, still stacked, and the 320 px screen did not change.
+For `v0.8.0`, the same page shot twice came out identical (13 of 13), and after the copy all 13 changed, each
+only round its icons, raised onto their labels' capitals (the theme toggle, the view's buttons and the download
+button). The dark board in "Sides", which no state shows, was checked by itself: `#0c1217` on its fieldset's
+`#17212a`, darker than the panel where it was the lightest surface.
 
 Licensing is
 in `REUSE.toml`: the stylesheets are MPL-2.0 like the rest of the page, the fonts

@@ -6,6 +6,12 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The design system's v0.8.0: each icon sits on its label's capitals, 0.5 to 1.75 px higher than before (the theme
+  toggle, the view's buttons and the download button), and in the dark theme the board drawn in "Sides" is darker
+  than the panel round it.
+
 ## [0.4.0] - 2026-10-21
 
 ### Added

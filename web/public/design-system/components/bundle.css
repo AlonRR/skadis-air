@@ -109,6 +109,8 @@
 /* Open, the More… and View… menus end at the screen's bottom edge and scroll inside: at 400 % zoom on a
   16:9 screen (320 × 180) neither fits under its button (D41) */
 .ws-header__actions:popover-open{position:fixed;inset:var(--header-h) var(--space-2) auto auto;margin:0;display:flex;flex-direction:column;align-items:stretch;gap:var(--space-2);padding:var(--space-2);color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border);border-radius:var(--radius-md);box-sizing:border-box;max-height:calc(100svh - var(--header-h) - var(--space-2));overflow:auto}
+/* Its items line up, their icons in one column, as a list reads (A86): a button centres its label */
+.ws-header__actions:popover-open > .ws-btn{justify-content:flex-start}
 /* Below breakpoint-header the header tightens to fit a phone: the name in the legend size, smaller gaps;
   narrower still, the name is cut short (its full text stays in the page) rather than the header scroll.
   breakpoint-header is wider than the layout's breakpoint, so the whole row waits until it fits
@@ -242,8 +244,10 @@
 .ws-input,.ws-status,.ws-plan__line,code,.ws-num{font-variant-ligatures:none;font-feature-settings:"calt" 0,"zero" 1}
 /* The browser sets these in its own monospace; keep the one family */
 code,kbd,samp,pre{font-family:var(--font-ui)}
-/* Nerd Font icons: decoration beside a text label, always aria-hidden */
-.ws-ic{display:inline-block;margin-right:var(--icon-gap);font-style:normal;line-height:1}
+/* Nerd Font icons: decoration beside a text label, always aria-hidden. Raised onto the label's capitals:
+  the font centres its icons 88.5 units under them (D88). top, not translate: Chromium moves the icon a
+  whole pixel for top and half a pixel for translate, which leaves it 1.25px low (measured) */
+.ws-ic{display:inline-block;margin-right:var(--icon-gap);font-style:normal;line-height:1;position:relative;top:calc(-1 * var(--icon-rise))}
 
 .ws-sides{display:grid;grid-template-columns:auto var(--sides-w) auto;grid-template-rows:auto var(--sides-h) auto;gap:var(--space-2);align-items:center;justify-items:center;width:max-content;margin-top:var(--space-2)}
 .ws-sides__board{grid-area:2/2;width:100%;height:100%;background:var(--surface-sunken);border:var(--line) dashed var(--border-strong);border-radius:var(--radius-sm)}
