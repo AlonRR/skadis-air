@@ -16,7 +16,8 @@ come from `npm run printables`, which writes them into `.check/printables/` from
 the picture of the page from `scripts/printables/write-images.mjs`, run against the built page while it is served, and
 the others from `scripts/printables/write-gallery.mjs` (the owner, 22 Oct 2026: "add images of features and board types
 to the printables page, use a better img for the main image", then "use a gifs also"). The owner adds photos of
-printed parts and publishes it.
+printed parts. Published at 18:46:30 UTC on 22 Oct 2026, from the owner's browser; since then a save in
+the editor is "Publish now", which changes the public page.
 
 ## Pictures
 

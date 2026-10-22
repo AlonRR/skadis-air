@@ -248,8 +248,9 @@ day (C293 to C295), is drawn from the library in [`figures/between-built/`](figu
 `node scripts/figures/shoot.mjs between-built`: the seams (b1), the standoffs (b2), lock screws alone (b3) and the
 clip (b4).
 
-- **T215** Photos of printed parts for the Printables page, before it is published. The contest that asked for them
-  will not take the page while it is labelled AI-assisted (Q309).
+- **T215** Photos of printed parts for the Printables page. The contest that asked for them will not take the page
+  while it is labelled AI-assisted (Q309). The page is public since 18:46:30 UTC on 22 Oct 2026 (Printables' API,
+  `datePublished`), published from the owner's browser after Q309, not by an agent (inferred: no agent click there).
 
 - **T151** Print the 80 x 80 mm lightened board on keyholes and hang it: on T274's PETG Basic plate (21 Oct 2026), or
   alone, `.check/test-print/skadis-trial-keyhole.stl` (`node scripts/test-print/write-trial-plate.mjs keyhole`; `skadis-lightened-80x80-keyholes-standoffs-15mm.stl` from
