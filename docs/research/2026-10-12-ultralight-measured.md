@@ -15,7 +15,7 @@ repository. Every figure below was read from the mesh with scad-tools' `stl-insp
 | Size | 120.0 × 120.0 × 10.0 mm; the board from z = −2.5 to 2.5 (5 mm thick), four corner standoffs above it to z = 7.5 |
 | Corner standoffs | four, about 10 mm across with a hole of about 4 mm, 5 mm tall (from their cross-section: 313.6 mm² for the four, 50.2 mm² of it hole); the 40 × 40 tile has two, at (9, 20) and (31, 20) |
 | Edges | **cut through slot centres**: half a slot every 40 mm down each side and along the top and bottom, and a quarter slot at each corner (cuts 1 mm inside the left and bottom edges find the openings centred at 0, 40, 80 and 120 mm). The 40 × 40 tile is one whole slot in its centre and a quarter slot at each corner. Tiles of the same pattern side by side make whole slots, with no slot missing |
-| Edge beams | hollow: a closed channel inside each, about 1.7 mm high (z −0.66 to 1.06) |
+| Edge beams | an open C-section, not hollow: the mesh is one connected shell with no closed void; at x = 60 mm the bottom edge is a plain 0.8 mm web at the outer face through the core (corrected 22 Oct 2026; this row said "a closed channel") |
 | Volume | 16 551 mm³ (standoffs included) |
 | Mesh | 28 028 facets; the STL's header says OpenSCAD wrote it |
 
@@ -61,8 +61,8 @@ hook's back tab. **Every member is the same I-beam**, the rims and the edges as 
   printed either face down, the face above overhangs no more than a 45 degree wall.
 - **The rim** runs 2.8 mm out from the slot's straight wall, 5.3 mm from the slot's centre line, at both
   faces, so where the slot is chamfered the rim seen at the face is 1.8 mm.
-- **0.8 mm is two lines of a 0.4 mm nozzle**, so a slicer prints each core as two perimeters with no gap
-  between them (inferred).
+- **0.8 mm is two lines of a 0.4 mm nozzle.** Sliced (22 Oct 2026, below), each core prints as external perimeter
+  only, read as one loop, with no infill (this line said two perimeters, inferred).
 
 [`figures/ibeam-profile.png`](../figures/ibeam-profile.png) draws the web's profile beside a full-depth 3 mm
 web.
@@ -78,9 +78,36 @@ web.
   [`skadis-standard.md`](../skadis-standard.md)). That fits the users' reports of tight connectors
   and of accessories that go in and do not come out. The generator's slots need a clearance
   setting, settled by the fit coupon.
-- **Sag at 10 % infill**: the flanges are about 1.25 mm deep and the webs thin, so most of the board
-  prints as walls; how stiff it is depends on the wall count as much as on the shape. Beam depth,
+- **Sag at 10 % infill**: the flanges are about 1.25 mm deep and the webs thin, so the board prints with no
+  sparse infill at all (measured 22 Oct 2026: the same grams at 15 % and 100 %); how stiff it is depends on the
+  wall count as much as on the shape. Beam depth,
   web width and wall count are the settings to expose.
 - **Room behind the board**: the corner standoffs are 5 mm tall, so the board stands 5 mm off the
   wall against IKEA's 20 mm. That fits the report of an accessory that could only be fitted after
   loosening the board from the wall. The standoff height must be a setting, defaulting to 20 mm.
+
+## Sliced, against the same lattice with full-depth members (22 Oct 2026)
+
+Measured by an agent at the owner's request ("run an analysis of the original skeleton frame to see if it has the
+same issue"), after our skeleton board was found to print heavier than our lightened one (D313, D314). The 120 x
+120 mm STL downloaded again for it, and the parametric rebuild's 3 x 3 tile (printables.com/model/1812712,
+`skadis-ultra-light-parametric-3x3.stl`, 2 042 884 bytes, CC BY-NC-SA), measured only, not in this repository. Its
+standoffs and the four screw bosses through the board cut away; the "full-depth equivalent" is the board's projected
+footprint extruded through 5 mm, which holds every section of the original. PETG Basic, PrusaSlicer, the 0.2 mm
+QUALITY @MK3 profile (2 perimeters, 15 % cubic infill, 5 top and 4 bottom solid layers, Arachne):
+
+| Part | Model | Sliced, 15 % infill | Sliced, 100 % |
+|---|---|---|---|
+| The original | 14.00 cm³ | **17.82 g**, 2 h 6 min | 17.82 g |
+| Its full-depth equivalent | 24.35 cm³ | **24.24 g**, 2 h 33 min | 31.59 g |
+| Our lightened board, 120 mm, no screw holes | 27.30 cm³ | **25.68 g**, 2 h 34 min | 35.38 g |
+| Our skeleton board, 120 mm, no screw holes | 21.59 cm³ | **26.23 g**, 2 h 46 min | 27.94 g |
+
+**The original's I-beam prints 26.5 % lighter than its full-depth equivalent; ours prints 2.1 % heavier than our
+lightened board.** The original is 57.5 % of its equivalent's volume, while a full-depth lattice at 15 % infill
+prints at about 78 % of its solid mass, so the deeper cut wins; ours is 79 % of the lightened board's volume, above
+the lightened board's 74 %, so it loses. From the G-code: the original's 0.8 mm core layers print as external
+perimeter only, 58 % cheaper per layer than the equivalent's, its core 28 % of the equivalent's section where ours
+is 51 %; and our skeleton's sloping taper layers print as solid infill, 9.44 g of it against the lightened board's
+6.21 g at 120 mm (the shell rules acting on sloping faces, inferred). The parametric rebuild slices the same, 23.8 %
+lighter than its equivalent.
