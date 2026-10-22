@@ -99,6 +99,27 @@
           animation: none;
         }
       }
+      /* A setting's label and the "i" button that shows and hides its help (C317), until the design system has
+        one: a quiet Button a control's size, 36 px or 44 px on a touch screen, pulled into its label's one line
+        (control-pad-y above and below) so the row grows no taller, its icon alone and centred. */
+      .label-row {
+        display: flex;
+        align-items: center;
+      }
+      div.label-row {
+        margin-top: var(--space-3);
+      }
+      .label-row > .ws-label {
+        margin-top: 0;
+      }
+      .info {
+        min-width: var(--control-h);
+        padding: 0 var(--space-2);
+        margin-block: calc(-1 * var(--control-pad-y));
+      }
+      .info > .ws-ic {
+        margin-right: 0;
+      }
     </style>
   </head>
   <body class="ws-page">

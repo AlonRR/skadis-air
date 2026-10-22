@@ -3,6 +3,7 @@
 // the four side toggles round a drawing of the board (Sides, D46), and the fine settings folded under
 // "Advanced" (Disclosure, D48). Nothing here names a board type or a setting. A form starts from the values
 // given, the choices kept in the browser (D250 g), and each number field steps by arrows beside it (D250 c).
+// Each setting's help is folded behind an "i" button beside its label (C317).
 import { readTypedNumber } from 'skadis-air';
 import type { AnyBoardType, ChoiceSetting, NumberSetting, Problem, Setting, SidesSetting } from 'skadis-air';
 
@@ -65,6 +66,42 @@ const errorLine = (key: string) =>
 const warningBox = (key: string) =>
   element('div', { class: 'ws-notice ws-notice--warning', 'data-testid': `warning-${key}`, 'aria-live': 'polite' });
 const note = (text: string, id?: string) => element('p', { class: 'ws-note', ...(id ? { id } : {}) }, text);
+
+/**
+ * A setting's help, folded behind an "i" button beside its label (C317), so the form is not a wall of notes: the
+ * design system's toggle for a section that cannot be a `details` (its Disclosure, v0.6.0), a Button saying in
+ * `aria-expanded` whether the help shows and naming it in `aria-controls`, the help `hidden` while folded. Its
+ * icon is the font's "info", named in `aria-label` as the Stepper's arrows are. The help stays the control's
+ * description while hidden, as a description may name hidden text, so a screen reader still reads it with the
+ * control. Nothing else folds: a warning, an error, a count and what the screws pass are always shown.
+ */
+function helpFor(s: Setting): { info: HTMLButtonElement; help: HTMLElement } | undefined {
+  if (s.help === undefined) return undefined;
+  const help = note(s.help, idOf(s.key, 'note'));
+  help.hidden = true;
+  const info = element('button', {
+    type: 'button',
+    class: 'ws-btn ws-btn--quiet info',
+    'aria-expanded': 'false',
+    'aria-controls': help.id,
+    'aria-label': `About ${s.label.toLowerCase()}`,
+  });
+  info.append(element('span', { class: 'ws-ic', 'aria-hidden': 'true' }, '\uea74'));
+  info.addEventListener('click', () => {
+    const open = info.getAttribute('aria-expanded') !== 'true';
+    info.setAttribute('aria-expanded', String(open));
+    help.hidden = !open;
+  });
+  return { info, help };
+}
+
+/** A label, and beside it the "i" button of the setting's help when it has one, in one row (C317). */
+function labelRow(label: HTMLElement, info: HTMLElement | undefined): HTMLElement {
+  if (info === undefined) return label;
+  const row = element('div', { class: 'label-row' });
+  row.append(label, info);
+  return row;
+}
 
 /** How many decimals a number is written with. */
 const decimals = (text: string) => (text.split('.')[1] ?? '').length;
@@ -153,7 +190,8 @@ function numberField(
   say();
   const row = element('div', { class: 'ws-stepper' });
   row.append(input, down, up);
-  field.append(label, row);
+  const folded = helpFor(s);
+  field.append(labelRow(label, folded?.info), row);
   const counted = s.count;
   if (counted !== undefined) {
     const count = element('p', { class: 'ws-note', id: idOf(s.key, 'count'), 'data-testid': `count-${s.key}` });
@@ -167,9 +205,9 @@ function numberField(
     input.addEventListener('input', update);
     field.append(count);
   }
-  if (s.help !== undefined) {
-    field.append(note(s.help, idOf(s.key, 'note')));
-    described.push(idOf(s.key, 'note'));
+  if (folded !== undefined) {
+    field.append(folded.help);
+    described.push(folded.help.id);
   }
   field.append(errorLine(s.key), warningBox(s.key));
   input.setAttribute('aria-describedby', [...described, idOf(s.key, 'error')].join(' '));
@@ -192,8 +230,14 @@ function sidesField(
   }
   const field = element('fieldset', { class: 'ws-fieldset field' });
   // The design system's Sides names each button for its side alone; the tick on a pressed one says it
-  // is closed, and the legend says so in words (C121).
-  field.append(element('legend', {}, `${s.label} (ticked = closed)`));
+  // is closed, and the legend says so in words (C121). The help's "i" button sits in the legend, beside its words,
+  // which alone name the fieldset (C317).
+  const folded = helpFor(s);
+  const legend = element('legend', folded === undefined ? {} : { class: 'label-row' });
+  const words = element('span', { id: idOf(s.key, 'legend') }, `${s.label} (ticked = closed)`);
+  legend.append(words, ...(folded === undefined ? [] : [folded.info]));
+  if (folded !== undefined) field.setAttribute('aria-labelledby', words.id);
+  field.append(legend);
   const grid = element('div', { class: 'ws-sides', role: 'group', 'aria-label': `Closed ${s.label.toLowerCase()}` });
   grid.append(element('div', { class: 'ws-sides__board', 'aria-hidden': 'true' }));
   for (const side of SIDES) {
@@ -213,11 +257,11 @@ function sidesField(
     grid.append(button);
   }
   field.append(grid);
-  if (s.help !== undefined) field.append(note(s.help, idOf(s.key, 'note')));
+  if (folded !== undefined) field.append(folded.help);
   field.append(errorLine(s.key));
   grid.setAttribute(
     'aria-describedby',
-    [...(s.help === undefined ? [] : [idOf(s.key, 'note')]), idOf(s.key, 'error')].join(' '),
+    [...(folded === undefined ? [] : [folded.help.id]), idOf(s.key, 'error')].join(' '),
   );
   return { field, read: () => ({ ...state }) };
 }
@@ -228,16 +272,17 @@ function choiceField(
   start?: unknown,
 ): { field: HTMLElement; read: () => string } {
   const field = element('div', { class: 'field' });
-  field.append(element('div', { class: 'ws-label' }, s.label));
+  const folded = helpFor(s);
+  field.append(labelRow(element('div', { class: 'ws-label' }, s.label), folded?.info));
   const chosen = typeof start === 'string' && s.options.some((o) => o.value === start) ? start : s.default;
   const group = choiceGroup(s.key, s.label, s.options, chosen);
   group.addEventListener('change', changed);
   field.append(group);
-  if (s.help !== undefined) field.append(note(s.help, idOf(s.key, 'note')));
+  if (folded !== undefined) field.append(folded.help);
   field.append(errorLine(s.key));
   group.setAttribute(
     'aria-describedby',
-    [...(s.help === undefined ? [] : [idOf(s.key, 'note')]), idOf(s.key, 'error')].join(' '),
+    [...(folded === undefined ? [] : [folded.help.id]), idOf(s.key, 'error')].join(' '),
   );
   return { field, read: () => chosenIn(group) };
 }
