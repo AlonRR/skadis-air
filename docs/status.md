@@ -250,6 +250,26 @@ day (C293 to C295), is drawn from the library in [`figures/between-built/`](figu
 `node scripts/figures/shoot.mjs between-built`: the seams (b1), the standoffs (b2), lock screws alone (b3) and the
 clip (b4).
 
+- **D313** How the board types' plastic is given. The page, the README, the Printables text and its picture give each
+  board's model volume against the solid board's (lightened 40 %, skeleton 32 %), but a slicer prints the lightened
+  board's 3 mm members as hollow boxes, two perimeters a side and 15 % infill inside, while the skeleton's thin
+  I-beams print solid. Sliced 22 Oct 2026, 200 x 200 mm, PETG Basic, PrusaSlicer's 0.2 mm QUALITY @MK3 profile:
+  solid 115.8 g, lightened 67.7 g, skeleton 69.6 g at the profile's 15 % infill (model volumes at 1.27 g/cm3: 227,
+  93 and 74 g); at 100 % infill 227.9, 94.3 and 75.6 g. The owner noticed it first ("the sliced lightened used less
+  fillamet than the skeleton version"). (a) printed grams, sliced so; (b) volumes, called so, and grams beside them;
+  (c) no skeleton. Recommended (a); waits on D314, which changes the skeleton's grams.
+
+- **D314** How the skeleton is slimmed (the owner: "the skeloton should use less, figure out how we can slim it
+  down"). Measured on trial builds, 200 x 200 mm, sliced as D313 (the lightened board 67.7 g): today's skeleton 69.6 g;
+  its core 0.8 mm alone 68.8 g, as the two 45 degree tapers meet before a rim reaches its core; **the front's flange
+  stepping straight to the core**, the back alone tapering at 45 degrees, which the board printed face down allows
+  with no overhang, 60.1 g; that and 0.4 mm flanges, 55.9 g; and a 0.9 mm core too, 53.5 g. Each built as one
+  closed body that passes the STL check. The rims then narrow to the core through the board, as the original
+  ultralight board's do (its 0.8 mm core and about 0.7 mm flanges, research/2026-10-12-ultralight-measured.md),
+  where today they keep 2.1 mm. (a) the step alone, 60.1 g; (b) the step and 0.4 mm flanges, 55.9 g; (c) the step,
+  0.4 mm flanges and a 0.9 mm core, 53.5 g, 21 % under the lightened board. Recommended: (c), then a hook-load test
+  print before it is released.
+
 - **T215** Photos of printed parts for the Printables page. The page is public since 18:46:30 UTC on 22 Oct 2026
   (Printables' API, `datePublished`), published from the owner's browser after Q309, not by an agent (inferred: no
   agent click there), and in the Designer Challenge, its AI answer then "No — fully human-made" (seen 20:01 UTC).
