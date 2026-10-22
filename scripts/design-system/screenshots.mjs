@@ -3,8 +3,10 @@
 //
 // Screenshots of the built page in the states a new version of the design system can change, for a
 // before-and-after comparison with compare-screenshots.py (D153): wide in both themes, each kind of
-// warning shown, a phone upright and sideways, a short wide screen, a 320 px screen, and the stage with no
-// WebGL. Each line it prints gives the page's width, so a page wider than its screen shows at once.
+// warning shown, a phone upright and sideways, a short wide screen, a 320 px screen, the stage with no WebGL, and a
+// change being built, wide in both themes and on a phone (C316). Each line it prints gives the page's width, so a page
+// wider than its screen shows at once. Every shot is taken with animations stopped, so a turning ring is drawn the
+// same each time.
 //
 //   npm run build -w skadis-air-web && npm run preview -w skadis-air-web -- --port 4199
 //   node scripts/design-system/screenshots.mjs http://127.0.0.1:4199/ .check/screenshots/before
@@ -39,6 +41,9 @@ const states = [
   { name: 'sideways-844', viewport: { width: 844, height: 390 } }, // a large phone's size, held sideways
   { name: 'narrow-320', viewport: { width: 320, height: 700 } },
   { name: 'no-webgl', viewport: wide, args: ['--disable-webgl', '--disable-webgl2', '--disable-3d-apis'] },
+  { name: 'wide-building', viewport: wide, building: true }, // the old part while the next is made (C316)
+  { name: 'wide-building-dark', viewport: wide, building: true, scheme: 'dark' },
+  { name: 'phone-building', device: 'iPhone 13', building: true },
 ];
 const stateOf = (page, id) =>
   page.evaluate((t) => document.querySelector(`[data-testid="${t}"]`)?.getAttribute('data-state'), id);
@@ -75,6 +80,27 @@ async function shoot(s) {
       () => document.querySelector('[data-testid="board-status"]')?.getAttribute('data-state') === 'ready',
     );
   }
+  if (s.building) {
+    // the largest skeleton board, seconds of building (C316), from the skeleton at its starting size, drawn
+    await page.locator('input[name="typeGroup"][value="board"]').check();
+    await page.locator('input[name="boardType"][value="skeleton"]').check();
+    await page.waitForFunction(
+      () => {
+        const status = document.querySelector('[data-testid="board-status"]');
+        return (
+          status?.getAttribute('data-state') === 'ready' &&
+          status.getAttribute('data-file-name') === 'skadis-skeleton-160x160.stl'
+        );
+      },
+      null,
+      { timeout: 60_000 },
+    );
+    await page.locator('input[name="widthMm"]').fill('400');
+    await page.locator('input[name="heightMm"]').fill('400');
+    await page.waitForFunction(
+      () => document.querySelector('[data-testid="board-status"]')?.getAttribute('data-state') === 'building',
+    );
+  }
   await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : null));
   if (s.show) await page.getByTestId(s.show).evaluate((el) => el.scrollIntoView({ block: 'center' }));
   await page.evaluate(async () => {
@@ -83,7 +109,12 @@ async function shoot(s) {
     await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
   });
   await page.waitForTimeout(400);
-  await page.screenshot({ path: join(out, `${s.name}.png`), fullPage: true });
+  await page.screenshot({ path: join(out, `${s.name}.png`), fullPage: true, animations: 'disabled' });
+  if (s.building) {
+    // still the old part: a shot taken after the build would show the new one, at rest
+    const status = await stateOf(page, 'board-status');
+    if (status !== 'building') throw new Error(`${s.name}: shot after the build, the status ${status}`);
+  }
   const width = await page.evaluate(() => document.documentElement.scrollWidth);
   console.log(`${s.name}: page ${width} px wide, preview ${await stateOf(page, 'preview')}`);
   await browser.close();
