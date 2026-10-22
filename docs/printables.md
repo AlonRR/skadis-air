@@ -21,7 +21,7 @@ to the printables page, use a better img for the main image", then "use a gifs a
 printed parts. Published at 18:46:30 UTC on 22 Oct 2026, from the owner's browser; since then a save in
 the editor is "Publish now", which changes the public page. The pictures and the text's GIFs below went up with one
 such save at 20:01:09 UTC that day (A310, A311), read back from Printables' API: the cover first, the eleven in order,
-the four GIFs in the text, "about 40 %"; the GIFs are served as the GIFs made, so they move. Another at 20:38:10 UTC put the turning cover first and the page tour second, the other ten after them as before (the owner's request that evening), read back the same way.
+the four GIFs in the text, "about 40 %"; the GIFs are served as the GIFs made, so they move. Another at 20:38:10 UTC put the turning cover first and the page tour second, the other ten after them as before (the owner's request that evening), read back the same way. At 21:01:37 UTC the page tour that opens on a wall took second place, read back the same way.
 
 ## Pictures
 
