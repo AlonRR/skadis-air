@@ -11,9 +11,19 @@ const COLOUR = { part: '#c3c9cf', feature: '#f76707' };
 const sides = (left, right, bottom, top) => ({ left, right, bottom, top });
 /** 0 to 1 and back to rest: an eased step, so a move starts and stops gently. */
 const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
-/** An animation's frames: `hold` still, `move` from 0 to 1, `rest` still at 1, each frame given its share t. */
-const timeline = (hold, move, rest, frame) =>
-  [...Array(hold + move + rest).keys()].map((k) => frame(ease((k - hold) / (move - 1))));
+/**
+ * A looping animation's frames, each given its share t: `hold` still at 0, `move` up to 1, `rest` still at 1, and
+ * `move` back down to 0, so its last frame runs on into its first with no jump.
+ */
+const cycle = (hold, move, rest, frame) =>
+  [
+    ...Array(hold).fill(0),
+    ...[...Array(move).keys()].map((k) => ease((k + 1) / move)),
+    ...Array(rest).fill(1),
+    ...[...Array(move).keys()].map((k) => ease(1 - (k + 1) / move)),
+  ].map(frame);
+/** A turn in this many frames: 80, three quarters of the speed of 60 at 15 frames a second (the owner's 75 %). */
+const TURN_FRAMES = 80;
 /** One part's plastic as a share of another's, in whole percent. */
 const pct = (a, b) => Math.round((100 * a.volume()) / b.volume());
 /** The board types' pictures side by side: the i-th moved right by `pitch`. */
@@ -74,8 +84,9 @@ export function build(kit) {
     const centred = board.translate([-80, -80, 5]);
     const behind = box(-90, 90, -90, 90, -40, -0.01 + 5);
     const R = 480;
-    const frames = [...Array(60).keys()].map((k) => {
-      const a = (2 * Math.PI * k) / 60;
+    // a whole turn, its last frame one step short of its first, so it loops with no jump
+    const frames = [...Array(TURN_FRAMES).keys()].map((k) => {
+      const a = (2 * Math.PI * k) / TURN_FRAMES;
       return { camera: { position: [R * Math.sin(a), 70, R * Math.cos(a)], target: [0, -2, 0], fov: 38, drop: 0.11 } };
     });
     scenes.push({
@@ -109,20 +120,27 @@ export function build(kit) {
     });
   }
 
-  // a wall of four panels, closed round the outside and open at the seams; as a still, a little apart, and as an
-  // animation, coming together
+  // a wall of six panels, three across and two up, closed round the outside and open at the seams; as a still, a
+  // little apart, and as an animation that loops, coming together and opening again
   {
-    const panel = (s) => built('solid', { widthMm: 160, heightMm: 160, sides: s });
-    const panels = [
-      ['p00', panel(sides('closed', 'open', 'closed', 'open')), [0, 0], [-1, -1]],
-      ['p10', panel(sides('open', 'closed', 'closed', 'open')), [160, 0], [1, -1]],
-      ['p01', panel(sides('closed', 'open', 'open', 'closed')), [0, 160], [-1, 1]],
-      ['p11', panel(sides('open', 'closed', 'open', 'closed')), [160, 160], [1, 1]],
+    const columns = [
+      ['closed', 'open'],
+      ['open', 'open'],
+      ['open', 'closed'],
     ];
+    const rows = [
+      ['closed', 'open'],
+      ['open', 'closed'],
+    ];
+    const panels = columns.flatMap(([left, right], i) =>
+      rows.map(([bottom, top], j) => {
+        const p = built('solid', { widthMm: 160, heightMm: 160, sides: sides(left, right, bottom, top) });
+        return [`p${i}${j}`, p, [160 * i, 160 * j], [i - 1, 2 * j - 1]];
+      }),
+    );
     const meshes = panels.map(([g, p, [x, y]], i) => (i === 0 ? feature : part)(p.translate([x, y, 0]), g));
-    const apart = (gap) =>
-      Object.fromEntries(panels.map(([g, , , [dx, dy]]) => [g, [(dx * gap) / 2, (dy * gap) / 2, 0]]));
-    const camera = { position: [90, -110, 640], target: [162, 158, 0], fov: 40 };
+    const apart = (gap) => Object.fromEntries(panels.map(([g, , , [dx, dy]]) => [g, [dx * gap, (dy * gap) / 2, 0]]));
+    const camera = { position: [150, -170, 980], target: [240, 158, 0], fov: 40 };
     const caption = [
       "A wall is split into panels that fit your printer's bed, closed round",
       'the outside; at the seams, half a slot on each side makes a whole one.',
@@ -135,15 +153,15 @@ export function build(kit) {
       camera,
       labels: [{ text: 'one panel', at: [73, 73, T], dx: -170, dy: 40 }],
       meshes: panels.map(([g, p, [x, y], [dx, dy]], i) =>
-        (i === 0 ? feature : part)(p.translate([x + dx * 7, y + dy * 7, 0]), g),
+        (i === 0 ? feature : part)(p.translate([x + dx * 14, y + dy * 7, 0]), g),
       ),
     });
     scenes.push({
       id: 'wall-together',
       title: 'Walls of any size',
       caption,
-      camera: { ...camera, position: [90, -140, 760] },
-      frames: timeline(8, 26, 16, (t) => ({ groups: apart(44 * (1 - t)) })),
+      camera,
+      frames: cycle(10, 24, 14, (t) => ({ groups: apart(36 * (1 - t)) })),
       meshes,
     });
   }
@@ -212,7 +230,7 @@ export function build(kit) {
       title: 'Slot clips join boards',
       caption,
       camera,
-      frames: timeline(8, 22, 18, (t) => ({ groups: { clip: [0, 0, -45 * (1 - t)] } })),
+      frames: cycle(8, 20, 14, (t) => ({ groups: { clip: [0, 0, -45 * (1 - t)] } })),
       meshes,
     });
   }

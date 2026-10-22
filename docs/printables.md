@@ -29,15 +29,20 @@ title in the page's font (`node scripts/printables/write-gallery.mjs .check/prin
 | --- | --- |
 | `cover.png` | Skådis Air: the solid, lightened and skeleton boards side by side, as they hang |
 | `board-types.png` | The three kinds at 240 x 200 mm, each one's plastic against the solid board's, measured |
-| `turntable.gif` | The lightened board on keyholes, turning: the pockets, then the standoffs behind |
+| `turntable.gif` | The lightened board on keyholes, turning: the pockets, then the standoffs behind (a turn in 80 frames, the owner's 75 %) |
 | `skeleton-ibeam.png` | The skeleton board cut open: each member an I-beam |
-| `wall-together.gif` | Four panels of a wall coming together, half a slot each side of a seam |
+| `wall-together.gif` | Six panels of a wall coming together and opening again, half a slot each side of a seam |
 | `between-slots.png` | Four boards meeting between the slots, every slot whole |
 | `mounting.png` | From the back: keyholes on standoffs, and lock screws |
-| `slot-clip-in.gif` | A slot clip going into the slots behind a seam |
+| `slot-clip-in.gif` | A slot clip going into the slots behind a seam, and out again |
 | `standoffs.png` | The standoffs for 1, 2 and 4 boards |
 | `fit-coupon.png` | The fit coupon |
 | `page.png` | The page, from `write-images.mjs` |
+
+Every GIF loops with no jump, its last frame running on into its first (the owner: "make all of the gifs seamless").
+The text has four more, of the page in use (`write-page-gifs.mjs`, against the built page while it is served): a
+pointer goes to each control and uses it, each frame shown for as long as it really took, and each ends as it began,
+its first and last frames the same to the pixel. Where they go is marked in the text below.
 
 ## Settings
 
@@ -59,13 +64,15 @@ Pegboards for IKEA SKÅDIS hooks, in any size: solid, lightened or skeleton, til
 **Make your own: <https://alonrr.github.io/skadis-air/>**. Choose a board, its size and its edges, see it in 3D, and
 download an STL or 3MF. Everything runs in the page; nothing is sent anywhere.
 
+_GIF `page-in-use.gif`: the page in use, a lightened board, its size, then a wall in panels._
+
 The files here are ready to print at the page's starting values. For any other size, edge or mounting, use the page.
 
 ### What is here
 
 - **Boards, 200 x 200 mm** (fits most printers) **and 240 x 200 mm** (fits a 250 x 210 mm bed), in three kinds:
   - **Solid**: a plain plate with the SKÅDIS slots.
-  - **Lightened**: open pockets between the slots, a rim kept round each slot, in about 41 % of the solid board's
+  - **Lightened**: open pockets between the slots, a rim kept round each slot, in about 40 % of the solid board's
     plastic.
   - **Skeleton**: every rim and web an I-beam, thin through the middle, in about 32 %.
 - **Fit coupon**: four slots at four clearances, told apart by dots. Print it first and try a hook in each, to find
@@ -76,6 +83,8 @@ The files here are ready to print at the page's starting values. For any other s
 - **Slot clip** for 2 boards side by side, 2 one above the other, and 4 where their corners meet: it joins boards
   behind a seam by pegs in their slots, so it needs no screw holes. It is as deep as the gap behind the boards, so
   the wall holds it on; ribs on the pegs press into the slots.
+
+_GIF `page-types.gif`: each board type on the page, then the connectors._
 
 ### On the page, beyond these files
 
@@ -91,6 +100,10 @@ The files here are ready to print at the page's starting values. For any other s
   board; every slot still takes a hook.
 - **A slot clip for seams between the slots**: a peg in the nearest slot each side, its bar on the diagonal.
 - **Printers**: 30 printers' beds by maker, or your own.
+
+_GIF `page-edges.gif`: closed sides, and open sides between the slots._
+
+_GIF `page-mounting.gif`: standoffs, keyholes seen from the back, and lock screws._
 
 ### Printing
 
