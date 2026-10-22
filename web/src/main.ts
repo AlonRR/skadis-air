@@ -108,6 +108,7 @@ function rebuild(type: AnyBoardType, form: Form): void {
   shown = 0;
   showPanels(id, [], '');
   setStatus('building', `Making the ${what}…`);
+  preview?.busy(); // the part on show is the old one until the answer is drawn (C316)
   const fileName = boardFileName(type, read.values, 'stl');
   answers.set('built', (built) => {
     if (built.kind !== 'built' || built.id !== latest) return; // a newer build replaced it

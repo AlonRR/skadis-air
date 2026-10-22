@@ -64,6 +64,9 @@ export interface Preview {
   /** Names the drawing and the stage round it for assistive technology: what is in them, in words ("The wall in
    * 3D"). */
   name(label: string): void;
+  /** Marks the view busy, a new part being made for it, until the next `show` draws it or empties the view: the
+   * page's stylesheet then dims the part on show under a turning ring (C316). */
+  busy(): void;
 }
 
 function webglAvailable(): boolean {
@@ -85,7 +88,7 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
     container.dataset['state'] = 'unavailable';
     say('The 3D preview needs WebGL, which this browser has switched off. Everything else works.');
     if (reset) reset.hidden = true;
-    return { show: () => {}, name: () => {} };
+    return { show: () => {}, name: () => {}, busy: () => {} }; // no part on show to dim (C316)
   }
 
   // preserveDrawingBuffer keeps the last drawn image readable, for the browser test; drawing only on
@@ -299,6 +302,10 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
   let framedFor = '';
   container.dataset['state'] = 'loading';
   say('Preparing the preview…');
+  // Busy on the view, not on the stage round it, which holds the status line: a screen reader may hold back what
+  // changes inside a busy element, and the status line is the announcement (C316). The first part is being made.
+  const busy = () => container.setAttribute('aria-busy', 'true');
+  busy();
 
   const stage = container.closest('.ws-stage');
   return {
@@ -306,7 +313,9 @@ export function mountPreview(container: HTMLElement, reset: HTMLButtonElement | 
       canvas.setAttribute('aria-label', label);
       stage?.setAttribute('aria-label', label);
     },
+    busy,
     show(mesh, framing, wallReply) {
+      container.removeAttribute('aria-busy'); // drawn, emptied or failed: the wait is over
       if (board) {
         if (wall) wall.dispose();
         else disposeScene(board);
