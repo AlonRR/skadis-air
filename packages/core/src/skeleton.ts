@@ -3,7 +3,8 @@
 // lightened board's at both faces for FLANGE_MM, and narrow through the board, to its core: from the back's flange
 // it narrows at 45 degrees, and behind the front's it steps straight to it. The board prints face down, the front on
 // the bed, so the step is the top of the front's flange and the 45 degrees the only overhang; a taper there, as
-// until D314, printed as solid infill on every layer for nothing. The webs, narrowing from both sides, reach the core
+// until D314, printed as solid infill (7.7 g of a 200 x 200 mm board's 0.4 to 1.5 mm from the bed, 1.6 g stepped,
+// sliced 23 Oct 2026, C315). The webs, narrowing from both sides, reach the core
 // first; a rim, from its outer side, and the band, from its inner side, reach it further in, and keep it to the
 // front's flange. Where the front's 1 mm chamfers, round each slot and along the edge, reach past the flange, a rim
 // and the band lean with the chamfer, the core's width from it, so that neither is ever narrower than its core. The
@@ -48,8 +49,8 @@ export const FLANGE_MM = 0.4;
 /** The narrowest core made: two lines of a 0.4 mm nozzle (D147). */
 export const MIN_CORE_MM = 0.8;
 /**
- * Below this a core is made, with a warning: two of the 0.45 mm lines PrusaSlicer's profiles for a 0.4 mm nozzle lay
- * (C315). It was 1.2 mm, the starting core, until D314 made the core thinner.
+ * Below this a core is made, with a warning: two of the 0.45 mm lines PrusaSlicer's MK3 profile lays for a 0.4 mm
+ * nozzle (C315). It was 1.2 mm, the starting core, until D314 made the core thinner.
  */
 export const WARN_CORE_MM = 0.9;
 /** How far the step behind the front's flange rises, mm: a quarter of a layer, so the loft's rings never meet. */
