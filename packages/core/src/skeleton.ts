@@ -1,19 +1,23 @@
-// The skeleton board (backlog item board-skeleton; D146, D147, D161, D278): the lightened board's lattice, every
-// member an I-beam, as the ultralight boards Q12 chose have them. Each rim, web and the edge band is as wide as
-// the lightened board's at both faces for 0.6 mm, then narrows at 45 degrees towards a 1.2 mm core: the webs,
-// narrowing from both sides, reach it; a rim, from one side, stays 2.1 mm through a 5 mm board (D161); the band,
-// from its inner side, reaches it at the middle. The screw pads stay full depth. Printed face down, no face
-// overhangs more than 45 degrees.
+// The skeleton board (backlog item board-skeleton; D146, D147, D161, D278, D314): the lightened board's lattice, every
+// member an I-beam, as the ultralight boards Q12 chose have them. Each rim, web and the edge band is as wide as the
+// lightened board's at both faces for FLANGE_MM, and narrow through the board, to its core: from the back's flange
+// it narrows at 45 degrees, and behind the front's it steps straight to it. The board prints face down, the front on
+// the bed, so the step is the top of the front's flange and the 45 degrees the only overhang; a taper there, as
+// until D314, printed as solid infill on every layer for nothing. The webs, narrowing from both sides, reach the core
+// first; a rim, from its outer side, and the band, from its inner side, reach it further in, and keep it to the
+// front's flange. Where the front's 1 mm chamfers, round each slot and along the edge, reach past the flange, a rim
+// and the band lean with the chamfer, the core's width from it, so that neither is ever narrower than its core. The
+// screw pads stay full depth. The flanges are 0.4 mm and the core 0.9 mm, D314's option (c).
 //
 // The members are a slab less the pockets, and the pockets are the lightened board's at both faces, their corners
 // blended (D278), each widening through the board into the members round it, edge by edge: one mesh a pocket,
-// lofted through the depths where its sides bend. Built so, a blend's taper follows its curve, and nothing meets
-// on a plane: the members built as solids and joined, as they were until D278, needed their bends staggered
-// (1 078 facets of no area, 15 Oct 2026), and pockets cut as slabs stacked through the board took 7.2 s for a
-// 160 x 160 mm board, slabs whose faces lie on each other being Manifold's slow case.
+// lofted through the depths where its sides bend. Built so, nothing meets on a plane: the members built as solids
+// and joined, as they were until D278, needed their bends staggered (1 078 facets of no area, 15 Oct 2026), and
+// pockets cut as slabs stacked through the board took 7.2 s for a 160 x 160 mm board, slabs whose faces lie on each
+// other being Manifold's slow case.
 import type { Manifold, Vec2 } from 'manifold-3d';
 import { boardFace, type BoardCuts, extentOf, makeSolidBoard, type SolidBoardParams } from './board-solid.js';
-import { grownRing } from './chamfer.js';
+import { EDGE_CHAMFER_MM, grownRing } from './chamfer.js';
 import type { Engine } from './engine.js';
 import {
   bothCuts,
@@ -31,16 +35,28 @@ import { SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import { slotPlaces } from './slots.js';
 
 export interface SkeletonParams extends LatticeParams {
-  coreMm: number; // how narrow a member gets through the middle (D147)
+  coreMm: number; // how narrow a member gets through the board (D147)
 }
 
-export const SKELETON_DEFAULTS: SkeletonParams = { ...LATTICE_DEFAULTS, coreMm: 1.2 }; // D147
-/** How deep the full width runs in from each face before the taper (D147). */
-export const FLANGE_MM = 0.6;
+/** The core starts at 0.9 mm, D314's option (c); it was 1.2 mm (D147). */
+export const SKELETON_DEFAULTS: SkeletonParams = { ...LATTICE_DEFAULTS, coreMm: 0.9 };
+/**
+ * How deep the full width runs in from each face, before the step at the front and the taper at the back: two 0.2 mm
+ * layers (D314 c); it was 0.6 mm (D147).
+ */
+export const FLANGE_MM = 0.4;
 /** The narrowest core made: two lines of a 0.4 mm nozzle (D147). */
 export const MIN_CORE_MM = 0.8;
-/** Below this a core is made, with a warning (D147). */
-export const WARN_CORE_MM = 1.2;
+/**
+ * Below this a core is made, with a warning: two of the 0.45 mm lines PrusaSlicer's profiles for a 0.4 mm nozzle lay
+ * (C315). It was 1.2 mm, the starting core, until D314 made the core thinner.
+ */
+export const WARN_CORE_MM = 0.9;
+/** How far the step behind the front's flange rises, mm: a quarter of a layer, so the loft's rings never meet. */
+const STEP_MM = 0.05;
+
+/** The flange a board this thick gets: FLANGE_MM, or half the board where it is thinner than two flanges. */
+export const flangeOf = (thicknessMm: number) => Math.min(FLANGE_MM, thicknessMm / 2);
 
 /** The skeleton asked for, with the starting values filled in, refused when it cannot be made. */
 export function skeletonParams(given: Partial<SkeletonParams>): SkeletonParams {
@@ -110,59 +126,78 @@ function alongOf(
   );
 }
 
+/** A member a pocket widens into. */
+type Member = Exclude<Along, null>;
+
 /**
- * How far into its member each edge's pocket widens at most, through the middle of the board: a web from each side
- * to its core, the band from its inner side to its core, a rim from its outer side to its core, a pad not at all. A
- * blend widens as the members it runs between do, from one to the other along its length; one from a pad not at all.
+ * The members each edge of a pocket's rings widens into: the one it runs along, or for a blend the two it runs
+ * between, the members before and after it on the ring. A blend widens no further than the less of its two would
+ * (C315): as far as either, from one to the other along its length, as until D314, a blend's wall near the web that
+ * leaves a half slot's round end widened past the web's own allowance, from both its sides, and left the web 0.84 mm
+ * through its 1.2 mm core. A blend from a pad does not widen, as the pad does not. A pocket with no edge along any
+ * member is taken to lie among them all, so it does not widen either.
  */
-function widening(
-  rings: readonly Vec2[][],
-  along: readonly Along[][],
-  p: SkeletonParams,
-  members: Members,
-): number[][] {
-  const most: Record<Exclude<Along, null>, number> = {
-    web: (members.webMm - p.coreMm) / 2,
-    rim: members.rimGrowMm - p.coreMm,
-    band: members.bandMm - p.coreMm,
-    pad: 0,
-  };
-  return rings.map((ring, r) => {
-    const kinds = along[r] ?? [];
-    const n = ring.length;
-    const known = kinds.map((k) => (k === null ? null : most[k]));
-    if (known.every((v) => v === null)) return known.map(() => most.band);
-    const lengths = ring.map((a, i) => {
-      const b = ring[(i + 1) % n] ?? a;
-      return Math.hypot(b[0] - a[0], b[1] - a[1]);
-    });
-    const starts = lengths.reduce<number[]>((s, l, i) => [...s, (s[i] ?? 0) + l], [0]);
-    const perimeter = starts[n] ?? 0;
-    const wrap = (d: number) => ((d % perimeter) + perimeter) % perimeter;
-    return known.map((v, i) => {
-      if (v !== null) return v;
+function membersOf(along: readonly Along[][]): Member[][][] {
+  return along.map((kinds) => {
+    if (kinds.every((k) => k === null)) return kinds.map((): Member[] => ['web', 'rim', 'band', 'pad']);
+    const n = kinds.length;
+    return kinds.map((k, i): Member[] => {
+      if (k !== null) return [k];
       let [before, after] = [i, i];
       do before = (before - 1 + n) % n;
-      while (known[before] === null);
+      while (kinds[before] === null);
       do after = (after + 1) % n;
-      while (known[after] === null);
-      // from the end of the edge before to the start of the edge after, by where this edge's middle lies
-      const from = (starts[before] ?? 0) + (lengths[before] ?? 0);
-      const span = wrap((starts[after] ?? 0) - from) || perimeter;
-      const k = wrap((starts[i] ?? 0) + (lengths[i] ?? 0) / 2 - from) / span;
-      // a blend from a pad is the pad's, full depth: it leaves the pad tangent, and any widening would cut into it
-      if (kinds[before] === 'pad' || kinds[after] === 'pad') return 0;
-      const [a, b] = [known[before] ?? 0, known[after] ?? 0];
-      return a + (b - a) * Math.min(1, k);
+      while (kinds[after] === null);
+      return [kinds[before] ?? 'pad', kinds[after] ?? 'pad'];
     });
   });
+}
+
+/** The members a pocket widens into. */
+const MEMBERS: readonly Member[] = ['web', 'rim', 'band', 'pad'];
+
+/**
+ * How far a pocket widens into each kind of member at depth z, from the back face (z = 0) to the front (z = t): not
+ * in the flanges; from the back's flange, at 45 degrees, as far as it is past it, to the member's core at most; and
+ * where a chamfer at the front reaches past the flange, only so far that the member keeps its core's width beside the
+ * chamfer, leaning with it.
+ */
+function allowance(
+  z: number,
+  t: number,
+  f: number,
+  most: Readonly<Record<Member, number>>,
+  front: Readonly<Record<Member, number>>,
+): Record<Member, number> {
+  const into = z > f && z < t - f - 1e-9 ? z - f : 0;
+  const at = (k: Member) => Math.max(0, Math.min(most[k], into, most[k] - Math.max(0, front[k] - (t - z))));
+  return { web: at('web'), rim: at('rim'), band: at('band'), pad: at('pad') };
+}
+
+/**
+ * The depths a pocket's levels lie at: where its walls bend. The back's flange; where each member's core is reached;
+ * where each front chamfer ends, and where a member's lean with it meets its 45 degrees; the step, from the core at
+ * STEP_MM behind the front's flange to the face's outline at it. Each pocket's edges take the members' own widening,
+ * no blend between two, so its walls bend only at these depths, and a pocket keeps a few rings, not one an edge (a
+ * ring for each blend edge took 6 s and 500 000 facets for a 160 mm board, against 0.85 s).
+ */
+function bendDepths(
+  t: number,
+  f: number,
+  most: Readonly<Record<Member, number>>,
+  front: Readonly<Record<Member, number>>,
+): number[] {
+  const last = t - f - STEP_MM;
+  const bends = MEMBERS.flatMap((k) => [f + most[k], t - front[k], (most[k] - front[k] + t + f) / 2]);
+  const sorted = [f, ...bends.filter((z) => z > f + 1e-6 && z < last - 1e-6), last, t - f].sort((a, b) => a - b);
+  return sorted.filter((z, i) => i === 0 || z - (sorted[i - 1] ?? z) > 1e-6);
 }
 
 /**
  * The skeleton's members as one solid, reaching past both faces and past the outline: a slab less its pockets. Each
  * pocket is the lightened board's at both faces, its sharp corners blended (D278), and widens through the board into
- * the members round it, at 45 degrees from the flange, each edge until its member's core is reached or the board's
- * middle: the I-beams of D147, the blends' taper following their curve. Each pocket is one mesh, lofted through the
+ * the members round it: from the back's flange at 45 degrees, each edge until its member's core is reached, and on to
+ * the front's flange, where it steps back to the face's outline (D314). Each pocket is one mesh, lofted through the
  * depths where its sides bend; built so, nothing meets on a plane.
  */
 export function skeletonMembers(
@@ -178,40 +213,37 @@ export function skeletonMembers(
   const shape = pocketShape(engine, board, members, pads);
   const pockets = shape.decompose();
   shape.delete();
-  const f = Math.min(FLANGE_MM, t / 2);
-  const middle = t / 2 - f; // how far a taper reaches by the middle
+  const f = flangeOf(t);
+  // how far each member's pocket side moves in to leave its core: a web from each side, the band from its inner side,
+  // a rim from its outer side, a pad not at all; and the chamfer each has at the front, round a slot and along the edge
+  const most: Record<Member, number> = {
+    web: (members.webMm - p.coreMm) / 2,
+    rim: members.rimGrowMm - p.coreMm,
+    band: members.bandMm - p.coreMm,
+    pad: 0,
+  };
+  const front: Record<Member, number> = { web: 0, rim: board.slotChamferMm, band: EDGE_CHAMFER_MM, pad: 0 };
+  // a board too thin to step in from both flanges keeps its pockets straight through, as the lightened board's
+  const depths = t - 2 * f - STEP_MM > 1e-6 ? bendDepths(t, f, most, front) : [];
+  const allowances = depths.map((z): [number, Record<Member, number>] => [z, allowance(z, t, f, most, front)]);
   const lofts = pockets.map((pocket) => {
     const rings = pocket.toPolygons();
     pocket.delete();
-    const most = widening(rings, alongOf(rings, board, members, pads), p, members);
-    // where the members bend: the flange, each kind's core, the middle; a blend, between two kinds, runs straight
-    // from one of these depths to the next, less than 45 degrees, so the pocket keeps a few rings, not one a blend
-    // edge (6 s and 500 000 facets for a 160 mm board, against 0.85 s)
-    const cores = [members.webMm / 2 - p.coreMm / 2, members.bandMm - p.coreMm, members.rimGrowMm - p.coreMm];
-    const bends = [...new Set(cores.filter((d) => d > 1e-6 && d < middle - 1e-6))].sort((a, b) => a - b);
-    const depths = [0, ...bends, middle];
-    const reach = [
-      ...depths.map((d) => f + d),
-      // and back out to the other face, the middle once
-      ...depths.slice(0, -1).map((_, i, all) => t - f - (all[all.length - 1 - i] ?? 0)),
-    ];
+    const along = membersOf(alongOf(rings, board, members, pads));
     const levels: [number, Vec2[][]][] = [
       [-1.5, rings],
-      ...reach.map((z): [number, Vec2[][]] => {
-        const into = Math.max(0, Math.min(z - f, t - f - z));
-        return [
-          z,
-          rings.map((ring, r) => {
-            // each point by the mean of its two edges' widening, so it changes smoothly along a blend
-            const edges = most[r] ?? [];
-            const points = edges.map((m, i) => (m + (edges[(i - 1 + edges.length) % edges.length] ?? m)) / 2);
-            return grownRing(
-              ring,
-              points.map((m) => -Math.min(m, into)),
-            );
-          }),
-        ];
-      }),
+      ...allowances.map(([z, a]): [number, Vec2[][]] => [
+        z,
+        rings.map((ring, r) => {
+          const edges = (along[r] ?? []).map((ks) => Math.min(...ks.map((k) => a[k])));
+          // each point by the mean of its two edges' widening, so it changes smoothly where a blend meets a member
+          const points = edges.map((m, i) => (m + (edges[(i - 1 + edges.length) % edges.length] ?? m)) / 2);
+          return grownRing(
+            ring,
+            points.map((m) => -m),
+          );
+        }),
+      ]),
       [t + 1.5, rings],
     ];
     return loftedSolid(engine, levels);
@@ -223,9 +255,17 @@ export function skeletonMembers(
   return kept;
 }
 
-/** What the skeleton keeps of the solid board: the plate only where its members are (BoardCuts.within). */
+/**
+ * What the skeleton keeps of the solid board: the plate only where its members are, whose sides stand upright for the
+ * back's flange (BoardCuts.within).
+ */
 export function skeletonCuts(board: SolidBoardParams, p: SkeletonParams, pads: readonly Vec2[][]): BoardCuts {
-  return { within: (engine: Engine): Manifold => skeletonMembers(engine, board, p, pads) };
+  return {
+    within: {
+      solid: (engine: Engine): Manifold => skeletonMembers(engine, board, p, pads),
+      uprightMm: flangeOf(board.thicknessMm),
+    },
+  };
 }
 
 /**

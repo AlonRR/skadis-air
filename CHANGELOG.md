@@ -6,6 +6,18 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The skeleton board prints lighter (D314). Printed face down, each rim and web now steps straight to its core just
+  behind the front face, where it narrowed at 45 degrees, and narrows at 45 degrees from the back alone; the full
+  width at the faces is 0.4 mm deep, where it was 0.6 mm, and the core 0.9 mm, where it was 1.2 mm. A core under
+  0.9 mm, two lines of a 0.4 mm nozzle, is warned about, where it was one under 1.2 mm.
+
+### Fixed
+
+- The skeleton board's members are never narrower than the core: the web leaving a half slot at a side edge was
+  0.84 mm at the middle of the board, with a 1.2 mm core.
+
 ## [0.4.2] - 2026-10-22
 
 ### Fixed

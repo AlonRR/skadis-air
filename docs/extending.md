@@ -47,8 +47,8 @@ The fit coupon (`fit-coupon.ts`) was then the first real type added this way.
 
 A type built on the solid board passes `makeSolidBoard` a third argument instead of copying it: a
 clearance per slot (`clearanceOf`), more to cut away (`extraCutters`), as the fit coupon does, and
-more to add before anything is cut (`extraSolids`), and a solid the plate is kept inside (`within`), as the
-skeleton board keeps only its members (`skeleton.ts`). Two parts' cuts go together with `bothCuts`, as the
+more to add before anything is cut (`extraSolids`), and a solid the plate is kept inside (`within`), with how deep
+from the back face its sides stand upright, as the skeleton board keeps only its members (`skeleton.ts`). Two parts' cuts go together with `bothCuts`, as the
 lightened board joins its pockets to the mounting's holes (`lightened.ts`).
 
 **A board that takes all of the solid board's settings** lists `BOARD_SETTINGS` from
