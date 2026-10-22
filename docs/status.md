@@ -194,6 +194,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D301 | **The design system's `v0.8.0` is adopted, and released as `v0.4.1`** ("301 a"): each icon sits on its label's capitals, 0.5 to 1.75 px higher, and in the dark theme the board drawn in "Sides" is darker than the panel round it. Built 22 Oct 2026 (`web/public/design-system/README.md` has the screenshots' count) | 22 Oct 2026 |
 | D306 | **On the lightened and skeleton boards a standoff behind a slot takes the frame's outline** ("306 a"; the owner, after T151's failed print: "the width of the keyhole section is wider than the light frame"): 13.0 x 23.0 mm at the 3 mm rim, 0.1 mm inside the frame round the slot, where it was 15 x 24 mm and stood 0.9 mm past the frame each side over the pockets; 2 mm of wall beside the keyhole (was 3) and 1.4 mm beside the hook's room (was 2.4). Where the standoff needs more than the frame holds, a 5 mm keyhole or a rim under about 2.7 mm, the frame grows round those four slots alone. The solid board keeps its 15 x 24 mm standoff. Built 22 Oct 2026 (C307) and released as `v0.4.2` (A308); T151's hanging tries the thinner walls | 22 Oct 2026 |
 | A308 | **`v0.4.2` is released** ("308 y"), so the page's lightened and skeleton boards get D306's standoffs; a patch version, as it fixes a fault and adds nothing | 22 Oct 2026 |
+| Q309 | **The Printables draft fixed** (the owner's "fix the printables draft", then "309 a b c", 22 Oct 2026): (a) the files put in the description's order, boards first, so the gallery's 3D preview, second after the cover and Printables' own, shows the solid 200 x 200 mm board where it showed a slot clip (seen on the model page after the save); (b) the page's picture made again from `v0.4.2` and put back fifth, the standoff's and the slot clip's after it as before; (c) the contest: not possible, as Printables lists every ongoing contest, this one among them, as closed to a model labelled AI-assisted ("only non-AI-generated models can be entered"), and the label stays as D236 set it. Saved as a draft and read back from a fresh load: 7 pictures and 13 files in order, the switch on Draft | 22 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -247,8 +248,8 @@ day (C293 to C295), is drawn from the library in [`figures/between-built/`](figu
 `node scripts/figures/shoot.mjs between-built`: the seams (b1), the standoffs (b2), lock screws alone (b3) and the
 clip (b4).
 
-- **T215** Photos of printed parts for the Printables page, before it is published: the contest asks for at
-  least one printed part, and closes on 22 Oct 2026 at 23:59 UTC.
+- **T215** Photos of printed parts for the Printables page, before it is published. The contest that asked for them
+  will not take the page while it is labelled AI-assisted (Q309).
 
 - **T151** Print the 80 x 80 mm lightened board on keyholes and hang it: on T274's PETG Basic plate (21 Oct 2026), or
   alone, `.check/test-print/skadis-trial-keyhole.stl` (`node scripts/test-print/write-trial-plate.mjs keyhole`; `skadis-lightened-80x80-keyholes-standoffs-15mm.stl` from

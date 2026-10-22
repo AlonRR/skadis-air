@@ -5,9 +5,13 @@ draft, model 1880460, on 17 Oct 2026 (T216): the 13 files, the 7 pictures, this 
 picture made again on 19 Oct 2026, A254; its standoff and slot clip files, their pictures and the page's
 picture again on 21 Oct 2026, with the screws' line, D264, D266, D270; and again that day, after D276 to D281, its ten
 board, coupon and standoff files, all seven pictures and the standoff's line; and on 22 Oct 2026 the lines for open
-sides between the slots, lock screws and the clip for such seams, A297); the contest is not chosen on the
-model's form, and its question whether AI was used is answered "Yes — AI-assisted creation" (D236, 18 Oct 2026).
-The page is entered in the Designer Challenge: Pegboard Wall Organizers (entries close on 22 Oct 2026 at 23:59 UTC). Its files
+sides between the slots, lock screws and the clip for such seams, A297; and that evening, Q309, the page's picture
+made again from `v0.4.2`, and the files put in this text's order, boards first, so the gallery's 3D preview, which
+Printables makes from the first file and shows second, is the solid 200 x 200 mm board rather than a slot clip); the
+model's question whether AI was used is answered "Yes — AI-assisted creation" (D236, 18 Oct 2026). **That label keeps
+it out of every contest**: on 22 Oct 2026 the model page's Contests button listed each ongoing one, the Designer
+Challenge: Pegboard Wall Organizers among them, with "This model cannot be added to the contest. According to the
+rules, only non-AI-generated models can be entered." (Q309), so the page is in none. Its files
 come from `npm run printables`, which writes them into `.check/printables/` from the release and checks each one;
 its pictures from `scripts/printables/write-images.mjs`, run against the built page while it is served. The owner adds photos of printed parts and publishes it.
 
@@ -17,7 +21,7 @@ its pictures from `scripts/printables/write-images.mjs`, run against the built p
 | --- | --- |
 | Name | Skådis Air: IKEA Skadis pegboard generator, parametric, lightweight and tileable, with connectors |
 | Licence | Creative Commons, Public Domain (CC0) (Q213) |
-| Contest | Designer Challenge: Pegboard Wall Organizers |
+| Contest | None: Printables refuses a model labelled AI-assisted (Q309) |
 | Tags | skadis, ikea, pegboard, parametric, customizable, lightweight, tileable, wall, organizer, connector, modular (Printables splits a tag at its spaces) |
 
 ## Summary
