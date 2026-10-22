@@ -31,7 +31,8 @@ title in the page's font (`node scripts/printables/write-gallery.mjs .check/prin
 
 | Picture | What it shows |
 | --- | --- |
-| `cover.png` | Skådis Air: the solid, lightened and skeleton boards side by side, as they hang |
+| `cover-turn.gif` | Skådis Air: the solid, lightened and skeleton boards, each turning on its own axis, countersunk, on keyholes and on lock screws (the owner, 22 Oct 2026: "have the main image have each of the boards rotating and give each a different type of Screw holes") |
+| `page-tour.gif` | The page: the board types and their mountings, the 3D view turned by hand ("have the second image be a gif of the webpage switching between different options and rotating"), from `write-page-gifs.mjs` |
 | `board-types.png` | The three kinds at 240 x 200 mm, each one's plastic against the solid board's, measured |
 | `turntable.gif` | The lightened board on keyholes, turning: the pockets, then the standoffs behind (a turn in 80 frames, the owner's 75 %) |
 | `skeleton-ibeam.png` | The skeleton board cut open: each member an I-beam |

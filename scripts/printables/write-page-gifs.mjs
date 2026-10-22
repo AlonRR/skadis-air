@@ -99,6 +99,34 @@ function recorder(page, dir) {
       await target.click({ force: true });
       await settle();
     },
+    /** The 3D view dragged across by (dx, dy) pixels in `steps` moves, turning the part, the pointer with it. */
+    async drag(dx, dy, steps = 24) {
+      const stage = page.getByTestId('preview');
+      await pointAt(stage);
+      const box = await stage.boundingBox();
+      if (box === null) throw new Error('the 3D view is not on the page');
+      const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await inTurn([...Array(steps).keys()], async (i) => {
+        const [px, py] = [x + (dx * (i + 1)) / steps, y + (dy * (i + 1)) / steps];
+        await page.mouse.move(px, py);
+        await page.evaluate(
+          ([qx, qy]) => {
+            const pointer = document.getElementById('gif-pointer');
+            pointer.style.transition = 'none';
+            pointer.style.transform = `translate(${qx}px, ${qy}px)`;
+          },
+          [px, py],
+        );
+        await snap();
+      });
+      await page.mouse.up();
+      await page.evaluate(() => {
+        document.getElementById('gif-pointer').style.transition = '';
+      });
+      await hold(500);
+    },
     /** A field cleared and typed into a key at a time. */
     async type(field, text) {
       await pointAt(field);
@@ -151,6 +179,25 @@ const recordings = [
       await r.type(page.locator('input[name="heightMm"]'), '160');
       await r.click(radio(page, 'panels', 'one'));
       await r.click(radio(page, 'boardType', 'solid'));
+    },
+  },
+  {
+    id: 'page-tour',
+    // the owner, 22 Oct 2026: "have the second image be a gif of the webpage switching between different options and
+    // rotating": the board types and their mountings, the view turned by hand, and back
+    async steps(r, page) {
+      await r.drag(240, 0);
+      await r.click(radio(page, 'boardType', 'lightened'));
+      await r.click(radio(page, 'standoffs', 'back'));
+      await r.click(radio(page, 'screwHead', 'keyhole'));
+      await r.drag(360, -40);
+      await r.click(radio(page, 'boardType', 'skeleton'));
+      await r.click(radio(page, 'screwHead', 'lock'));
+      await r.drag(-600, 40);
+      await r.click(radio(page, 'screwHead', 'countersunk'));
+      await r.click(radio(page, 'standoffs', 'none'));
+      await r.click(radio(page, 'boardType', 'solid'));
+      await r.click(page.getByTestId('preview-reset'));
     },
   },
   {

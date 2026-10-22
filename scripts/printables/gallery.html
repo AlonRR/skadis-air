@@ -2,7 +2,8 @@
 <!-- SPDX-FileCopyrightText: 2026 Alon A. Rabinowitz -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 <!-- A picture for the Printables page: the scene named by ?id= from scenes.json, drawn with three.js under its title, -->
-<!-- in the page's own font and colours (write-gallery.mjs). window.draw(k) draws an animation's frame k. -->
+<!-- in the page's own font and colours (write-gallery.mjs). window.draw(k) draws an animation's frame k: its camera, -->
+<!-- and each named group's place, as [x, y, z], or { at: [x, y, z], turn: radians about the vertical } to spin it. -->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -117,12 +118,17 @@
         const f = s.frames?.[k] ?? {};
         place(f.camera ?? s.camera);
         for (const [name, holders] of groups) {
-          const at = f.groups?.[name] ?? [0, 0, 0];
-          for (const h of holders) h.position.set(...at);
+          const g = f.groups?.[name] ?? [0, 0, 0];
+          const [at, turn] = Array.isArray(g) ? [g, 0] : [g.at ?? [0, 0, 0], g.turn ?? 0];
+          for (const h of holders) {
+            h.position.set(...at);
+            h.rotation.set(0, turn, 0);
+          }
         }
         renderer.render(scene, camera);
         svg.replaceChildren();
-        if (!s.frames) for (const l of s.labels ?? []) label(l);
+        // labels stay where a still camera puts them; a moving camera's animation has none
+        for (const l of s.labels ?? []) label(l);
       };
       window.frames = s.frames?.length ?? 0;
       window.draw(0);

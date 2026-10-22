@@ -57,6 +57,41 @@ export function build(kit) {
     });
   }
 
+  // the cover as an animation (the owner, 22 Oct 2026: "have the main image have each of the boards rotating and give
+  // each a different type of Screw holes"): the three board types, each turning on its own upright axis, so its back
+  // shows: the solid board countersunk, the lightened on keyholes and the skeleton on lock screws, both on standoffs
+  {
+    const kinds = [
+      ['solid', { screwHead: 'countersunk' }, 'Solid · countersunk'],
+      ['lightened', { screwHead: 'keyhole', standoffs: 'back' }, 'Lightened · keyholes'],
+      ['skeleton', { screwHead: 'lock', standoffs: 'back' }, 'Skeleton · lock screws'],
+    ];
+    const SPACING = 205;
+    const meshes = kinds.map(([kind, mounting], i) => {
+      const board = built(kind, { widthMm: 160, heightMm: 160, ...mounting });
+      const b = board.boundingBox();
+      // centred on its own axis, so it turns in place
+      return feature(board.translate([-80, -80, -(b.min[2] + b.max[2]) / 2]), `b${i}`);
+    });
+    const at = (i) => [(i - 1) * SPACING, 0, 0];
+    const frames = [...Array(TURN_FRAMES).keys()].map((k) => ({
+      groups: Object.fromEntries(kinds.map((_, i) => [`b${i}`, { at: at(i), turn: (2 * Math.PI * k) / TURN_FRAMES }])),
+    }));
+    scenes.push({
+      id: 'cover-turn',
+      title: 'Skådis Air',
+      hero: true,
+      caption: [
+        'Pegboards for IKEA SKÅDIS hooks, in any size: solid, lightened',
+        'or skeleton, tiled into walls, made in your browser.',
+      ],
+      camera: { position: [0, 140, 680], target: [0, -8, 0], fov: 38, drop: 0.14 },
+      labels: kinds.map(([, , text], i) => ({ text, at: [at(i)[0], -112, 0], tag: true })),
+      frames,
+      meshes,
+    });
+  }
+
   // the board types face on, each one's plastic against the solid board's, measured at the Printables files' size
   {
     const size = { widthMm: 240, heightMm: 200 };
