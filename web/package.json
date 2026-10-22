@@ -1,7 +1,7 @@
 {
   "name": "skadis-air-web",
   "private": true,
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "The page: choose a SKÅDIS board, see it in 3D, download it",
   "license": "MPL-2.0",
   "type": "module",
@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "manifold-3d": "3.5.4",
-    "skadis-air": "0.4.1",
+    "skadis-air": "0.4.2",
     "three": "0.186.1"
   },
   "devDependencies": {

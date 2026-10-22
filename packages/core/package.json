@@ -1,6 +1,6 @@
 {
   "name": "skadis-air",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "description": "3D-printable SKÅDIS-compatible boards and connectors: the geometry as a library for Node.js and browsers.",
   "license": "MPL-2.0",

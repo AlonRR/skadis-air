@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-22
+
 ### Fixed
 
 - On the lightened and skeleton boards, the standoffs behind the corner slots (keyholes, lock screws) take the
