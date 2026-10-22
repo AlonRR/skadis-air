@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-22
+
 ### Changed
 
 - The design system's v0.8.0: each icon sits on its label's capitals, 0.5 to 1.75 px higher than before (the theme
