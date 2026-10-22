@@ -148,8 +148,9 @@ function recorder(page, dir) {
           if (e && e.scrollTop > 0) e.scrollTo({ top: 0, behavior: 'smooth' });
         }
       });
-      // the real mouse, which clicked, to the corner it started in, so no control is left hovered
+      // the real mouse, which clicked, to the corner it started in, so no control is left hovered, and no focus ring
       await page.mouse.move(0, 0);
+      await page.evaluate(() => document.activeElement?.blur());
       await hold(1600);
     },
   };
@@ -184,10 +185,22 @@ const recordings = [
   {
     id: 'page-tour',
     // the owner, 22 Oct 2026: "have the second image be a gif of the webpage switching between different options and
-    // rotating": the board types and their mountings, the view turned by hand, and back
+    // rotating", and "the second webpage view should also show the wall option, so that users know its an option right
+    // away": it starts on a wall in panels, its first frame the GIF's still, turns it by hand, makes one board of it,
+    // goes through the board types and their mountings, and grows back into the wall
+    async before(page) {
+      await radio(page, 'boardType', 'lightened').click();
+      await radio(page, 'panels', 'split').click();
+      await page.locator('input[name="widthMm"]').fill('1200');
+      await page.locator('input[name="heightMm"]').fill('800');
+      await page.keyboard.press('Tab');
+    },
     async steps(r, page) {
-      await r.drag(240, 0);
-      await r.click(radio(page, 'boardType', 'lightened'));
+      await r.hold(800);
+      await r.drag(260, -40);
+      await r.type(page.locator('input[name="widthMm"]'), '160');
+      await r.type(page.locator('input[name="heightMm"]'), '160');
+      await r.click(radio(page, 'panels', 'one'));
       await r.click(radio(page, 'standoffs', 'back'));
       await r.click(radio(page, 'screwHead', 'keyhole'));
       await r.drag(360, -40);
@@ -196,7 +209,10 @@ const recordings = [
       await r.drag(-600, 40);
       await r.click(radio(page, 'screwHead', 'countersunk'));
       await r.click(radio(page, 'standoffs', 'none'));
-      await r.click(radio(page, 'boardType', 'solid'));
+      await r.click(radio(page, 'boardType', 'lightened'));
+      await r.click(radio(page, 'panels', 'split'));
+      await r.type(page.locator('input[name="widthMm"]'), '1200');
+      await r.type(page.locator('input[name="heightMm"]'), '800');
       await r.click(page.getByTestId('preview-reset'));
     },
   },
@@ -265,6 +281,7 @@ await inTurn(recordings, async (g) => {
       { timeout: 90_000 },
     );
     await page.mouse.move(0, 0);
+    await page.evaluate(() => document.activeElement?.blur());
     await page.waitForTimeout(500);
     await page.evaluate(() => {
       for (const e of [document.scrollingElement, ...document.querySelectorAll('*')]) if (e) e.scrollTop = 0;
