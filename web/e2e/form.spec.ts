@@ -309,3 +309,39 @@ test('says a number field the browser cannot read is not a number, and refuses a
   await expect(page.getByTestId('error-widthMm')).toContainText('unclear');
   await expect(page.getByTestId('count-widthMm')).toHaveText('');
 });
+
+// A build still running when the form turns invalid must not land: it would show "ready" and offer a download for
+// values the form no longer holds (found 22 Oct 2026: 30 s after a 400 mm skeleton build had started, a width of
+// 250 mm left "Board ready" and the download on). The worker's answers are counted, so the test waits for the
+// stale one itself rather than for a time.
+test('drops a build that is still running when the form turns invalid', async ({ page }) => {
+  await page.addInitScript(() => {
+    const Base = window.Worker;
+    const seen = window as unknown as { builtReplies: number };
+    seen.builtReplies = 0;
+    window.Worker = class extends Base {
+      constructor(url: string | URL, options?: WorkerOptions) {
+        super(url, options);
+        // registered before the page's own listener, so the count rises before the page handles the answer
+        this.addEventListener('message', (event: MessageEvent<{ kind?: string }>) => {
+          if (event.data.kind === 'built') seen.builtReplies += 1;
+        });
+      }
+    };
+  });
+  await ready(page);
+  await choose(page, 'boardType', 'skeleton');
+  await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
+  await page.locator('input[name="heightMm"]').fill('400');
+  await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready', { timeout: 60_000 });
+  const replies = () => page.evaluate(() => (window as unknown as { builtReplies: number }).builtReplies);
+  const before = await replies();
+  await page.locator('input[name="widthMm"]').fill('400');
+  await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'building');
+  await page.locator('input[name="widthMm"]').fill('250');
+  await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'invalid');
+  // the 400 mm board's answer arrives, and is dropped
+  await expect.poll(replies, { timeout: 60_000 }).toBeGreaterThan(before);
+  await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'invalid');
+  await expect(page.getByTestId('download-stl')).toBeDisabled();
+});

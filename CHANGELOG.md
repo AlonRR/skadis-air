@@ -17,6 +17,8 @@ All notable changes to this project are recorded here. The format follows
 
 - The skeleton board's members are never narrower than the core: the web leaving a half slot at a side edge was
   0.84 mm at the middle of the board, with a 1.2 mm core.
+- A board still being made when the form turns invalid is dropped: it used to arrive later and say "ready", with the
+  download on, for values the form no longer held.
 
 ## [0.4.2] - 2026-10-22
 
