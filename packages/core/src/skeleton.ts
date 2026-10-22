@@ -17,6 +17,7 @@ import { grownRing } from './chamfer.js';
 import type { Engine } from './engine.js';
 import {
   bothCuts,
+  framedBoard,
   LATTICE_DEFAULTS,
   latticeMembers,
   latticeParams,
@@ -251,7 +252,8 @@ export function makeSkeletonBoard(
   p: SkeletonParams,
   mounting: MountingParams,
 ): Manifold {
-  const cuts = bothCuts(mountingCuts(mounting, board), skeletonCuts(board, p, mountingPads(mounting, board)));
+  const framed = framedBoard(board, p);
+  const cuts = bothCuts(mountingCuts(mounting, framed), skeletonCuts(board, p, mountingPads(mounting, framed)));
   const made = withoutHollows(engine, makeSolidBoard(engine, board, cuts));
   // without the points the pockets' rings leave on straight walls, where a member's side stands upright between two
   // of its bends: 191 344 facets to 149 028 for a 240 x 200 mm board, the solid itself unchanged (D278)

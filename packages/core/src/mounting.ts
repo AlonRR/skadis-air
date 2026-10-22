@@ -8,7 +8,8 @@
 // stands on standoffs, so a hook has room behind it (D190), and the keyholes are cut in the top two standoffs'
 // wall faces, the head sliding behind lips there as on the slot clip, the board's face left plain (D235); each
 // top standoff is the keyhole and its walls, behind its corner tile's centre slot, as IKEA's spacer stands behind
-// a slot, with a pocket that leaves a hook its room behind that slot (D244). On a board whose open sides run between
+// a slot, with a pocket that leaves a hook its room behind that slot (D244); on a lattice board, the outline of the
+// frame round that slot, so it stands flush with it (D306). On a board whose open sides run between
 // the slots (D282), a corner one of whose sides does has no screw, which would land on a slot, and each standoff
 // stands behind the slot nearest its corner that keeps it on the board (D289 a).
 // Any board type built on the solid board takes these as its third argument (BoardCuts).
@@ -54,11 +55,19 @@ export const MIN_BEHIND_CHANNEL_MM = 1.2;
 export const MIN_KEYHOLE_STANDOFF_MM = HOOK_DEPTH_MM + 2;
 /** The lips a keyhole's head slides behind, at the wall face of the part it is cut in (C199, D235). */
 export const KEYHOLE_LIPS_MM = 1.5;
-/** A keyhole standoff's wall round its keyhole (D244): 15 x 24 mm for a 4 mm screw, which leaves about 2 mm round
- * the hook's room behind the slot. */
+/** A keyhole standoff's wall round its keyhole on the solid board (D244): 15 x 24 mm for a 4 mm screw, which leaves
+ * about 2 mm round the hook's room behind the slot. */
 const KEYHOLE_WALL_MM = 3;
 /** The room a hook takes behind a board, C99's margin and all (D190): its back tab's depth and 2 mm. */
 const HOOK_ROOM_MM = HOOK_DEPTH_MM + 2;
+/** How far the hook's room behind a slot reaches past the slot's chamfer (D244): past the slot cutter's flare. */
+const ROOM_PAST_CHAMFER_MM = 1.5;
+/** On a lattice board, the least wall a standoff behind a slot keeps round what is cut in it (D306): about three lines
+ * of a 0.4 mm nozzle. */
+const STANDOFF_WALL_MM = 1.2;
+/** On a lattice board, how far inside the frame round its slot a standoff behind it stands (D306): flush to the eye,
+ * and off the pockets' walls, which a standoff lying on them shared and left degenerate facets (C240). */
+export const FRAME_INSET_MM = 0.1;
 /** The widest head that passes through a slot, mm: a larger lock screw's head gets a groove in the slot (A248). */
 const HEAD_THROUGH_SLOT_MM = 5;
 /** What a lock screw's head and shank are given round them, mm, and the standoff left under its head. */
@@ -83,6 +92,11 @@ function sunkRound(m: Pick<MountingParams, 'screwHead' | 'screwMm'>, thicknessMm
 }
 /** A lock screw's head goes in a recess its height and 0.3 mm deep (A248). */
 const lockRecessMm = (lockScrewMm: number) => panHead(lockScrewMm).tallMm + 0.3;
+/** Whether a head too wide to pass a slot, which gets a groove in the slot's sides (A248). */
+const grooved = (lockScrewMm: number) => panHead(lockScrewMm).acrossMm > HEAD_THROUGH_SLOT_MM;
+/** How wide a lock screw's recess is: its head and the room round it (A248). */
+const lockRecessAcross = (lockScrewMm: number) =>
+  panHead(lockScrewMm).acrossMm + (grooved(lockScrewMm) ? GROOVE_ROOM_MM : HEAD_ROOM_MM);
 
 /** A screw's hole, its 90 degree countersink across the front, and the standoff round it (C83). */
 export function screwHole(screwMm: number): { holeMm: number; countersinkMm: number; standoffDiameterMm: number } {
@@ -168,9 +182,21 @@ export function mountingScrews(m: MountingParams, thicknessMm: number, cornerScr
 }
 
 /** A board as the mounting places things on it: its tiles, and its sides and seams where they move its edges (D288 a);
- * open all round and through the slots unless given. */
+ * open all round and through the slots unless given; its slots, as the solid board's unless given; and on a lattice
+ * board, how far the frame round each slot reaches past the slot's drawn edge, which the standoffs behind the slots
+ * take as their outline (D306). */
 export type MountingBoard = Pick<SolidBoardParams, 'columns' | 'rows'> &
-  Partial<Pick<SolidBoardParams, 'sides' | 'seams'>>;
+  Partial<Pick<SolidBoardParams, 'sides' | 'seams' | 'slotClearanceMm' | 'slotChamferMm'>> & { frameMm?: number };
+
+/** A board's slot as it cuts it: its drawn width and height, and its chamfer. */
+function slotOf(b: MountingBoard): { widthMm: number; heightMm: number; chamferMm: number } {
+  const clearance = b.slotClearanceMm ?? SOLID_BOARD_DEFAULTS.slotClearanceMm;
+  return {
+    widthMm: SLOT_WIDTH_MM + clearance,
+    heightMm: SLOT_HEIGHT_MM + clearance,
+    chamferMm: b.slotChamferMm ?? SOLID_BOARD_DEFAULTS.slotChamferMm,
+  };
+}
 
 const extentOfBoard = (b: MountingBoard): Extent =>
   boardExtent(b.columns, b.rows, b.sides ?? ALL_OPEN, b.seams ?? 'through');
@@ -193,15 +219,18 @@ export function screwPlaces(board: MountingBoard): readonly (readonly [number, n
 /** How far a pad that nothing may be cut from reaches past a screw's countersink, all round (D144; C83's margin). */
 export const PAD_MARGIN_MM = 2;
 
+/** A standoff's outline round the middle of the slot it stands behind. */
+type Outline = (place: readonly [number, number]) => Vec2[];
+
 /**
  * The slot a standoff at a corner of a board between the slots stands behind (D289 a): the one nearest the corner
- * whose standoff, a keyhole's and its walls, lies on the board 1 mm in from its edges, clear of their chamfer; of two
- * as near, the one nearer the corner's bottom or top edge, then its side.
+ * whose standoff lies on the board 1 mm in from its edges, clear of their chamfer; of two as near, the one nearer the
+ * corner's bottom or top edge, then its side.
  */
-function standoffSlot(board: MountingBoard, screwMm: number, [cx, cy]: readonly [number, number]): [number, number] {
+function standoffSlot(board: MountingBoard, outline: Outline, [cx, cy]: readonly [number, number]): [number, number] {
   const e = extentOfBoard(board);
   const fits = (place: readonly [number, number]) => {
-    const pad = keyholePad(screwMm, place);
+    const pad = outline(place);
     const [xs, ys] = [pad.map((q) => q[0]), pad.map((q) => q[1])];
     const m = EDGE_CHAMFER_MM;
     return (
@@ -222,14 +251,16 @@ function standoffSlot(board: MountingBoard, screwMm: number, [cx, cy]: readonly 
 
 /** The middles of a board's two keyholes: its top corner tiles' centre slots, which the standoffs stand behind,
  * 11.25 mm clear of every other slot and hook where panels meet (D244); between the slots, the slot nearest each top
- * corner that keeps its standoff on the board (D289 a). Left, then right. */
+ * corner that keeps its standoff on the board (D289 a), the standoff a keyhole's and its walls unless given. Left, then
+ * right. */
 export function keyholePlaces(
   board: MountingBoard,
   screwMm = MOUNTING_DEFAULTS.screwMm,
+  outline: Outline = (q) => keyholePad(screwMm, q),
 ): readonly (readonly [number, number])[] {
   if (board.seams === 'between') {
     const e = extentOfBoard(board);
-    return [standoffSlot(board, screwMm, [e.x0, e.y1]), standoffSlot(board, screwMm, [e.x1, e.y1])];
+    return [standoffSlot(board, outline, [e.x0, e.y1]), standoffSlot(board, outline, [e.x1, e.y1])];
   }
   const [width, height] = [TILE_MM * board.columns, TILE_MM * board.rows];
   return [
@@ -240,14 +271,15 @@ export function keyholePlaces(
 
 /** The middles of a board's bottom corner tiles' centre slots, which a board on keyholes stands behind at the
  * bottom too, unless lock screws hold it there (D245); between the slots, the slot nearest each bottom corner that
- * keeps its standoff on the board (D289 a). Left, then right. */
+ * keeps its standoff on the board (D289 a), the standoff a keyhole's and its walls unless given. Left, then right. */
 export function bottomSlotPlaces(
   board: MountingBoard,
   screwMm = MOUNTING_DEFAULTS.screwMm,
+  outline: Outline = (q) => keyholePad(screwMm, q),
 ): readonly (readonly [number, number])[] {
   if (board.seams === 'between') {
     const e = extentOfBoard(board);
-    return [standoffSlot(board, screwMm, [e.x0, e.y0]), standoffSlot(board, screwMm, [e.x1, e.y0])];
+    return [standoffSlot(board, outline, [e.x0, e.y0]), standoffSlot(board, outline, [e.x1, e.y0])];
   }
   const width = TILE_MM * board.columns;
   return [
@@ -263,20 +295,63 @@ export function keyholePad(screwMm: number, [x, y]: readonly [number, number], g
   return stadium(x, y, k.entryMm + 2 * KEYHOLE_WALL_MM, k.slideMm + k.entryMm + 2 * KEYHOLE_WALL_MM, grow);
 }
 
+/** The screw a standoff behind a slot is sized for: the keyhole's, or for lock screws alone, which have no such screw,
+ * a 4 mm screw's (D289). */
+const standoffScrewOf = (m: MountingParams) => (m.screwHead === 'lock' ? MOUNTING_DEFAULTS.screwMm : m.screwMm);
+/** Whether lock screws go through any of the slots the standoffs stand behind (A248, D289). */
+const lockScrewsOf = (m: MountingParams) => m.screwHead === 'lock' || (m.screwHead === 'keyhole' && m.lockScrews);
+
+/**
+ * How far past its slot's drawn edge a standoff behind a slot reaches on a lattice board (D306): the frame round the
+ * slot, less FRAME_INSET_MM, so it stands flush with the frame and no plate is missing in front of it; or, where that
+ * would leave less than STANDOFF_WALL_MM round the keyhole's channel, the hook's room or a lock screw's recess, as far
+ * as that wall needs, and the frame grows round it (mountingPads). Undefined on the solid board, which has no frame:
+ * there the standoff is the keyhole and its walls (keyholePad).
+ */
+export function standoffGrowMm(m: MountingParams, board: MountingBoard): number | undefined {
+  if (board.frameMm === undefined) return undefined;
+  const slot = slotOf(board);
+  const wall = STANDOFF_WALL_MM;
+  const needs = [slot.chamferMm + ROOM_PAST_CHAMFER_MM + wall]; // the hook's room
+  if (m.screwHead === 'keyhole') {
+    // the channel, as wide as the entry and from the entry's bottom to past the resting screw, twice the entry long
+    const entry = keyhole(m.screwMm).entryMm;
+    needs.push((entry + 2 * wall - slot.widthMm) / 2, (2 * entry + 2 * wall - slot.heightMm) / 2);
+  }
+  if (lockScrewsOf(m)) needs.push((lockRecessAcross(m.lockScrewMm) + 2 * wall - slot.widthMm) / 2);
+  return Math.max(board.frameMm - FRAME_INSET_MM, ...needs);
+}
+
+/** The outline of every standoff a board stands on behind its slots, round the middle of the slot it stands behind:
+ * the frame's on a lattice board (D306), a keyhole's and its walls on the solid board (D244). */
+function standoffOutline(m: MountingParams, board: MountingBoard): Outline {
+  const grow = standoffGrowMm(m, board);
+  if (grow === undefined) return (q) => keyholePad(standoffScrewOf(m), q);
+  const slot = slotOf(board);
+  return ([x, y]) => stadium(x, y, slot.widthMm, slot.heightMm, grow);
+}
+
 /**
  * The outlines a lightened board keeps solid round the mounting (D144, D158): round each screw hole or standoff,
- * the countersink and 2 mm all round, 13 mm across for a 4 mm screw, which also covers the standoff; with keyholes,
- * each top standoff's outline and 1 mm round it (D237), so a pocket's wall and the standoff's do not lie on one
- * another, which left 92 degenerate facets. None where there is neither a hole nor a standoff.
+ * the countersink and 2 mm all round, 13 mm across for a 4 mm screw, which also covers the standoff. On keyholes or
+ * lock screws every standoff stands behind a slot inside the frame round it, which meets that slot's rim and the webs as
+ * they are, so those slots look like every other (D250 f, D306); none, unless the standoff needs more than the frame
+ * holds, and then the frame grows round it, FRAME_INSET_MM past it, so the two stay flush. None where there is neither
+ * a hole nor a standoff.
  */
 export function mountingPads(m: MountingParams, board: MountingBoard): Vec2[][] {
   if (m.screwHead === 'none' && m.standoffHeightMm === 0) return [];
   const padMm = screwHole(m.screwMm).countersinkMm + 2 * PAD_MARGIN_MM;
   if (m.screwHead !== 'keyhole' && m.screwHead !== 'lock')
     return screwPlaces(board).map(([x, y]) => circle(x, y, padMm));
-  // On keyholes or lock screws every standoff stands behind a corner slot and meets that slot's rim and the webs as they are: no
-  // pad, so those slots look like every other (D250 f).
-  return [];
+  const grow = standoffGrowMm(m, board);
+  if (grow === undefined || board.frameMm === undefined || grow <= board.frameMm - FRAME_INSET_MM + 1e-9) return [];
+  if (board.rows < 2 || board.columns < 2) return []; // refused by mountingCuts
+  const [screwMm, outline] = [standoffScrewOf(m), standoffOutline(m, board)];
+  const slot = slotOf(board);
+  return [...keyholePlaces(board, screwMm, outline), ...bottomSlotPlaces(board, screwMm, outline)].map(([x, y]) =>
+    stadium(x, y, slot.widthMm, slot.heightMm, grow + FRAME_INSET_MM),
+  );
 }
 
 /**
@@ -328,13 +403,14 @@ function hookRoomOutline(
     [x + tabWidth / 2, bottom + 1],
     [x - tabWidth / 2, bottom + 1],
   ];
-  return new CrossSection([stadium(x, y, slot.widthMm, slot.heightMm, slot.chamferMm + 1.5), tab], 'NonZero');
+  const room = stadium(x, y, slot.widthMm, slot.heightMm, slot.chamferMm + ROOM_PAST_CHAMFER_MM);
+  return new CrossSection([room, tab], 'NonZero');
 }
 
 /** Whether any two standoffs behind slots would meet: their outlines' boxes overlap, or two stand behind one slot. */
-function standoffsMeet(places: readonly (readonly [number, number])[], screwMm: number): boolean {
+function standoffsMeet(places: readonly (readonly [number, number])[], outline: Outline): boolean {
   const boxes = places.map((q) => {
-    const pad = keyholePad(screwMm, q);
+    const pad = outline(q);
     const [xs, ys] = [pad.map((v) => v[0]), pad.map((v) => v[1])];
     return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
   });
@@ -344,9 +420,7 @@ function standoffsMeet(places: readonly (readonly [number, number])[], screwMm: 
 /** What the mounting adds to and cuts from a board of this size: BoardCuts for makeSolidBoard. */
 export function mountingCuts(
   m: MountingParams,
-  board: MountingBoard &
-    Pick<SolidBoardParams, 'thicknessMm'> &
-    Partial<Pick<SolidBoardParams, 'slotClearanceMm' | 'slotChamferMm'>>,
+  board: MountingBoard & Pick<SolidBoardParams, 'thicknessMm'>,
 ): BoardCuts {
   const t = board.thicknessMm;
   const { holeMm, countersinkMm, standoffDiameterMm } = screwHole(m.screwMm);
@@ -356,12 +430,11 @@ export function mountingCuts(
   const locked = m.screwHead === 'lock';
   const behindSlots = keyholes || locked;
   const what = keyholes ? 'Keyholes' : 'Lock screws';
-  // the standoffs behind the slots, a keyhole's and its walls (D237): sized from its screw, or for lock screws alone,
-  // which have no such screw, a 4 mm screw's
-  const standoffScrewMm = locked ? MOUNTING_DEFAULTS.screwMm : m.screwMm;
+  // the standoffs behind the slots: on a lattice board the frame round the slot (D306); on the solid board a keyhole's
+  // and its walls (D237), sized from its screw, or for lock screws alone, which have no such screw, a 4 mm screw's
+  const [standoffScrewMm, outline] = [standoffScrewOf(m), standoffOutline(m, board)];
   // the lips, the head's channel and a roof over it, then a hook's room behind the slot in front (D235, D244); a
   // lock screw's head in its recess behind the room, and some standoff under it (A248)
-  const head = panHead(m.lockScrewMm);
   const recessMm = lockRecessMm(m.lockScrewMm);
   const underLock = HOOK_ROOM_MM + recessMm + UNDER_HEAD_MM;
   const leastStandoff = locked
@@ -383,9 +456,9 @@ export function mountingCuts(
     );
   }
   const [tops, bottoms] = behindSlots
-    ? [keyholePlaces(board, standoffScrewMm), bottomSlotPlaces(board, standoffScrewMm)]
+    ? [keyholePlaces(board, standoffScrewMm, outline), bottomSlotPlaces(board, standoffScrewMm, outline)]
     : [[], []];
-  if (behindSlots && standoffsMeet([...tops, ...bottoms], standoffScrewMm)) {
+  if (behindSlots && standoffsMeet([...tops, ...bottoms], outline)) {
     throw new RangeError(
       `${what} need a larger board: between the slots, two of its standoffs would meet, behind the slots nearest ` +
         'its corners; open a side, or make it a tile larger',
@@ -430,12 +503,7 @@ export function mountingCuts(
     return both;
   };
   // the slot as this board cuts it, for the hook's room behind the slots the keyhole standoffs stand behind
-  const clearance = board.slotClearanceMm ?? SOLID_BOARD_DEFAULTS.slotClearanceMm;
-  const slot = {
-    widthMm: SLOT_WIDTH_MM + clearance,
-    heightMm: SLOT_HEIGHT_MM + clearance,
-    chamferMm: board.slotChamferMm ?? SOLID_BOARD_DEFAULTS.slotChamferMm,
-  };
+  const slot = slotOf(board);
   // A lock screw goes in through its corner slot, head and all: its shank's hole from the wall up through the
   // standoff, and its head in a recess just behind the hook's room, so the slot still takes a hook; a head too wide
   // to pass the slot gets a groove, the recess carried on up through the slot's sides (A248).
@@ -445,11 +513,9 @@ export function mountingCuts(
       [-m.standoffHeightMm - 1, 0],
       [floor + 0.5, 0],
     ]);
-    const grooved = head.acrossMm > HEAD_THROUGH_SLOT_MM;
-    const across = head.acrossMm + (grooved ? GROOVE_ROOM_MM : HEAD_ROOM_MM);
-    const recess = ringedSolid(engine, (grow) => circle(x, y, across, grow), [
+    const recess = ringedSolid(engine, (grow) => circle(x, y, lockRecessAcross(m.lockScrewMm), grow), [
       [floor, 0],
-      [grooved ? t + 1 : -HOOK_ROOM_MM + 0.5, 0],
+      [grooved(m.lockScrewMm) ? t + 1 : -HOOK_ROOM_MM + 0.5, 0],
     ]);
     return [shank, recess];
   };
@@ -479,21 +545,22 @@ export function mountingCuts(
     // no area in the printed part (D276)
     const round = (engine: Engine, [x, y]: readonly [number, number]) =>
       ringedSolid(engine, (grow) => circle(x, y, standoffDiameterMm, grow, HALF_STEP), post);
-    // with keyholes, the top two are the keyholes' standoffs, the keyhole and its walls (D244)
+    // with keyholes or lock screws alone, the standoffs behind the slots: the frame's outline on a lattice board (D306),
+    // the keyhole and its walls on the solid board (D244)
     // The standoff from its foot into the plate, less the hook's room from the room's ceiling up past the standoff's
     // top, taken out before the standoff joins the plate: the plate fills the room's top, so it stops at the board's
     // back face and never cuts the plate. Two prisms joined round the room instead shared their outer walls where
     // they overlapped and left degenerate facets (D244, D245).
     const pad = (engine: Engine, place: readonly [number, number]) => {
-      const outline = new engine.CrossSection([keyholePad(standoffScrewMm, place)]);
+      const section = new engine.CrossSection([outline(place)]);
       const roomOutline = hookRoomOutline(engine, place, slot);
-      const tall = chamferedExtrusion(engine, outline, m.standoffHeightMm + t / 2, { bottomMm: foot, topMm: 0 });
+      const tall = chamferedExtrusion(engine, section, m.standoffHeightMm + t / 2, { bottomMm: foot, topMm: 0 });
       const roomTall = roomOutline.extrude(HOOK_ROOM_MM + t / 2 + 1);
       const whole = tall.translate([0, 0, -m.standoffHeightMm]);
       const room = roomTall.translate([0, 0, -HOOK_ROOM_MM]);
       const solid = whole.subtract(room);
       for (const s of [tall, roomTall, whole, room]) s.delete();
-      for (const c of [outline, roomOutline]) c.delete();
+      for (const c of [section, roomOutline]) c.delete();
       return solid;
     };
     cuts.extraSolids = (engine: Engine): Manifold[] =>

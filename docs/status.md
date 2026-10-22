@@ -192,6 +192,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | A297 | **The Printables draft's description gets a line for each new choice** ("297 y"), once the site shows them: open sides between the slots, lock screws alone and the clip for such seams; saved as a draft only and checked after a reload. Waits on T298, the browser | 21 Oct 2026 |
 | A300 | **The PETG Basic trial plate is uploaded and started** ("300 upload and start the print"): T274's grips and T151's keyhole board, `skadis-trial-petg.gcode`, uploaded by the 3d-printing repository's `upload_resume.py` to a READY printer and started by its `start_print.py`, which read back PRINTING, 4 h 40 min left, at 16:40 UTC on 21 Oct 2026 | 21 Oct 2026 |
 | D301 | **The design system's `v0.8.0` is adopted, and released as `v0.4.1`** ("301 a"): each icon sits on its label's capitals, 0.5 to 1.75 px higher, and in the dark theme the board drawn in "Sides" is darker than the panel round it. Built 22 Oct 2026 (`web/public/design-system/README.md` has the screenshots' count) | 22 Oct 2026 |
+| D306 | **On the lightened and skeleton boards a standoff behind a slot takes the frame's outline** ("306 a"; the owner, after T151's failed print: "the width of the keyhole section is wider than the light frame"): 13.0 x 23.0 mm at the 3 mm rim, 0.1 mm inside the frame round the slot, where it was 15 x 24 mm and stood 0.9 mm past the frame each side over the pockets; 2 mm of wall beside the keyhole (was 3) and 1.4 mm beside the hook's room (was 2.4). Where the standoff needs more than the frame holds, a 5 mm keyhole or a rim under about 2.7 mm, the frame grows round those four slots alone. The solid board keeps its 15 x 24 mm standoff. Built 22 Oct 2026 (C307); T151's hanging tries the thinner walls | 22 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -261,20 +262,9 @@ clip (b4).
   and level, their heads standing about 5 mm out (the underside 1.5 to 1.8 mm off the wall); push the board on with
   the heads through the wide entries, let it drop, and put an IKEA hook in each corner slot and in another.
   Then say how the lips printed, whether the heads went in and held behind them, whether the board sat snug and
-  straight, whether the hooks sat straight, and what it weighs. Before it is printed again, D306: the owner, 22 Oct
-  2026, "the width of the keyhole section is wider than the light frame".
-
-- **D306** (T151) The keyhole standoff is wider than the lightened board's frame round its slot: 15.0 x 24.0 mm,
-  where the rim round the slot is 13.2 x 23.2 mm, so from 1 mm behind the board it stands 0.9 mm past the frame each
-  side, about 24 mm² of each standoff with no plate in front of it (measured 22 Oct 2026 by slicing T151's board from
-  the library). All four standoffs are that shape, on the skeleton board too. (a) The standoff takes the frame's
-  outline, 13.2 x 23.2 mm at the 3 mm rim, flush with it, so every slot still looks alike: 2.1 mm of wall beside the
-  keyhole (now 3) and 1.5 mm beside the hook's room (now 2.4), and a little less plastic; with a rim set under about
-  2.7 mm (Advanced), too narrow to hold it, the frame grows round those four slots only. (b) The frame widens round
-  every slot on a board on keyholes or lock screws, a 4.4 mm rim for 3, holding the standoff with 0.5 mm to spare;
-  every slot alike, but 11 % more plastic at 80 x 80 mm and 21 % at 200 x 200 mm. (c) A wider frame only round the
-  four slots with standoffs, 17 x 26 mm, the look D250 (f) took out. Recommended: (a), the fix as the owner put it,
-  D250 (f)'s look kept, no added plastic; T151's hanging then tries the thinner walls.
+  straight, whether the hooks sat straight, and what it weighs. Before it was printed again the owner found the keyhole
+  standoff wider than the lightened board's frame (22 Oct 2026), built that day as D306: print the board again,
+  `.check/test-print/skadis-trial-keyhole.stl` alone or on the trial plate.
 
 ## Inputs from outside this repository
 

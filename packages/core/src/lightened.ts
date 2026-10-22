@@ -149,6 +149,12 @@ export function bothCuts(a: BoardCuts, b: BoardCuts): BoardCuts {
   };
 }
 
+/** The board as its mounting sees it: with the frame round each slot, which the standoffs behind the slots stand inside
+ * (D306). */
+export function framedBoard(board: SolidBoardParams, lattice: LatticeParams): SolidBoardParams & { frameMm: number } {
+  return { ...board, frameMm: latticeMembers(board, lattice).rimGrowMm };
+}
+
 /** The lightened board: the solid board, its mounting, and the lattice's pockets. */
 export function makeLightenedBoard(
   engine: Engine,
@@ -156,6 +162,7 @@ export function makeLightenedBoard(
   lattice: LatticeParams,
   mounting: MountingParams,
 ): Manifold {
-  const cuts = bothCuts(mountingCuts(mounting, board), latticeCuts(board, lattice, mountingPads(mounting, board)));
+  const framed = framedBoard(board, lattice);
+  const cuts = bothCuts(mountingCuts(mounting, framed), latticeCuts(board, lattice, mountingPads(mounting, framed)));
   return makeSolidBoard(engine, board, cuts);
 }

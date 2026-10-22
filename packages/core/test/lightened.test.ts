@@ -212,6 +212,41 @@ describe('makeLightenedBoard (D141 to D144)', () => {
     expect(uncovered(corners, midSlice(lightened({}, {}, m)), midSlice(solid({}, m)))).toBeLessThan(0.01);
   });
 
+  it('stands each standoff behind a slot inside the frame round that slot, flush with it (D306)', () => {
+    // behind the board, at the hook's room, the keyhole's roof and the lips: no standoff with no plate in front of it,
+    // but for the slot it closes the back of (D244), and a 5 mm lock screw's groove through the slot's sides (A248)
+    const slots = shape(
+      [20, 140].flatMap((x) => [20, 140].flatMap((y) => [stadium(x, y, 5.2, 15.2, 1.5), circle(x, y, 10.6)])),
+    );
+    const unbacked = (b: Manifold) => {
+      const plate = keep(keep(b.slice(0.5)).add(slots));
+      return Math.max(...[-1.5, -10, -19].map((z) => keep(keep(b.slice(z)).subtract(plate)).area()));
+    };
+    const keyholes = { screwHead: 'keyhole', standoffHeightMm: 20 } as const;
+    const cases: [Partial<LatticeParams>, Partial<MountingParams>][] = [
+      [{}, keyholes],
+      [{}, { ...keyholes, lockScrews: true, lockScrewMm: 5 }],
+      [{}, { screwHead: 'lock', standoffHeightMm: 20 }],
+      [{}, { ...keyholes, screwMm: 5 }], // a keyhole too large for the frame: the frame grows round it
+      [{ rimMm: 2 }, keyholes], // a frame too narrow for the standoff: it grows round it
+      [{ rimMm: 6 }, keyholes], // a wide frame: the standoff grows with it
+    ];
+    for (const [lattice, m] of cases) {
+      const b = lightened({}, lattice, m);
+      expect(unbacked(b)).toBeLessThan(1e-3);
+      expect(degenerateFacets(meshOf(b))).toBe(0);
+    }
+    // flush: above the keyhole's roof the top standoffs cover the frame round their slots, all but its outer 0.15 mm
+    const frame = (grow: number) => shape([20, 140].map((x) => stadium(x, 140, 5.2, 15.2, grow)));
+    const roof = (b: Manifold) => keep(b.slice(-10));
+    for (const rimMm of [3, 6]) {
+      const b = lightened({}, { rimMm }, keyholes);
+      expect(keep(frame(1 + rimMm - 0.15).subtract(roof(b))).area()).toBeLessThan(1e-3);
+      // control: the outer 0.1 mm is not covered
+      expect(keep(frame(1 + rimMm).subtract(roof(b))).area()).toBeGreaterThan(1);
+    }
+  }, 120_000);
+
   it('keeps the pad round a standoff with no screw hole, and the standoff whole', () => {
     const m = { screwHead: 'none', standoffHeightMm: 20 } as const;
     const pads = shape([10, 150].flatMap((x) => [10, 150].map((y) => circle(x, y, 13 - 0.02))));

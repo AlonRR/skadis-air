@@ -6,6 +6,13 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- On the lightened and skeleton boards, the standoffs behind the corner slots (keyholes, lock screws) take the
+  outline of the frame round their slot, 13 x 23 mm with the starting 3 mm rim, so none stands past it over a pocket.
+  Where a 5 mm keyhole or a narrow rim needs a larger standoff, the frame grows round those slots. The solid board's
+  standoffs are as before.
+
 ## [0.4.1] - 2026-10-22
 
 ### Changed

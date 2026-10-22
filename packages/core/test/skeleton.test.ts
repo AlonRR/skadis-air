@@ -174,6 +174,46 @@ describe('makeSkeletonBoard (D146, D147, D161)', () => {
     }
   });
 
+  it('stands each standoff behind a slot inside the frame round that slot, flush with it (D306)', () => {
+    // behind the board, at the hook's room, the keyhole's roof and the lips: no standoff with no member in front of it,
+    // the members full width at the back face for FLANGE_MM, but for the slot it closes the back of (D244)
+    const slots = keep(
+      new engine.CrossSection(
+        [20, 140].flatMap((x) => [20, 140].map((y) => stadium(x, y, 5.2, 15.2, 1.5))),
+        'NonZero',
+      ),
+    );
+    const unbacked = (b: Manifold) => {
+      const plate = keep(keep(b.slice(FLANGE_MM - 0.1)).add(slots));
+      return Math.max(...[-1.5, -10, -19].map((z) => keep(keep(b.slice(z)).subtract(plate)).area()));
+    };
+    const keyholes = { screwHead: 'keyhole', standoffHeightMm: 20 } as const;
+    const cases: [Partial<SkeletonParams>, Partial<MountingParams>][] = [
+      [{}, keyholes],
+      [{}, { ...keyholes, lockScrews: true }],
+      [{}, { screwHead: 'lock', standoffHeightMm: 20 }],
+      [{}, { ...keyholes, screwMm: 5 }],
+      [{ rimMm: 2 }, keyholes],
+      [{ rimMm: 6 }, keyholes],
+    ];
+    for (const [s, m] of cases) {
+      const b = skeleton({}, s, m);
+      expect(unbacked(b)).toBeLessThan(1e-3);
+      expect(degenerateFacets(meshOf(b))).toBe(0);
+    }
+    // flush: above the keyhole's roof the top standoffs cover the frame round their slots, all but its outer 0.15 mm
+    const frame = (grow: number) =>
+      keep(
+        new engine.CrossSection(
+          [20, 140].map((x) => stadium(x, 140, 5.2, 15.2, grow)),
+          'NonZero',
+        ),
+      );
+    const roof = keep(skeleton({}, {}, keyholes).slice(-10));
+    expect(keep(frame(1 + 3 - 0.15).subtract(roof)).area()).toBeLessThan(1e-3);
+    expect(keep(frame(1 + 3).subtract(roof)).area()).toBeGreaterThan(1); // control: the outer 0.1 mm is not covered
+  }, 120_000);
+
   it('leaves no degenerate facet, open or closed, with keyholes or standoffs', () => {
     expect(degenerateFacets(meshOf(skeleton()))).toBe(0);
     const closed = { sides: { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' } } as const;
