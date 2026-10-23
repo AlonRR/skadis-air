@@ -12,7 +12,7 @@ import {
   readValues,
   type AnyBoardType,
 } from 'skadis-air';
-import { panelText, type PanelLine, type Reply, type Request } from './build-messages.js';
+import { allPanelsText, panelText, type PanelLine, type Reply, type Request } from './build-messages.js';
 import { loadChoices, saveChoices, startingValues } from './choices.js';
 import { choiceGroup, chosenIn, labelledChoice, renderForm, type Form } from './form.js';
 import { saveFile } from './download.js';
@@ -176,10 +176,9 @@ function showPanels(id: number, lines: readonly PanelLine[], wallName: string): 
   if (downloadButton !== null) downloadButton.hidden = lines.length > 0;
   if (printList === null) return;
   printList.hidden = lines.length === 0;
-  const count = lines.reduce((n, line) => n + line.count, 0);
   // Every kind in one file: a zip of STLs with the print list, or one 3MF (D181 to D183).
   const all = printRow(
-    `All ${count} panels in one file`,
+    allPanelsText(lines),
     'Download all',
     () => download(id, `${wallName}.${format() === '3mf' ? '3mf' : 'zip'}`, 'all'),
     'print-all',

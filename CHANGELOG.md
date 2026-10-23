@@ -31,6 +31,8 @@ All notable changes to this project are recorded here. The format follows
   standoffs must be.
 - The size under the 3D view keeps the decimals it has, up to two: a 5.25 mm thick board showed as 5.3 mm.
 - With 3MF chosen, the status line names the file as it will download, `.3mf`, where it named the `.stl`.
+- A wall's "Download all" says what its file holds, each kind of panel once ("All 9 kinds of panel in one file"),
+  where it said "All 24 panels in one file"; a wall of one panel no longer says "All 1 panels".
 
 ## [0.6.0] - 2026-10-23
 

@@ -16,6 +16,26 @@ test('a wall of one panel says "1 panel"', async ({ page }) => {
   await expect(page.getByTestId('board-status')).toHaveText('Wall ready: 1 panel, 1 to download below.', {
     timeout: 30_000,
   });
+  await expect(page.getByTestId('print-all').locator('.ws-plan__line')).toHaveText('The 1 panel in one file');
+});
+
+// Found by QA (Q11, 23 Oct 2026): "All 24 panels in one file", where the file holds each of the 9 kinds once, the
+// copies left to the slicer (D182, D183).
+test('"Download all" says it holds each kind of panel once, where some kinds are printed more than once', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await ready(page);
+  await choose(page, 'panels', 'split');
+  await page.locator('input[name="widthMm"]').fill('1200');
+  await page.locator('input[name="heightMm"]').fill('800');
+  await expect(page.getByTestId('board-status')).toHaveText('Wall ready: 24 panels, 9 to download below.', {
+    timeout: 60_000,
+  });
+  const all = page.getByTestId('print-all').locator('.ws-plan__line');
+  await expect(all).toHaveText('All 9 kinds of panel in one file');
+  await choose(page, 'fileFormat', '3mf'); // the same in a 3MF as in the zip
+  await expect(all).toHaveText('All 9 kinds of panel in one file');
 });
 
 test('splits a board into panels for the bed, lists each size with its count, and downloads one', async ({ page }) => {
@@ -83,29 +103,36 @@ test.describe('on a phone', () => {
   });
 
   // The owner's "351 a" (23 Oct 2026): "All 4 panels in one file" was cut to "All 4 / panels i…" by its two buttons.
-  test('the "Download all" row shows its whole label, its buttons on a line under it (D351)', async ({ page }) => {
-    test.setTimeout(90_000);
-    await ready(page);
-    await choose(page, 'panels', 'split');
-    await page.locator('input[name="widthMm"]').fill('400');
-    await page.locator('input[name="heightMm"]').fill('400');
-    await expect(page.getByTestId('board-status')).toContainText('Wall ready: 4 panels', { timeout: 30_000 });
-    const all = page.getByTestId('print-all');
-    await expect(all).toContainText('All 4 panels in one file');
-    const laid = await all.evaluate((row) => {
-      const line = row.querySelector('.ws-plan__line');
-      const buttons = [...row.querySelectorAll('button')].map((b) => b.getBoundingClientRect());
-      if (line === null || buttons.length !== 2) return undefined;
-      const box = line.getBoundingClientRect();
-      return {
-        whole: line.scrollHeight <= line.clientHeight + 1, // no line of it clamped away
-        oneLine: box.height < 1.5 * parseFloat(getComputedStyle(line).lineHeight),
-        under: buttons.every((b) => b.top >= box.bottom - 0.5),
-        side: Math.abs((buttons[0]?.top ?? 0) - (buttons[1]?.top ?? 1)) < 0.5, // the two side by side
-      };
+  // And the longer words a wall whose kinds repeat has (Q11).
+  for (const [wide, high, panels, words] of [
+    ['400', '400', 'Wall ready: 4 panels', 'All 4 panels in one file'],
+    ['1200', '800', 'Wall ready: 24 panels', 'All 9 kinds of panel in one file'],
+  ] as const)
+    test(`the "Download all" row shows its whole label, its buttons on a line under it (D351): ${words}`, async ({
+      page,
+    }) => {
+      test.setTimeout(90_000);
+      await ready(page);
+      await choose(page, 'panels', 'split');
+      await page.locator('input[name="widthMm"]').fill(wide);
+      await page.locator('input[name="heightMm"]').fill(high);
+      await expect(page.getByTestId('board-status')).toContainText(panels, { timeout: 60_000 });
+      const all = page.getByTestId('print-all');
+      await expect(all).toContainText(words);
+      const laid = await all.evaluate((row) => {
+        const line = row.querySelector('.ws-plan__line');
+        const buttons = [...row.querySelectorAll('button')].map((b) => b.getBoundingClientRect());
+        if (line === null || buttons.length !== 2) return undefined;
+        const box = line.getBoundingClientRect();
+        return {
+          whole: line.scrollHeight <= line.clientHeight + 1, // no line of it clamped away
+          oneLine: box.height < 1.5 * parseFloat(getComputedStyle(line).lineHeight),
+          under: buttons.every((b) => b.top >= box.bottom - 0.5),
+          side: Math.abs((buttons[0]?.top ?? 0) - (buttons[1]?.top ?? 1)) < 0.5, // the two side by side
+        };
+      });
+      expect(laid).toEqual({ whole: true, oneLine: true, under: true, side: true });
     });
-    expect(laid).toEqual({ whole: true, oneLine: true, under: true, side: true });
-  });
 });
 
 test("closes the wall's sides when split, and they open again (D37)", async ({ page }) => {

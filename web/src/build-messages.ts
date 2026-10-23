@@ -74,3 +74,11 @@ export const panelText = (line: PanelLine) =>
 /** A kind's object in a wall's 3MF, named with how many to print (D182): "160 × 160 mm, closed left, × 4". */
 export const panelObjectName = (line: PanelLine) =>
   `${line.widthMm} × ${line.heightMm} mm${closedText(line)}, × ${line.count}`;
+
+/** What "Download all" holds, the zip and the 3MF alike: each kind of panel once, its copies left to the slicer (D182,
+ * D183), so its panels where each is a kind of its own, and its kinds where some are printed more than once (Q11). */
+export function allPanelsText(lines: readonly PanelLine[]): string {
+  const [kinds, count] = [lines.length, lines.reduce((n, line) => n + line.count, 0)];
+  if (kinds === count) return count === 1 ? 'The 1 panel in one file' : `All ${count} panels in one file`;
+  return kinds === 1 ? 'The 1 kind of panel in one file' : `All ${kinds} kinds of panel in one file`;
+}
