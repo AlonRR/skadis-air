@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-23
+
 ### Changed
 
 - Keyholes take a countersunk screw, its head 90 degrees, in place of a pan head, on the boards' top standoffs and in
