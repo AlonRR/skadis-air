@@ -4,11 +4,14 @@
 // The Printables page's pictures of the boards and their features, and its animations (Q309, 22 Oct 2026): the
 // scenes in gallery.mjs, each part the library's own, drawn by gallery.html under a title in the page's own font and
 // photographed into <folder>, 1600 x 1200; an animation's frames go to <folder>/frames/<id>/ and ffmpeg makes them
-// a GIF, 800 x 600, beside the pictures. Reads the library's build, so run `npm run build -w skadis-air` first.
+// a GIF, 800 x 600, beside the pictures. A scene with a `width` is scaled to it, still or animation: the text's
+// close-ups, 560 wide as the text's GIFs are (A356). Reads the library's build, so run `npm run build -w skadis-air`
+// first.
 //
 //   node scripts/printables/write-gallery.mjs <folder> [id...]
 //
-// PW_CHROMIUM_PATH picks the Chromium, as for the browser test; ffmpeg must be on the PATH for the animations.
+// PW_CHROMIUM_PATH picks the Chromium, as for the browser test; ffmpeg must be on the PATH for the animations and
+// the scaled pictures.
 import { execFileSync } from 'node:child_process';
 import { createReadStream, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -57,18 +60,27 @@ page.on('pageerror', (e) => console.error('page error:', e.message));
 // One after another on one page, as the shots must be: each in steps, in order.
 const inTurn = (items, step) => items.reduce((done, item) => done.then(() => step(item)), Promise.resolve());
 const pad = (k) => String(k).padStart(3, '0');
-await inTurn(scenes, async ({ id, frames }) => {
+const ffmpeg = (...args) => execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...args]);
+await inTurn(scenes, async ({ id, frames, width }) => {
   await page.goto(`http://127.0.0.1:${port}/gallery.html?id=${id}`);
   await page.waitForFunction(() => window.done === true, null, { timeout: 60000 });
   const fig = page.locator('#fig');
-  if (!frames) {
-    await fig.screenshot({ path: join(out, `${id}.png`) });
-    console.log(join(out, `${id}.png`));
-    return;
-  }
   const dir = join(out, 'frames', id);
   rmSync(dir, { recursive: true, force: true });
-  mkdirSync(dir, { recursive: true });
+  if (frames || width !== undefined) mkdirSync(dir, { recursive: true });
+  if (!frames) {
+    const png = join(out, `${id}.png`);
+    if (width === undefined) {
+      await fig.screenshot({ path: png });
+    } else {
+      // photographed at its own size, then scaled, so its text is drawn at full size and stays sharp
+      const shot = join(dir, 'full.png');
+      await fig.screenshot({ path: shot });
+      ffmpeg('-i', shot, '-vf', `scale=${width}:-1:flags=lanczos`, png);
+    }
+    console.log(png);
+    return;
+  }
   await inTurn([...frames.keys()], async (k) => {
     await page.evaluate((n) => window.draw(n), k);
     await fig.screenshot({ path: join(dir, `${pad(k)}.png`) });
@@ -76,22 +88,9 @@ await inTurn(scenes, async ({ id, frames }) => {
   // one palette for the whole animation, so its colours do not flicker from frame to frame
   const gif = join(out, `${id}.gif`);
   const filter =
-    'scale=800:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=full[p];' +
+    `scale=${width ?? 800}:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=full[p];` +
     '[b][p]paletteuse=dither=sierra2_4a';
-  execFileSync('ffmpeg', [
-    '-y',
-    '-loglevel',
-    'error',
-    '-framerate',
-    '15',
-    '-i',
-    join(dir, '%03d.png'),
-    '-vf',
-    filter,
-    '-loop',
-    '0',
-    gif,
-  ]);
+  ffmpeg('-framerate', '15', '-i', join(dir, '%03d.png'), '-vf', filter, '-loop', '0', gif);
   console.log(`${gif}: ${frames.length} frames`);
 });
 await browser.close();

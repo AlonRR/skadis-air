@@ -4,9 +4,13 @@
 // GIFs of the page in use, for the Printables page's text (the owner, 22 Oct 2026: "in the printables text use gifs
 // of the page being used and of the types and options"): a pointer moves to each control and uses it, and every frame
 // is the page as it then is, each shown for as long as it really took. Each recording ends as it began, so the GIF
-// loops with no jump. The frames go to <folder>/frames/<id>/, the GIF, 800 x 500, beside them; ffmpeg makes it.
+// loops with no jump. The frames go to <folder>/frames/<id>/, the GIF beside them; ffmpeg makes it, as wide as its
+// recording's `width`: 800 for the gallery's page tour, 560 for the text's (A356, the owner, 23 Oct 2026: "we might
+// want to shrink the description gifs size"; C394).
 // `page-phone` is the page on a phone (the owner, 23 Oct 2026: "add a gif of the mobile version to printables"): a
 // fingertip instead of the arrow, and the page scrolled so each control shows below the pinned 3D view; 480 wide.
+// Each recording is of a section of the page, more or less (the owner: "each gif should represent a section of the
+// page more or less, instead of a gif being of one type").
 //
 //   npm run build -w skadis-air-web && npm run preview -w skadis-air-web -- --host 127.0.0.1 --port 4199
 //   node scripts/printables/write-page-gifs.mjs http://127.0.0.1:4199/ <folder> [id...]
@@ -186,6 +190,7 @@ const button = (page, name) => page.getByRole('button', { name, exact: true });
 const recordings = [
   {
     id: 'page-in-use',
+    width: 560,
     // a wall's panels close its outer sides, and one board keeps them: so it starts closed all round, as it ends
     async before(page) {
       await inTurn(['Top', 'Left', 'Right', 'Bottom'], (side) => button(page, side).click());
@@ -208,6 +213,7 @@ const recordings = [
   },
   {
     id: 'page-tour',
+    width: 800,
     // the owner, 22 Oct 2026: "have the second image be a gif of the webpage switching between different options and
     // rotating", and "the second webpage view should also show the wall option, so that users know its an option right
     // away": it starts on a wall in panels, its first frame the GIF's still, turns it by hand, makes one board of it,
@@ -242,6 +248,7 @@ const recordings = [
   },
   {
     id: 'page-types',
+    width: 560,
     // each board type, the fit coupon under Advanced, Test prints (D357), then the connectors, and back
     async steps(r, page) {
       await r.click(radio(page, 'boardType', 'lightened'));
@@ -257,6 +264,7 @@ const recordings = [
   },
   {
     id: 'page-edges',
+    width: 560,
     // closed sides, and open sides between the slots, and back
     async steps(r, page) {
       await r.click(button(page, 'Top'));
@@ -270,6 +278,7 @@ const recordings = [
   },
   {
     id: 'page-mounting',
+    width: 560,
     // standoffs, keyholes seen from the back, lock screws, and back
     async steps(r, page) {
       await r.click(radio(page, 'standoffs', 'back'));
@@ -284,6 +293,7 @@ const recordings = [
   {
     id: 'page-phone',
     phone: true,
+    width: 480,
     // the board turned by a finger, the board types, a setting's help folded open and shut, a wall in panels, and back,
     // the 3D view staying at the top as the form scrolls under it; a wall's panels close its outer sides and one board
     // keeps them, so it starts closed all round, as it ends
@@ -372,9 +382,11 @@ await inTurn(recordings, async (g) => {
   const listFile = join(dir, 'frames.txt');
   writeFileSync(listFile, `ffconcat version 1.0\n${list.join('\n')}\n`);
   const gif = join(out, `${g.id}.gif`);
+  // an ordered dither, which gives a pixel the same colour wherever it is redrawn: with only each frame's changed
+  // rectangle drawn again, an error-diffusing one left the last frame a few pixels off the first (C392)
   const filter =
-    `scale=${g.phone ? 480 : 800}:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=full[p];` +
-    '[b][p]paletteuse=dither=sierra2_4a:diff_mode=rectangle';
+    `scale=${g.width}:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=full[p];` +
+    '[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle';
   execFileSync('ffmpeg', [
     '-y',
     '-loglevel',

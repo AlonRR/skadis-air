@@ -4,6 +4,9 @@
 <!-- A picture for the Printables page: the scene named by ?id= from scenes.json, drawn with three.js under its title, -->
 <!-- in the page's own font and colours (write-gallery.mjs). window.draw(k) draws an animation's frame k: its camera, -->
 <!-- and each named group's place, as [x, y, z], or { at: [x, y, z], turn: radians about the vertical } to spin it. -->
+<!-- A scene's `size` is the picture's, 1600 x 1200 unless given; its `insets` are close-ups drawn over it, each in a -->
+<!-- framed box with a camera of its own, showing the meshes whose `view` names it (and the main view's, with `main`), -->
+<!-- as scissored viewports of the one canvas (C391). -->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -20,19 +23,25 @@
       #head .bar { width: 72px; height: 8px; border-radius: 4px; background: #f76707; margin-bottom: 26px; }
       #fig.hero #head h1 { font-size: 96px; margin-bottom: 18px; }
       #fig.hero #head p { font-size: 32px; }
+      #fig.compact #head { left: 48px; right: 48px; top: 40px; }
+      #fig.compact #head h1 { font-size: 46px; }
+      #fig.compact #head .bar { margin-bottom: 18px; }
       #foot { position: absolute; right: 72px; bottom: 34px; font-size: 22px; color: #5a6773; }
+      #fig.compact #foot { right: 48px; bottom: 24px; }
       #foot b { color: #16222c; }
-      canvas, #labels { position: absolute; left: 0; top: 0; }
+      canvas, #labels, #backs { position: absolute; left: 0; top: 0; }
       #labels text { font: 700 26px 'FiraCode Nerd Font', monospace; fill: #16222c; paint-order: stroke; stroke: #fff;
         stroke-width: 7px; stroke-linejoin: round; }
       #labels text.tag { font-size: 30px; }
+      #labels text.inset { font-size: 24px; stroke-width: 6px; }
     </style>
     <script type="importmap">{ "imports": { "three": "/three/build/three.module.js" } }</script>
   </head>
   <body>
     <div id="fig">
       <div id="head"><div class="bar"></div><h1 id="title"></h1><p id="caption"></p></div>
-      <svg id="labels" width="1600" height="1200"></svg>
+      <svg id="backs"></svg>
+      <svg id="labels"></svg>
       <div id="foot"><b>Skådis Air</b> · alonrr.github.io/skadis-air</div>
     </div>
     <script type="module">
@@ -43,27 +52,51 @@
       const scenes = await (await fetch('scenes.json')).json();
       const s = scenes.find((x) => x.id === id);
       document.getElementById('title').textContent = s.title;
-      if (s.hero) document.getElementById('fig').classList.add('hero');
+      const fig = document.getElementById('fig');
+      if (s.hero) fig.classList.add('hero');
+      if (s.compact) fig.classList.add('compact');
       document.getElementById('caption').innerHTML = s.caption.join('<br>');
-      const [W, H] = [1600, 1200];
+      const [W, H] = s.size ?? [1600, 1200];
+      fig.style.width = `${W}px`;
+      fig.style.height = `${H}px`;
+      for (const layer of ['backs', 'labels']) {
+        document.getElementById(layer).setAttribute('width', W);
+        document.getElementById(layer).setAttribute('height', H);
+      }
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
       renderer.setPixelRatio(1);
       renderer.setSize(W, H);
       renderer.setClearColor(0x000000, 0);
-      document.getElementById('fig').insertBefore(renderer.domElement, document.getElementById('labels'));
+      renderer.autoClear = false;
+      fig.insertBefore(renderer.domElement, document.getElementById('labels'));
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(s.camera.fov, W / H, 1, 4000);
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f96, 1.5));
+      // each camera carries its own lights, lit from where it looks, so a scene that turns stays lit from the front;
+      // only the lights of the camera drawing are on
+      const rigs = [];
+      // the lights shine on the point `aim`: the main view's the origin, which its scenes are drawn round, as a
+      // light's own target is; a close-up's the point it looks at, as its parts are drawn away from the origin
+      const rigged = (cam, aim) => {
+        scene.add(cam);
+        const key = new THREE.DirectionalLight(0xffffff, 1.5);
+        key.position.set(-0.6, 0.8, 1);
+        const fill = new THREE.DirectionalLight(0xffffff, 0.45);
+        fill.position.set(0.8, -0.2, 0.6);
+        cam.add(key, fill);
+        if (aim) {
+          const target = new THREE.Object3D();
+          target.position.set(...aim);
+          scene.add(target);
+          key.target = target;
+          fill.target = target;
+        }
+        rigs.push([cam, [key, fill]]);
+        return cam;
+      };
+      const camera = rigged(new THREE.PerspectiveCamera(s.camera.fov, W / H, 1, 4000));
       // the scene is drawn in the part below the title: its middle moved down by `drop` of the picture's height
       camera.setViewOffset(W, H, 0, -H * (s.camera.drop ?? 0.08), W, H);
-      // lit from the camera, so a scene that turns stays lit from the front
-      scene.add(camera);
-      scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f96, 1.5));
-      const key = new THREE.DirectionalLight(0xffffff, 1.5);
-      key.position.set(-0.6, 0.8, 1);
-      camera.add(key);
-      const fill = new THREE.DirectionalLight(0xffffff, 0.45);
-      fill.position.set(0.8, -0.2, 0.6);
-      camera.add(fill);
+      const holders = [];
       const groups = new Map();
       for (const m of s.meshes) {
         const g = new THREE.BufferGeometry();
@@ -71,9 +104,11 @@
         g.setIndex(m.triangles);
         const flat = g.toNonIndexed();
         flat.computeVertexNormals();
+        const seeThrough = (m.opacity ?? 1) < 1;
         const material = new THREE.MeshStandardMaterial({
           color: m.color, roughness: 0.7, metalness: 0, flatShading: true,
           polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
+          transparent: seeThrough, opacity: m.opacity ?? 1, depthWrite: !seeThrough,
         });
         const holder = new THREE.Group();
         holder.add(new THREE.Mesh(flat, material));
@@ -81,54 +116,108 @@
           const dark = new THREE.Color(m.color).multiplyScalar(0.5);
           holder.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, 28), new THREE.LineBasicMaterial({ color: dark })));
         }
+        holder.userData.view = m.view ?? null;
         scene.add(holder);
+        holders.push(holder);
         const name = m.group ?? '';
         groups.set(name, [...(groups.get(name) ?? []), holder]);
       }
-      const svg = document.getElementById('labels');
       const ns = 'http://www.w3.org/2000/svg';
-      const add = (tag, attrs) => {
+      const svg = document.getElementById('labels');
+      const backs = document.getElementById('backs');
+      const add = (tag, attrs, into = svg) => {
         const e = document.createElementNS(ns, tag);
         for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
-        svg.append(e);
+        into.append(e);
         return e;
       };
-      const place = (c) => {
-        camera.up.set(...(c.up ?? [0, 1, 0]));
-        camera.position.set(...c.position);
-        camera.lookAt(...c.target);
-        camera.updateMatrixWorld();
+      const place = (cam, c) => {
+        cam.up.set(...(c.up ?? [0, 1, 0]));
+        cam.position.set(...c.position);
+        cam.lookAt(...c.target);
+        cam.updateMatrixWorld();
+      };
+      // a point as a camera draws it, in the picture's pixels, within the box [x, y, w, h] it draws in
+      const onScreen = (cam, at, [bx, by, bw, bh]) => {
+        const v = new THREE.Vector3(...at).project(cam);
+        return [bx + ((v.x + 1) / 2) * bw, by + ((1 - v.y) / 2) * bh];
       };
       // a label: a dot on the part and its name beside it, joined by a line; a tag: a name centred on its point
-      const label = (l) => {
-        const v = new THREE.Vector3(...l.at).project(camera);
-        const [x, y] = [((v.x + 1) / 2) * W, ((1 - v.y) / 2) * H];
+      const label = (l, cam, box) => {
+        const [x, y] = onScreen(cam, l.at, box);
         if (l.tag) {
-          add('text', { x, y, 'text-anchor': 'middle', class: 'tag' }).textContent = l.text;
+          add('text', { x, y, 'text-anchor': 'middle', class: l.small ? 'tag inset' : 'tag' }).textContent = l.text;
           return;
         }
         const [tx, ty] = [x + l.dx, y + l.dy];
         add('line', { x1: x, y1: y, x2: tx, y2: ty, stroke: '#16222c', 'stroke-width': 2.5 });
         add('circle', { cx: x, cy: y, r: 8, fill: '#f76707', stroke: '#fff', 'stroke-width': 3 });
-        const text = add('text', { x: tx + (l.dx < 0 ? -10 : 10), y: ty + 9, 'text-anchor': l.dx < 0 ? 'end' : 'start' });
+        const text = add('text', {
+          x: tx + (l.dx < 0 ? -10 : 10),
+          y: ty + 9,
+          'text-anchor': l.dx < 0 ? 'end' : 'start',
+          ...(l.small ? { class: 'inset' } : {}),
+        });
         text.textContent = l.text;
+      };
+      // the close-ups: each a camera of its own, its box backed in white under the parts and framed over them
+      const insets = (s.insets ?? []).map((i) => {
+        const [, , w, h] = i.rect;
+        const cam = rigged(new THREE.PerspectiveCamera(i.camera.fov, w / h, 0.5, 4000), i.camera.target);
+        place(cam, i.camera);
+        return { ...i, cam };
+      });
+      for (const i of insets) {
+        const [x, y, w, h] = i.rect;
+        add('rect', { x, y, width: w, height: h, rx: 18, fill: '#ffffff' }, backs);
+      }
+      const whole = [0, 0, W, H];
+      // what one camera sees, lit by its own lights: the meshes of its view, and with `main` the main view's too
+      const show = (cam, view, main) => {
+        for (const h of holders) h.visible = h.userData.view === view || (main && h.userData.view === null);
+        for (const [c, lights] of rigs) for (const l of lights) l.visible = c === cam;
       };
       // frame k of an animation: its camera, and how far each named group has moved
       window.draw = (k) => {
         const f = s.frames?.[k] ?? {};
-        place(f.camera ?? s.camera);
-        for (const [name, holders] of groups) {
+        place(camera, f.camera ?? s.camera);
+        for (const [name, list] of groups) {
           const g = f.groups?.[name] ?? [0, 0, 0];
           const [at, turn] = Array.isArray(g) ? [g, 0] : [g.at ?? [0, 0, 0], g.turn ?? 0];
-          for (const h of holders) {
+          for (const h of list) {
             h.position.set(...at);
             h.rotation.set(0, turn, 0);
           }
         }
+        renderer.setScissorTest(false);
+        renderer.setViewport(0, 0, W, H);
+        renderer.clear();
+        show(camera, null, true);
         renderer.render(scene, camera);
         svg.replaceChildren();
-        // labels stay where a still camera puts them; a moving camera's animation has none
-        for (const l of s.labels ?? []) label(l);
+        for (const i of insets) {
+          const [x, y, w, h] = i.rect;
+          // a viewport counts up from the canvas's bottom edge
+          renderer.setViewport(x, H - y - h, w, h);
+          renderer.setScissor(x, H - y - h, w, h);
+          renderer.setScissorTest(true);
+          renderer.clear();
+          show(i.cam, i.id, i.main === true);
+          renderer.render(scene, i.cam);
+          // from the part it shows to the box's nearest edge, a line and a dot on the part
+          if (i.from) {
+            const [px, py] = onScreen(camera, i.from, whole);
+            const ex = Math.min(Math.max(px, x), x + w);
+            const ey = Math.min(Math.max(py, y), y + h);
+            add('line', { x1: px, y1: py, x2: ex, y2: ey, stroke: '#16222c', 'stroke-width': 2.5 });
+            add('circle', { cx: px, cy: py, r: 8, fill: '#f76707', stroke: '#fff', 'stroke-width': 3 });
+          }
+          add('rect', { x, y, width: w, height: h, rx: 18, fill: 'none', stroke: '#16222c', 'stroke-width': 3 });
+          add('text', { x: x + 20, y: y + 38, class: 'inset' }).textContent = i.title;
+          for (const l of i.labels ?? []) label({ ...l, small: true }, i.cam, i.rect);
+        }
+        // labels stay where a still camera puts them, over the close-ups' lines; a moving camera's animation has none
+        for (const l of s.labels ?? []) label(l, camera, whole);
       };
       window.frames = s.frames?.length ?? 0;
       window.draw(0);
