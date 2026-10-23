@@ -143,12 +143,88 @@ const rows = (info: Locator) =>
     }),
   );
 
+/** Each help opened by its button and measured against its field (D318): whether it shows under its label row and
+ * above its control, how far opening it moves the control and what follows the field (each measured from the
+ * field's top, so a scroll changes nothing), and whether a press at the control's middle still reaches the
+ * control. Each help is folded again after. */
+const opened = (info: Locator) =>
+  info.evaluateAll((buttons: HTMLElement[]) =>
+    buttons.map((b) => {
+      const id = b.getAttribute('aria-controls') ?? '';
+      const help = document.getElementById(id);
+      const control = document.querySelector(`[aria-describedby~="${id}"]`);
+      const field = help?.parentElement;
+      if (help === null || control === null || field === null || field === undefined) {
+        return { key: id, found: false, under: false, above: false, pushed: false, nextPushed: false, reached: false };
+      }
+      const next = field.nextElementSibling;
+      // something not drawn has no place to be pushed from
+      const from = (e: Element | null) =>
+        e === null || e.getClientRects().length === 0
+          ? Number.NaN
+          : e.getBoundingClientRect().top - field.getBoundingClientRect().top;
+      const before = { control: from(control), next: from(next) };
+      b.click();
+      const shown = help.getBoundingClientRect();
+      const label = b.parentElement?.getBoundingClientRect();
+      const moved = { control: from(control) - before.control, next: from(next) - before.next };
+      const above = shown.bottom <= control.getBoundingClientRect().top + 0.5; // before the scroll below
+      control.scrollIntoView({ block: 'center' });
+      const box = control.getBoundingClientRect();
+      const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      const result = {
+        key: id,
+        found: true,
+        under: label !== undefined && shown.top >= label.bottom - 0.5,
+        above,
+        pushed: moved.control >= shown.height - 0.5,
+        nextPushed: Number.isNaN(moved.next) || moved.next >= shown.height - 0.5,
+        reached: hit !== null && control.contains(hit),
+      };
+      b.click();
+      return result;
+    }),
+  );
+
 for (const [name, use] of [
   ['with a mouse', { viewport: { width: 1280, height: 800 } }],
   ['on a phone, with a touch screen', { viewport: { width: 375, height: 800 }, hasTouch: true, isMobile: true }],
 ] as const) {
   test.describe(name, () => {
     test.use(use);
+    // The owner, 23 Oct 2026: "the description should be above the options, under the header. make sure the items
+    // under get pushed down and not hidden by the description."
+    test('a help opened shows under its label and above its control, and pushes what is below it down (D318)', async ({
+      page,
+    }) => {
+      await ready(page);
+      let checked = 0;
+      for (const type of BOARD_TYPES) {
+        await choose(page, 'boardType', type.id);
+        await openAdvanced(page);
+        const measured = await opened(form(page).locator('button[aria-expanded]'));
+        expect(measured.length, type.id).toBeGreaterThan(0);
+        const wrong = measured.flatMap((m) =>
+          Object.entries(m)
+            .filter(([k, v]) => k !== 'key' && v === false)
+            .map(([k]) => `${type.id} ${m.key} not ${k}`),
+        );
+        expect(wrong).toEqual([]);
+        checked += measured.length;
+      }
+      expect(checked).toBeGreaterThan(20);
+      // control: a help laid over its field as a pop-over, out of the form's flow and taller than a control's
+      // middle, pushes nothing down and covers its control
+      await choose(page, 'boardType', 'solid');
+      await page.addStyleTag({
+        content:
+          '.field { position: relative; } .ws-note[id$="-note"] { position: absolute; z-index: 9; min-height: 4em; }',
+      });
+      const [over] = await opened(infoOf(page, 'thicknessMm'));
+      expect(over?.found).toBe(true);
+      expect(over?.pushed).toBe(false);
+      expect(over?.reached).toBe(false);
+    });
     // The button is a control's height, 36 px or 44 px on a touch screen, but its row stays one line of its label,
     // or the buttons would give back much of the room the folded help saves.
     test('each i button sits in its label row without making it taller, and a press at its middle reaches it (C317)', async ({

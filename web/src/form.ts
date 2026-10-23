@@ -70,7 +70,8 @@ const note = (text: string, id?: string) => element('p', { class: 'ws-note', ...
 /**
  * A setting's help, folded behind an "i" button beside its label (C317), so the form is not a wall of notes: the
  * design system's toggle for a section that cannot be a `details` (its Disclosure, v0.6.0), a Button saying in
- * `aria-expanded` whether the help shows and naming it in `aria-controls`, the help `hidden` while folded. Its
+ * `aria-expanded` whether the help shows and naming it in `aria-controls`, the help `hidden` while folded and,
+ * shown, under its label and above its control, in the form's flow, so what is under it moves down (D318). Its
  * icon is the font's "info", named in `aria-label` as the Stepper's arrows are. The help stays the control's
  * description while hidden, as a description may name hidden text, so a screen reader still reads it with the
  * control. Nothing else folds: a warning, an error, a count and what the screws pass are always shown.
@@ -78,6 +79,7 @@ const note = (text: string, id?: string) => element('p', { class: 'ws-note', ...
 function helpFor(s: Setting): { info: HTMLButtonElement; help: HTMLElement } | undefined {
   if (s.help === undefined) return undefined;
   const help = note(s.help, idOf(s.key, 'note'));
+  help.classList.add('help');
   help.hidden = true;
   const info = element('button', {
     type: 'button',
@@ -191,7 +193,12 @@ function numberField(
   const row = element('div', { class: 'ws-stepper' });
   row.append(input, down, up);
   const folded = helpFor(s);
-  field.append(labelRow(label, folded?.info), row);
+  field.append(labelRow(label, folded?.info));
+  if (folded !== undefined) {
+    field.append(folded.help);
+    described.push(folded.help.id);
+  }
+  field.append(row);
   const counted = s.count;
   if (counted !== undefined) {
     const count = element('p', { class: 'ws-note', id: idOf(s.key, 'count'), 'data-testid': `count-${s.key}` });
@@ -204,10 +211,6 @@ function numberField(
     update();
     input.addEventListener('input', update);
     field.append(count);
-  }
-  if (folded !== undefined) {
-    field.append(folded.help);
-    described.push(folded.help.id);
   }
   field.append(errorLine(s.key), warningBox(s.key));
   input.setAttribute('aria-describedby', [...described, idOf(s.key, 'error')].join(' '));
@@ -238,6 +241,7 @@ function sidesField(
   legend.append(words, ...(folded === undefined ? [] : [folded.info]));
   if (folded !== undefined) field.setAttribute('aria-labelledby', words.id);
   field.append(legend);
+  if (folded !== undefined) field.append(folded.help);
   const grid = element('div', { class: 'ws-sides', role: 'group', 'aria-label': `Closed ${s.label.toLowerCase()}` });
   grid.append(element('div', { class: 'ws-sides__board', 'aria-hidden': 'true' }));
   for (const side of SIDES) {
@@ -257,7 +261,6 @@ function sidesField(
     grid.append(button);
   }
   field.append(grid);
-  if (folded !== undefined) field.append(folded.help);
   field.append(errorLine(s.key));
   grid.setAttribute(
     'aria-describedby',
@@ -274,11 +277,11 @@ function choiceField(
   const field = element('div', { class: 'field' });
   const folded = helpFor(s);
   field.append(labelRow(element('div', { class: 'ws-label' }, s.label), folded?.info));
+  if (folded !== undefined) field.append(folded.help);
   const chosen = typeof start === 'string' && s.options.some((o) => o.value === start) ? start : s.default;
   const group = choiceGroup(s.key, s.label, s.options, chosen);
   group.addEventListener('change', changed);
   field.append(group);
-  if (folded !== undefined) field.append(folded.help);
   field.append(errorLine(s.key));
   group.setAttribute(
     'aria-describedby',
