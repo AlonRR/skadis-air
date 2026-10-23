@@ -277,6 +277,22 @@ clip (b4).
   (c) no skeleton. Recommended (a). D314 is answered (c), 23 Oct 2026: the skeleton built so prints 55.80 g at
   200 x 200 mm, sliced as above (C315).
 
+- **D374** The slimmer skeleton, D314's, after the physics tests ([report](research/2026-10-23-physics-tests.md)): per
+  hook it holds 43 % of the skeleton released (`v0.4.2`'s, on `main` again since D353): 31 against 62 N in PETG, 3.1
+  against 6.3 kg (the lightened board 110 N, 11.2 kg), modelled as solid plastic, so a ranking rather than a breaking
+  load. Its weak spots are the step behind the front's flange where a web meets the rim, and the hook's body on the
+  0.4 mm front flange. (a) Keep it held back until T320 shows where it breaks; (b) rework it first, a radius at the
+  step and a thicker front flange where the hook presses, weighed and modelled again, then T320 prints that; (c) drop
+  it, keeping the released skeleton, which prints heavier than the lightened board (D313) and holds less.
+  Recommended (b).
+
+- **D375** A rounded root where the standoffs and the slot clip's bar meet the part (the same report): each is a sharp
+  inner edge, its modelled stress rising with every finer mesh, and the weakest place on every board mounted on
+  standoffs. (a) A radius there; (b) as now. Recommended (a).
+
+- **T373** Measure an IKEA hook for the physics model: where its rod bears in the slot and how wide it is, how far in
+  front of the board its load hangs, and where its body presses below (the model assumed them, C331 to C336).
+
 - **D371** Corner screws where a side runs between the slots (the owner, 23 Oct 2026: "round head and counter sunk
   don't work on 'between the slots' option"; [QA](research/2026-10-23-qa-sweep.md) Q14). D289 (a) left no screw at such a
   corner, as its usual place, 10 mm in from both edges, would land on a slot; with all four sides between the slots no
