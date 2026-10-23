@@ -22,15 +22,13 @@ kg, and the stress shown on pictures of the parts). The choices made on the way 
 
 ### Resume point
 
-Kept current at each checkpoint. **23 Oct 2026, evening:** level 2 is done for every hook, spread and connector case
-but one: today's lightened board on standoffs, whose level 2 meshed in no try within a window (reported at level 1).
-Level 3 (C348) ran for v0.4.2's skeleton under the edge hook and today's skeleton on standoffs. Left: the walls'
-governing case (one hook at the seam, the wall's four outer screws) at level 2, the lightened wall's running; one more
-try of the skeleton's wall at level 1 (C346); the figures of v0.4.2's skeleton and the walls, whose runs predate the
-surface file or are running. One window is one command: `run.py --levels 2 --order=-160,-80-,standoff-,slot-clip-,-wall-
---budget 1680`, with `--only` and `--cases` to choose; `--levels 3` for level 3; `run.py` skips what `results.jsonl`
-holds, starts no run it cannot finish and kills one that outlasts its window (C344). A figure whose run predates the
-surface file is saved again by `run.py --resave`, refused unless its peaks are the reported ones (C347).
+Kept current at each checkpoint. **23 Oct 2026, the last:** the runs are done as far as this machine takes them.
+Level 2 for every hook, spread and connector case but one (today's lightened board on standoffs, which no try meshed);
+level 3 for the two skeleton cases that decide a before and after; the walls at level 1, their level 2 past a window;
+the skeleton's wall not solved ([not done](#not-done-and-why)). Eleven figures. To take it further: `run.py --levels 2
+--only <part> --cases <case> --retry-failed --budget <s>` in a window longer than 28 minutes runs a wall's level 2;
+`run.py` skips what `results.jsonl` holds, starts no run it cannot finish and kills one that outlasts its window
+(C344).
 
 ## Findings
 
@@ -84,8 +82,9 @@ to the yield alone, from its peak, which converged in 31 of the 44.
 - **The slot clip** for two boards holds 53 N (5.4 kg) across the layers at its bar's root by the loaded peg, rising
   with the mesh (an upper bound); 111 N to the yield alone.
 
-**The walls** (level 1; per hook): one hook in the seam's slot, the wall on its four outer screws alone, the clip
-carrying a panel's share: the solid wall 113 N across the layers, the lightened 164 N at the yield; with each panel on
+**The walls** (level 1 only, their level 2 past a window; per hook): one hook in the seam's slot, the wall on its four outer screws alone, the clip
+carrying a panel's share: the solid wall 113 N across the layers at an outer screw's countersink band (C345: 2 mm off
+it 0.67 against 1.50 MPa), the lightened 164 N at the yield on a web beside the seam; with each panel on
 its own screws, 208 and 199 N. The clip is not the weak part: its peak is between a tenth and a half of the panels'.
 
 ## The loads
@@ -408,14 +407,35 @@ prints what the part holds in PLA, PETG and ASA (Q329). `scripts/physics/figures
 - [Lightened board, today: one hook in a slot by the left edge, 10 N (hook-edge)](../figures/physics/lightened-today.png): mesh level 2, converged: 5 % / 2 % / 1 % / 1 %; holds per hook, to the yield in the part or the layers' adhesion: PLA 119 N, 12.2 kg (yield) · PETG 110 N, 11.2 kg (yield) · ASA 98 N, 10.0 kg (yield)
 - [Lightened board, v0.2.1: one hook in a slot by the left edge, 10 N (hook-edge)](../figures/physics/lightened-v0.2.1.png): mesh level 2, not converged: 5 % / 24 % / 2 % / 0 %; holds per hook, to the yield in the part or the layers' adhesion: PLA 72 N, 7.4 kg (layers) · PETG 76 N, 7.8 kg (layers) · ASA 47 N, 4.8 kg (layers)
 - [Skeleton board, today: one hook in a slot by the left edge, 10 N (hook-edge)](../figures/physics/skeleton-today.png): mesh level 2, converged: 6 % / 3 % / 6 % / 0 %; holds per hook, to the yield in the part or the layers' adhesion: PLA 29 N, 2.9 kg (layers) · PETG 31 N, 3.1 kg (layers) · ASA 19 N, 1.9 kg (layers)
-- **Skeleton board, v0.4.2**: its picture is of an older result; drawn again with the rest
+- [Skeleton board, v0.4.2: one hook in the middle slot, 10 N (hook-mid)](../figures/physics/skeleton-v0.4.2.png): mesh level 2, converged: 5 % / 3 % / 10 % / 0 %; holds per hook, to the yield in the part or the layers' adhesion: PLA 67 N, 6.8 kg (yield) · PETG 62 N, 6.3 kg (yield) · ASA 55 N, 5.6 kg (yield)
 - [Skeleton board, v0.2.1: one hook in a slot by the left edge, 10 N (hook-edge)](../figures/physics/skeleton-v0.2.1.png): mesh level 2, not converged: 14 % / 33 % / 5 % / 1 %; holds per hook, to the yield in the part or the layers' adhesion: PLA 4 N, 0.4 kg (layers) · PETG 5 N, 0.5 kg (layers) · ASA 3 N, 0.3 kg (layers)
 - [Standoff for one board, 15 mm, today: 10 N down the wall (shear)](../figures/physics/standoff-1.png): mesh level 2, not converged: 9 % / 12 % / 3 % / 0 %; holds per connector, to the yield in the part or the layers' adhesion: PLA 80 N, 8.2 kg (layers) · PETG 85 N, 8.7 kg (layers) · ASA 52 N, 5.3 kg (layers)
 - [Slot clip for two boards, today: 10 N down the wall (shear)](../figures/physics/slot-clip-2.png): mesh level 2, not converged: 8 % / 20 % / 6 % / 0 %; holds per connector, to the yield in the part or the layers' adhesion: PLA 53 N, 5.4 kg (layers) · PETG 56 N, 5.8 kg (layers) · ASA 34 N, 3.5 kg (layers)
-- **Two lightened panels joined by a slot clip, today**: not drawn yet, its run's surface not saved
-- **Two solid panels joined by a slot clip, today**: not drawn yet, its run's surface not saved
+- [Two lightened panels joined by a slot clip, today: one hook in the seam's slot, 10 N, on the wall's four outer screws (wall-seam-hook-outer-screws)](../figures/physics/lightened-wall.png): mesh level 1 only; holds per hook, to the yield in the part or the layers' adhesion: PLA 164 N, 16.7 kg (yield) · PETG 151 N, 15.4 kg (yield) · ASA 123 N, 12.6 kg (layers)
+- [Two solid panels joined by a slot clip, today: one hook in the seam's slot, 10 N, on the wall's four outer screws (wall-seam-hook-outer-screws)](../figures/physics/solid-wall.png): mesh level 1 only; holds per hook, to the yield in the part or the layers' adhesion: PLA 113 N, 11.6 kg (layers) · PETG 120 N, 12.2 kg (layers) · ASA 73 N, 7.5 kg (layers)
 
 <!-- figures:end -->
+
+## Not done, and why
+
+- **Today's lightened board on standoffs at level 2**: no mesh try finished within a window (one sat 13 minutes in a
+  surface before the tries were capped, C338; capped, they outlasted the window). Reported at level 1.
+- **The lightened wall at level 2**: about 4.2 million unknowns, past what PARDISO factors here, and conjugate gradients
+  outlasted a 28-minute window. Reported at level 1, as are the walls' other cases, run at level 2 only for the
+  governing one.
+- **The solid wall at level 2**: its governing case, past PARDISO's limit for a solid board here (2.2 million
+  unknowns), outlasted its window on conjugate gradients (1085 s left). Reported at level 1.
+- **The skeleton's wall**: tried once more at level 1 for its governing case (C346). It meshed, and PARDISO found its
+  stiffness singular (error -4, a zero pivot): the part is one body, so some region of its mesh is held by no more than
+  an edge or a point, most likely where the 0.2 mm seam slit (C337) meets the skeleton's 0.4 mm flanges. Not run;
+  finding that region is the next step, if the skeleton's wall is wanted.
+- **Level 3 for the other cases not converged**: run for the two that decide a before and after (v0.4.2's skeleton
+  under the edge hook, today's skeleton on standoffs); the others stand at level 2 with their changes shown. Those whose
+  stress rose at its place are at sharp inner edges, upper bounds by nature, which more levels would only confirm.
+- **v0.2.1's skeleton window under the edge hook**: no try meshed it (gmsh's parametrisation failed in every try); the
+  windows are the local stress alone (C334), and the whole board's row stands.
+- **The hook's contact as a contact**: the hook's real shape is not measured, so its loads are even pressures on
+  patches (C332), a question for the owner below.
 
 ## Questions for the owner
 
