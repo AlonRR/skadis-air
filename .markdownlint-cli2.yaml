@@ -17,7 +17,7 @@ globs:
   - "**/*.md"
 ignores:
   - "reports/**"        # generated scanner output - lint the generator, not its output
-  - ".venv/**"
+  - "**/.venv/**"
   - "**/node_modules/**"  # at any depth; "node_modules/**" matched only the root one
   - "web/out/**"        # the page's generated output: the build and browser-test reports
   - "**/CHANGELOG.md"   # generated; its format is the tool's, not ours

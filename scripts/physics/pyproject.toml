@@ -1,0 +1,16 @@
+[project]
+name = "skadis-air-physics"
+version = "0.1.0"
+description = "Structural checks of the boards and connectors: meshing, linear static finite elements, and their controls"
+requires-python = ">=3.12,<3.14"
+license = "MPL-2.0"
+dependencies = [
+  "gmsh==4.15.0",
+  "scikit-fem==12.0.1",
+  "numpy>=2.1,<3",
+  "scipy>=1.14,<2",
+  "pypardiso==0.4.6",
+]
+
+[tool.uv]
+package = false

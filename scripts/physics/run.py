@@ -1,0 +1,317 @@
+"""Run the load cases of the parts write-parts.mjs wrote, one run per (version, part, case, mesh level), each in its
+own process, appended to .check/physics/results.jsonl as it finishes. A run already there is skipped, so a killed
+batch loses one run and starts again where it stopped.
+
+    uv run python run.py                          every version under .check/physics/parts, both mesh levels
+    uv run python run.py --only skeleton-hook     parts whose name contains this
+    uv run python run.py --versions today --levels 1
+
+Each case is run once, at the reference modulus E_REF: for prescribed loads the stresses do not depend on the
+modulus, so a material's deflection is this one's times E_REF / E (Q326, materials.py).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import numpy as np
+
+ROOT = Path(__file__).resolve().parents[2]
+PARTS = ROOT / ".check" / "physics" / "parts"
+RESULTS = ROOT / ".check" / "physics" / "results.jsonl"
+E_REF, NU = 1000.0, 0.35  # MPa; Poisson's ratio from no sheet (C331)
+EXCLUDE_MM = 1.0  # stresses within this of a fixed surface are left out of the peak: a clamp's edge is singular (C338)
+
+# Mesh levels (C338): (global size, size near the loads and supports), mm. Level 2 is the convergence check. The
+# global size is the board type's, by its thinnest member: the solid board is a 5 mm plate, the lattices' members
+# 3 mm (lightened) and 0.9 mm with a 0.4 mm flange (skeleton); the connectors are posts and bars 4 mm and more.
+LEVELS = {
+    "solid": {1: (1.5, 0.5), 2: (1.2, 0.35)},
+    "lightened": {1: (1.0, 0.5), 2: (0.8, 0.35)},
+    "skeleton": {1: (1.0, 0.5), 2: (0.8, 0.35)},
+    "standoff": {1: (1.0, 0.5), 2: (0.8, 0.35)},
+    "slot-clip": {1: (1.0, 0.5), 2: (0.8, 0.35)},
+}
+# The whole 160 mm board under one hook: coarser away from the hook and the screws, where the stress is low and smooth.
+LEVELS_WHOLE = {
+    "solid": {1: (2.0, 0.5), 2: (1.6, 0.35)},
+    "lightened": {1: (1.5, 0.5), 2: (1.2, 0.35)},
+    "skeleton": {1: (1.2, 0.5), 2: (1.0, 0.35)},
+}
+
+
+def single_level(part: str) -> bool:
+    """A window of a board (C334) is run at level 1 alone: it bounds the whole board's result, which is reported."""
+    return "-hook-" in part
+
+
+def kind_of(meta: dict) -> str:
+    return "connector" if meta["type"] in ("standoff", "slot-clip") else "board"
+
+
+# --- selecting boundary facets -----------------------------------------------------------------------------------
+
+
+def select(sel: dict, cen: np.ndarray, nrm: np.ndarray) -> np.ndarray:
+    ok = np.ones(len(cen), dtype=bool)
+    if "box" in sel:
+        lo, hi = np.array(sel["box"][0]), np.array(sel["box"][1])
+        ok &= np.all((cen >= lo) & (cen <= hi), axis=1)
+    if "normal" in sel:
+        n = np.array(sel["normal"], dtype=float)
+        if np.linalg.norm(n) > 0:
+            ok &= nrm @ (n / np.linalg.norm(n)) >= sel.get("minDot", 0.9)
+    if "rho" in sel:
+        c = np.array(sel["rho"]["centre"])
+        rho = np.hypot(cen[:, 0] - c[0], cen[:, 1] - c[1])
+        ok &= (rho >= sel["rho"]["range"][0]) & (rho <= sel["rho"]["range"][1])
+    return ok
+
+
+def hook_patches(h: dict, cen: np.ndarray, nrm: np.ndarray, area: np.ndarray) -> dict:
+    """The three places a hook bears on the board (C332): its rod on the slot's bottom end, down; its back tab on the
+    back face below the slot, outward; its body on the front face round the slot 40 mm below, inward."""
+    xs, ys = h["slot"]
+    hw, hh, t, b = h["halfWidth"], h["halfHeight"], h["thickness"], h["widthMm"] / 2
+    bottom = ys - hh
+    x, y, z = cen[:, 0], cen[:, 1], cen[:, 2]
+    across = np.abs(x - xs) <= b
+    bearing = across & (nrm[:, 1] > 0.45) & (np.abs(nrm[:, 2]) < 0.3) & (y >= bottom - 0.05) & (y <= bottom + hw + 0.05)
+    bearing &= (z > -0.01) & (z < t + 0.01)
+    back = across & (nrm[:, 2] < -0.9) & (np.abs(z) < 0.05) & (y <= bottom) & (y >= bottom - h["dropMm"])
+    lower = ys - h["pegBelowMm"]
+    front = across & (nrm[:, 2] > 0.9) & (np.abs(z - t) < 0.05) & (np.abs(y - lower) <= hh + 1 + b)
+    out = {}
+    for name, m in (("bearing", bearing), ("back", back), ("front", front)):
+        if not m.any():
+            raise ValueError(f"hook at {h['slot']}: no facets for its {name} patch")
+        out[name] = (m, float(area[m].sum()), float((cen[m, 1] * area[m]).sum() / area[m].sum()))
+    w = h["force"]
+    arm = out["back"][2] - out["front"][2]
+    r = w * (h["depthMm"] + t / 2) / arm
+    return {"patches": out, "R": r, "arm": arm}
+
+
+def mesh_with_retries(stl: str, size: float, refine: list):
+    """gmsh's remeshed surfaces can cross in a tight spot ("a segment and a facet intersect") or fail to
+    parametrise. Each retry moves every node: sizes 3 and 6 % smaller and 3 % larger, then the surfaces classified
+    at 50 degrees instead of 40, which keeps a 45 degree chamfer in one patch with its neighbour (C338); the volume
+    control judges the result.
+    Returns the points, the tets and the attempt used: (angle, scale)."""
+    import fe
+
+    errors = []
+    for angle, scale in ((40, 1.0), (40, 0.97), (40, 0.94), (40, 1.03), (50, 1.0), (50, 0.97)):
+        try:
+            rs = [fe.Refine(r.centre, r.radius, r.size * scale, r.grow) for r in refine]
+            points, tets = fe.mesh_stl(stl, size * scale, rs, angle_deg=angle)
+            return points, tets, [angle, scale]
+        except Exception as error:  # gmsh raises a bare Exception
+            errors.append(f"{angle} deg x{scale}: {str(error).splitlines()[0]}")
+    raise RuntimeError("meshing failed: " + "; ".join(errors))
+
+
+# --- one run ----------------------------------------------------------------------------------------------------
+
+
+def run_one(version: str, part: str, case_id: str, level: int) -> dict:
+    import fe
+
+    meta = json.loads((PARTS / version / f"{part}.json").read_text())
+    case = next(c for c in meta["cases"] if c["id"] == case_id)
+    levels = LEVELS_WHOLE if case.get("mesh") == "whole-160" else LEVELS
+    size, fine = levels[meta["type"]][level]
+    timer = fe.Timer()
+    refine = [fe.Refine(tuple(r["centre"]), r["radius"], fine) for r in case.get("refine", [])]
+    points, tets, attempt = mesh_with_retries(str(PARTS / version / f"{part}.stl"), size, refine)
+    timer.mark("mesh")
+    model = fe.Model.of(points, tets)
+    volume = model.volume()
+    k = model.stiffness(E_REF, NU)
+    timer.mark("assemble")
+    bf, cen, nrm, area = model.boundary()
+
+    fixed_mask = np.zeros(len(bf), dtype=bool)
+    fixed_areas = {}
+    for sel in case["fixed"]:
+        m = select(sel, cen, nrm)
+        fixed_areas[sel["label"]] = round(fixed_areas.get(sel["label"], 0) + float(area[m].sum()), 3)
+        if not m.any():
+            raise ValueError(f"{part}/{case_id}: nothing selected for {sel['label']}")
+        fixed_mask |= m
+    fixed_nodes = model.facet_nodes(bf[fixed_mask])
+
+    f = np.zeros(model.ndof)
+    applied = np.zeros(3)
+    moment = np.zeros(3)
+    loads_log = []
+    probes = []
+    for load in case["loads"]:
+        if "hook" in load:
+            h = load["hook"]
+            hp = hook_patches(h, cen, nrm, area)
+            pieces = [
+                ("bearing", np.array([0, -h["force"], 0])),
+                ("back", np.array([0, 0, hp["R"]])),
+                ("front", np.array([0, 0, -hp["R"]])),
+            ]
+            for name, force in pieces:
+                m = hp["patches"][name][0]
+                f += model.traction_load(bf[m], force)
+                applied += force
+                c = (cen[m] * area[m, None]).sum(axis=0) / area[m].sum()
+                moment += np.cross(c, force)
+            probes.append(model.facet_nodes(bf[hp["patches"]["bearing"][0]]))
+            loads_log.append(
+                {
+                    "hook": h["slot"],
+                    "W": h["force"],
+                    "R": round(hp["R"], 4),
+                    "arm": round(hp["arm"], 3),
+                    "areas": {n: round(v[1], 3) for n, v in hp["patches"].items()},
+                }
+            )
+        else:
+            m = select(load["select"], cen, nrm)
+            if not m.any():
+                raise ValueError(f"{part}/{case_id}: nothing selected for {load['label']}")
+            force = np.array(load["force"], dtype=float)
+            f += model.traction_load(bf[m], force)
+            applied += force
+            probes.append(model.facet_nodes(bf[m]))
+            loads_log.append({"label": load["label"], "force": load["force"], "area": round(float(area[m].sum()), 3)})
+    # nothing applied on a fixed node is lost: the load vector's sum is the applied force
+    assert np.allclose(f.reshape(-1, 3).sum(axis=0), applied, atol=1e-9 * max(1, np.abs(applied).max()))
+    timer.mark("loads")
+    u = model.solve(k, f, fixed_nodes)
+    timer.mark("solve")
+    # equilibrium: the supports' reactions balance what was applied
+    reaction = (k @ u - f).reshape(-1, 3)[fixed_nodes].sum(axis=0)
+    balance = float(np.abs(reaction + applied).max() / max(1e-12, np.abs(applied).max()))
+
+    s = model.stresses(u, E_REF, NU)
+    vm = fe.von_mises(s)
+    layer = np.array(meta.get("layerNormal", [0, 0, 1]), dtype=float)
+    sn = fe.normal_stress(s, layer)
+    tau = fe.interlayer_shear(s, layer)
+    fixed_points = model.mesh.p[:, np.unique(model.mesh.facets[:, bf[fixed_mask]])].T
+    keep = fe.far_from(model, fixed_points, EXCLUDE_MM)
+    timer.mark("stress")
+
+    def peak(values: np.ndarray, sign: float = 1.0) -> dict:
+        v = sign * values[keep]
+        e, corner = np.unravel_index(np.argmax(v), v.shape)
+        el = np.flatnonzero(keep)[e]
+        where = model.mesh.p[:, model.mesh.t[corner, el]]
+        return {"value": float(sign * v[e, corner]), "at": [round(float(c), 2) for c in where]}
+
+    disp = u.reshape(-1, 3)
+    mag = np.linalg.norm(disp, axis=1)
+    worst = int(np.argmax(mag))
+    probe = [float(np.linalg.norm(disp[p], axis=1).mean()) for p in probes]
+    return {
+        "version": version,
+        "part": part,
+        "case": case_id,
+        "level": level,
+        "size": size,
+        "fine": fine,
+        "tets": int(model.mesh.t.shape[1]),
+        "dofs": int(model.ndof),
+        "meshAttempt": attempt,
+        "volume": round(volume, 2),
+        "volumeManifold": round(meta["volume"], 2),
+        "volumeErr": round(volume / meta["volume"] - 1, 5),
+        "fixedAreas": fixed_areas,
+        "loads": loads_log,
+        "applied": applied.round(6).tolist(),
+        "appliedMoment": moment.round(5).tolist(),
+        "balance": balance,
+        "excluded": int((~keep).sum()),
+        "elements": int(keep.size),
+        "vm": peak(vm),
+        "vmRaw": float(vm.max()),
+        "sn": peak(sn),
+        "snCompression": peak(sn, -1.0),
+        "tau": peak(tau),
+        "umax": {"value": float(mag[worst]), "at": [round(float(c), 2) for c in model.nodes[:, worst]]},
+        "uLoad": probe,
+        "E": E_REF,
+        "nu": NU,
+        "times": timer.marks,
+    }
+
+
+# --- the batch ------------------------------------------------------------------------------------------------
+
+
+def done_keys() -> set:
+    keys = set()
+    if RESULTS.exists():
+        for line in RESULTS.read_text().splitlines():
+            if line.strip():
+                r = json.loads(line)
+                keys.add((r["version"], r["part"], r["case"], r["level"]))
+    return keys
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--one", nargs=4, metavar=("VERSION", "PART", "CASE", "LEVEL"))
+    ap.add_argument("--versions")
+    ap.add_argument("--only")
+    ap.add_argument("--levels", default="1,2")
+    args = ap.parse_args()
+    if args.one:
+        v, p, c, lv = args.one
+        print(json.dumps(run_one(v, p, c, int(lv))))
+        return 0
+    versions = args.versions.split(",") if args.versions else sorted(d.name for d in PARTS.iterdir() if d.is_dir())
+    levels = [int(x) for x in args.levels.split(",")]
+    done = done_keys()
+    todo = []
+    for v in versions:
+        for part in json.loads((PARTS / v / "index.json").read_text()):
+            if args.only and args.only not in part:
+                continue
+            meta = json.loads((PARTS / v / f"{part}.json").read_text())
+            for case in meta["cases"]:
+                for lv in levels:
+                    if lv > 1 and single_level(part):
+                        continue
+                    if (v, part, case["id"], lv) not in done:
+                        todo.append((v, part, case["id"], lv))
+    print(f"{len(todo)} runs to do", flush=True)
+    failed = 0
+    for i, (v, part, case, lv) in enumerate(todo, 1):
+        t0 = time.time()
+        proc = subprocess.run(
+            [sys.executable, __file__, "--one", v, part, case, str(lv)], capture_output=True, text=True
+        )
+        if proc.returncode != 0:
+            failed += 1
+            print(
+                f"[{i}/{len(todo)}] FAILED {v} {part} {case} L{lv}: {proc.stderr.strip().splitlines()[-1:]}", flush=True
+            )
+            continue
+        line = proc.stdout.strip().splitlines()[-1]
+        with RESULTS.open("a") as fh:
+            fh.write(line + "\n")
+        r = json.loads(line)
+        print(
+            f"[{i}/{len(todo)}] {v} {part} {case} L{lv}: {r['tets']} tets, vol {100 * r['volumeErr']:+.2f} %, "
+            f"vm {r['vm']['value']:.2f} MPa at {r['vm']['at']}, u {r['umax']['value']:.4f} mm, "
+            f"{time.time() - t0:.0f} s",
+            flush=True,
+        )
+    print(f"{len(todo)} runs, {len(todo) - failed} done, {failed} failed", flush=True)
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

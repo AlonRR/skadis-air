@@ -62,3 +62,6 @@ packages/*/dist/
 # --- Python bytecode: it records the absolute path of its source file ---
 __pycache__/
 *.pyc
+
+# --- the physics runs' Python environment, which uv makes beside its pyproject.toml ---
+.venv/
