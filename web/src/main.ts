@@ -121,7 +121,8 @@ function rebuild(type: AnyBoardType, form: Form): void {
     }
     shown = id;
     const { min, max } = built;
-    const size = [0, 1, 2].map((k) => Math.round(((max[k] ?? 0) - (min[k] ?? 0)) * 10) / 10).join(' × ');
+    // with the decimals each has, up to two: a thickness of 5.25 mm had shown as 5.3 (Q12)
+    const size = [0, 1, 2].map((k) => Math.round(((max[k] ?? 0) - (min[k] ?? 0)) * 100) / 100).join(' × ');
     if (built.wall) {
       const count = built.wall.panels.reduce((n, line) => n + line.count, 0);
       warnAboutBed(0, 0); // every panel fits the bed it was cut for

@@ -29,6 +29,7 @@ All notable changes to this project are recorded here. The format follows
 - With keyholes or lock screws on standoffs too short for them, the note under the screw size no longer gives a
   length less than nothing ("passes -9.3 mm of standoff"); it says nothing, and the status line says how tall the
   standoffs must be.
+- The size under the 3D view keeps the decimals it has, up to two: a 5.25 mm thick board showed as 5.3 mm.
 
 ## [0.6.0] - 2026-10-23
 

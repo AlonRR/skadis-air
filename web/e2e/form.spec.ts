@@ -94,6 +94,16 @@ test('says a connector it refuses is a connector, not a board', async ({ page })
   await expect(status).toHaveText('Correct the settings marked above to make the connector.');
 });
 
+// Found by QA (Q12, 23 Oct 2026): a thickness of 5.25 mm was shown as 5.3 mm; the file was right.
+test('shows the size with the decimals it has, up to two', async ({ page }) => {
+  await ready(page);
+  const size = page.getByTestId('board-size');
+  await page.locator('input[name="thicknessMm"]').fill('5.25');
+  await expect(size).toHaveText('160 × 160 × 5.25 mm');
+  await page.locator('input[name="thicknessMm"]').fill('4.5');
+  await expect(size).toHaveText('160 × 160 × 4.5 mm');
+});
+
 test('warns about a thickness outside 4 to 5.5 mm, and still builds it (C43)', async ({ page }) => {
   await ready(page);
   const thickness = page.locator('input[name="thicknessMm"]');
