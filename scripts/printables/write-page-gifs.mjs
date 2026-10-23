@@ -5,6 +5,8 @@
 // of the page being used and of the types and options"): a pointer moves to each control and uses it, and every frame
 // is the page as it then is, each shown for as long as it really took. Each recording ends as it began, so the GIF
 // loops with no jump. The frames go to <folder>/frames/<id>/, the GIF, 800 x 500, beside them; ffmpeg makes it.
+// `page-phone` is the page on a phone (the owner, 23 Oct 2026: "add a gif of the mobile version to printables"): a
+// fingertip instead of the arrow, and the page scrolled so each control shows below the pinned 3D view; 480 wide.
 //
 //   npm run build -w skadis-air-web && npm run preview -w skadis-air-web -- --host 127.0.0.1 --port 4199
 //   node scripts/printables/write-page-gifs.mjs http://127.0.0.1:4199/ <folder> [id...]
@@ -34,13 +36,20 @@ const POINTER = `
   #gif-pointer .ring { position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; border-radius: 50%;
     border: 3px solid #f76707; opacity: 0; }
   #gif-pointer.click .ring { animation: gif-ring 380ms ease-out; }
-  @keyframes gif-ring { from { opacity: 1; transform: scale(0.4); } to { opacity: 0; transform: scale(1.6); } }`;
+  @keyframes gif-ring { from { opacity: 1; transform: scale(0.4); } to { opacity: 0; transform: scale(1.6); } }
+  #gif-pointer .tip { position: absolute; left: -15px; top: -15px; width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(22, 34, 44, 0.35); border: 2px solid #fff; }`;
 const ARROW =
   '<svg width="26" height="34" viewBox="0 0 26 34"><path d="M2 2 L2 28 L9 21 L14 32 L19 30 L14 19 L24 19 Z" ' +
   'fill="#16222c" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>';
+/** On a phone, a fingertip. */
+const TIP = '<div class="tip"></div>';
+const DESKTOP = { viewport: { width: 1280, height: 800 } };
 
-/** One recording: drives the page through its steps, keeping each frame and when it was taken. */
-function recorder(page, dir) {
+/** One recording: drives the page through its steps, keeping each frame and when it was taken. `centre` is where
+ * the pointer rests; `phone` scrolls the page itself so a control shows below the 3D view and the plan bar, which a
+ * phone pins at the top as the page scrolls, where the browser's own scrolling would leave it under them. */
+function recorder(page, dir, { centre, phone }) {
   const frames = [];
   const snap = async () => {
     const file = join(dir, `${String(frames.length).padStart(3, '0')}.png`);
@@ -68,8 +77,23 @@ function recorder(page, dir) {
     await untilMade(300);
     await hold(ms);
   };
+  // on a phone: the page scrolled until the control is below what is pinned at the top, frames while it scrolls
+  const clearOfPinned = async (target) => {
+    const moved = await target.evaluate((el) => {
+      const sticky = [...document.querySelectorAll('.ws-stage__view, .ws-plan')].filter(
+        (e) => getComputedStyle(e).position === 'sticky',
+      );
+      if (sticky.some((e) => e.contains(el))) return false; // pinned itself, so always in sight
+      const pinned = sticky.reduce((bottom, e) => Math.max(bottom, e.getBoundingClientRect().bottom), 0);
+      const box = el.getBoundingClientRect();
+      if (box.top >= pinned + 8 && box.bottom <= innerHeight - 8) return false;
+      window.scrollBy({ top: box.top - pinned - 48, behavior: 'smooth' });
+      return true;
+    });
+    if (moved) await hold(700);
+  };
   const pointAt = async (target) => {
-    await target.scrollIntoViewIfNeeded();
+    await (phone ? clearOfPinned(target) : target.scrollIntoViewIfNeeded());
     const box = await target.boundingBox();
     if (box === null) throw new Error('a control to point at is not on the page');
     const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
@@ -142,12 +166,12 @@ function recorder(page, dir) {
     },
     /** Back to where it began, so the GIF loops: the pointer, and every scrolled panel scrolled back up. */
     async home() {
-      await page.evaluate(() => {
-        document.getElementById('gif-pointer').style.transform = 'translate(640px, 420px)';
+      await page.evaluate(([x, y]) => {
+        document.getElementById('gif-pointer').style.transform = `translate(${x}px, ${y}px)`;
         for (const e of [document.scrollingElement, ...document.querySelectorAll('*')]) {
           if (e && e.scrollTop > 0) e.scrollTo({ top: 0, behavior: 'smooth' });
         }
-      });
+      }, centre);
       // the real mouse, which clicked, to the corner it started in, so no control is left hovered, and no focus ring
       await page.mouse.move(0, 0);
       await page.evaluate(() => document.activeElement?.blur());
@@ -256,12 +280,45 @@ const recordings = [
       await r.click(radio(page, 'standoffs', 'none'));
     },
   },
+  {
+    id: 'page-phone',
+    phone: true,
+    // the board turned by a finger, the board types, a setting's help folded open and shut, a wall in panels, and back,
+    // the 3D view staying at the top as the form scrolls under it; a wall's panels close its outer sides and one board
+    // keeps them, so it starts closed all round, as it ends
+    async before(page) {
+      await inTurn(['Top', 'Left', 'Right', 'Bottom'], (side) => button(page, side).click());
+    },
+    async steps(r, page) {
+      const info = page.locator('button[aria-controls="field-thicknessMm-note"]');
+      await r.drag(180, -20, 20);
+      await r.click(radio(page, 'boardType', 'lightened'));
+      await r.click(radio(page, 'boardType', 'skeleton'));
+      await r.click(info);
+      await r.hold(1400);
+      await r.click(info);
+      await r.click(radio(page, 'boardType', 'lightened'));
+      await r.click(radio(page, 'panels', 'split'));
+      await r.type(page.locator('input[name="widthMm"]'), '800');
+      await r.type(page.locator('input[name="heightMm"]'), '600');
+      await r.hold(1500);
+      await r.type(page.locator('input[name="widthMm"]'), '160');
+      await r.type(page.locator('input[name="heightMm"]'), '160');
+      await r.click(radio(page, 'panels', 'one'));
+      await r.click(radio(page, 'boardType', 'solid'));
+      await r.click(page.getByTestId('preview-reset'));
+    },
+  },
 ].filter((g) => only.length === 0 || only.includes(g.id));
+/** A phone's screen, as the page's browser test takes one: 412 x 860, twice as many pixels, touch. */
+const PHONE = { viewport: { width: 412, height: 860 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
 
 const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM_PATH || undefined });
 await inTurn(recordings, async (g) => {
   // a context of its own, as the page keeps its choices in the browser and one recording's would start the next
-  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const screen = g.phone ? PHONE : DESKTOP;
+  const context = await browser.newContext(screen);
+  const centre = [Math.round(screen.viewport.width / 2), Math.round(screen.viewport.height / 2)];
   const page = await context.newPage();
   page.on('pageerror', (e) => console.error('page error:', e.message));
   await page.goto(base);
@@ -288,16 +345,20 @@ await inTurn(recordings, async (g) => {
     });
   }
   await page.addStyleTag({ content: POINTER });
-  await page.evaluate((svg) => {
-    const p = document.createElement('div');
-    p.id = 'gif-pointer';
-    p.innerHTML = `<div class="ring"></div>${svg}`;
-    document.body.append(p);
-  }, ARROW);
+  await page.evaluate(
+    ([svg, [x, y]]) => {
+      const p = document.createElement('div');
+      p.id = 'gif-pointer';
+      p.innerHTML = `<div class="ring"></div>${svg}`;
+      p.style.transform = `translate(${x}px, ${y}px)`;
+      document.body.append(p);
+    },
+    [g.phone ? TIP : ARROW, centre],
+  );
   const dir = join(out, 'frames', g.id);
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
-  const r = recorder(page, dir);
+  const r = recorder(page, dir, { centre, phone: g.phone === true });
   await r.hold(1400);
   await g.steps(r, page);
   await r.home();
@@ -311,7 +372,7 @@ await inTurn(recordings, async (g) => {
   writeFileSync(listFile, `ffconcat version 1.0\n${list.join('\n')}\n`);
   const gif = join(out, `${g.id}.gif`);
   const filter =
-    'scale=800:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=full[p];' +
+    `scale=${g.phone ? 480 : 800}:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=full[p];` +
     '[b][p]paletteuse=dither=sierra2_4a:diff_mode=rectangle';
   execFileSync('ffmpeg', [
     '-y',
