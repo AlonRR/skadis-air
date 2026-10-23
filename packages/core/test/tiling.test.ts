@@ -5,8 +5,10 @@
 import type { Manifold } from 'manifold-3d';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { defaultValues } from '../src/settings.js';
-import { buildBoard, SOLID } from '../src/board-types/index.js';
+import { buildBoard, buildWall, printedPart, SOLID } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
+import { DEFAULT_BED } from '../src/printer.js';
+import { PRINTERS } from '../src/printers.js';
 import { boardExtent, type Sides } from '../src/slots.js';
 import { evenSplit, largestPanel, panelCount, panelPlaces, wallPlan } from '../src/tiling.js';
 
@@ -207,6 +209,118 @@ describe('a wall between the slots (D282, D288)', () => {
       const section = whole.solid.slice(z);
       expect(Math.abs(cut(z) - section.area())).toBeLessThan(0.01);
       section.delete();
+    }
+  });
+});
+
+// Found by QA (Q3, 23 Oct 2026): on a Prusa MK4S, 250 x 210 mm, a wall 1000 x 640 mm was cut into 15 panels of
+// 200 x 240 mm, which fit the bed only turned, as the plan chose them (D176); each STL came unturned, 200 x 240 x 5,
+// and did not fit the bed as downloaded.
+describe("a wall's panels as they go to the printer (Q3)", () => {
+  const beds = [{ ...DEFAULT_BED, name: 'the default bed' }, ...PRINTERS.map((p) => ({ ...p, name: p.model }))];
+  const walls = [
+    [1000, 640],
+    [1200, 800],
+    [440, 280],
+    [2000, 1200],
+  ] as const;
+  /** A stand-in for a panel: a plate of its outline's extent, as the plan cuts it, 5 mm thick, as it hangs. */
+  const standIn = (panel: { values: Record<string, unknown> }, seams: 'through' | 'between') => {
+    const e = boardExtent(
+      Number(panel.values['widthMm']) / 40,
+      Number(panel.values['heightMm']) / 40,
+      panel.values['sides'] as Sides,
+      seams,
+    );
+    const plate = engine.Manifold.cube([e.x1 - e.x0, e.y1 - e.y0, 5]);
+    const placed = plate.translate([e.x0, e.y0, 0]);
+    plate.delete();
+    return placed;
+  };
+  const lies = (part: Manifold) => {
+    const { min, max } = part.boundingBox();
+    return { min: min.map((v) => Math.round(v * 1e6) / 1e6), x: max[0] - min[0], y: max[1] - min[1] };
+  };
+  const fits = (box: { x: number; y: number }, bed: { xMm: number; yMm: number }) =>
+    box.x <= bed.xMm + 1e-6 && box.y <= bed.yMm + 1e-6;
+
+  it("fits every preset's bed as it comes, turned a quarter where it fits only turned", () => {
+    let [checked, turned] = [0, 0];
+    const misfits: string[] = [];
+    for (const bed of beds) {
+      for (const [widthMm, heightMm] of walls) {
+        for (const [seams, sides] of [
+          ['through', CLOSED],
+          ['between', CLOSED],
+          ['through', undefined],
+          ['between', undefined],
+        ] as const) {
+          const plan = wallPlan(wall({ widthMm, heightMm, seams, ...(sides ? { sides } : {}) }), bed);
+          for (const panel of plan?.panels ?? []) {
+            const hanging = standIn(panel, seams);
+            const printed = printedPart(SOLID, hanging, bed);
+            const [before, after] = [lies(hanging), lies(printed)];
+            for (const m of [hanging, printed]) m.delete();
+            checked += 1;
+            if (Math.abs(after.x - before.x) > 1e-6) turned += 1;
+            if (!fits(after, bed) || after.min.some((v) => v !== 0)) {
+              misfits.push(
+                `${bed.name}, ${widthMm} x ${heightMm} ${seams} ${sides ? 'closed' : 'open'}: ${after.x} x ${after.y}`,
+              );
+            }
+          }
+        }
+      }
+    }
+    expect(misfits).toEqual([]);
+    expect(checked).toBeGreaterThan(1000);
+    // the control: some panels fit their bed only turned, and those are the ones turned
+    expect(turned).toBeGreaterThan(0);
+  });
+
+  it("builds the MK4S's 1000 x 640 mm wall in panels whose files fit its bed as they come", () => {
+    const bed = { xMm: 250, yMm: 210 }; // the Original Prusa MK4S's (printers.ts)
+    const built = buildWall(engine, SOLID, wall({ widthMm: 1000, heightMm: 640, sides: CLOSED }) as never, bed);
+    if (built === null) throw new Error('a wall');
+    expect(built.panels.reduce((n, p) => n + panelCount(p), 0)).toBe(15);
+    made.push(...built.panels.map((p) => p.solid));
+    // the bottom row's three kinds are 200 mm across and 240 mm up, and fit the bed only turned; the rest, 200 x 200
+    const sizes = built.panels.map((panel) => {
+      const unturned = printedPart(SOLID, panel.solid);
+      const printed = printedPart(SOLID, panel.solid, bed);
+      const [before, after] = [lies(unturned), lies(printed)];
+      for (const m of [unturned, printed]) m.delete();
+      const mm = (box: { x: number; y: number }) =>
+        `${Math.round(box.x * 1e3) / 1e3} x ${Math.round(box.y * 1e3) / 1e3}`;
+      return { before: mm(before), after: mm(after), fits: fits(after, bed), placed: after.min };
+    });
+    expect(sizes.filter((s) => s.before === '200 x 240').map((s) => s.after)).toEqual([
+      '240 x 200',
+      '240 x 200',
+      '240 x 200',
+    ]);
+    expect(sizes.filter((s) => s.before === '200 x 200').map((s) => s.after)).toEqual([
+      '200 x 200',
+      '200 x 200',
+      '200 x 200',
+      '200 x 200',
+      '200 x 200',
+      '200 x 200',
+    ]);
+    expect(sizes.every((s) => s.fits && s.placed.every((v) => v === 0))).toBe(true);
+  });
+
+  it('leaves a part that fits as it lies, or fits neither way, as it lies', () => {
+    for (const [x, y, bed] of [
+      [200, 200, { xMm: 250, yMm: 210 }],
+      [240, 200, { xMm: 250, yMm: 210 }],
+      [300, 300, { xMm: 250, yMm: 210 }],
+    ] as const) {
+      const plate = engine.Manifold.cube([x, y, 5]);
+      const printed = printedPart(SOLID, plate, bed);
+      const box = lies(printed);
+      for (const m of [plate, printed]) m.delete();
+      expect([Math.round(box.x), Math.round(box.y)]).toEqual([x, y]);
     }
   });
 });

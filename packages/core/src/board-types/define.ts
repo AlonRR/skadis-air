@@ -4,7 +4,7 @@
 // file names are derived from that (the extension-registry practice).
 import type { Manifold } from 'manifold-3d';
 import type { Engine } from '../engine.js';
-import { placeOnBed, printPose } from '../print-pose.js';
+import { onBed, placeOnBed, printPose } from '../print-pose.js';
 import { DEFAULT_BED, type Bed } from '../printer.js';
 import { readValues, type Setting, type Values } from '../settings.js';
 import { panelPlaces, wallPlan, type PanelKind } from '../tiling.js';
@@ -44,9 +44,14 @@ export function defineBoardType<const S extends readonly Setting[]>(type: BoardT
 
 export type Built = { ok: true; solid: Manifold } | { ok: false; problem: string };
 
-/** The part as it goes to the printer: turned over, face down (D66), or as built for a type that says so. */
-export function printedPart(type: { prints?: 'face-down' | 'as-built' }, solid: Manifold): Manifold {
-  return type.prints === 'as-built' ? placeOnBed(solid) : printPose(solid);
+/** The part as it goes to the printer: turned over, face down (D66), or as built for a type that says so; and, given
+ * the bed, turned a quarter on it where it fits the bed only so, as a wall's panels may be cut to (D176; Q3). */
+export function printedPart(type: { prints?: 'face-down' | 'as-built' }, solid: Manifold, bed?: Bed): Manifold {
+  const posed = type.prints === 'as-built' ? placeOnBed(solid) : printPose(solid);
+  if (bed === undefined) return posed;
+  const placed = onBed(posed, bed);
+  posed.delete();
+  return placed;
 }
 
 /** A wall (D175): each kind of panel built once, as it is printed, with the places of its copies. */

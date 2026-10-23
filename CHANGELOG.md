@@ -42,6 +42,10 @@ All notable changes to this project are recorded here. The format follows
 - The skeleton board says in plain words what to change for a core it cannot make, where it said "A 2.503 mm move is
   larger than the outline takes": a core wider than the 3 mm edge band is refused on its field, the Core width now
   0.8 to 3 mm, and pockets too small to narrow to the core ask for a wider core or narrower webs.
+- A wall's panels that fit the chosen bed only turned, as the panels are cut to whichever way makes fewer, come
+  turned in their files, the zip and the 3MF alike, so each fits the bed as it is downloaded: on a Prusa MK4S a
+  1000 x 640 mm wall's 200 x 240 mm panels came 200 x 240 mm for a 250 x 210 mm bed. One board that fits only
+  turned comes turned too.
 
 ## [0.6.0] - 2026-10-23
 

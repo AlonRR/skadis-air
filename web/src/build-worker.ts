@@ -24,13 +24,16 @@ import {
   toStl,
   zipFiles,
   type AnyBoardType,
+  type Bed,
 } from 'skadis-air';
 import { panelObjectName, panelText, type PanelLine, type Placed, type Reply, type Request } from './build-messages.js';
 import type { Slot } from './wall-detail.js';
 
 const engine = () => loadEngine(wasmUrl);
-// What the page shows: one board, or a wall's panel kinds, each as it is printed; freed when replaced.
-let last: { id: number; type: AnyBoardType; solid?: Manifold; panels: Manifold[]; lines: PanelLine[] } | undefined;
+// What the page shows: one board, or a wall's panel kinds, each as it is printed, and the bed it was made for; freed
+// when replaced.
+let last:
+  { id: number; type: AnyBoardType; bed: Bed; solid?: Manifold; panels: Manifold[]; lines: PanelLine[] } | undefined;
 let waiting: Extract<Request, { kind: 'build' }> | undefined; // the newest build asked for, not yet begun
 let scheduled = false;
 
@@ -70,7 +73,7 @@ async function build(request: Extract<Request, { kind: 'build' }>): Promise<void
     let lines: PanelLine[] | undefined;
     let parts: { solid: Manifold; xs: number[]; ys: number[] }[];
     if (wall !== null) {
-      last = { id, type, panels: wall.panels.map((p) => p.solid), lines: [] };
+      last = { id, type, bed: request.bed, panels: wall.panels.map((p) => p.solid), lines: [] };
       parts = wall.panels;
       lines = wall.panels.map((p) => {
         const sides: unknown = p.values['sides'];
@@ -96,7 +99,7 @@ async function build(request: Extract<Request, { kind: 'build' }>): Promise<void
         reply({ kind: 'built', id, ok: false, problem: built.problem });
         return;
       }
-      last = { id, type, solid: built.solid, panels: [], lines: [] };
+      last = { id, type, bed: request.bed, solid: built.solid, panels: [], lines: [] };
       parts = [{ solid: built.solid, xs: [0], ys: [0] }];
     }
     // Each mesh once, with the places of its copies: a wall's copies are drawn from it, not sent again.
@@ -130,9 +133,10 @@ function forget(): void {
   last = undefined;
 }
 
-/** A part's mesh as it prints, face down (D66) unless its type says otherwise (C101). */
-function printedMesh(type: AnyBoardType, part: Manifold) {
-  const printed = printedPart(type, part);
+/** A part's mesh as it prints, face down (D66) unless its type says otherwise (C101), turned a quarter on the bed
+ * where it fits the bed only so, as a wall's panels may be cut to (D176; Q3). */
+function printedMesh(type: AnyBoardType, part: Manifold, bed: Bed) {
+  const printed = printedPart(type, part, bed);
   try {
     return meshOf(printed);
   } finally {
@@ -153,7 +157,7 @@ function file(request: Extract<Request, { kind: 'file' }>): void {
   let bytes: Uint8Array;
   let type: string = MEDIA_TYPES[format];
   if (request.panel === 'all') {
-    const meshes = shown.panels.map((part) => printedMesh(shown.type, part));
+    const meshes = shown.panels.map((part) => printedMesh(shown.type, part, shown.bed));
     if (format === '3mf') {
       bytes = to3mf(meshes.map((mesh, k) => ({ name: shown.lines[k] ? panelObjectName(shown.lines[k]) : '', mesh })));
     } else {
@@ -177,7 +181,7 @@ function file(request: Extract<Request, { kind: 'file' }>): void {
       reply({ kind: 'file', id, ok: false, error: 'There is no such panel' });
       return;
     }
-    const mesh = printedMesh(shown.type, part);
+    const mesh = printedMesh(shown.type, part, shown.bed);
     bytes = format === '3mf' ? to3mf([{ name: base, mesh }]) : toStl(mesh, base);
   }
   reply({ kind: 'file', id, ok: true, bytes, type }, [bytes.buffer]);

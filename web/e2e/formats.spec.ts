@@ -22,6 +22,29 @@ const objectNames = (bytes: Uint8Array) =>
     (m) => m[1],
   );
 
+/** A binary STL's box, across and deep as it lies on the bed, and where it starts, read from the file itself. */
+function stlBox(bytes: Uint8Array) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const [min, max] = [
+    [Infinity, Infinity, Infinity],
+    [-Infinity, -Infinity, -Infinity],
+  ];
+  for (let t = 0; t < view.getUint32(80, true); t++) {
+    for (let corner = 0; corner < 9; corner++) {
+      const v = view.getFloat32(84 + t * 50 + 12 + corner * 4, true);
+      const k = corner % 3;
+      min[k] = Math.min(min[k] ?? Infinity, v);
+      max[k] = Math.max(max[k] ?? -Infinity, v);
+    }
+  }
+  const round = (v: number) => Math.round(v * 1000) / 1000;
+  return {
+    from: min.map(round),
+    across: round((max[0] ?? 0) - (min[0] ?? 0)),
+    deep: round((max[1] ?? 0) - (min[1] ?? 0)),
+  };
+}
+
 async function wall(page: Page) {
   await ready(page);
   await choose(page, 'panels', 'split');
@@ -97,4 +120,51 @@ test('downloads a line of the print list in the format chosen', async ({ page })
     page.getByTestId('print-row').first().getByRole('button', { name: 'Download', exact: true }).click(),
   ]);
   expect(download.suggestedFilename()).toBe('skadis-solid-160x160-closed-left-bottom.3mf');
+});
+
+// Found by QA (Q3, 23 Oct 2026): on an MK4S, 250 x 210 mm, a wall 1000 x 640 mm was cut into panels 200 x 240 mm,
+// which fit the bed turned, and each STL came 200 x 240 x 5, which did not fit it as downloaded.
+test('gives every panel of a wall in a file that fits the chosen bed as it comes, turned where it must be', async ({
+  page,
+}, info) => {
+  test.setTimeout(120_000);
+  await ready(page);
+  await choose(page, 'printerBed', 'prusa'); // its first printer, the MK4S
+  await expect(page.getByTestId('bed-note')).toContainText('250 × 210 mm');
+  await choose(page, 'panels', 'split');
+  await page.locator('input[name="widthMm"]').fill('1000');
+  await page.locator('input[name="heightMm"]').fill('640');
+  await expect(page.getByTestId('board-status')).toContainText('Wall ready: 15 panels', { timeout: 90_000 });
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByTestId('print-list').getByRole('button', { name: 'Download all' }).click(),
+  ]);
+  const files = unzipSync(await saved(download, info.outputPath('wall.zip')));
+  const boxes = Object.entries(files)
+    .filter(([name]) => name.endsWith('.stl'))
+    .map(([name, bytes]) => ({ name, ...stlBox(bytes) }));
+  expect(boxes).toHaveLength(9);
+  for (const box of boxes) {
+    expect(box.from, box.name).toEqual([0, 0, 0]);
+    expect(box.across <= 250 && box.deep <= 210, `${box.name}: ${box.across} x ${box.deep}`).toBe(true);
+  }
+  // the bottom row's three kinds, 200 mm across and 240 mm up as they hang, are turned to lie 240 x 200
+  expect(boxes.filter((b) => b.across === 240 && b.deep === 200)).toHaveLength(3);
+});
+
+// The same for one board (Q3): 200 x 240 mm fits the MK4S only turned, so the page warns of nothing, and its file
+// now comes turned too.
+test('gives one board that fits the bed only turned in a file turned to fit it', async ({ page }, info) => {
+  await ready(page);
+  await choose(page, 'printerBed', 'prusa');
+  await page.locator('input[name="widthMm"]').fill('200');
+  await page.locator('input[name="heightMm"]').fill('240');
+  await expect(page.getByTestId('board-status')).toHaveText('Board ready: skadis-solid-200x240.stl');
+  await expect(page.getByTestId('bed-warning')).toBeEmpty();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Download STL' }).click(),
+  ]);
+  const box = stlBox(await saved(download, info.outputPath('board.stl')));
+  expect([box.from, box.across, box.deep]).toEqual([[0, 0, 0], 240, 200]);
 });
