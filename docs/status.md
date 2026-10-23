@@ -277,6 +277,20 @@ clip (b4).
   (c) no skeleton. Recommended (a). D314 is answered (c), 23 Oct 2026: the skeleton built so prints 55.80 g at
   200 x 200 mm, sliced as above (C315).
 
+- **D371** Corner screws where a side runs between the slots (the owner, 23 Oct 2026: "round head and counter sunk
+  don't work on 'between the slots' option"; [QA](research/2026-10-23-qa-sweep.md) Q14). D289 (a) left no screw at such a
+  corner, as its usual place, 10 mm in from both edges, would land on a slot; with all four sides between the slots no
+  corner keeps one, and "Standoffs on the back" goes with them. Measured on a 160 x 160 board (the section at
+  mid-thickness): two of the four usual places are clear 10 mm round, more than a corner has through the slots (8.6
+  mm); the other two have a place 8.9 mm clear 21.5 mm along the edge. (a) Every corner gets a screw at the nearest
+  place at least 10 mm in from both edges with a normal corner's room, 8.5 mm, its standoff with it; (b) D289 as is,
+  but countersunk and round greyed out where no corner can take one, saying why; (c) something else. Recommended (a).
+
+- **D372** Settings that apply only with another choice ([QA](research/2026-10-23-qa-sweep.md) Q15): "Lock screws: at
+  the bottom" is ticked and ignored without keyholes; the standoff height and lock screw size refuse values while
+  nothing uses them. (a) Greyed out and unchecked while they do not apply, their help saying when they do; (b) as now;
+  (c) hidden while they do not apply. Recommended (a).
+
 - **D354** How a part reaches the user's printer ([research](research/2026-10-23-send-to-printer.md), 23 Oct 2026,
   for the owner's "look into how to upload the print to the user printer"). A page with no server can hand a part to
   nothing but the user's own download: every "open in slicer" link and print service fetches an https address itself,
