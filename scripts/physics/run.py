@@ -20,11 +20,14 @@ import time
 from pathlib import Path
 
 import numpy as np
+from scipy.spatial import cKDTree
 
 ROOT = Path(__file__).resolve().parents[2]
 PARTS = ROOT / ".check" / "physics" / "parts"
 RESULTS = ROOT / ".check" / "physics" / "results.jsonl"
 E_REF, NU = 1000.0, 0.35  # MPa; Poisson's ratio from no sheet (C331)
+CONTACT_MM = 3.0  # a peak within this of a loaded face is the load's contact, not the part's own (C339)
+FIELDS = ROOT / ".check" / "physics" / "fields"
 EXCLUDE_MM = 1.0  # stresses within this of a fixed surface are left out of the peak: a clamp's edge is singular (C338)
 
 # Mesh levels (C338): (global size, size near the loads and supports), mm. Level 2 is the convergence check. The
@@ -97,6 +100,28 @@ def hook_patches(h: dict, cen: np.ndarray, nrm: np.ndarray, area: np.ndarray) ->
     return {"patches": out, "R": r, "arm": arm}
 
 
+def save_field(version, part, case_id, level, model, vm_of, layer, dfix, dload, keep: int = 30000) -> None:
+    """The highest stresses at element corners, with where they are and how far from the held and loaded faces, so a
+    peak can be read again another way without running the case again."""
+    import fe
+
+    vm = fe.von_mises(vm_of).ravel()
+    sn = fe.normal_stress(vm_of, np.array(layer, dtype=float)).ravel()
+    pts = model.mesh.p[:, model.mesh.t].reshape(3, -1)  # corner-major, as the stress arrays are (nel, 4)
+    pts = pts.reshape(3, 4, -1).transpose(0, 2, 1).reshape(3, -1)
+    chosen = np.unique(np.concatenate([np.argsort(vm)[::-1][:keep], np.argsort(sn)[::-1][:keep]]))
+    out = FIELDS / version / part
+    out.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(
+        out / f"{case_id}-L{level}.npz",
+        vm=vm[chosen].astype(np.float32),
+        sn=sn[chosen].astype(np.float32),
+        xyz=pts[:, chosen].T.astype(np.float32),
+        dfix=dfix.ravel()[chosen].astype(np.float32),
+        dload=dload.ravel()[chosen].astype(np.float32),
+    )
+
+
 def mesh_with_retries(stl: str, size: float, refine: list):
     """gmsh's remeshed surfaces can cross in a tight spot ("a segment and a facet intersect") or fail to
     parametrise. Each retry moves every node: sizes 3 and 6 % smaller and 3 % larger, then the surfaces classified
@@ -151,6 +176,7 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
     moment = np.zeros(3)
     loads_log = []
     probes = []
+    loaded = np.zeros(len(bf), dtype=bool)
     for load in case["loads"]:
         if "hook" in load:
             h = load["hook"]
@@ -162,6 +188,7 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
             ]
             for name, force in pieces:
                 m = hp["patches"][name][0]
+                loaded |= m
                 f += model.traction_load(bf[m], force)
                 applied += force
                 c = (cen[m] * area[m, None]).sum(axis=0) / area[m].sum()
@@ -181,6 +208,7 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
             if not m.any():
                 raise ValueError(f"{part}/{case_id}: nothing selected for {load['label']}")
             force = np.array(load["force"], dtype=float)
+            loaded |= m
             f += model.traction_load(bf[m], force)
             applied += force
             probes.append(model.facet_nodes(bf[m]))
@@ -200,15 +228,44 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
     sn = fe.normal_stress(s, layer)
     tau = fe.interlayer_shear(s, layer)
     fixed_points = model.mesh.p[:, np.unique(model.mesh.facets[:, bf[fixed_mask]])].T
-    keep = fe.far_from(model, fixed_points, EXCLUDE_MM)
+    # each element corner's distance from the held faces: a value is read only where its own point is more than
+    # EXCLUDE_MM from them (C338), as the stress at a clamp's edge grows without bound as the mesh is refined
+    corner_points = model.mesh.p[:, model.mesh.t].reshape(3, -1).T  # (4 * nel, 3), corner-major
+    dist = cKDTree(fixed_points).query(corner_points)[0].reshape(4, -1).T  # (nel, 4)
+    # and from the loaded faces: within CONTACT_MM a peak is the load's contact, past it the part's own (C339)
+    load_points = model.mesh.p[:, np.unique(model.mesh.facets[:, bf[loaded]])].T
+    dload = cKDTree(load_points).query(corner_points)[0].reshape(4, -1).T
+    save_field(
+        version, part, case_id, level, model, vm_of=s, layer=meta.get("layerNormal", [0, 0, 1]), dfix=dist, dload=dload
+    )
     timer.mark("stress")
 
-    def peak(values: np.ndarray, sign: float = 1.0) -> dict:
-        v = sign * values[keep]
+    def peak(values: np.ndarray, sign: float = 1.0, beyond: float = EXCLUDE_MM, region: str = "all") -> dict:
+        ok = dist > beyond
+        if region == "member":
+            ok &= dload > CONTACT_MM
+        elif region == "contact":
+            ok &= dload <= CONTACT_MM
+        if not ok.any():
+            return {"value": None, "at": None}
+        v = np.where(ok, sign * values, -np.inf)
         e, corner = np.unravel_index(np.argmax(v), v.shape)
-        el = np.flatnonzero(keep)[e]
-        where = model.mesh.p[:, model.mesh.t[corner, el]]
+        where = model.mesh.p[:, model.mesh.t[corner, e]]
         return {"value": float(sign * v[e, corner]), "at": [round(float(c), 2) for c in where]}
+
+    def hot_spots(values: np.ndarray, n: int = 6, apart: float = 4.0) -> list:
+        """The highest values at up to n places at least `apart` mm from each other: the part's weak spots."""
+        v = np.where(dist > EXCLUDE_MM, values, -np.inf).ravel()
+        order = np.argsort(v)[::-1][:20000]
+        found: list = []
+        for k in order:
+            e, corner = np.unravel_index(k, values.shape)
+            at = model.mesh.p[:, model.mesh.t[corner, e]]
+            if all(np.linalg.norm(at - np.array(f["at"])) >= apart for f in found):
+                found.append({"value": float(v[k]), "at": [round(float(c), 2) for c in at]})
+                if len(found) == n:
+                    break
+        return found
 
     disp = u.reshape(-1, 3)
     mag = np.linalg.norm(disp, axis=1)
@@ -232,9 +289,15 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
         "applied": applied.round(6).tolist(),
         "appliedMoment": moment.round(5).tolist(),
         "balance": balance,
-        "excluded": int((~keep).sum()),
-        "elements": int(keep.size),
+        "excludedCorners": int((dist <= EXCLUDE_MM).sum()),
+        "elements": int(vm.shape[0]),
         "vm": peak(vm),
+        "vm2": peak(vm, beyond=2.0),
+        "vmSpots": hot_spots(vm),
+        "vmMember": peak(vm, region="member"),
+        "vmContact": peak(vm, region="contact"),
+        "snMember": peak(sn, region="member"),
+        "tauMember": peak(tau, region="member"),
         "vmRaw": float(vm.max()),
         "sn": peak(sn),
         "snCompression": peak(sn, -1.0),

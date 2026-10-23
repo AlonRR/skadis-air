@@ -54,6 +54,18 @@ specification or a person's measurement; **code** a value in an existing generat
 | Connector for SKÅDIS pegboards, 404.776.46 | a 30 × 65 × 2 mm steel plate behind a seam, held by the boards' corner screws and spacers | [IKEA product page](https://www.ikea.com/gb/en/p/-40477646/); assembly AA-2231911-1 | IKEA |
 | Connector (desk clamp), 103.207.89 | holds a board upright on a desk or shelf 1 to 25 mm or 25 to 50 mm thick | [IKEA product page](https://www.ikea.com/gb/en/p/skadis-connector-white-10320789/); assembly AA-1891338-2 | IKEA |
 
+## Loads
+
+What the physics tests ([`research/2026-10-23-physics-tests.md`](research/2026-10-23-physics-tests.md)) load the
+parts with. The owner asked for IKEA's published ratings (Q325); **IKEA publishes none** that could be found, so the
+tests run at a reference load and give the load each part takes, and the rating stays a question.
+
+| Value | Figure | Source | Label | Status |
+|---|---|---|---|---|
+| Load rating of a board, a hook or a shelf | **none published**: no "max load" or weight capacity on any page or in the instructions read | read 23 Oct 2026: SKÅDIS pegboard 56 × 56 cm, [003.208.03](https://www.ikea.com/us/en/p/skadis-pegboard-white-00320803/) (its "Good to know" and safety text, a packed weight only); hook [203.208.02](https://www.ikea.com/us/en/p/skadis-hook-white-20320802/); hook [303.216.17](https://www.ikea.cn/cn/en/p/skadis-hook-white-30321617); shelf [003.207.99](https://www.ikea.com/ca/en/p/skadis-shelf-white-00320799/); a [pegboard combination](https://www.ikea.cn/cn/en/p/skadis-pegboard-combination-multicolour-s39590605) (each part's net weight only); the text of [AA-1891323-4](https://www.ikea.com/gb/en/assembly_instructions/skadis-pegboard-white__AA-1891323-4-100.pdf), all eight pages; and searches in English and German | IKEA | open: the load to rate the parts at is the owner's to give |
+| How far in front of the board a hook's load hangs | at most 25 mm on the small hook, 95 mm on the long one: their depths | small hook 203.208.02 "Depth 1"" on the US page and 2.5 cm in the survey's reading of the UK page; 303.216.17 "Product depth 2.5 cm" (read 23 Oct 2026); the long hook 9.5 cm ([survey](research/2026-10-12-skadis-survey.md), section 1.6) | IKEA | the physics tests hang the load 25 mm in front (C332); `<<CONFIRM>>` where on a real hook the load sits |
+| A hook's height | 6 cm, small and long hook alike | as above | IKEA | settled; its second peg 40 mm below the first, as the replica hook has it (*Room an IKEA hook takes*, above) |
+
 ## Measured on a real board
 
 The owner measured a SKÅDIS board and the first test print with calipers on 15 Oct 2026 (T17, T109),
