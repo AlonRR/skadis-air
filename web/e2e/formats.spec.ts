@@ -30,6 +30,19 @@ async function wall(page: Page) {
   await expect(page.getByTestId('board-status')).toContainText('Wall ready: 6 panels', { timeout: 30_000 });
 }
 
+// Found by QA (Q10, 23 Oct 2026): with 3MF chosen the status still read "Board ready: skadis-solid-160x160.stl".
+test('names the file in the status as it will download, in the format chosen', async ({ page }) => {
+  await ready(page);
+  const status = page.getByTestId('board-status');
+  await expect(status).toHaveText('Board ready: skadis-solid-160x160.stl');
+  await choose(page, 'fileFormat', '3mf'); // after the build
+  await expect(status).toHaveText('Board ready: skadis-solid-160x160.3mf');
+  await page.locator('input[name="widthMm"]').fill('200'); // and a build made with 3MF chosen
+  await expect(status).toHaveText('Board ready: skadis-solid-200x160.3mf');
+  await choose(page, 'fileFormat', 'stl');
+  await expect(status).toHaveText('Board ready: skadis-solid-200x160.stl');
+});
+
 test('downloads one board as 3MF when 3MF is chosen (D181)', async ({ page }, info) => {
   await ready(page);
   await choose(page, 'fileFormat', '3mf');

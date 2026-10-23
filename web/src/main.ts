@@ -53,8 +53,12 @@ const formatChoice = document.querySelector<HTMLElement>('[data-testid="file-for
 const downloadFormat = document.querySelector<HTMLElement>('[data-testid="download-format"]');
 const format = (): 'stl' | '3mf' => (formatChoice && chosenIn(formatChoice) === '3mf' ? '3mf' : 'stl');
 const withFormat = (name: string) => name.replace(/\.(stl|3mf)$/, `.${format()}`);
+/** The one part shown ready, which the status line names as it will download: in the format chosen (Q10). */
+let readyPart: { what: 'Board' | 'Connector'; fileName: string } | undefined;
+const readyText = (part: NonNullable<typeof readyPart>) => `${part.what} ready: ${withFormat(part.fileName)}`;
 formatChoice?.addEventListener('change', () => {
   if (downloadFormat !== null) downloadFormat.textContent = `\u00a0${format().toUpperCase()}`;
+  if (readyPart !== undefined && boardStatus !== null) boardStatus.textContent = readyText(readyPart);
 });
 
 /** Asks the worker for a file of the build it showed, and saves it under its name (D181 to D183). */
@@ -76,6 +80,7 @@ const answers = new Map<Reply['kind'], (reply: Reply) => void>();
 worker.addEventListener('message', (event: MessageEvent<Reply>) => answers.get(event.data.kind)?.(event.data));
 
 function setStatus(state: 'building' | 'ready' | 'invalid' | 'problem', text: string, fileName = '', size = ''): void {
+  readyPart = undefined; // named again by the caller when it is one part, ready
   if (downloadButton !== null) downloadButton.disabled = state !== 'ready'; // only a board that exists
   if (sizeLine !== null) sizeLine.textContent = size === '' ? '' : `${size} mm`;
   if (boardStatus === null) return;
@@ -133,7 +138,9 @@ function rebuild(type: AnyBoardType, form: Form): void {
       showPanels(id, built.wall.panels, wallName);
     } else {
       warnAboutBed(max[0], max[1]);
-      setStatus('ready', `${what === 'board' ? 'Board' : 'Connector'} ready: ${fileName}`, fileName, size);
+      const part = { what: what === 'board' ? 'Board' : 'Connector', fileName } as const;
+      setStatus('ready', readyText(part), fileName, size);
+      readyPart = part;
       showPanels(id, [], '');
     }
     preview?.show(built.parts, `${type.id} ${size}`, built.wall); // framed again only when type or size changes
