@@ -273,6 +273,18 @@ clip (b4).
   (c) no skeleton. Recommended (a). D314 is answered (c), 23 Oct 2026: the skeleton built so prints 55.80 g at
   200 x 200 mm, sliced as above (C315).
 
+- **D354** How a part reaches the user's printer ([research](research/2026-10-23-send-to-printer.md), 23 Oct 2026,
+  for the owner's "look into how to upload the print to the user printer"). A page with no server can hand a part to
+  nothing but the user's own download: every "open in slicer" link and print service fetches an https address itself,
+  every printer wants G-code, PrusaLink sends no CORS headers, and Bambu's printers speak protocols a page cannot (all
+  relayed from the research, which read the sources). (a) A line beside the download buttons on making downloads open
+  in the slicer; (b) (a), and "open in OrcaSlicer, Cura or Bambu Studio" links for fixed preset sizes published with
+  the page; (c) neither. Recommended (a).
+
+- **Q355** Is the page's "nothing is sent to a server" a promise to keep strictly, or may it become "only your
+  settings are sent, to build the file"? One-click opening of custom sizes needs the second, and a paid server
+  function (a board takes 0.67 to 2.1 s to build).
+
 - **T215** Photos of printed parts for the Printables page. The page is public since 18:46:30 UTC on 22 Oct 2026
   (Printables' API, `datePublished`), published from the owner's browser after Q309, not by an agent (inferred: no
   agent click there), and in the Designer Challenge, its AI answer then "No — fully human-made" (seen 20:01 UTC).
