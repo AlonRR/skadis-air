@@ -60,6 +60,8 @@ const size = (input: HTMLInputElement | null): number => {
   const typed = input === null ? null : readTypedNumber(input.value);
   return typed?.ok ? typed.value : Number.NaN;
 };
+/** Whether a custom bed's size is one the page can use. */
+const usable = (v: number) => Number.isFinite(v) && v >= MIN_MM && v <= MAX_MM;
 
 /** `box` is the maker's field; `machine`, the next, holds its models or the custom size (D257). */
 export function mountPrinter(box: HTMLElement, machine: HTMLElement, changed: () => void): PrinterChoice {
@@ -144,14 +146,22 @@ export function mountPrinter(box: HTMLElement, machine: HTMLElement, changed: ()
   return {
     bed() {
       if (error) error.textContent = '';
+      for (const input of [x, y]) input?.removeAttribute('aria-invalid');
       const bed = chosenBed();
       const printer = chosenPrinter();
       if (printer) return { ok: true, bed: { xMm: printer.xMm, yMm: printer.yMm } };
       if (bed !== 'custom') return { ok: true, bed: { ...DEFAULT_BED } };
       const [bx, by] = [size(x), size(y)];
-      if (![bx, by].every((v) => Number.isFinite(v) && v >= MIN_MM && v <= MAX_MM)) {
+      if (!usable(bx) || !usable(by)) {
         const problem = `A custom bed is ${MIN_MM} to ${MAX_MM} mm each way.`;
         if (error) error.textContent = problem;
+        // each size it cannot use marked, as the form marks a field it refuses (Q4)
+        for (const [input, v] of [
+          [x, bx],
+          [y, by],
+        ] as const) {
+          if (!usable(v)) input?.setAttribute('aria-invalid', 'true');
+        }
         return { ok: false, problem };
       }
       return { ok: true, bed: { xMm: bx, yMm: by } };

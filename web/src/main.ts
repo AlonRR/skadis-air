@@ -103,12 +103,16 @@ function rebuild(type: AnyBoardType, form: Form): void {
   form.show(read.ok ? [] : read.errors, read.warnings);
   if (read.ok) form.screws(screwsOf(type, read.values));
   const what = groupOf(type) === 'connector' ? 'connector' : 'board';
-  if (!read.ok) {
+  // the bed is a field of the form like any other: one it cannot use refuses the build, its message on its field (Q4),
+  // where the part had been made, and a wall cut, for the default bed
+  const bed = printer?.bed() ?? { ok: true, bed: { ...DEFAULT_BED } };
+  if (!read.ok || !bed.ok) {
     // any build still running is for values the form no longer holds: its answer is dropped as a replaced one is
     latest += 1;
     shown = 0;
     // and a wall's print list goes with it, as the single download is turned off: nothing to download (Q2)
     showPanels(latest, [], '');
+    bedWarning?.replaceChildren(); // nor a warning about a part not made
     setStatus('invalid', `Correct the settings marked above to make the ${what}.`);
     preview?.show(null, '');
     return;
@@ -148,8 +152,7 @@ function rebuild(type: AnyBoardType, form: Form): void {
     preview?.show(built.parts, `${type.id} ${size}`, built.wall); // framed again only when type or size changes
     preview?.name(`The ${built.wall ? 'wall' : what} in 3D`);
   });
-  const bed = printer?.bed();
-  ask({ kind: 'build', id, typeId: type.id, values: read.values, bed: bed?.ok ? bed.bed : { ...DEFAULT_BED } });
+  ask({ kind: 'build', id, typeId: type.id, values: read.values, bed: bed.bed });
 }
 
 /** A line of the print list: its words and its button. */

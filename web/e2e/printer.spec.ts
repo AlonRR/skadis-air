@@ -41,6 +41,34 @@ test('says so when the custom bed is not a size it can use', async ({ page }) =>
   await expect(page.getByTestId('bed-error')).toContainText('50');
 });
 
+// Found by QA (Q4, 23 Oct 2026): a custom bed out of its range showed its error, yet the board was still built and
+// offered, a 400 mm board got no warning, and a wall was cut for the default bed.
+test('makes nothing while the custom bed is not a size it can use, as for any field refused', async ({ page }) => {
+  await ready(page);
+  const [status, download] = [page.getByTestId('board-status'), page.getByRole('button', { name: 'Download STL' })];
+  await choose(page, 'printerBed', 'custom');
+  const width = page.locator('input[name="bedXMm"]');
+  for (const bad of ['30', '0', 'abc', '-5', '']) {
+    await width.fill(bad);
+    await expect(page.getByTestId('bed-error')).toHaveText('A custom bed is 50 to 1000 mm each way.');
+    await expect(status).toHaveAttribute('data-state', 'invalid');
+    await expect(status).toHaveText('Correct the settings marked above to make the board.');
+    await expect(download).toBeDisabled();
+    await expect(page.getByTestId('bed-warning')).toBeEmpty();
+    await expect(width).toHaveAttribute('aria-invalid', 'true');
+  }
+  // a wall is not cut for another bed meanwhile
+  await choose(page, 'panels', 'split');
+  await expect(status).toHaveAttribute('data-state', 'invalid');
+  await expect(page.getByTestId('print-list')).toBeHidden();
+  // the control: a bed it takes makes the board again, the field no longer marked
+  await choose(page, 'panels', 'one');
+  await width.fill('250');
+  await expect(status).toHaveAttribute('data-state', 'ready');
+  await expect(width).not.toHaveAttribute('aria-invalid', /.*/);
+  await expect(download).toBeEnabled();
+});
+
 // printer-presets (D170 to D172): a button for each maker after the default and "Custom"; a maker shows its
 // models, as buttons, each with its bed from the maker's site (docs/printer-beds.md).
 test('lists the makers after the default and custom, and a maker its models (D170)', async ({ page }) => {

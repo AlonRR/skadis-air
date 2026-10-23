@@ -269,14 +269,28 @@
               <div data-testid="custom-bed" hidden>
                 <label class="ws-label">
                   Bed width (mm)
-                  <input class="ws-input" inputmode="decimal" name="bedXMm" value="200" autocomplete="off" />
+                  <input
+                    class="ws-input"
+                    inputmode="decimal"
+                    name="bedXMm"
+                    value="200"
+                    autocomplete="off"
+                    aria-describedby="bed-error"
+                  />
                 </label>
                 <label class="ws-label">
                   Bed depth (mm)
-                  <input class="ws-input" inputmode="decimal" name="bedYMm" value="200" autocomplete="off" />
+                  <input
+                    class="ws-input"
+                    inputmode="decimal"
+                    name="bedYMm"
+                    value="200"
+                    autocomplete="off"
+                    aria-describedby="bed-error"
+                  />
                 </label>
               </div>
-              <span class="ws-error" data-testid="bed-error" aria-live="polite"></span>
+              <span class="ws-error" id="bed-error" data-testid="bed-error" aria-live="polite"></span>
             </fieldset>
             <!-- The file's format: set once, as the printer is (D207; first beside the download, D181) -->
             <fieldset class="ws-fieldset" data-testid="file">

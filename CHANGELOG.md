@@ -35,6 +35,8 @@ All notable changes to this project are recorded here. The format follows
   where it said "All 24 panels in one file"; a wall of one panel no longer says "All 1 panels".
 - A wall whose settings are refused no longer leaves the wall before it in the print list, its "Download all" still
   live: as for one board, nothing can be downloaded until the settings are corrected.
+- A custom bed outside 50 to 1000 mm makes nothing, as any refused setting does, where the part had been made, and a
+  wall cut, for the default bed beside the bed's error.
 
 ## [0.6.0] - 2026-10-23
 
