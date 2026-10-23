@@ -89,7 +89,9 @@ export function readTypedNumber(text: string): TypedNumber {
 }
 
 function readNumber(s: NumberSetting, given: unknown, errors: Problem[], warnings: Problem[]): number {
-  if (given === undefined || given === '') return s.default;
+  // Only a setting not given takes its starting value: a field left empty is refused as text that is no number is
+  // (Q5), where it had been made at the starting value while the field stood empty.
+  if (given === undefined) return s.default;
   // A form hands over text; a caller may hand over a number. Anything else is not a number.
   const typed: TypedNumber =
     typeof given === 'number'

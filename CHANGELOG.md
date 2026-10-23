@@ -22,6 +22,8 @@ All notable changes to this project are recorded here. The format follows
 - Where the hook's room behind a corner slot runs out of its standoff, its ceiling rises at 45 degrees to the
   standoff's face, so it no longer ends in a curved edge printed over air; the hook's room is as before.
 - A connector whose settings are refused says "to make the connector", not "to make the board".
+- A number field left empty is refused, "Width must be a number", where it had been made at its starting value
+  while the field stood empty.
 
 ## [0.6.0] - 2026-10-23
 

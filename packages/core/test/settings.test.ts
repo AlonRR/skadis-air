@@ -122,6 +122,16 @@ describe('readValues', () => {
     expect(read.ok).toBe(false);
   });
 
+  // Found by QA (Q5, 23 Oct 2026): a Width field cleared was read as its starting value, so a 160 mm board was made
+  // while the field stood empty and nothing said so. Only a setting not given at all takes its starting value.
+  it('refuses a number field left empty, as it refuses text that is not a number, saying which', () => {
+    for (const empty of ['', '   ']) {
+      const read = readValues(SETTINGS, { widthMm: empty });
+      expect(read.ok).toBe(false);
+      if (!read.ok) expect(read.errors).toEqual([{ key: 'widthMm', message: 'Width must be a number' }]);
+    }
+  });
+
   it('warns, without refusing, outside the range a setting warns about', () => {
     const read = readValues(SETTINGS, { thicknessMm: '6' });
     expect(read.ok).toBe(true);

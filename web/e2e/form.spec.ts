@@ -66,6 +66,23 @@ test('refuses a size off the 40 mm steps, and builds nothing from it', async ({ 
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'invalid');
 });
 
+// Found by QA (Q5, 23 Oct 2026): a field cleared was built at its starting value, the field still empty.
+test('refuses a number field left empty, saying so beside it, and builds nothing', async ({ page }) => {
+  await ready(page);
+  for (const name of ['widthMm', 'heightMm', 'thicknessMm']) {
+    const field = page.locator(`input[name="${name}"]`);
+    const before = await field.inputValue();
+    await field.fill('');
+    await field.press('Tab');
+    await expect(page.getByTestId(`error-${name}`)).toContainText('must be a number');
+    await expect(field).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'invalid');
+    await expect(page.getByRole('button', { name: 'Download STL' })).toBeDisabled();
+    await field.fill(before);
+    await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready');
+  }
+});
+
 // Found by QA (Q7, 23 Oct 2026): a standoff 60 mm tall was "Correct the settings marked above to make the board."
 test('says a connector it refuses is a connector, not a board', async ({ page }) => {
   await ready(page);
