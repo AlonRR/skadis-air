@@ -152,14 +152,7 @@ export interface BoardCuts {
   clearanceOf?: (slot: SlotPlace) => number; // in place of slotClearanceMm, slot by slot (the fit coupon)
   extraCutters?: (engine: Engine) => Manifold[]; // cut away with the slots; freed here (the coupon's dots, screw holes)
   extraSolids?: (engine: Engine) => Manifold[]; // added to the plate before anything is cut; freed here (standoffs)
-  within?: Within; // the plate is kept only inside this, before the rest (the skeleton)
-}
-
-/** What a board keeps of its plate: the solid it keeps, freed here, and how deep from the back face its sides stand
- * upright, which what is added may reach into (the skeleton's back flange). */
-export interface Within {
-  solid: (engine: Engine) => Manifold;
-  uprightMm: number;
+  within?: (engine: Engine) => Manifold; // the plate is kept only inside this, before the rest; freed here (the skeleton)
 }
 
 export function makeSolidBoard(engine: Engine, params: SolidBoardParams, cuts: BoardCuts = {}): Manifold {
@@ -173,17 +166,15 @@ export function makeSolidBoard(engine: Engine, params: SolidBoardParams, cuts: B
   // What is added goes on before the cuts, so a screw hole runs on through a standoff.
   const added = (cuts.extraSolids?.(engine) ?? []).map((m) => keep(m, solids));
   const whole = keep(plateOf(engine, face, p, e), solids);
-  const within = cuts.within ? keep(cuts.within.solid(engine), solids) : undefined;
+  const within = cuts.within ? keep(cuts.within(engine), solids) : undefined;
   const plate = within ? keep(whole.intersect(within), solids) : whole;
   // With the plate kept only inside its members, what is added reaches into the plate only where they are, and only
-  // into the back three quarters of the depth where a member's sides stand upright (0.3 mm of the skeleton's 0.4 mm
-  // flange, D314; 0.45 of 0.6 before it): a standoff meets the members and fills no gap between them (D250 f). Up to
-  // half that depth it is whole, which keeps its cut off the members' back face. Cut on that face, or reaching up to
-  // the I-beams' slopes, it left degenerate facets.
-  const upright = cuts.within?.uprightMm ?? 0;
+  // into their back 0.45 mm, where a member's sides stand upright (the skeleton's I-beams bend at 0.6 mm): a
+  // standoff meets the members and fills no gap between them (D250 f). Up to 0.3 mm it is whole, which keeps its cut
+  // off the members' back face. Cut on that face, or reaching up to the I-beams' slopes, it left degenerate facets.
   const block = within ? keep(Manifold.cube([e.x1 - e.x0 + 2, e.y1 - e.y0 + 2, 1000]), solids) : null;
-  const behind = block ? keep(block.translate([e.x0 - 1, e.y0 - 1, upright / 2 - 1000]), solids) : null;
-  const flange = block ? keep(block.translate([e.x0 - 1, e.y0 - 1, (3 * upright) / 4 - 1000]), solids) : null;
+  const behind = block ? keep(block.translate([e.x0 - 1, e.y0 - 1, 0.3 - 1000]), solids) : null;
+  const flange = block ? keep(block.translate([e.x0 - 1, e.y0 - 1, 0.45 - 1000]), solids) : null;
   const inFlange = within && flange ? keep(within.intersect(flange), solids) : null;
   const allowed = behind && inFlange ? keep(Manifold.union(behind, inFlange), solids) : null;
   const kept = allowed ? added.map((m) => keep(m.intersect(allowed), solids)) : added;

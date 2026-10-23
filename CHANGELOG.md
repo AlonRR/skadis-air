@@ -16,10 +16,6 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
-- The skeleton board prints lighter (D314). Printed face down, each rim and web now steps straight to its core just
-  behind the front face, where it narrowed at 45 degrees, and narrows at 45 degrees from the back alone; the full
-  width at the faces is 0.4 mm deep, where it was 0.6 mm, and the core 0.9 mm, where it was 1.2 mm. A core under
-  0.9 mm, two lines of a 0.4 mm nozzle, is warned about, where it was one under 1.2 mm.
 - Each setting's help is folded behind an "i" button beside its label, so the form is about a quarter shorter;
   the button shows and hides it, under the label and above the setting's control, moving what is below it down. A
   screen reader still reads the help with its control. Warnings, errors and the counts beside a value are always
@@ -31,8 +27,6 @@ All notable changes to this project are recorded here. The format follows
 - On a phone, a wall's "Download all" row is whole and scrolls away under the 3D view: it stayed on the screen
   as the page scrolled, drawn over the view, and was cut in half. Its label is now whole, "All 4 panels in one
   file", with its buttons on a line under it, where the buttons beside it cut it to "All 4 panels i…".
-- The skeleton board's members are never narrower than the core: the web leaving a half slot at a side edge was
-  0.84 mm at the middle of the board, with a 1.2 mm core.
 - A board still being made when the form turns invalid is dropped: it used to arrive later and say "ready", with the
   download on, for values the form no longer held.
 

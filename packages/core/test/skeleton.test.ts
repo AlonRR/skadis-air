@@ -1,12 +1,9 @@
-// The skeleton board (backlog item board-skeleton; D146, D147, D161, D314): the lightened board's lattice with every
-// member an I-beam, full width at both faces for FLANGE_MM, narrowing at 45 degrees from the back's flange to its
-// core and stepping straight to it behind the front's. The tests are written in FLANGE_MM and the core, which D314's
-// options differed in alone; one test pins the option chosen, (c).
+// The skeleton board (backlog item board-skeleton; D146, D147, D161): the lightened board's lattice with every
+// member an I-beam, full width at both faces for 0.6 mm, then narrowing at 45 degrees towards a 1.2 mm core.
 // Each claim is measured on sections of the built solid; each has a control that must fail.
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { makeSolidBoard, solidBoardParams, type SolidBoardParams } from '../src/board-solid.js';
-import { EDGE_CHAMFER_MM } from '../src/chamfer.js';
 import { loadEngine } from '../src/engine.js';
 import { LATTICE_DEFAULTS, makeLightenedBoard } from '../src/lightened.js';
 import { mountingCuts, mountingParams, type MountingParams } from '../src/mounting.js';
@@ -60,48 +57,10 @@ const r2 = Math.SQRT1_2;
 const webAt = (b: Manifold, z: number) => widthAcross(keep(b.slice(z)), [30, 30], [r2, -r2], 4);
 /** A rim's width at depth z: along x from the right side of the slot at (20, 20), as far as the pocket. */
 const rimAt = (b: Manifold, z: number) => widthAcross(keep(b.slice(z)), [20 + 2.6 + 3, 20], [1, 0], 3);
-/** A half slot's rim at depth z, behind the step: along x from the left edge through the half slot at (0, 40). */
-const halfRimAt = (b: Manifold, z: number) => widthAcross(keep(b.slice(z)), [2.5, 40], [1, 0], 2.5);
-
-// The board's thickness, the flange and the core, as built
-const T = params().thicknessMm;
-const F = FLANGE_MM;
-const CORE = SKELETON_DEFAULTS.coreMm;
-
-/** The depths from `from` to `to`, `step` apart, rounded so they never drift onto a level of the loft. */
-const depths = (from: number, to: number, step: number) =>
-  Array.from(
-    { length: Math.floor((to - from) / step + 1e-9) + 1 },
-    (_, k) => Math.round((from + k * step) * 1e6) / 1e6,
-  );
-
-/**
- * The largest part of a section thinner than `width`: opened, shrunk and grown back by just under half of it, the
- * section loses every part narrower than that, and slivers at its outer corners; the area of the largest outline lost.
- * Each outline's area on its own, by its points: decompose() overflows Manifold's memory on thousands of slivers.
- */
-function thinnest(section: CrossSection, width: number): number {
-  const r = width / 2 - 0.03;
-  const opened = keep(keep(section.offset(-r, 'Round')).offset(r, 'Round'));
-  const lost = keep(section.subtract(opened));
-  const areas = lost.toPolygons().map((ring) => {
-    const twice = ring.reduce((a, [x, y], i) => {
-      const [u, v] = ring[(i + 1) % ring.length] ?? [x, y];
-      return a + x * v - u * y;
-    }, 0);
-    return Math.abs(twice) / 2;
-  });
-  return Math.max(0, ...areas);
-}
 
 describe('skeletonParams: the starting values', () => {
-  it('are a 3 mm rim, 3 mm webs and the core the board is built with', () => {
-    expect(skeletonParams({})).toEqual({ rimMm: 3, webMm: 3, coreMm: CORE });
-  });
-
-  it("are D314's option (c): 0.4 mm flanges and a 0.9 mm core", () => {
-    expect(FLANGE_MM).toBe(0.4);
-    expect(SKELETON_DEFAULTS.coreMm).toBe(0.9);
+  it('are a 3 mm rim, 3 mm webs and a 1.2 mm core (D147)', () => {
+    expect(skeletonParams({})).toEqual({ rimMm: 3, webMm: 3, coreMm: 1.2 });
   });
 
   it('refuse a core under 0.8 mm, or wider than the rim or the webs (D147)', () => {
@@ -126,104 +85,36 @@ describe('makeSkeletonBoard (D146, D147, D161)', () => {
     expect(share).toBeLessThan(0.38);
   });
 
-  it('has webs 3 mm wide at both faces and its core through the middle, an I-beam (D147)', () => {
+  it('has webs 3 mm wide at both faces and 1.2 mm through the middle, an I-beam (D147)', () => {
     const b = skeleton();
-    expect(webAt(b, F / 2)).toBeCloseTo(3, 1);
-    expect(webAt(b, T - F / 2)).toBeCloseTo(3, 1);
-    expect(webAt(b, T / 2)).toBeCloseTo(CORE, 1);
+    expect(webAt(b, 0.3)).toBeCloseTo(3, 1);
+    expect(webAt(b, 4.7)).toBeCloseTo(3, 1);
+    expect(webAt(b, 2.5)).toBeCloseTo(1.2, 1);
     // control: the lightened board's webs are 3 mm all through
     const light = keep(makeLightenedBoard(engine, params(), LATTICE_DEFAULTS, mountingParams({})));
-    expect(webAt(light, T / 2)).toBeCloseTo(3, 1);
+    expect(webAt(light, 2.5)).toBeCloseTo(3, 1);
   });
 
-  it("narrows its webs at 45 degrees from the back's flange to the core, and keeps it to the front's (D314)", () => {
+  it('narrows its webs at 45 degrees from the flange to the core, from both faces', () => {
     const b = skeleton();
     let checked = 0;
-    for (const z of depths(0.1, T - 0.1, 0.1)) {
-      if (z > T - F - 0.06 && z < T - F + 0.01) continue; // the step, a quarter of a layer behind the front's flange
-      const expected = z > T - F ? 3 : Math.max(CORE, 3 - 2 * Math.max(0, z - F)); // the 45 degree line
-      expect(Math.abs(webAt(b, z) - expected)).toBeLessThan(0.06);
+    for (let z = 0.1; z < 4.95; z += 0.1) {
+      const fromFace = Math.min(z, 5 - z);
+      const slope = Math.max(1.2, 3 - 2 * Math.max(0, fromFace - FLANGE_MM)); // the 45 degree line
+      expect(Math.abs(webAt(b, z) - slope)).toBeLessThan(0.06);
       checked++;
     }
-    expect(checked).toBe(48);
+    expect(checked).toBe(49);
   });
 
-  it("steps every member straight to its core just behind the front's flange (D314)", () => {
+  it('keeps its rims 4 mm out from the slot at the faces, narrowing at 45 degrees to 2.1 mm (D161 a)', () => {
     const b = skeleton();
-    const z = T - F - 0.1;
-    expect(webAt(b, z)).toBeCloseTo(CORE, 1);
-    expect(rimAt(b, z)).toBeCloseTo(CORE, 1);
-    expect(halfRimAt(b, z)).toBeCloseTo(CORE, 1);
-    // control: in the front's flange each is full width, the rim less the slot's chamfer
-    expect(webAt(b, T - F / 2)).toBeCloseTo(3, 1);
-    expect(rimAt(b, T - F / 2)).toBeCloseTo(3 + F / 2, 1);
+    // 0.3 mm in, the slot's 1 mm chamfer takes 0.7 mm of the 4 mm: 3 mm outside the chamfer, as D143 measures
+    expect(rimAt(b, 0.3)).toBeCloseTo(3.3, 1);
+    expect(rimAt(b, 1)).toBeCloseTo(3.6, 1); // 0.4 mm past the flange, 0.4 mm narrower
+    expect(rimAt(b, 2.5)).toBeCloseTo(2.1, 1);
+    expect(rimAt(b, 4)).toBeCloseTo(3.6, 1);
   });
-
-  it("keeps its rims 4 mm out from the slot at the faces, narrowing at 45 degrees from the back's (D314)", () => {
-    const b = skeleton();
-    const c = params().slotChamferMm;
-    // in the back's flange the slot's 1 mm chamfer takes 1 - z mm of the 4 mm, as D143 measures
-    expect(rimAt(b, F / 2)).toBeCloseTo(4 - (c - F / 2), 1);
-    // past the chamfer, narrower by as much as it is past the flange, down to the core
-    for (const z of [1.5, T / 2, T - c]) expect(rimAt(b, z)).toBeCloseTo(Math.max(CORE, 4 - (z - F)), 1);
-    expect(rimAt(b, T - F / 2)).toBeCloseTo(4 - (c - F / 2), 1);
-  });
-
-  it("keeps its rims and band their core wide through the front's chamfers, behind the step (D314)", () => {
-    // the slot's chamfer and the edge's reach 1 mm into the front, past its flange: where a member stepped to its
-    // core from the side away from the chamfer, the chamfer took up to 0.6 mm more (0.35 mm left, 22 Oct 2026)
-    const [b, between] = [skeleton(), skeleton({ seams: 'between' })];
-    const bandAt = (z: number) => widthAcross(keep(between.slice(z)), [15, 40], [1, 0], 5);
-    const from = T - Math.max(params().slotChamferMm, EDGE_CHAMFER_MM);
-    let checked = 0;
-    for (const z of depths(from, T - F - 0.06, 0.05)) {
-      for (const width of [rimAt(b, z), halfRimAt(b, z), bandAt(z)]) expect(width).toBeGreaterThan(CORE - 0.05);
-      checked++;
-    }
-    expect(checked).toBeGreaterThan(5);
-  });
-
-  it('leaves no member thinner than its core: opened by just under half of it, a section loses only slivers', () => {
-    // found 22 Oct 2026: the web leaving a half slot at a side edge was 0.84 mm at the middle of the board, its core
-    // 1.2 mm, where the blends from the half slot's round rim end on both its sides widened past the web's allowance
-    const boards = [
-      skeleton(),
-      skeleton({ sides: { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' } } as const),
-      skeleton({ seams: 'between' }),
-    ];
-    // behind the flanges, where the skeleton is not the lightened board: in them its sections are the lightened
-    // board's, chamfers and all, and with seams between the slots a slot's end and the edge's chamfers at the faces
-    // leave less than the core of the 2.4 mm between them, as on every board type
-    const between = (T - 2 * F) / 20;
-    for (const b of boards) {
-      const worst = Math.max(...depths(F + between / 2, T - F, between).map((z) => thinnest(keep(b.slice(z)), CORE)));
-      expect(worst).toBeLessThan(0.5);
-    }
-    // control: a 3 mm strip necked to 0.6 mm for 2 mm of its length loses the neck, 1.2 mm²; the strip alone only
-    // slivers at its corners, under 0.1 mm² each
-    const necked = rect([
-      [0, 0],
-      [10, 0],
-      [10, 3],
-      [6, 3],
-      [6, 0.6],
-      [4, 0.6],
-      [4, 3],
-      [0, 3],
-    ]);
-    expect(thinnest(necked, CORE)).toBeGreaterThan(0.5);
-    expect(
-      thinnest(
-        rect([
-          [0, 0],
-          [10, 0],
-          [10, 3],
-          [0, 3],
-        ]),
-        CORE,
-      ),
-    ).toBeLessThan(0.2);
-  }, 120_000);
 
   it("blends its pockets' corners at both faces as the lightened board's, the blend widening with them inside (D278)", () => {
     const b = skeleton();
@@ -429,8 +320,7 @@ describe('makeSkeletonBoard between the slots (D282)', () => {
     const b = skeleton({ seams: 'between' });
     // the left edge, at x = 10, where the webs from the corner tiles' slots meet outside the board
     const at = (z: number) => widthAcross(keep(b.slice(z)), [15, 40], [1, 0], 5);
-    expect(at(F / 2)).toBeCloseTo(3, 1);
-    expect(at(T / 2)).toBeCloseTo(CORE, 1);
-    expect(at(T - F - 0.1)).toBeCloseTo(CORE, 1);
+    expect(at(0.3)).toBeCloseTo(3, 1);
+    expect(at(2.5)).toBeCloseTo(SKELETON_DEFAULTS.coreMm, 1);
   });
 });

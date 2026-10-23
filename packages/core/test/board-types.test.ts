@@ -18,7 +18,6 @@ import {
 } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
 import { defaultValues, defineSettings, readValues } from '../src/settings.js';
-import { SKELETON_DEFAULTS } from '../src/skeleton.js';
 
 const engine = await loadEngine();
 const made: Manifold[] = [];
@@ -382,20 +381,19 @@ describe('the skeleton board type (D146, D147, D161)', () => {
     expect(groupOf(skeleton)).toBe('board');
   });
 
-  it("takes the lightened board's settings, at the same starting values, and its core after the web", () => {
+  it("takes the lightened board's settings, at the same starting values, and a 1.2 mm core after the web", () => {
     const keys = skeleton.settings.map((s) => s.key);
     expect(keys.filter((k) => k !== 'coreMm')).toEqual(lightened.settings.map((s) => s.key));
     expect(keys.indexOf('coreMm')).toBe(keys.indexOf('webMm') + 1);
     const { coreMm, ...rest } = defaultValues(skeleton.settings);
-    expect(coreMm).toBe(SKELETON_DEFAULTS.coreMm);
+    expect(coreMm).toBe(1.2);
     expect(rest).toEqual(defaultValues(lightened.settings));
   });
 
-  it('puts the core under Advanced, refused under 0.8 mm and warned under 0.9 mm, two lines (D147, C315)', () => {
+  it('puts the core under Advanced, refused under 0.8 mm and warned under 1.2 mm (D147)', () => {
     expect(boardType('skeleton').settings.find((s) => s.key === 'coreMm')?.advanced).toBe(true);
     expect(readValues(skeleton.settings, { coreMm: '0.7' }).ok).toBe(false);
-    expect(readValues(skeleton.settings, { coreMm: '0.8' }).warnings.map((w) => w.key)).toEqual(['coreMm']);
-    expect(readValues(skeleton.settings, { coreMm: '0.9' }).warnings).toEqual([]);
+    expect(readValues(skeleton.settings, { coreMm: '1' }).warnings.map((w) => w.key)).toEqual(['coreMm']);
     expect(readValues(skeleton.settings, { coreMm: '1.2' }).warnings).toEqual([]);
     const wide = buildBoard(engine, skeleton, { ...defaultValues(skeleton.settings), coreMm: 3.5 });
     expect(wide.ok).toBe(false);
@@ -414,7 +412,7 @@ describe('the skeleton board type (D146, D147, D161)', () => {
     expect(bones.solid.volume()).toBeLessThan(0.9 * light.solid.volume());
   });
 
-  it('names its file as the lightened board does, adding the core only when it differs from its starting value', () => {
+  it('names its file as the lightened board does, adding the core only when it differs from 1.2 mm', () => {
     const v = defaultValues(skeleton.settings);
     const name = (given: Record<string, string | number>) => boardFileName(skeleton, { ...v, ...given }, 'stl');
     expect(name({})).toBe('skadis-skeleton-160x160.stl');

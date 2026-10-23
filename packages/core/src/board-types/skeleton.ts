@@ -1,4 +1,4 @@
-// The skeleton board as a board type (D146, D147, D161, D314): the lightened board's settings, with the core every
+// The skeleton board as a board type (D146, D147, D161): the lightened board's settings, with the core every
 // member narrows to under Advanced after the web, so the two boards cannot drift apart.
 import { MOUNTING_SETTINGS, mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
 import { defineSettings } from '../settings.js';
@@ -24,8 +24,8 @@ export const SKELETON = defineBoardType({
       min: MIN_CORE_MM,
       max: 6,
       step: 0.1,
-      warnOutside: [WARN_CORE_MM, 6], // D147, C315: made, but under two lines
-      help: 'How thin the rims and webs get inside the board: they step in just behind the front face and narrow at 45 degrees from the back.',
+      warnOutside: [WARN_CORE_MM, 6], // D147: made, but thin
+      help: 'How thin the rims and webs get through the middle of the board, narrowing at 45 degrees from the faces.',
       advanced: true,
     },
     ...MOUNTING_SETTINGS,
