@@ -30,7 +30,27 @@ export interface MountingParams {
   standoffHeightMm: number; // how far the standoffs stand behind the board; 0 for none (D75)
   lockScrews: boolean; // with keyholes: screws through the bottom corner slots too, tucked behind them (D156, A248)
   lockScrewMm: number; // their size: a head up to 5 mm passes the slot, a larger one a groove cut in it (A248)
+  /** The keyhole printability pass's prototypes (KeyholeSeat, RoomExit), which the page does not offer: 'flat' unless
+   * given, as built until then. */
+  keyholeSeat?: KeyholeSeat;
+  roomExit?: RoomExit;
 }
+
+/**
+ * How a keyhole seats its screw's head (the keyhole printability pass, 23 Oct 2026, a prototype): 'flat', the lips as
+ * built until then, a pan head bearing flat on their ledge over the head's channel (D157, C199), which a board printed
+ * face down prints as a ledge over air; 'countersunk', a seat widening at 45 degrees from the slot out to the channel's
+ * width, a 90 degree countersunk head bearing on its cone; 'either', that seat with a channel deep enough for a pan
+ * head too, which bears on its rim; 'ledge', a 1 mm flat ledge beside the slot and the 45 degree seat beyond it, either
+ * head.
+ */
+export type KeyholeSeat = 'flat' | 'countersunk' | 'either' | 'ledge';
+export const KEYHOLE_SEATS: readonly KeyholeSeat[] = ['flat', 'countersunk', 'either', 'ledge'];
+/** Where a standoff's hook room runs out of its bottom face (the same pass, a prototype): 'flat', its ceiling running
+ * on to that face, an edge over the opening that nothing holds as it prints; 'ramp', the ceiling over the hook's back
+ * tab rising at 45 degrees toward the wall from short of the keyhole's channel, so no edge of it is free. */
+export type RoomExit = 'flat' | 'ramp';
+export const ROOM_EXITS: readonly RoomExit[] = ['flat', 'ramp'];
 
 export const MOUNTING_DEFAULTS: MountingParams = {
   screwHead: 'countersunk',
@@ -115,6 +135,54 @@ export function keyhole(screwMm: number): { slotMm: number; entryMm: number; sli
   return { slotMm: screwHole(screwMm).holeMm, entryMm, slideMm: entryMm, channelMm: 0.8 * screwMm + 0.3 };
 }
 
+/** A 90 degree countersunk head, DIN 7991's proportions for M3 to M5 (ISO 10642's alike): twice the screw across and
+ * 0.62 times it tall, 8 x 2.48 mm for a 4 mm screw. */
+export const countersunkHead = (screwMm: number) => ({ acrossMm: 2 * screwMm, tallMm: 0.62 * screwMm });
+/** The flat ledge the 'ledge' seat keeps beside the slot. */
+const SEAT_LEDGE_MM = 1;
+/** What a keyhole's channel leaves past a seated head's top: D155's 0.3 mm. */
+const CHANNEL_SPARE_MM = 0.3;
+
+/** A keyhole seat's sizes, from the wall face in: the slot's straight part through the lips, the flat ledge beside it,
+ * the 45 degree cone out to the channel's width, and the depth to the channel's floor; and for each head it is made
+ * for, how far that head's top stands out of the wall, seated. */
+export interface KeyholeSeatSize {
+  lipsMm: number;
+  ledgeMm: number;
+  coneMm: number;
+  depthMm: number;
+  heads: { pan?: { outMm: number }; countersunk?: { outMm: number } };
+}
+
+/**
+ * The sizes of a keyhole seat for this screw (KeyholeSeat). A pan head bears flat on the ledge where the ledge reaches
+ * its rim, and otherwise its rim on the cone; a countersunk head's cone passes the slot's edge at the lips, so it bears
+ * on the cone when there is no ledge, on the ledge's edge when there is. The channel is deep enough for each head the
+ * seat is made for, with 0.3 mm spare, and always deeper than the cone, as every head is taller than it.
+ */
+export function keyholeSeat(screwMm: number, seat: KeyholeSeat = 'flat'): KeyholeSeatSize {
+  const k = keyhole(screwMm);
+  const [slotHalf, channelHalf] = [k.slotMm / 2, k.entryMm / 2];
+  const lipsMm = KEYHOLE_LIPS_MM;
+  const ledgeMm = seat === 'flat' ? channelHalf - slotHalf : seat === 'ledge' ? SEAT_LEDGE_MM : 0;
+  const coneMm = channelHalf - slotHalf - ledgeMm;
+  const [pan, sunk] = [panHead(screwMm), countersunkHead(screwMm)];
+  const panOut = lipsMm + Math.max(0, pan.acrossMm / 2 - slotHalf - ledgeMm) + pan.tallMm;
+  const sunkOut = lipsMm - (slotHalf - screwMm / 2) + sunk.tallMm;
+  const heads: KeyholeSeatSize['heads'] =
+    seat === 'flat'
+      ? { pan: { outMm: panOut } }
+      : seat === 'countersunk'
+        ? { countersunk: { outMm: sunkOut } }
+        : { pan: { outMm: panOut }, countersunk: { outMm: sunkOut } };
+  const tops = [heads.pan?.outMm, heads.countersunk?.outMm].filter((top): top is number => top !== undefined);
+  const depthMm =
+    seat === 'flat' // as built until then, to the last bit
+      ? KEYHOLE_LIPS_MM + k.channelMm
+      : Math.max(lipsMm + coneMm, ...tops.map((top) => top + CHANNEL_SPARE_MM));
+  return { lipsMm, ledgeMm, coneMm, depthMm, heads };
+}
+
 /** The mounting asked for, with the starting values filled in, refused when it cannot be made. */
 export function mountingParams(given: Partial<MountingParams>): MountingParams {
   const m: MountingParams = { ...MOUNTING_DEFAULTS, ...given };
@@ -125,6 +193,12 @@ export function mountingParams(given: Partial<MountingParams>): MountingParams {
   if (!(m.standoffHeightMm >= 0)) throw new RangeError('The standoffs cannot be less than 0 mm tall');
   if (typeof m.lockScrews !== 'boolean') throw new RangeError('Lock screws must be on or off');
   if (!(m.lockScrewMm > 0)) throw new RangeError('The lock screw size must be more than 0 mm');
+  if (m.keyholeSeat !== undefined && !KEYHOLE_SEATS.includes(m.keyholeSeat)) {
+    throw new RangeError("A keyhole's seat is flat, countersunk, either or ledge");
+  }
+  if (m.roomExit !== undefined && !ROOM_EXITS.includes(m.roomExit)) {
+    throw new RangeError("A hook's room runs out of its standoff flat or on a ramp");
+  }
   return m;
 }
 
@@ -359,16 +433,42 @@ export function mountingPads(m: MountingParams, board: MountingBoard): Vec2[][] 
  * head goes in by and the slot the screw slides up, to where it rests at the top; behind them the head's channel,
  * as wide as the entry, from the entry up past the screw. The slot clip and a board's top standoffs share it. Two
  * prisms stacked, which meet on one plane rather than overlapping, so no two walls lie on each other.
+ *
+ * With another seat than 'flat' (KeyholeSeat, the printability pass's prototypes), the slot and its channel are one
+ * solid of rings, the slot's outline grown from the lips' top out to the channel's width at 45 degrees, past a flat
+ * ledge for the 'ledge' seat; and the entry a cylinder through the lips and the seat, up to where the slot reaches the
+ * channel's width, so the two meet on one ring there, as the two prisms do.
  */
 export function wallKeyholeCutter(
   engine: Engine,
   [x, y]: readonly [number, number],
   screwMm: number,
   footZ = 0,
+  seat: KeyholeSeat = 'flat',
 ): Manifold {
   const { CrossSection, Manifold } = engine;
   const k = keyhole(screwMm);
   const [entry, rest] = [y - k.slideMm / 2, y + k.slideMm / 2]; // the screw rests at the top, as the part hangs
+  if (seat !== 'flat') {
+    const size = keyholeSeat(screwMm, seat);
+    const wide = (k.entryMm - k.slotMm) / 2; // the slot grown to the channel's width
+    const [lipTop, coneTop] = [footZ + size.lipsMm, footZ + size.lipsMm + size.coneMm];
+    const levels: [number, number][] = [
+      [footZ - 1, 0],
+      [lipTop, 0],
+      ...(size.ledgeMm > 0 ? [[lipTop, size.ledgeMm] as [number, number]] : []),
+      [coneTop, wide],
+      [footZ + size.depthMm, wide],
+    ];
+    const slot = ringedSolid(engine, (grow) => stadium(x, y, k.slotMm, k.slideMm + k.slotMm, grow), levels);
+    const way = ringedSolid(engine, (grow) => circle(x, entry, k.entryMm, grow), [
+      [footZ - 1, 0],
+      [coneTop, 0],
+    ]);
+    const seated = Manifold.union(slot, way);
+    for (const m of [slot, way]) m.delete();
+    return seated;
+  }
   const lips = new CrossSection(
     [circle(x, entry, k.entryMm), stadium(x, y, k.slotMm, k.slideMm + k.slotMm)],
     'NonZero',
@@ -407,6 +507,57 @@ function hookRoomOutline(
   return new CrossSection([room, tab], 'NonZero');
 }
 
+/** Where a 'ramp' exit starts below the keyhole's channel: 0.5 mm short of its end, so at the least standoff, where
+ * 1.2 mm of roof is all there is under the channel, the ramp's 45 degrees still pass its end's edge (1.2 + 0.5) / root 2
+ * = 1.20 mm off (MIN_BEHIND_CHANNEL_MM). */
+const RAMP_SHORT_MM = 0.5;
+
+/**
+ * The room a hook takes behind the slot whose middle is at (x, y) (D244), which the standoff behind it leaves empty:
+ * hookRoomOutline from HOOK_ROOM_MM behind the board's back to past its middle. With a 'ramp' exit (RoomExit, the
+ * printability pass's prototype), a wedge under the ceiling over the hook's back tab, as wide as the tab, rising at
+ * 45 degrees toward the wall from 0.5 mm below the keyhole's channel to the tab's end, so where the room runs out of the
+ * standoff its ceiling ends on a 45 degree face, not an edge; the wedge meets the room on the ceiling's plane and its
+ * sides go on in the tab's, so no two walls lie on each other. Below the standoff it cuts only air.
+ */
+export function hookRoomCutter(
+  engine: Engine,
+  place: readonly [number, number],
+  board: MountingBoard & Pick<SolidBoardParams, 'thicknessMm'>,
+  exit: RoomExit = 'flat',
+  screwMm = MOUNTING_DEFAULTS.screwMm,
+): Manifold {
+  const { CrossSection, Manifold } = engine;
+  const slot = slotOf(board);
+  const outline = hookRoomOutline(engine, place, slot);
+  const tall = outline.extrude(HOOK_ROOM_MM + board.thicknessMm / 2 + 1);
+  const room = tall.translate([0, 0, -HOOK_ROOM_MM]);
+  tall.delete();
+  outline.delete();
+  if (exit === 'flat') return room;
+  const [x, y] = place;
+  const k = keyhole(screwMm);
+  const tabWidth = HOOK_WIDTH_MM + 4;
+  const end = y - slot.heightMm / 2 - (HOOK_DROP_MM + 2); // the tab's end, below the slot
+  const start = y - (k.slideMm + k.entryMm) / 2 - RAMP_SHORT_MM; // short of the channel's end
+  const rise = start - end;
+  // the wedge's side, in the plane across the tab: (y, z) as (u, v), counter-clockwise; extruded along x
+  const side = new CrossSection([
+    [
+      [end, 0],
+      [end, -rise],
+      [start, 0],
+    ],
+  ]);
+  const flat = side.extrude(tabWidth);
+  const turned = flat.rotate([90, 0, 90]); // (u, v, w) to (w, u, v): across the tab along x
+  const wedge = turned.translate([x - tabWidth / 2, 0, -HOOK_ROOM_MM]);
+  const both = Manifold.union(room, wedge);
+  for (const m of [room, flat, turned, wedge]) m.delete();
+  side.delete();
+  return both;
+}
+
 /** Whether any two standoffs behind slots would meet: their outlines' boxes overlap, or two stand behind one slot. */
 function standoffsMeet(places: readonly (readonly [number, number])[], outline: Outline): boolean {
   const boxes = places.map((q) => {
@@ -437,10 +588,12 @@ export function mountingCuts(
   // lock screw's head in its recess behind the room, and some standoff under it (A248)
   const recessMm = lockRecessMm(m.lockScrewMm);
   const underLock = HOOK_ROOM_MM + recessMm + UNDER_HEAD_MM;
+  // the keyhole's seat and the room's exit: as built until then unless given (the printability pass's prototypes)
+  const [seat, exit] = [m.keyholeSeat ?? 'flat', m.roomExit ?? 'flat'];
   const leastStandoff = locked
     ? underLock
     : Math.max(
-        KEYHOLE_LIPS_MM + keyhole(m.screwMm).channelMm + MIN_BEHIND_CHANNEL_MM + HOOK_ROOM_MM,
+        keyholeSeat(m.screwMm, seat).depthMm + MIN_BEHIND_CHANNEL_MM + HOOK_ROOM_MM,
         m.lockScrews ? underLock : 0,
       );
   if (behindSlots && m.standoffHeightMm < leastStandoff - 1e-9) {
@@ -502,8 +655,6 @@ export function mountingCuts(
     for (const s of [shaft, cup]) s.delete();
     return both;
   };
-  // the slot as this board cuts it, for the hook's room behind the slots the keyhole standoffs stand behind
-  const slot = slotOf(board);
   // A lock screw goes in through its corner slot, head and all: its shank's hole from the wall up through the
   // standoff, and its head in a recess just behind the hook's room, so the slot still takes a hook; a head too wide
   // to pass the slot gets a groove, the recess carried on up through the slot's sides (A248).
@@ -526,7 +677,7 @@ export function mountingCuts(
     // the keyholes in the top standoffs' wall faces (D235, D244); lock screws through the bottom slots (A248)
     cuts.extraCutters = (engine: Engine): Manifold[] => [
       ...(m.lockScrews ? bottoms.flatMap((p) => lockScrew(engine, p)) : []),
-      ...tops.map((p) => wallKeyholeCutter(engine, p, m.screwMm, -m.standoffHeightMm)),
+      ...tops.map((p) => wallKeyholeCutter(engine, p, m.screwMm, -m.standoffHeightMm, seat)),
     ];
   } else if (m.screwHead !== 'none') {
     cuts.extraCutters = (engine: Engine): Manifold[] => places.map((p) => hole(engine, p));
@@ -553,14 +704,12 @@ export function mountingCuts(
     // they overlapped and left degenerate facets (D244, D245).
     const pad = (engine: Engine, place: readonly [number, number]) => {
       const section = new engine.CrossSection([outline(place)]);
-      const roomOutline = hookRoomOutline(engine, place, slot);
       const tall = chamferedExtrusion(engine, section, m.standoffHeightMm + t / 2, { bottomMm: foot, topMm: 0 });
-      const roomTall = roomOutline.extrude(HOOK_ROOM_MM + t / 2 + 1);
       const whole = tall.translate([0, 0, -m.standoffHeightMm]);
-      const room = roomTall.translate([0, 0, -HOOK_ROOM_MM]);
+      const room = hookRoomCutter(engine, place, board, exit, standoffScrewMm);
       const solid = whole.subtract(room);
-      for (const s of [tall, roomTall, whole, room]) s.delete();
-      for (const c of [section, roomOutline]) c.delete();
+      for (const s of [tall, whole, room]) s.delete();
+      section.delete();
       return solid;
     };
     cuts.extraSolids = (engine: Engine): Manifold[] =>

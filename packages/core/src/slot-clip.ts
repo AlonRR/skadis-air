@@ -21,10 +21,12 @@ import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { SOLID_BOARD_DEFAULTS } from './board-solid.js';
 import type { Engine } from './engine.js';
 import {
-  KEYHOLE_LIPS_MM,
+  KEYHOLE_SEATS,
   keyhole,
   counterbore,
   keyholeScrews,
+  keyholeSeat,
+  type KeyholeSeat,
   MIN_BEHIND_CHANNEL_MM,
   MOUNTING_DEFAULTS,
   screwHole,
@@ -58,6 +60,8 @@ export interface SlotClipParams {
   /** For the trial only (T268): nubs this far proud of a ribbed peg's sides, past the slot's straight wall; none
    * unless given. */
   nubMm?: number;
+  /** For the keyhole printability pass only (KeyholeSeat): how the keyhole seats its head; 'flat' unless given. */
+  keyholeSeat?: KeyholeSeat;
 }
 
 export const SLOT_CLIP_DEFAULTS: SlotClipParams = {
@@ -132,9 +136,10 @@ export function roundHeadClipDepth(screwMm: number): number {
   return TUNNEL_DEPTH_MM + counterbore(screwMm).deepMm + BORE_FLOOR_MM;
 }
 
-/** The least depth a clip with a keyhole needs: the hooks' room, the keyhole's lips, the head's channel, a roof. */
-export function keyholeClipDepth(screwMm: number): number {
-  return TUNNEL_DEPTH_MM + KEYHOLE_LIPS_MM + keyhole(screwMm).channelMm + MIN_BEHIND_CHANNEL_MM;
+/** The least depth a clip with a keyhole needs: the hooks' room, the keyhole's lips and the head's channel, as its seat
+ * takes them (flat unless given), a roof. */
+export function keyholeClipDepth(screwMm: number, seat: KeyholeSeat = 'flat'): number {
+  return TUNNEL_DEPTH_MM + keyholeSeat(screwMm, seat).depthMm + MIN_BEHIND_CHANNEL_MM;
 }
 
 const nice = (n: number) => String(Math.round(n * 100) / 100);
@@ -189,10 +194,13 @@ export function slotClipParams(given: Partial<SlotClipParams>): SlotClipParams {
         `${nice(roundHeadClipDepth(p.screwMm))} mm deep, to sink the head below the bar`,
     );
   }
-  if (p.fixing === 'keyhole' && p.depthMm < keyholeClipDepth(p.screwMm) - 1e-9) {
+  if (p.keyholeSeat !== undefined && !KEYHOLE_SEATS.includes(p.keyholeSeat)) {
+    throw new RangeError("A keyhole's seat is flat, countersunk, either or ledge");
+  }
+  if (p.fixing === 'keyhole' && p.depthMm < keyholeClipDepth(p.screwMm, p.keyholeSeat) - 1e-9) {
     throw new RangeError(
       `A slot clip with a keyhole for a ${nice(p.screwMm)} mm screw needs to be at least ` +
-        `${nice(keyholeClipDepth(p.screwMm))} mm deep`,
+        `${nice(keyholeClipDepth(p.screwMm, p.keyholeSeat))} mm deep`,
     );
   }
   return p;
@@ -521,7 +529,7 @@ export function makeSlotClip(engine: Engine, params: SlotClipParams): Manifold {
   const cutter =
     p.fixing === 'screw'
       ? screwCutter(engine, screwCentre(p), p.screwMm, bar, p.screwHead)
-      : wallKeyholeCutter(engine, keyholeCentre(p.boards), p.screwMm);
+      : wallKeyholeCutter(engine, keyholeCentre(p.boards), p.screwMm, 0, p.keyholeSeat);
   const part = joined.subtract(cutter);
   for (const m of [joined, cutter]) m.delete();
   return part;
