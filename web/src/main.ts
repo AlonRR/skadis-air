@@ -243,9 +243,13 @@ function testPrintField(type: AnyBoardType, tests: readonly AnyBoardType[]): HTM
   return labelledChoice('Test prints', group);
 }
 
+/** The build a burst of typing waits to make: one for the page, not one a form, so a form replaced takes its build
+ * with it (Q1). The old form's, left waiting, had fired after the new type was shown and built the old type last. */
+let typing: ReturnType<typeof setTimeout> | undefined;
+
 function show(type: AnyBoardType): void {
   if (formBox === null) return;
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  clearTimeout(typing); // the form shown before, and any build its typing still waited to make, are replaced
   // every edit is kept at once, and builds after a burst of typing
   const keep = () => {
     shownValues = form.read();
@@ -254,8 +258,8 @@ function show(type: AnyBoardType): void {
   };
   const changed = () => {
     keep();
-    clearTimeout(timer);
-    timer = setTimeout(() => rebuild(type, form), 150);
+    clearTimeout(typing);
+    typing = setTimeout(() => rebuild(type, form), 150);
   };
   // a type starts from the one shown before only within its group: boards from boards, connectors from connectors
   const before = groupOf(type) === shownGroup ? shownValues : {};

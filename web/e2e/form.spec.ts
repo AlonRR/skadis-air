@@ -66,6 +66,27 @@ test('refuses a size off the 40 mm steps, and builds nothing from it', async ({ 
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'invalid');
 });
 
+// Found by QA (Q1, 23 Oct 2026): Width 240, Tab, and at once Lightened: Lightened was ticked, but the status read
+// "Board ready: skadis-solid-240x160.stl", and that was the download. The solid form's build, still waiting out the
+// 150 ms after the typing, fired after the new form had built. Both changes are made here in one script, no pause.
+test('builds the type ticked when it is chosen just after a size is typed', async ({ page }) => {
+  await ready(page);
+  await page.evaluate(() => {
+    const width = document.querySelector<HTMLInputElement>('input[name="widthMm"]');
+    const lightened = document.querySelector<HTMLInputElement>('input[name="boardType"][value="lightened"]');
+    if (width === null || lightened === null) throw new Error('no width field or no Lightened');
+    width.value = '240';
+    width.dispatchEvent(new Event('input', { bubbles: true }));
+    lightened.click();
+  });
+  await page.waitForTimeout(500); // past the 150 ms the solid form's build waited
+  const status = page.getByTestId('board-status');
+  await expect(status).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
+  await expect(chosen(page, 'boardType')).toHaveValue('lightened');
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-lightened-240x160.stl');
+  await expect(status).toHaveText('Board ready: skadis-lightened-240x160.stl');
+});
+
 // Found by QA (Q5, 23 Oct 2026): a field cleared was built at its starting value, the field still empty.
 test('refuses a number field left empty, saying so beside it, and builds nothing', async ({ page }) => {
   await ready(page);

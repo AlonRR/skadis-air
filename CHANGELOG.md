@@ -37,6 +37,8 @@ All notable changes to this project are recorded here. The format follows
   live: as for one board, nothing can be downloaded until the settings are corrected.
 - A custom bed outside 50 to 1000 mm makes nothing, as any refused setting does, where the part had been made, and a
   wall cut, for the default bed beside the bed's error.
+- A board type chosen within a moment of a size typed is the one made and downloaded: the type before it, whose build
+  was still waiting out the typing, had been made last, under the new type's tick.
 
 ## [0.6.0] - 2026-10-23
 
