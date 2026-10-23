@@ -1,5 +1,6 @@
-// The seam-test pair as a board type (D69): beside the fit coupon, printed with it, its slot clearance
-// and thickness on the form and its chamfer under Advanced, as the coupon has them.
+// The seam-test pair as a board type (D69): a test print beside the fit coupon under Advanced, Test prints (D357),
+// printed with it, its slot clearance and thickness on the form and its chamfer under Advanced, as the coupon has
+// them.
 import { SOLID_BOARD_DEFAULTS } from '../board-solid.js';
 import { makeSeamTest, seamTestParams } from '../seam-test.js';
 import { defineSettings } from '../settings.js';
@@ -11,6 +12,7 @@ export const SEAM_TEST = defineBoardType({
   id: 'seam-test',
   name: 'Seam test pair',
   parts: 2, // the two tiles, apart on the bed (C107)
+  testPrint: true,
   description: 'Two tiles that push together into one slot across a seam, to test how tiles join.',
   settings: defineSettings([
     {
@@ -22,7 +24,7 @@ export const SEAM_TEST = defineBoardType({
       min: -0.5,
       max: 1,
       step: 0.05,
-      help: 'Added to the 5 × 15 mm slot. Print it with the fit coupon; if a coupon slot fits better, print the pair again at that clearance.',
+      help: 'Added to the 5 × 15 mm slot. Print it with the fit coupon, under Advanced, Test prints; if a coupon slot fits better, print the pair again at that clearance.',
     },
     {
       kind: 'number',

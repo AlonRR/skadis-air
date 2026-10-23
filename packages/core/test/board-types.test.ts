@@ -103,6 +103,11 @@ function contract(type: AnyBoardType) {
     expect(['board', 'connector']).toContain(groupOf(type));
   });
 
+  it("is a test print only in the group of boards, under whose forms' Advanced the page offers it (D357)", () => {
+    // a test print is a board; any other type may be in either group
+    expect(type.testPrint === true ? groupOf(type) : 'board').toBe('board');
+  });
+
   it('names its file after its id and its starting values', () => {
     const name = boardFileName(type, defaultValues(type.settings), 'stl');
     expect(name).toMatch(new RegExp(`^skadis-${type.id}-.+\\.stl$`));
@@ -119,6 +124,12 @@ describe('every listed board type', () => {
     const groups = BOARD_TYPES.map(groupOf);
     expect(groups).toEqual([...groups].sort((a, b) => (a === b ? 0 : a === 'board' ? -1 : 1)));
     expect(groups).toContain('connector');
+  });
+
+  it('marks as test prints the fit coupon and the seam-test pair, and nothing else, both boards (D357)', () => {
+    const tests = BOARD_TYPES.filter((t) => t.testPrint === true);
+    expect(tests.map((t) => t.id)).toEqual(['fit-coupon', 'seam-test']);
+    expect(tests.map(groupOf)).toEqual(['board', 'board']);
   });
   for (const type of BOARD_TYPES) {
     describe(`board type ${type.id}`, () => {

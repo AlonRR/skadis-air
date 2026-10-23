@@ -1,9 +1,9 @@
-// The fit coupon on the page (backlog item fit-coupon; D67): chosen from the board-type list, with its own
+// The fit coupon on the page (backlog item fit-coupon; D67): chosen under Advanced, Test prints (D357), with its own
 // settings, previewed and downloaded like a board.
 import { expect, test } from '@playwright/test';
 import { choose } from './design-system.js';
 
-test('the fit coupon is chosen from the list, shows its own settings, and downloads', async ({ page }) => {
+test('the fit coupon is chosen under Test prints, shows its own settings, and downloads', async ({ page }) => {
   await page.goto('./');
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
   await choose(page, 'boardType', 'fit-coupon');
@@ -28,7 +28,7 @@ test('the fit coupon is chosen from the list, shows its own settings, and downlo
   expect(download.suggestedFilename()).toBe('skadis-fit-coupon-5mm-0.1-to-0.4.stl');
 });
 
-test('the seam-test pair is chosen from the list beside the coupon, and downloads (D69)', async ({ page }) => {
+test('the seam-test pair is chosen beside the coupon, and downloads (D69)', async ({ page }) => {
   await page.goto('./');
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
   await choose(page, 'boardType', 'seam-test');

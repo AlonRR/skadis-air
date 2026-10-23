@@ -14,9 +14,12 @@ async function ready(page: Page) {
 const form = (page: Page) => page.getByTestId('board-form');
 const helpOf = (page: Page, key: string) => page.locator(`#field-${key}-note`);
 const infoOf = (page: Page, key: string) => form(page).locator(`button[aria-controls="field-${key}-note"]`);
+// opened only when closed, as a test print's form starts with it open (D357)
 const openAdvanced = async (page: Page) => {
   const advanced = page.getByTestId('advanced');
-  if ((await advanced.count()) > 0) await advanced.locator('summary').click();
+  if ((await advanced.count()) > 0 && (await advanced.getAttribute('open')) === null) {
+    await advanced.locator('summary').click();
+  }
 };
 
 // Read from the registry, as form.spec.ts reads the types: every setting of every type that has help.

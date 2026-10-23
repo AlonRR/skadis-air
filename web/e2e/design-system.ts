@@ -81,8 +81,9 @@ export const previewBackground = (page: Page): Promise<number[]> =>
     return Array.from(ctx.getImageData(2, 2, 1, 1).data.subarray(0, 3));
   });
 
-/** Chooses an option of a Choice by its value, as a click on its button does; a type, in its group first (D250 h);
- * or of a Select, as picking it from the list does (D260). */
+/** Chooses an option of a Choice by its value, as a click on its button does; a type, in its group first (D250 h),
+ * and a closed fold round the option opened first, as a person opens Advanced to reach a test print (D357); or of a
+ * Select, as picking it from the list does (D260). */
 export async function choose(page: Page, name: string, value: string): Promise<void> {
   const select = page.locator(`select[name="${name}"]`);
   if ((await select.count()) > 0) {
@@ -90,8 +91,20 @@ export async function choose(page: Page, name: string, value: string): Promise<v
     return;
   }
   const input = page.locator(`input[name="${name}"][value="${value}"]`);
+  if (name === 'boardType' && (await input.count()) === 0) {
+    // a type only in a form of its group, as a test print is under the boards' Advanced: each group shown in turn
+    // until its option is on the page
+    for (const group of await page.locator('input[name="typeGroup"]').all()) {
+      await group.check();
+      if ((await input.count()) > 0) break;
+    }
+  }
   const group = name === 'boardType' ? await input.getAttribute('data-group') : null;
   if (group !== null) await page.locator(`input[name="typeGroup"][value="${group}"]`).check();
+  const fold = input.locator('xpath=ancestor::details[1]');
+  if ((await fold.count()) > 0 && (await fold.getAttribute('open')) === null) {
+    await fold.locator('xpath=./summary').click();
+  }
   await input.check();
 }
 

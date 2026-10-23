@@ -242,10 +242,11 @@ const recordings = [
   },
   {
     id: 'page-types',
-    // each board type, then the connectors, and back
+    // each board type, the fit coupon under Advanced, Test prints (D357), then the connectors, and back
     async steps(r, page) {
       await r.click(radio(page, 'boardType', 'lightened'));
       await r.click(radio(page, 'boardType', 'skeleton'));
+      await r.click(page.getByTestId('advanced').locator('summary'));
       await r.click(radio(page, 'boardType', 'fit-coupon'));
       await r.click(radio(page, 'typeGroup', 'connector'));
       await r.click(radio(page, 'boardType', 'standoff'));

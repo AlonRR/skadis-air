@@ -36,7 +36,11 @@ own, so the hole and the screw cannot drift apart from the board's. A type is tu
 face down (D66), unless it says `prints: 'as-built'` (C101), as the standoff does; the contract test
 checks that every type's printed part sits on the bed. A type whose file holds more than one
 separate part, as the seam-test pair's two tiles do, says `parts: 2` (C107); the contract test
-holds every type to its count, and the STL check reads it from a file beside the sample. Whatever stands behind a board is tested
+holds every type to its count, and the STL check reads it from a file beside the sample. A type that tests the printer
+before a board is made, as the fit coupon and the seam-test pair do, says `testPrint: true` (D357): the page then offers
+it under "Test prints" at the top of the Advanced fold of every form of its group, not in the group's list. A test print
+is a board, which the contract test checks, and a test beside it names the test prints there are, so a new one is added
+there too. Whatever stands behind a board is tested
 against `test/slot-zone.ts`: the room round each slot, and the room a hook takes below it; a part with pegs in the boards' own slots, as the slot clip has, names those slots in the zones' `except`, so only they are left out.
 
 Nothing else. The page lists the type, builds its form, checks its values, rebuilds it on every
@@ -70,6 +74,7 @@ What fails if a step is missed:
 | A starting value outside its range, a key used twice, a build that makes nothing | `packages/core/test/board-types.test.ts`: the contract every listed type is held to |
 | The id not in lower-case words, two types with one id | the same contract |
 | A connector listed among the boards, or a group other than board or connector | the same contract, and the list's order test beside it |
+| A test print (`testPrint: true`) among the connectors, or one marked that the test beside the contract does not name | the same contract, and that test (D357) |
 | A choice whose starting value is not one of its options, or an option listed twice | the same contract |
 | The line in `BOARD_TYPES` | the type is simply not on the page; `web/e2e/form.spec.ts` lists what is |
 | A build or label written against settings it does not declare | the type check |

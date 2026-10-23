@@ -6,6 +6,12 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The fit test coupon and the seam test pair are under Advanced, as "Test prints" at the top of every board's Advanced
+  fold, and the Board list holds the three boards alone. Choosing a test print opens its form with Advanced open on
+  it; choosing a board in the list goes back. The page still remembers a test print chosen after a reload.
+
 ## [0.5.0] - 2026-10-23
 
 ### Added

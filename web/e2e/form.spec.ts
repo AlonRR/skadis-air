@@ -16,12 +16,13 @@ test('lists the board types that are built, in the order of the registry, openin
   page,
 }) => {
   await ready(page);
-  // every type, boards then connectors as the registry lists them, under the toggle between the two (D250 h)
+  // every type, boards then connectors as the registry lists them, under the toggle between the two (D250 h); the
+  // test prints are under Advanced instead (D357, test-prints.spec.ts)
   const ids = await page
     .getByTestId('board-type')
     .locator('input[name="boardType"]')
     .evaluateAll((inputs) => inputs.map((i) => (i instanceof HTMLInputElement ? i.value : '')));
-  expect(ids).toEqual(BOARD_TYPES.map((t) => t.id));
+  expect(ids).toEqual(BOARD_TYPES.filter((t) => t.testPrint !== true).map((t) => t.id));
   await expect(chosen(page, 'boardType')).toHaveValue(BOARD_TYPES[0]?.id ?? '');
 });
 

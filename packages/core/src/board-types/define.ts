@@ -18,6 +18,9 @@ export interface BoardType<S extends readonly Setting[]> {
   group?: Group; // a board unless set
   prints?: 'face-down' | 'as-built'; // how it goes on the bed: turned over (D66) unless set (C101)
   parts?: number; // the separate parts in one file: 1 unless set, as for a test pair (C107)
+  /** A print that tests the printer before a board, as the fit coupon does (D357): a board, which the page offers
+   * under "Test prints" at the top of every board's Advanced fold, not in the list of boards. Not one unless set. */
+  testPrint?: boolean;
   description?: string;
   settings: S;
   // Methods, not function properties, so that a type with its own settings is still a board type.

@@ -14,7 +14,7 @@ import {
 } from 'skadis-air';
 import { panelText, type PanelLine, type Reply, type Request } from './build-messages.js';
 import { loadChoices, saveChoices, startingValues } from './choices.js';
-import { choiceGroup, chosenIn, renderForm, type Form } from './form.js';
+import { choiceGroup, chosenIn, labelledChoice, renderForm, type Form } from './form.js';
 import { saveFile } from './download.js';
 import { mountPreview } from './preview.js';
 import { mountPrinter } from './printer.js';
@@ -31,6 +31,8 @@ let shownGroup = '';
 let filesShown = false;
 /** The types of a group, boards or connectors, in the list's order. */
 const typesOf = (group: string) => BOARD_TYPES.filter((t) => groupOf(t) === group);
+/** A group's test prints, offered under Advanced in each of its forms rather than in its list (D357). */
+const testPrintsOf = (group: string) => typesOf(group).filter((t) => t.testPrint === true);
 
 const engineStatus = document.querySelector<HTMLElement>('[data-testid="engine-status"]');
 const boardStatus = document.querySelector<HTMLElement>('[data-testid="board-status"]');
@@ -220,6 +222,15 @@ function warnAboutBed(widthMm: number, heightMm: number): void {
   );
 }
 
+/** The test prints of a type's group, as a choice of type at the top of its form's Advanced fold (D357): the same
+ * choice as the list's, so one ticked here leaves nothing ticked there, the type shown ticked when it is one. */
+function testPrintField(type: AnyBoardType, tests: readonly AnyBoardType[]): HTMLElement {
+  const options = tests.map((t) => ({ value: t.id, label: t.name }));
+  const group = choiceGroup('boardType', 'Test prints', options, type.testPrint === true ? type.id : '');
+  for (const input of group.querySelectorAll<HTMLInputElement>('input')) input.dataset['group'] = groupOf(type);
+  return labelledChoice('Test prints', group);
+}
+
 function show(type: AnyBoardType): void {
   if (formBox === null) return;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -237,7 +248,11 @@ function show(type: AnyBoardType): void {
   // a type starts from the one shown before only within its group: boards from boards, connectors from connectors
   const before = groupOf(type) === shownGroup ? shownValues : {};
   shownGroup = groupOf(type);
-  const form = renderForm(formBox, type, changed, startingValues(type, choices.values[type.id], before));
+  // a test print's own form opens its Advanced fold, to show it chosen there (D357)
+  const tests = testPrintsOf(groupOf(type));
+  const extras =
+    tests.length === 0 ? {} : { advancedFirst: testPrintField(type, tests), advancedOpen: type.testPrint === true };
+  const form = renderForm(formBox, type, changed, startingValues(type, choices.values[type.id], before), extras);
   keep();
   current = changed;
   // A wall is closed round its outer edge (D37): split, the sides still open close, and can be opened again.
@@ -287,7 +302,8 @@ async function start(): Promise<void> {
   if (makeField === null || typeList === null) return;
   // Boards or connectors, a field of its own at the top (D256), and under it the types of the group chosen, their
   // field titled for it (D250 h; D91, D112). Every type is one choice, the same name in both groups; each group's
-  // list keeps the type last chosen in it.
+  // list keeps the type last chosen in it. A test print is not in its group's list but at the top of the Advanced
+  // fold of each of the group's forms, still the same choice, since the list and the form are in one form (D357).
   const groups = [
     { group: 'board', heading: 'Boards', title: 'Board' },
     { group: 'connector', heading: 'Connectors', title: 'Connector' },
@@ -307,7 +323,9 @@ async function start(): Promise<void> {
   makeField.append(toggle);
   const lists = new Map<string, HTMLElement>();
   for (const { group, heading } of groups) {
-    const options = typesOf(group).map((t) => ({ value: t.id, label: t.name }));
+    const options = typesOf(group)
+      .filter((t) => t.testPrint !== true)
+      .map((t) => ({ value: t.id, label: t.name }));
     const list = choiceGroup('boardType', heading, options, group === startGroup ? (chosenOf(group)?.id ?? '') : '');
     for (const input of list.querySelectorAll<HTMLInputElement>('input')) input.dataset['group'] = group;
     list.hidden = group !== startGroup; // hidden as it is, since the design system's v0.6.0 (D259; C179)
@@ -330,14 +348,21 @@ async function start(): Promise<void> {
     if (option) option.checked = true;
     if (type !== undefined) show(type);
   });
-  typeList.addEventListener('change', (event) => {
+  // a type chosen in its group's list, or among the test prints in its form's Advanced fold (D357)
+  const chooseType = (event: Event) => {
     const input = event.target instanceof HTMLInputElement ? event.target : null;
     if (input?.name !== 'boardType') return;
     const group = input.dataset['group'] ?? 'board';
+    const focused = document.activeElement === input;
     showGroup(group); // a type chosen in the other group, as a script may, shows that group
     choices.types[group] = input.value;
     show(boardType(input.value));
-  });
+    // a test print's choice is made again with its form: the focus goes on to the new one, where the keys move it
+    if (focused && !input.isConnected)
+      formBox?.querySelector<HTMLInputElement>('input[name="boardType"]:checked')?.focus();
+  };
+  typeList.addEventListener('change', chooseType);
+  formBox?.addEventListener('change', chooseType);
   showGroup(startGroup);
   const first = chosenOf(startGroup);
   if (first !== undefined) show(first);

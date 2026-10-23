@@ -18,7 +18,7 @@ round head, keyholes at the top so it lifts off its screws, or lock screws throu
 prints. A lightened board is the same with open pockets cut between the slots: a rim round each slot,
 joined to its neighbours by diagonal webs, in about 40 % of the plastic; a skeleton board makes every rim and web
 of that lattice an I-beam, thin through the middle, in about 32 %. It warns when the board is larger than your printer's bed. It also makes a small coupon to
-test the slots' fit first, a pair of tiles to test how two tiles meet, and a standoff, the first connector, to hold one board off the wall at a
+test the slots' fit first, a pair of tiles to test how two tiles meet (both under Advanced, Test prints), and a standoff, the first connector, to hold one board off the wall at a
 corner screw, or two side by side or one above the other, or four where their corners meet, and a slot clip, which joins boards behind a seam by pegs in their slots, whether the seam runs through the slots or between them. The SKÅDIS dimensions it uses come from published sources, checked against a real board
 with calipers, and a printed coupon set the slots' clearance ([`docs/skadis-standard.md`](docs/skadis-standard.md)).
 

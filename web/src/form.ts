@@ -3,7 +3,8 @@
 // the four side toggles round a drawing of the board (Sides, D46), and the fine settings folded under
 // "Advanced" (Disclosure, D48). Nothing here names a board type or a setting. A form starts from the values
 // given, the choices kept in the browser (D250 g), and each number field steps by arrows beside it (D250 c).
-// Each setting's help is folded behind an "i" button beside its label (C317).
+// Each setting's help is folded behind an "i" button beside its label (C317). The page may put a field of its own
+// first under Advanced, as it puts the test prints there (D357).
 import { readTypedNumber } from 'skadis-air';
 import type { AnyBoardType, ChoiceSetting, NumberSetting, Problem, Setting, SidesSetting } from 'skadis-air';
 
@@ -50,6 +51,13 @@ export function choiceGroup(
     group.append(button);
   }
   return group;
+}
+
+/** A Choice as the form shows a setting's: its label in words above its buttons, in a field of the form. */
+export function labelledChoice(label: string, group: HTMLElement): HTMLElement {
+  const field = element('div', { class: 'field' });
+  field.append(element('div', { class: 'ws-label' }, label), group);
+  return field;
 }
 
 /** The value of the option checked in a group of Choice buttons, or '' when none is. */
@@ -305,6 +313,13 @@ function put(container: HTMLElement, kind: 'error' | 'warning', problem: Problem
     container.querySelector(`.ws-input[name="${problem.key}"]`)?.setAttribute('aria-invalid', 'true');
 }
 
+/** What the page puts in a form beside the type's settings: a field first under Advanced, such as its choice of
+ * test print (D357), and whether Advanced starts open, to show what is chosen there. */
+export interface FormExtras {
+  advancedFirst?: HTMLElement;
+  advancedOpen?: boolean;
+}
+
 /** Replaces the container's contents with a form for the board type, starting from `start` where it gives a value
  * and from each setting's starting value elsewhere; `changed` runs on every edit. */
 export function renderForm(
@@ -312,14 +327,15 @@ export function renderForm(
   type: AnyBoardType,
   changed: () => void,
   start: Readonly<Record<string, unknown>> = {},
+  extras: FormExtras = {},
 ): Form {
   container.replaceChildren();
   const main = element('div', { class: 'main-settings' });
   const advanced = element('details', { class: 'ws-details', 'data-testid': 'advanced' });
-  advanced.append(
-    element('summary', { class: 'ws-summary' }, 'Advanced'),
-    note('Starting values: change them when a test print says to.'),
-  );
+  advanced.append(element('summary', { class: 'ws-summary' }, 'Advanced'));
+  if (extras.advancedFirst !== undefined) advanced.append(extras.advancedFirst);
+  advanced.append(note('Starting values: change them when a test print says to.'));
+  const kept = advanced.children.length; // the summary, the note and the page's field
   const readers = new Map<string, () => unknown>();
   for (const s of type.settings) {
     const { field, read } = fieldFor(s, changed, start[s.key]);
@@ -327,7 +343,9 @@ export function renderForm(
     readers.set(s.key, read);
   }
   container.append(main);
-  if (advanced.children.length > 2) container.append(advanced); // more than its summary and note
+  // shown when it holds a setting or the page's field: never a summary and a note alone
+  if (advanced.children.length > kept || extras.advancedFirst !== undefined) container.append(advanced);
+  advanced.open = extras.advancedOpen === true;
   // what each screw passes, in the screw size's own field, before its error (D264)
   const screwNote = element('p', { class: 'ws-note', 'data-testid': 'screw-note', 'aria-live': 'polite' });
   const screwField = container.querySelector('input[name="screwMm"]')?.closest('.field');

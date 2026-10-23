@@ -1,4 +1,5 @@
-// The fit coupon as a board type (backlog item fit-coupon; D67, D68): chosen on the page like a board.
+// The fit coupon as a board type (backlog item fit-coupon; D67, D68): a test print, chosen on the page under
+// Advanced, Test prints (D357), and made like a board.
 import { SOLID_BOARD_DEFAULTS } from '../board-solid.js';
 import { FIT_COUPON_TILES, fitCouponParams, makeFitCoupon } from '../fit-coupon.js';
 import { defineSettings } from '../settings.js';
@@ -9,6 +10,7 @@ const mm = (n: number) => String(Math.round(n * 100) / 100);
 export const FIT_COUPON = defineBoardType({
   id: 'fit-coupon',
   name: 'Fit test coupon',
+  testPrint: true,
   description: `${FIT_COUPON_TILES} slots at ${FIT_COUPON_TILES} clearances, to find the one that fits your printer.`,
   settings: defineSettings([
     {
