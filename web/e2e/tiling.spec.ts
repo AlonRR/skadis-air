@@ -44,6 +44,36 @@ test('splits a board into panels for the bed, lists each size with its count, an
   expect(download.suggestedFilename()).toBe('skadis-solid-160x160-closed-left-bottom.stl');
 });
 
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 412, height: 860 }, hasTouch: true, isMobile: true });
+  // The owner, 23 Oct 2026, from a phone: "the download bar stays on the screen when it should be hidden and it's
+  // cut in half". On a phone the 3D view and the plan bar are pinned while the page scrolls; the print list is not.
+  test("a wall's print list is whole, and scrolls away under the pinned 3D view (C350)", async ({ page }) => {
+    test.setTimeout(90_000);
+    await ready(page);
+    await choose(page, 'panels', 'split');
+    await page.locator('input[name="widthMm"]').fill('400');
+    await page.locator('input[name="heightMm"]').fill('400');
+    await expect(page.getByTestId('board-status')).toContainText('Wall ready: 4 panels', { timeout: 30_000 });
+    const list = page.getByTestId('print-list');
+    await expect(list.getByTestId('print-all')).toBeVisible();
+    // whole: no height of its own cuts it short
+    const sizes = await list.evaluate((l) => ({ shown: l.clientHeight, content: l.scrollHeight }));
+    expect(sizes.shown).toBeGreaterThanOrEqual(sizes.content - 1);
+    // scrolled until its top is at the pinned view's middle: the view covers it, and nothing of it is drawn over
+    const covered = await list.evaluate((l) => {
+      const view = document.querySelector('.ws-stage__view')?.getBoundingClientRect();
+      if (view === undefined) return 'no view';
+      const by = l.getBoundingClientRect().top - (view.top + view.height / 2);
+      window.scrollTo({ top: window.scrollY + by, behavior: 'instant' });
+      const box = l.getBoundingClientRect();
+      const at = document.elementFromPoint(box.left + box.width / 2, box.top + 10);
+      return at === null ? 'nothing' : l.contains(at) ? 'the list, over the view' : 'covered';
+    });
+    expect(covered).toBe('covered');
+  });
+});
+
 test("closes the wall's sides when split, and they open again (D37)", async ({ page }) => {
   await ready(page);
   const pressed = () =>

@@ -21,11 +21,21 @@
         color: var(--ink-muted);
         font: var(--text-note);
       }
-      /* A wall's print list scrolls in its own share of the stage, so the 3D view keeps most of it (C205). */
-      .print-list {
-        flex: 0 1 auto;
-        max-height: 40%;
-        overflow-y: auto;
+      /* A wall's print list scrolls in its own share of the stage, so the 3D view keeps most of it (C205), where the
+        stage is a column beside the form: the design system's wide layout, whose query this repeats. On a phone the
+        list is in the page's flow, whole, and scrolls away under the pinned view and plan bar (C350). */
+      @media (min-width: 56rem) and (min-height: 16.5rem),
+        (min-aspect-ratio: 4/3) and (min-width: 48rem) and (min-height: 16.5rem) {
+        .print-list {
+          flex: 0 1 auto;
+          max-height: 40%;
+          overflow-y: auto;
+        }
+      }
+      /* Its "Download all" row wears the plan bar's look but is not the plan bar, so it never pins on a phone: pinned,
+        it was drawn over the 3D view as the page scrolled (C350). */
+      .print-list .ws-plan {
+        position: static;
       }
       [data-state='error'],
       [data-state='invalid'],
