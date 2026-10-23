@@ -13,11 +13,11 @@ kg, and the stress shown on pictures of the parts). The choices made on the way 
 |---|---|
 | 1. Tooling and controls | done: `scripts/physics/`, `tests/test-physics.sh` |
 | 2. Loads, hook and materials cited | done: IKEA publishes no rating, so the runs use a reference load and give each part's capacity ([below](#the-loads)) |
-| 3. Today's parts | level 1 done but the skeleton's wall; level 2, the convergence check, running |
-| 4. The old versions | level 1 done but one window (v0.2.1's skeleton, hook at the edge, which no try meshed); level 2 running |
-| 5. Walls | solid and lightened at level 1; the skeleton's wall not solved (its iterative solve outlasted a window) |
+| 3. Today's parts | level 2 done for every hook, spread and connector case but one (the lightened board on standoffs, which no try meshed at level 2); level 3 for the skeleton on standoffs |
+| 4. The old versions | level 2 done for every case but one window (v0.2.1's skeleton, hook at the edge, which no try meshed); level 3 for v0.4.2's skeleton under the edge hook |
+| 5. Walls | solid and lightened at level 1, their level 2 past a window; the skeleton's wall not solved (its stiffness singular, C346) |
 | 6. Capacities (Q329) | done for every run: the headline table, in N and kg per material |
-| 7. Figures | `scripts/physics/figures.py`, `figure.html`, `figures.mjs`; drawn as each case's run with its saved surface lands |
+| 7. Figures | done: eleven, in `docs/figures/physics/` ([below](#the-figures-c343)), by `scripts/physics/figures.py`, `figure.html` and `figures.mjs` |
 | 8. The report | this file; its tables are `scripts/physics/tables.py`'s output, as of the last run |
 
 ### Resume point
@@ -45,10 +45,11 @@ to the yield alone, from its peak, which converged in 31 of the 44.
 
 - **The solid board** holds the most: 469 N (47.8 kg) today, 513 N in v0.2.1, set across the layers 1 mm from a corner
   screw's countersink, where the fully held countersink sets the value (C345: 2 mm off it the stress is 0.22 against
-  0.36 MPa); to the yield alone 550 N. The hook's contact comes first, at 292 N. Old and new are one board here.
+  0.36 MPa), and not converged (the layers' stress moved 16 % today, 28 % in v0.2.1); to the yield alone 550 N,
+  converged. The hook's contact comes first, at 292 N. Old and new are one board here.
 - **The lightened board** holds 119 N (12.2 kg) today, converged, at the yield where a web meets the left rim 26 mm from
-  the edge hook's slot, against 72 N (7.4 kg) in v0.2.1, across the layers 10 mm from it (86 N to the yield alone): 65 %
-  more. The hook's contact, 107 N on both, now comes first on today's.
+  the edge hook's slot, against 72 N (7.4 kg) in v0.2.1, across the layers 10 mm from it, not converged (that stress
+  moved 24 %; 86 N to the yield alone): 65 % more. The hook's contact, 107 N on both, now comes first on today's.
 - **The skeleton board** went from 4 N (0.4 kg) in v0.2.1, at a sharp pocket corner by the slot whose stress rose with
   each mesh (54 to 64 MPa: an upper bound), to 67 N (6.8 kg) in v0.4.2, its corners rounded, converged, and back to
   29 N (2.9 kg) today, converged: **43 % of v0.4.2's** (55 against 67 N to the yield alone). D314's stepped profile moved
@@ -451,6 +452,10 @@ Unnumbered here; the session that relays them gives them their IDs.
   step where a web meets a rim, across the layers, and the 0.4 mm front flange under the hook's body. If the print
   breaks there, the options this points at are a radius where the flange steps to the core, or a thicker flange; each
   would give back some of the filament D314 saved (built, 55.8 g against the lightened board's 67.7 g at 200 x 200 mm).
+- **A radius at the standoffs' roots and the slot clip's bar root** (a decision; recommended: yes, if the design allows
+  it): in the model each is a sharp inner edge whose stress rose with each mesh, and a standoff's root on the board's
+  back is the weakest place on every board on standoffs (18 to 92 N per board in PLA, upper bounds). What a print holds
+  there depends on the root's real radius; a drawn radius would make it the design's, not the nozzle's.
 - **The filament of the test prints** (a fact only the owner has): the hook-load prints are read against the column of
   the filament they are printed in, PLA, PETG or ASA.
 
