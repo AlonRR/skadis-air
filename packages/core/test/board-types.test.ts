@@ -17,7 +17,7 @@ import {
   type AnyBoardType,
 } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
-import { defaultValues, defineSettings, readValues } from '../src/settings.js';
+import { defaultValues, defineSettings, readValues, type Setting, settingsNotApplying } from '../src/settings.js';
 import { skeletonParams } from '../src/skeleton.js';
 
 const engine = await loadEngine();
@@ -66,6 +66,13 @@ function contract(type: AnyBoardType) {
         expect(values).toContain(s.default);
       }
     }
+  });
+
+  it('says of a setting that applies only with another choice whether it does, at its starting values (D372)', () => {
+    for (const s of type.settings) {
+      if (s.appliesWhen !== undefined) expect(typeof s.appliesWhen(defaultValues(type.settings))).toBe('boolean');
+    }
+    expect(settingsNotApplying(type.settings, {}).every((key) => type.settings.some((s) => s.key === key))).toBe(true);
   });
 
   it('accepts its own starting values', () => {
@@ -370,6 +377,92 @@ describe('the solid board type', () => {
     const flat = buildBoard(engine, solid, { ...v, screwHead: 'keyhole' });
     expect(flat.ok).toBe(false);
     if (!flat.ok) expect(flat.problem).toContain('standoffs at least 13.23 mm');
+  });
+});
+
+// The mounting's settings that apply only with another choice (D372; QA Q15): lock screws at the bottom only with
+// keyholes; the standoff height only with standoffs, on the back or under keyholes and lock screws; the lock screw size
+// only with lock screws. While one does not apply it is not checked, and the build is handed its starting value.
+describe("the mounting's settings that apply only with another choice (D372)", () => {
+  const solid = SOLID;
+  const notApplying = (id: string, given: Record<string, unknown>) =>
+    settingsNotApplying(boardType(id).settings, given).filter((k) =>
+      ['lockScrews', 'standoffHeightMm', 'lockScrewMm'].includes(k),
+    );
+
+  it('greys out each where it does not apply, for every board, and nothing else of theirs', () => {
+    for (const id of ['solid', 'lightened', 'skeleton']) {
+      expect(notApplying(id, {})).toEqual(['lockScrews', 'lockScrewMm', 'standoffHeightMm']);
+      expect(notApplying(id, { standoffs: 'back' })).toEqual(['lockScrews', 'lockScrewMm']);
+      expect(notApplying(id, { screwHead: 'keyhole' })).toEqual(['lockScrewMm']);
+      expect(notApplying(id, { screwHead: 'keyhole', lockScrews: 'bottom' })).toEqual([]);
+      expect(notApplying(id, { screwHead: 'lock' })).toEqual(['lockScrews']);
+      expect(notApplying(id, { screwHead: 'round', lockScrews: 'bottom' })).toEqual([
+        'lockScrews',
+        'lockScrewMm',
+        'standoffHeightMm',
+      ]);
+      // every other setting of a board applies always
+      expect(settingsNotApplying(boardType(id).settings, {})).toEqual(notApplying(id, {}));
+    }
+  });
+
+  it('checks none of them while it does not apply, so a value left there blocks nothing', () => {
+    const bad = { lockScrews: 'sideways', lockScrewMm: '9', standoffHeightMm: '1' };
+    const read = readValues(solid.settings, { ...bad, screwHead: 'countersunk' });
+    expect(read.ok).toBe(true);
+    if (read.ok) {
+      expect([read.values.lockScrews, read.values.lockScrewMm, read.values.standoffHeightMm]).toEqual([
+        'none',
+        2.5,
+        15,
+      ]);
+    }
+  });
+
+  it('checks each while it applies (the control)', () => {
+    const keys = (given: Record<string, unknown>) => {
+      const read = readValues(solid.settings, given);
+      return read.ok ? [] : read.errors.map((e) => e.key);
+    };
+    expect(keys({ screwHead: 'keyhole', lockScrews: 'sideways' })).toEqual(['lockScrews']);
+    expect(keys({ standoffs: 'back', standoffHeightMm: '1' })).toEqual(['standoffHeightMm']);
+    expect(keys({ screwHead: 'keyhole', standoffHeightMm: '1' })).toEqual(['standoffHeightMm']);
+    expect(keys({ screwHead: 'lock', standoffHeightMm: '1' })).toEqual(['standoffHeightMm']);
+    expect(keys({ screwHead: 'lock', lockScrewMm: '9' })).toEqual(['lockScrewMm']);
+    expect(keys({ screwHead: 'keyhole', lockScrews: 'bottom', lockScrewMm: '9' })).toEqual(['lockScrewMm']);
+    expect(keys({ screwHead: 'keyhole', lockScrewMm: '9' })).toEqual([]);
+  });
+
+  it('builds and names a board the same whatever a setting that does not apply holds', () => {
+    const v = defaultValues(solid.settings);
+    const plain = buildBoard(engine, solid, v);
+    expect(plain.ok).toBe(true);
+    if (!plain.ok) return;
+    made.push(plain.solid);
+    for (const off of [{ lockScrews: 'bottom' }, { lockScrewMm: 4 }, { standoffHeightMm: 30 }] as const) {
+      // handed straight to the build, as a caller may: it ignores the value
+      const given = { ...v, ...off };
+      const built = buildBoard(engine, solid, given);
+      expect(built.ok).toBe(true);
+      if (!built.ok) continue;
+      made.push(built.solid);
+      expect(built.solid.volume()).toBeCloseTo(plain.solid.volume(), 6);
+      expect(boardFileName(solid, given, 'stl')).toBe(boardFileName(solid, v, 'stl'));
+      expect(solid.screws?.(given)).toBe(solid.screws?.(v));
+      // and read from the form, it is its starting value
+      const read = readValues(solid.settings, given);
+      expect(read.ok && read.values).toEqual(v);
+    }
+  });
+
+  it('says in its help when each applies', () => {
+    const help = (key: string) => (solid.settings as readonly Setting[]).find((s) => s.key === key)?.help ?? '';
+    expect(help('lockScrews')).toMatch(/^With keyholes: /);
+    expect(help('lockScrewMm')).toMatch(/^With lock screws, at the bottom with keyholes or as the screw holes: /);
+    expect(help('standoffHeightMm')).toMatch(
+      /^With standoffs on the back, or keyholes or lock screws, which stand on them: /,
+    );
   });
 });
 

@@ -152,6 +152,12 @@
       .help {
         margin-bottom: var(--space-2);
       }
+      /* A setting that does not apply to what is chosen (D372): its label greyed as the design system greys its
+        disabled controls; its "i" button and help stay as they are, to say when it applies. */
+      .field[data-applies='false'] .ws-label,
+      .field[data-applies='false'] legend > span {
+        opacity: var(--opacity-disabled);
+      }
     </style>
   </head>
   <body class="ws-page">

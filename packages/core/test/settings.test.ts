@@ -1,7 +1,7 @@
 // The settings a board type declares, read from what the page or a caller hands in (backlog item
 // registry). The settings here are declared in this file alone: the reader must not know any board.
 import { describe, expect, it } from 'vitest';
-import { defineSettings, defaultValues, readTypedNumber, readValues } from '../src/settings.js';
+import { defineSettings, defaultValues, readTypedNumber, readValues, settingsNotApplying } from '../src/settings.js';
 
 const SETTINGS = defineSettings([
   {
@@ -162,5 +162,83 @@ describe('readValues', () => {
       expect(read.errors.map((e) => e.key)).toEqual(['head']);
       expect(read.errors[0]?.message).toContain('Countersunk');
     }
+  });
+});
+
+// A setting that applies only with another choice (D372): greyed out on the page and not checked while it does not
+// apply, so a value left in it blocks nothing, and the build is handed its starting value. Declared here alone.
+describe('a setting that applies only with another choice (D372)', () => {
+  const GATED = defineSettings([
+    {
+      kind: 'choice',
+      key: 'head',
+      label: 'Screw head',
+      options: [
+        { value: 'countersunk', label: 'Countersunk' },
+        { value: 'lock', label: 'Lock screws' },
+      ],
+      default: 'countersunk',
+    },
+    {
+      kind: 'choice',
+      key: 'extra',
+      label: 'Extra',
+      options: [
+        { value: 'none', label: 'None' },
+        { value: 'more', label: 'More' },
+      ],
+      default: 'none',
+      appliesWhen: (v) => v['head'] === 'lock',
+    },
+    {
+      kind: 'number',
+      key: 'sizeMm',
+      label: 'Size',
+      unit: 'mm',
+      default: 2.5,
+      min: 2,
+      max: 5,
+      step: 0.5,
+      warnOutside: [2, 3],
+      appliesWhen: (v) => v['head'] === 'lock' && v['extra'] === 'more',
+    },
+  ]);
+
+  it('is not checked while it does not apply, nor warned about, and reads as its starting value', () => {
+    expect(readValues(GATED, { head: 'countersunk', sizeMm: '99' })).toEqual({
+      ok: true,
+      values: { head: 'countersunk', extra: 'none', sizeMm: 2.5 },
+      warnings: [],
+    });
+    expect(readValues(GATED, { head: 'countersunk', sizeMm: '4' })).toEqual({
+      ok: true,
+      values: { head: 'countersunk', extra: 'none', sizeMm: 2.5 },
+      warnings: [],
+    });
+    expect(readValues(GATED, { head: 'lock', sizeMm: 'not a number' }).ok).toBe(true);
+  });
+
+  it('is checked while it applies, and read as given', () => {
+    const refused = readValues(GATED, { head: 'lock', extra: 'more', sizeMm: '99' });
+    expect(refused.ok).toBe(false);
+    if (!refused.ok) expect(refused.errors.map((e) => e.key)).toEqual(['sizeMm']);
+    const warned = readValues(GATED, { head: 'lock', extra: 'more', sizeMm: '4' });
+    expect(warned).toMatchObject({ ok: true, values: { sizeMm: 4 } });
+    expect(warned.warnings.map((w) => w.key)).toEqual(['sizeMm']);
+  });
+
+  it('follows a chain: one that does not apply is read at its starting value, which those that hang on it see', () => {
+    expect(readValues(GATED, { head: 'countersunk', extra: 'more', sizeMm: '99' })).toEqual({
+      ok: true,
+      values: { head: 'countersunk', extra: 'none', sizeMm: 2.5 },
+      warnings: [],
+    });
+  });
+
+  it('says which settings do not apply to what is given, for the form, whatever else is refused', () => {
+    expect(settingsNotApplying(GATED, { head: 'countersunk' })).toEqual(['extra', 'sizeMm']);
+    expect(settingsNotApplying(GATED, { head: 'lock' })).toEqual(['sizeMm']);
+    expect(settingsNotApplying(GATED, { head: 'lock', extra: 'more', sizeMm: 'abc' })).toEqual([]);
+    expect(settingsNotApplying(SETTINGS, { widthMm: 'abc' })).toEqual([]);
   });
 });

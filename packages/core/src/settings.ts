@@ -3,6 +3,15 @@
 // list, so a new setting is one entry and nothing else (the extension-registry practice).
 import { ALL_OPEN, type Side, type Sides } from './slots.js';
 
+/**
+ * Whether a setting applies, from the values of the others (D372): one that applies only with another choice, as the
+ * lock screw size with lock screws, says so. While it does not, the page shows it greyed out, the reader neither
+ * checks nor warns about it and hands on its starting value, so a value left in it blocks nothing and the build never
+ * sees it. Given the values as read, those that do not apply already at their starting values. Every setting applies
+ * unless it says.
+ */
+export type AppliesWhen = (values: Readonly<Record<string, unknown>>) => boolean;
+
 export interface NumberSetting {
   kind: 'number';
   key: string;
@@ -15,8 +24,9 @@ export interface NumberSetting {
   onStep?: boolean; // the value must be min plus a whole number of steps (a board's size, D15)
   count?: { one: string; other: string }; // what a step is called, beside the value: '= 1 tile', '= 6 tiles' (D45, A263)
   warnOutside?: readonly [number, number]; // a range outside which the value is allowed but warned about
-  help?: string;
+  help?: string; // says when it applies, where it does not always (D372)
   advanced?: boolean; // shown under "Advanced", folded away (D48)
+  appliesWhen?: AppliesWhen;
 }
 
 export interface SidesSetting {
@@ -26,6 +36,7 @@ export interface SidesSetting {
   default: Sides;
   help?: string;
   advanced?: boolean;
+  appliesWhen?: AppliesWhen;
 }
 
 export interface ChoiceSetting {
@@ -36,6 +47,7 @@ export interface ChoiceSetting {
   default: string; // one of the options' values
   help?: string;
   advanced?: boolean;
+  appliesWhen?: AppliesWhen;
 }
 
 export type Setting = NumberSetting | SidesSetting | ChoiceSetting;
@@ -163,11 +175,11 @@ function readChoice(s: ChoiceSetting, given: unknown, errors: Problem[]): string
   return s.default;
 }
 
-/** Reads every setting from what was given, as text or numbers; anything missing takes its starting value. */
-export function readValues<const S extends readonly Setting[]>(
-  settings: S,
+/** Each setting read alone, its problems kept by key: a value it refuses as its starting value. */
+function readEach(
+  settings: readonly Setting[],
   given: Readonly<Record<string, unknown>>,
-): ReadResult<S> {
+): { values: Record<string, number | string | Sides>; errors: Problem[]; warnings: Problem[] } {
   const errors: Problem[] = [];
   const warnings: Problem[] = [];
   const values: Record<string, number | string | Sides> = {};
@@ -176,7 +188,43 @@ export function readValues<const S extends readonly Setting[]>(
     else if (s.kind === 'choice') values[s.key] = readChoice(s, given[s.key], errors);
     else values[s.key] = readSides(s, given[s.key], errors);
   }
+  return { values, errors, warnings };
+}
+
+/** The keys of the settings that do not apply to these values (D372), each set to its starting value in them, until
+ * none changes: one that does not apply is seen at its starting value by those that hang on it. */
+function offOf(settings: readonly Setting[], values: Record<string, number | string | Sides>): Set<string> {
+  const off = new Set<string>();
+  for (let changed = true; changed;) {
+    changed = false;
+    for (const s of settings) {
+      if (off.has(s.key) || s.appliesWhen === undefined || s.appliesWhen(values)) continue;
+      off.add(s.key);
+      values[s.key] = s.kind === 'sides' ? { ...s.default } : s.default;
+      changed = true;
+    }
+  }
+  return off;
+}
+
+/** The keys of the settings that do not apply to what was given (D372), in the order declared, a value refused read
+ * as its starting value: for the page, which greys them out. */
+export function settingsNotApplying(settings: readonly Setting[], given: Readonly<Record<string, unknown>>): string[] {
+  const off = offOf(settings, readEach(settings, given).values);
+  return settings.filter((s) => off.has(s.key)).map((s) => s.key);
+}
+
+/** Reads every setting from what was given, as text or numbers; anything missing takes its starting value, and a
+ * setting that does not apply, unchecked, its starting value too (D372). */
+export function readValues<const S extends readonly Setting[]>(
+  settings: S,
+  given: Readonly<Record<string, unknown>>,
+): ReadResult<S> {
+  const read = readEach(settings, given);
+  const off = offOf(settings, read.values);
+  const errors = read.errors.filter((p) => !off.has(p.key));
+  const warnings = read.warnings.filter((p) => !off.has(p.key));
   if (errors.length > 0) return { ok: false, errors, warnings };
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- built key by key from the declaration
-  return { ok: true, values: values as Values<S>, warnings };
+  return { ok: true, values: read.values as Values<S>, warnings };
 }

@@ -4,8 +4,9 @@
 // "Advanced" (Disclosure, D48). Nothing here names a board type or a setting. A form starts from the values
 // given, the choices kept in the browser (D250 g), and each number field steps by arrows beside it (D250 c).
 // Each setting's help is folded behind an "i" button beside its label (C317). The page may put a field of its own
-// first under Advanced, as it puts the test prints there (D357).
-import { readTypedNumber } from 'skadis-air';
+// first under Advanced, as it puts the test prints there (D357). A setting that applies only with another choice is
+// greyed out, its controls disabled, while it does not (D372): the reader leaves it unchecked then, so nothing marks it.
+import { readTypedNumber, settingsNotApplying } from 'skadis-air';
 import type { AnyBoardType, ChoiceSetting, NumberSetting, Problem, Setting, SidesSetting } from 'skadis-air';
 
 type Side = 'left' | 'right' | 'bottom' | 'top';
@@ -116,11 +117,19 @@ function labelRow(label: HTMLElement, info: HTMLElement | undefined): HTMLElemen
 /** How many decimals a number is written with. */
 const decimals = (text: string) => (text.split('.')[1] ?? '').length;
 
-function numberField(
-  s: NumberSetting,
-  changed: () => void,
-  start?: unknown,
-): { field: HTMLElement; read: () => string } {
+/** A setting's field, how to read it, and how to turn its controls on or off as it applies or not (D372). */
+interface Field<V> {
+  field: HTMLElement;
+  read: () => V;
+  enable: (on: boolean) => void;
+}
+
+/** Marks a field as applying or not, so the page greys its label and notes as the design system greys a control. */
+const markApplies = (field: HTMLElement, on: boolean) => {
+  field.dataset['applies'] = String(on);
+};
+
+function numberField(s: NumberSetting, changed: () => void, start?: unknown): Field<string> {
   const field = element('div', { class: 'field' });
   const label = element('label', { class: 'ws-label', for: idOf(s.key, 'input') });
   label.append(`${s.label} (${s.unit})`);
@@ -225,14 +234,16 @@ function numberField(
   input.addEventListener('input', changed);
   // A number field the browser cannot read is handed over empty, which would read as the starting value; it is
   // handed on as what it is, not a number (D222).
-  return { field, read: () => (input.validity.badInput ? 'not a number' : input.value) };
+  const enable = (on: boolean) => {
+    markApplies(field, on);
+    input.disabled = !on;
+    down.disabled = !on;
+    up.disabled = !on;
+  };
+  return { field, read: () => (input.validity.badInput ? 'not a number' : input.value), enable };
 }
 
-function sidesField(
-  s: SidesSetting,
-  changed: () => void,
-  start?: unknown,
-): { field: HTMLElement; read: () => Record<Side, string> } {
+function sidesField(s: SidesSetting, changed: () => void, start?: unknown): Field<Record<Side, string>> {
   const state: Record<Side, 'open' | 'closed'> = { ...s.default };
   for (const side of SIDES) {
     const v: unknown =
@@ -274,14 +285,14 @@ function sidesField(
     'aria-describedby',
     [...(folded === undefined ? [] : [folded.help.id]), idOf(s.key, 'error')].join(' '),
   );
-  return { field, read: () => ({ ...state }) };
+  const enable = (on: boolean) => {
+    markApplies(field, on);
+    for (const button of grid.querySelectorAll<HTMLButtonElement>('button')) button.disabled = !on;
+  };
+  return { field, read: () => ({ ...state }), enable };
 }
 
-function choiceField(
-  s: ChoiceSetting,
-  changed: () => void,
-  start?: unknown,
-): { field: HTMLElement; read: () => string } {
+function choiceField(s: ChoiceSetting, changed: () => void, start?: unknown): Field<string> {
   const field = element('div', { class: 'field' });
   const folded = helpFor(s);
   field.append(labelRow(element('div', { class: 'ws-label' }, s.label), folded?.info));
@@ -295,10 +306,14 @@ function choiceField(
     'aria-describedby',
     [...(folded === undefined ? [] : [folded.help.id]), idOf(s.key, 'error')].join(' '),
   );
-  return { field, read: () => chosenIn(group) };
+  const enable = (on: boolean) => {
+    markApplies(field, on);
+    for (const input of group.querySelectorAll<HTMLInputElement>('input')) input.disabled = !on;
+  };
+  return { field, read: () => chosenIn(group), enable };
 }
 
-function fieldFor(s: Setting, changed: () => void, start?: unknown): { field: HTMLElement; read: () => unknown } {
+function fieldFor(s: Setting, changed: () => void, start?: unknown): Field<unknown> {
   if (s.kind === 'number') return numberField(s, changed, start);
   if (s.kind === 'choice') return choiceField(s, changed, start);
   return sidesField(s, changed, start);
@@ -337,11 +352,24 @@ export function renderForm(
   advanced.append(note('Starting values: change them when a test print says to.'));
   const kept = advanced.children.length; // the summary, the note and the page's field
   const readers = new Map<string, () => unknown>();
+  const enablers = new Map<string, (on: boolean) => void>();
+  const read = () => Object.fromEntries([...readers].map(([key, r]) => [key, r()]));
+  // greys out what does not apply to the values held now, and turns the rest on, before the page reads them (D372)
+  const applies = () => {
+    const off = new Set(settingsNotApplying(type.settings, read()));
+    for (const [key, enable] of enablers) enable(!off.has(key));
+  };
+  const edited = () => {
+    applies();
+    changed();
+  };
   for (const s of type.settings) {
-    const { field, read } = fieldFor(s, changed, start[s.key]);
-    (s.advanced ? advanced : main).append(field);
-    readers.set(s.key, read);
+    const made = fieldFor(s, edited, start[s.key]);
+    (s.advanced ? advanced : main).append(made.field);
+    readers.set(s.key, made.read);
+    enablers.set(s.key, made.enable);
   }
+  applies();
   container.append(main);
   // shown when it holds a setting or the page's field: never a summary and a note alone
   if (advanced.children.length > kept || extras.advancedFirst !== undefined) container.append(advanced);
@@ -352,7 +380,7 @@ export function renderForm(
   screwField?.querySelector('.ws-error')?.before(screwNote);
 
   return {
-    read: () => Object.fromEntries([...readers].map(([key, read]) => [key, read()])),
+    read,
     show: (errors, warnings) => {
       for (const p of container.querySelectorAll<HTMLElement>('.ws-error, .ws-notice')) p.replaceChildren();
       for (const i of container.querySelectorAll('[aria-invalid]')) i.removeAttribute('aria-invalid');

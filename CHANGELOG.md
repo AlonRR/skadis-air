@@ -13,6 +13,10 @@ All notable changes to this project are recorded here. The format follows
   through the slots has, 8.5 mm to the nearest slot, and its standoff and a lattice board's pad with it: on a 160 mm
   board open all round, the bottom left and top right screws move 21.5 mm along their edge. On a board one tile
   across, two corners whose screws would stand within 20 mm of each other share one.
+- A setting that applies only with another choice is greyed out while it does not apply, and its value is not
+  checked then, so a value left in it no longer stops the board: "Lock screws: at the bottom" applies only with
+  keyholes, the standoff height only with standoffs on the back, keyholes or lock screws, and the lock screw size
+  only with lock screws, at the bottom with keyholes or as the screw holes. Each one's help says when it applies.
 
 ### Fixed
 

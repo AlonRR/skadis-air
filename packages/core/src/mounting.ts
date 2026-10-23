@@ -835,6 +835,7 @@ export const MOUNTING_SETTINGS = defineSettings([
       'With keyholes: screws through the bottom corner slots into the standoffs behind, which hold the board in ' +
       "place; each goes in head and all, its head behind the hook's room, so the slot still takes a hook.",
     advanced: true,
+    appliesWhen: (v) => v['screwHead'] === 'keyhole', // D372
   },
   {
     kind: 'number',
@@ -846,9 +847,11 @@ export const MOUNTING_SETTINGS = defineSettings([
     max: 5,
     step: 0.5,
     help:
-      'For lock screws: their size. A pan head up to 5 mm across, about a 2.5 mm screw, passes through the slot; ' +
-      "a larger one gets a groove cut in the slot's sides to pass.",
+      'With lock screws, at the bottom with keyholes or as the screw holes: their size. A pan head up to 5 mm ' +
+      "across, about a 2.5 mm screw, passes through the slot; a larger one gets a groove cut in the slot's sides to " +
+      'pass.',
     advanced: true,
+    appliesWhen: (v) => v['screwHead'] === 'lock' || (v['screwHead'] === 'keyhole' && v['lockScrews'] === 'bottom'),
   },
   {
     kind: 'number',
@@ -859,8 +862,11 @@ export const MOUNTING_SETTINGS = defineSettings([
     min: 3,
     max: 40,
     step: 0.5,
-    help: "How far the standoffs hold the board off the wall: 15 mm unless set; IKEA's spacers hold it about 20 mm off.",
+    help:
+      'With standoffs on the back, or keyholes or lock screws, which stand on them: how far the standoffs hold the ' +
+      "board off the wall, 15 mm unless set; IKEA's spacers hold it about 20 mm off.",
     advanced: true,
+    appliesWhen: (v) => v['standoffs'] === 'back' || v['screwHead'] === 'keyhole' || v['screwHead'] === 'lock',
   },
 ]);
 

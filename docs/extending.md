@@ -20,7 +20,11 @@ A board type is one file and one line in a list (D11, the extension-registry pra
      (`{ one: 'tile', other: 'tiles' }`, for `= 1 tile` and `= 6 tiles`), `warnOutside` for
      a range it allows but warns about, `advanced` to fold it under "Advanced" (D48), and `help`, which the
      page folds behind an "i" button beside the label (C317). A
-     choice has its `options`, each a value and a label, and its starting value, one of them (C82);
+     choice has its `options`, each a value and a label, and its starting value, one of them (C82). Any setting
+     that applies only with another choice says so in `appliesWhen(values)`, given the values read, true where it
+     applies (D372): while it does not, the page greys it out, its controls disabled, the reader neither checks nor
+     warns about it and hands the build its starting value, and its `help` says when it applies, as the lock screw
+     size's does in `mounting.ts`;
    - `build(engine, values)`: the solid, from values typed by the settings above. A combination it
      cannot make throws a `RangeError`, which the page shows as a problem instead of a board; a
      `SettingsProblem`, a `RangeError` with the keys of the settings it belongs to, also marks those fields;
@@ -77,6 +81,7 @@ What fails if a step is missed:
 | A connector listed among the boards, or a group other than board or connector | the same contract, and the list's order test beside it |
 | A test print (`testPrint: true`) among the connectors, or one marked that the test beside the contract does not name | the same contract, and that test (D357) |
 | A choice whose starting value is not one of its options, or an option listed twice | the same contract |
+| An `appliesWhen` that does not answer true or false at the type's starting values | the same contract (D372) |
 | The line in `BOARD_TYPES` | the type is simply not on the page; `web/e2e/form.spec.ts` lists what is |
 | A build or label written against settings it does not declare | the type check |
 
@@ -86,7 +91,10 @@ same calls, which shows the generic code names no board.
 ## A new setting on an existing board type
 
 1. Add it to the type's `defineSettings([...])` list. The page shows a control for it, the reader
-   checks it, and `build` receives it, typed.
+   checks it, and `build` receives it, typed. If it applies only with another choice, give it an
+   `appliesWhen(values)` and say in its `help` when it applies (D372): the form greys it out and the reader
+   leaves it unchecked by itself, with no page code; `settingsNotApplying` in `settings.ts` names those that do not
+   apply to a form's values, and `settings.test.ts` declares its own such settings.
 2. Use it in the type's `build`, and in `label` if two values must give different file names.
 3. A test in `packages/core/test` for what it changes in the shape, measured on the solid; a
    browser test in `web/e2e` if the page does more than show it.
@@ -95,7 +103,8 @@ same calls, which shows the generic code names no board.
 
 A setting that is none of a number, the four sides or a choice needs three places: its interface
 beside `NumberSetting` in `packages/core/src/settings.ts` (and its value's type in `ValueOf` there),
-its reading in `readValues` there, and its control in `fieldFor` in `web/src/form.ts`.
+its reading in `readEach` there, which `readValues` calls, and its control in `fieldFor` in `web/src/form.ts`, with
+an `enable(on)` that turns its controls on and off for `appliesWhen` (D372).
 `packages/core/test/settings.test.ts` declares its own settings and is where its reading is tested.
 **The choice kind was added this way on 14 Oct 2026** (C82): those three places, a rule for it in the
 contract test (its starting value is one of its options), and a browser test of its control.
