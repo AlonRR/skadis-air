@@ -8,6 +8,8 @@ All notable changes to this project are recorded here. The format follows
 
 ### Added
 
+- The page as it stands on `main`, not released, at <https://alonrr.github.io/skadis-air/dev/>, under a banner that
+  names its commit and links the released page; search engines are asked not to list it.
 - While a change is being built, the part on show dims and a ring turns over it, until the new part is drawn or
   the form says it cannot be made. It waits 0.4 s first, so a quick rebuild does not flicker, and with reduced motion
   the ring does not turn.

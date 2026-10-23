@@ -55,6 +55,8 @@ pre-commit run --all-files
 `--recursive` fetches `scad-tools`, whose STL checks judge every part the page makes. The commit
 hooks check the commit's identity and message form; [`CLAUDE.md`](CLAUDE.md) lists the rules. The
 same checks, with the tests below, run on every push to GitHub (`.github/workflows/checks.yml`).
+The page at the address above is the latest release; `main` as it stands, not released, is at
+<https://alonrr.github.io/skadis-air/dev/>, under a banner that says so.
 
 The geometry is a library in `packages/core`, and the page lives in `web/`. They are one npm workspace
 and need Node.js 22.12 or later:

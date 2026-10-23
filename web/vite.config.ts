@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
+import { devPagePlugin } from './dev-page.js';
 
 export default defineConfig({
   // The page builds the library from its source, so an edit there shows at once.
@@ -8,6 +9,8 @@ export default defineConfig({
       'skadis-air': fileURLToPath(new URL('../packages/core/src/index.ts', import.meta.url)),
     },
   },
+  // The development page's banner, only when the Pages workflow builds main (D328).
+  plugins: [devPagePlugin()],
   // Relative asset URLs: the same build works under a GitHub Pages /<repo>/ path.
   base: './',
   // The build worker (D166) imports the library and the engine as modules.

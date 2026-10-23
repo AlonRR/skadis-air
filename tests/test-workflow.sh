@@ -19,7 +19,10 @@
 # And .github/workflows/pages.yml (D103, 15 Oct 2026), to actionlint and to 5, its rules: it is
 # skipped while the repository is private, runs only after a checks run on main succeeded, builds
 # the latest stable release on main whose commit the checks passed, not main's newest commit (A291,
-# C292), and may deploy to Pages but never write to the repository (C135).
+# C292), and may deploy to Pages but never write to the repository (C135); and 7, the development page (D328, 23 Oct
+# 2026): main's commit that checks run passed on (main's newest on a manual run), refused too unless the checks
+# passed on it, built after the release with SKADIS_DEV_COMMIT set, which gives it its banner and noindex, and put
+# under dev/, the release staying the site's root.
 #
 # The controls: the same checks run against copies of the workflow, each with one of those
 # bugs put back, and each copy must FAIL. A check that cannot fail is not a check.
@@ -81,15 +84,25 @@ pages_checks() {
   check "5. skipped while the repository is private" present '!github\.event\.repository\.private'
   check "5. it runs when a checks run on main ends" present 'workflows:[[:space:]]*\[checks\]'
   check "5. ... and deploys only if that run succeeded" present "workflow_run\.conclusion == 'success'"
+  check "5. it checks out main, to find the release on it" present '^[[:space:]]+ref:[[:space:]]+main$'
   check "5. it fetches every tag" present 'fetch-depth:[[:space:]]*0([[:space:]]|$)'
   check "5. it finds the latest stable release with the tested script" present 'run:[[:space:]]+bash scripts/release/latest-release\.sh'
   check "5. ... whose commit the checks passed" present 'checks\.yml/runs\?head_sha=\$\{?sha\}?&status=success'
   check "5. ... which it may read" present 'actions:[[:space:]]*read([[:space:]]|$)'
   check "5. it builds that release, not main's newest commit" present 'git checkout --detach "\$\{\{ steps\.release\.outputs\.sha \}\}"'
-  check "5. ... and nothing before it" absent 'workflow_run\.head_sha|github\.sha'
+  first_checkout() { grep -m1 -E 'git checkout --detach' "$wf" | grep -qE 'steps\.release\.outputs\.sha'; }
+  check "5. ... and nothing before it" first_checkout
+  check "5. the release's build is kept as the site's root" present 'run:[[:space:]]+mv web/out/site "\$RUNNER_TEMP/site"$'
   check "5. the locked dependencies are installed (npm ci)" present 'run:[[:space:]]+npm ci$'
   check "5. it builds the page" present 'run:[[:space:]]+npm run build -w skadis-air-web$'
-  check "5. it uploads the built site" present 'path:[[:space:]]+web/out/site$'
+  check "5. it uploads the built site" present 'path:[[:space:]]+\$\{\{ runner\.temp \}\}/site$'
+  check "7. the development page is the commit the checks run passed on" present 'head:[[:space:]]+\$\{\{ github\.event\.workflow_run\.head_sha \}\}'
+  check "7. ... refused unless the checks passed on it too" present 'for sha in "\$release" "\$dev"; do'
+  check "7. it is built from that commit" present 'git checkout --detach "\$\{\{ steps\.dev\.outputs\.sha \}\}"'
+  two_installs() { [ "$(grep -cE 'run:[[:space:]]+npm ci$' "$wf")" -ge 2 ]; }
+  check "7. ... with its own locked dependencies" two_installs
+  check "7. ... with its banner and noindex" present 'SKADIS_DEV_COMMIT:[[:space:]]+\$\{\{ steps\.dev\.outputs\.sha \}\}'
+  check "7. ... and put under dev/, below the release" present 'run:[[:space:]]+mv web/out/site "\$RUNNER_TEMP/site/dev"$'
   check "5. it cannot write to the repository" absent 'contents:[[:space:]]*write'
   check "5. it may deploy to Pages" present 'pages:[[:space:]]*write'
   check "5. ... with the token that proves where it ran" present 'id-token:[[:space:]]*write'
@@ -139,7 +152,12 @@ control "pages finds the release some other way" "$PAGES" pages_checks 's|bash s
 control "pages fetches no tags" "$PAGES" pages_checks 's/fetch-depth: 0 /fetch-depth: 1 /'
 control "pages cannot read the checks' runs" "$PAGES" pages_checks 's/      actions: read /      actions: none /'
 control "pages may write to the repository" "$PAGES" pages_checks 's/contents: read$/contents: write/'
-control "pages uploads the wrong folder" "$PAGES" pages_checks 's|path: web/out/site|path: web/out|'
+control "pages uploads the wrong folder" "$PAGES" pages_checks 's|path: ${{ runner.temp }}/site|path: web/out/site|'
+control "the development page without its banner" "$PAGES" pages_checks '/SKADIS_DEV_COMMIT:/d'
+control "the development page over the release" "$PAGES" pages_checks 's|mv web/out/site "$RUNNER_TEMP/site/dev"|mv web/out/site "$RUNNER_TEMP/site"|'
+control "the development page built first" "$PAGES" pages_checks 's|git checkout --detach "${{ steps.release.outputs.sha }}"|git checkout --detach "${{ steps.dev.outputs.sha }}"|'
+control "the development commit never checked" "$PAGES" pages_checks 's|for sha in "$release" "$dev"; do|for sha in "$release"; do|'
+control "the development page from main's newest commit" "$PAGES" pages_checks 's|head: ${{ github.event.workflow_run.head_sha }}|head: ""|'
 
 printf '\n%s checks passed, %s failed; %s of %s controls refused\n' "$pass" "$fail" "$refused" "$controls"
 [ "$fail" -eq 0 ] && [ "$pass" -gt 0 ] && [ "$refused" -eq "$controls" ]

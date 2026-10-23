@@ -29,6 +29,7 @@
     "test",
     "e2e",
     "vite.config.ts",
+    "dev-page.ts",
     "playwright.config.ts"
   ]
 }

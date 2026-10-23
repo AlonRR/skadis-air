@@ -148,7 +148,9 @@ and the Printables files without slicing them (`npm run plates`, C299), on each 
 It reads the repository variables `EXPECT_EMAIL` and `EXPECT_NAME`. A red run is a problem to fix, not a gate that
 held: a direct push to `main` is not stopped by it. `npm run check:stl` stays local.
 `.github/workflows/pages.yml` (D103, 15 Oct 2026) publishes the page on GitHub Pages after a green checks run on `main`,
-and skips while the repository is private (C135).
+and skips while the repository is private (C135): the latest release at the site's root (A291), and the commit that
+checks run passed on under `dev/`, built with `SKADIS_DEV_COMMIT` so `web/dev-page.ts` gives it its banner and
+`noindex` (D328, C329).
 
 The library (`packages/core`, the npm package `skadis-air`) and the page (`web/`) are one
 npm workspace. After `npm ci` at the repo root:

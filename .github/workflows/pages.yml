@@ -10,6 +10,11 @@
 # release reaches the page with the main push that goes with it: push the tag first, or in the same
 # push as main, or the run finds the release before it.
 #
+# Beside it, under dev/, the development page (D328, 23 Oct 2026): main's commit that checks run passed on (main's
+# newest on a manual run), refused too unless a checks run passed on it, built after the release with
+# SKADIS_DEV_COMMIT set to it, so web/dev-page.ts gives it a banner saying it is not released, links the release,
+# and asks search engines not to list it. The release stays the site's root.
+#
 # Skipped while the repository is private: Pages needs it public and switched on (Settings ->
 # Pages -> Source: GitHub Actions), both the owner's, and a skipped run is not a red one (C135).
 # Gitea has its Actions off for this repository (D105), so this runs on GitHub alone.
@@ -39,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      actions: read     # to see that the checks passed on the release's commit
+      actions: read     # to see that the checks passed on the release's commit and the development one
       pages: write      # to deploy to Pages
       id-token: write   # to prove the deployment comes from this workflow
     environment:
@@ -53,15 +58,23 @@ jobs:
       - id: release
         name: Find the latest stable release
         run: bash scripts/release/latest-release.sh | tee -a "$GITHUB_OUTPUT"
-      - name: Refuse it unless the checks passed on its commit
+      - id: dev
+        name: Find the development commit, the one the checks run passed on
+        env:
+          head: ${{ github.event.workflow_run.head_sha }}
+        run: echo "sha=${head:-$(git rev-parse HEAD)}" | tee -a "$GITHUB_OUTPUT"
+      - name: Refuse either unless the checks passed on its commit
         env:
           GH_TOKEN: ${{ github.token }}
-          sha: ${{ steps.release.outputs.sha }}
+          release: ${{ steps.release.outputs.sha }}
+          dev: ${{ steps.dev.outputs.sha }}
         run: |
-          runs="repos/$GITHUB_REPOSITORY/actions/workflows/checks.yml/runs?head_sha=${sha}&status=success"
-          passed=$(gh api "$runs" --jq .total_count)
-          echo "checks runs passed on $sha: $passed"
-          [ "$passed" -gt 0 ]
+          for sha in "$release" "$dev"; do
+            runs="repos/$GITHUB_REPOSITORY/actions/workflows/checks.yml/runs?head_sha=${sha}&status=success"
+            passed=$(gh api "$runs" --jq .total_count)
+            echo "checks runs passed on $sha: $passed"
+            [ "$passed" -gt 0 ] || exit 1
+          done
       - name: Check out the release
         run: git checkout --detach "${{ steps.release.outputs.sha }}"
       - uses: actions/setup-node@v7
@@ -73,9 +86,21 @@ jobs:
         run: npm ci
       - name: Build the page
         run: npm run build -w skadis-air-web
+      - name: Keep the release's build as the site's root
+        run: mv web/out/site "$RUNNER_TEMP/site"
+      - name: Check out the development commit
+        run: git checkout --detach "${{ steps.dev.outputs.sha }}"
+      - name: Install its locked dependencies
+        run: npm ci
+      - name: Build it as the development page
+        env:
+          SKADIS_DEV_COMMIT: ${{ steps.dev.outputs.sha }}
+        run: npm run build -w skadis-air-web
+      - name: Put it under dev/
+        run: mv web/out/site "$RUNNER_TEMP/site/dev"
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: web/out/site
+          path: ${{ runner.temp }}/site
       - id: deployment
         uses: actions/deploy-pages@v5
