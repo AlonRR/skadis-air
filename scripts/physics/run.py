@@ -427,8 +427,10 @@ def done_keys() -> set:
 def run_capped(command: list, cap: float | None) -> subprocess.CompletedProcess | None:
     """Run a case's process, killed with every process under it past `cap` seconds (None: no cap). On Windows a
     venv's python.exe starts the interpreter as a child of its own, which a plain kill leaves running: one did, past its
-    window, on 23 Oct 2026. Returns None for a run that was killed."""
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    window, on 23 Oct 2026. Returns None for a run that was killed. On Windows the process, and every process it
+    starts, runs below normal priority: the machine is the owner's, and what else runs on it comes first."""
+    priority = subprocess.BELOW_NORMAL_PRIORITY_CLASS if os.name == "nt" else 0
+    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, creationflags=priority)
     try:
         out, err = proc.communicate(timeout=cap)
     except subprocess.TimeoutExpired:
@@ -486,11 +488,12 @@ def resave(version: str, part: str, case_id: str, level: int) -> int:
 
 
 def not_converged(version: str, part: str, case_id: str) -> bool | None:
-    """Whether a case's level 2 moved too far from its level 1, as the tables judge it (C338)."""
-    from tables import load, row
+    """Whether a case's peak in the part moved too far from level 1 to level 2, as the tables judge it (C338): level 3
+    refines round the peak alone, so a case whose deflection alone moved is not one it can answer (C348)."""
+    from tables import STRESS_TOL, load, row
 
     r = row(load(), version, part, case_id)
-    return None if r is None or r["converged"] is None else not r["converged"]
+    return None if r is None or r["dvm"] is None else r["dvm"] >= STRESS_TOL
 
 
 def estimate(version: str, part: str, case_id: str, level: int) -> float | None:
@@ -529,6 +532,7 @@ def main() -> int:
     )
     ap.add_argument("--versions")
     ap.add_argument("--only")
+    ap.add_argument("--cases", help="case ids, comma-separated: these cases alone")
     ap.add_argument("--levels", default="1,2")
     ap.add_argument("--retry-failed", action="store_true")
     ap.add_argument("--budget", type=float, help="seconds: start no run that would likely end past them")
@@ -556,6 +560,8 @@ def main() -> int:
                 continue
             meta = json.loads((PARTS / v / f"{part}.json").read_text())
             for case in meta["cases"]:
+                if args.cases and case["id"] not in args.cases.split(","):
+                    continue
                 for lv in levels:
                     if lv > 1 and single_level(part):
                         continue

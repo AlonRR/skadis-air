@@ -187,7 +187,11 @@ pressure makes the value the model's as much as the hook's (C339). The first tab
 hook for a hook, per board for the spread load, per connector for a connector; the case tables after it give kg. A
 wall's peaks are its panels' and its clip's, the bonded pegs' edges left out (C341). Deflection is the hook's slot's
 movement in a hook's case, the part's largest otherwise. *Mesh change* is how far the part's peak (at its own place,
-C338), the contact's peak and the deflection moved from level 1 to level 2.
+C338), the contact's peak and the deflection moved from level 1 to level 2. A row whose spot is *at a held face's band* lies just past the 1 mm
+round a held face where no peak is read: the held face's idealisation, every degree of freedom, sets it as much as the
+part does, so its capacity is a lower bound and the reading 2 mm off the held faces, given beside it, is nearer the
+part's own (C345). Every capacity set across the layers (l) also moves with Poisson's ratio, -19 % and +30 % at 0.30
+and 0.40 (the last table).
 
 <!-- tables:begin -->
 
