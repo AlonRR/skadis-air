@@ -37,6 +37,24 @@
       .print-list .ws-plan {
         position: static;
       }
+      /* On a phone the "Download all" row's label is whole on its own line, its buttons on a line under it (D351);
+        in the wide layout, where the row has the stage's width, all three stay on one line. */
+      .print-list [data-testid='print-all'] {
+        flex-wrap: wrap;
+        row-gap: var(--space-2);
+      }
+      .print-list [data-testid='print-all'] > .ws-plan__line {
+        flex-basis: 100%;
+      }
+      @media (min-width: 56rem) and (min-height: 16.5rem),
+        (min-aspect-ratio: 4/3) and (min-width: 48rem) and (min-height: 16.5rem) {
+        .print-list [data-testid='print-all'] {
+          flex-wrap: nowrap;
+        }
+        .print-list [data-testid='print-all'] > .ws-plan__line {
+          flex-basis: 0;
+        }
+      }
       [data-state='error'],
       [data-state='invalid'],
       [data-state='problem'] {

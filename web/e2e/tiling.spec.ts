@@ -72,6 +72,31 @@ test.describe('on a phone', () => {
     });
     expect(covered).toBe('covered');
   });
+
+  // The owner's "351 a" (23 Oct 2026): "All 4 panels in one file" was cut to "All 4 / panels i…" by its two buttons.
+  test('the "Download all" row shows its whole label, its buttons on a line under it (D351)', async ({ page }) => {
+    test.setTimeout(90_000);
+    await ready(page);
+    await choose(page, 'panels', 'split');
+    await page.locator('input[name="widthMm"]').fill('400');
+    await page.locator('input[name="heightMm"]').fill('400');
+    await expect(page.getByTestId('board-status')).toContainText('Wall ready: 4 panels', { timeout: 30_000 });
+    const all = page.getByTestId('print-all');
+    await expect(all).toContainText('All 4 panels in one file');
+    const laid = await all.evaluate((row) => {
+      const line = row.querySelector('.ws-plan__line');
+      const buttons = [...row.querySelectorAll('button')].map((b) => b.getBoundingClientRect());
+      if (line === null || buttons.length !== 2) return undefined;
+      const box = line.getBoundingClientRect();
+      return {
+        whole: line.scrollHeight <= line.clientHeight + 1, // no line of it clamped away
+        oneLine: box.height < 1.5 * parseFloat(getComputedStyle(line).lineHeight),
+        under: buttons.every((b) => b.top >= box.bottom - 0.5),
+        side: Math.abs((buttons[0]?.top ?? 0) - (buttons[1]?.top ?? 1)) < 0.5, // the two side by side
+      };
+    });
+    expect(laid).toEqual({ whole: true, oneLine: true, under: true, side: true });
+  });
 });
 
 test("closes the wall's sides when split, and they open again (D37)", async ({ page }) => {
