@@ -38,6 +38,8 @@ from z 0 to 5, and each standoff rises to its wall face at z 20.
 
 ![Today's flat lips](../figures/keyhole-pass/k1-flat-today.png)
 
+(verified: code: the library's own part at this branch's tip, as it prints; the orange and pale faces computed from its mesh)
+
 ## The baseline, in PETG
 
 T151's file, `.check/test-print/skadis-trial-keyhole.stl`, written again from this branch is the same past its 80-byte
@@ -48,7 +50,7 @@ header (verified: code, `cmp`). Sliced in PETG (verified: sliced):
 | 4.2 | 0 | 3182.8 mm | 0.0 mm | internal bridge: the plate's first top layer over its infill |
 | **13.2** | **70.8 mm** | **1952.2 mm** | 663.4 mm | **the rooms' ceilings, four standoffs** |
 | 14.2 | 0 | 909.9 mm | 9.4 mm | internal bridge under the channels' floors |
-| **18.8** | **92.1 mm** | **333.2 mm** | 0.0 mm | **the lips, two keyholes** |
+| **18.8** | **92.1 mm** | **333.2 mm** | 0.0 mm, as the 2.25 mm ledge is narrower than the 3 mm the report looks across: all of it is over air | **the lips, two keyholes** |
 | 19.2 | 0 | 942.5 mm | 0.0 mm | internal bridge under the wall faces |
 
 They are the caller's ASA slice of 22 Oct to the tenth (relayed): what is an overhang is geometry, not the filament.
@@ -97,11 +99,19 @@ standoffs are 15.0 today, 13.85 for K1 and 17.25 for K2 (computed).
 
 ![A 45 degree seat for a countersunk head](../figures/keyhole-pass/k2-countersunk.png)
 
+(verified: code: the library's own part at this branch's tip, as it prints; the orange and pale faces computed from its mesh)
+
 ![The seat deep enough for a pan head too](../figures/keyhole-pass/k3-either.png)
+
+(verified: code: the library's own part at this branch's tip, as it prints; the orange and pale faces computed from its mesh)
 
 ![A 1 mm ledge, then 45 degrees](../figures/keyhole-pass/k4-ledge.png)
 
+(verified: code: the library's own part at this branch's tip, as it prints; the orange and pale faces computed from its mesh)
+
 ![Each seat across the slot, its head in it](../figures/keyhole-pass/k5-seats-across.png)
+
+(verified: code: the library's own part at this branch's tip, as it prints; the orange and pale faces computed from its mesh)
 
 **Considered, not built.** A two-bridge ceiling, the practice's own answer for a counterbore printed face down, needs
 every first-layer bridge line held at both ends: beside the slot the lines would run along it, and the entry, as wide
@@ -121,6 +131,8 @@ takes about 10 mm3 from each standoff (computed: 41.7 mm3 from the four). It is 
 the solid board (verified: code).
 
 ![The room's exit, today and on a ramp](../figures/keyhole-pass/k6-room-exit.png)
+
+(verified: code: the library's own part at this branch's tip, as it prints; the orange and pale faces computed from its mesh)
 
 **What the slice shows** (verified: sliced): the ramp's first layer still ends over the room, so PrusaSlicer still
 prints its edge as overhang perimeter, 64.8 mm against 70.8; but as eight straight lines, each 8.1 mm long on an 8.1 mm
@@ -165,6 +177,8 @@ its test; verified: sliced).
 | ledge | 14.95 mm | none | z 6.0: 455.7 mm | 6.63 g | PASS |
 
 ![The slot clip's keyhole, today and countersunk](../figures/keyhole-pass/k7-clip.png)
+
+(verified: code: the library's own part at this branch's tip, as it prints; the orange and pale faces computed from its mesh)
 
 ## Recommendations
 
