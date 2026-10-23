@@ -24,6 +24,8 @@ All notable changes to this project are recorded here. The format follows
 - A connector whose settings are refused says "to make the connector", not "to make the board".
 - A number field left empty is refused, "Width must be a number", where it had been made at its starting value
   while the field stood empty.
+- The fit test coupon refuses a clearance step of 0, which gave all four slots the same clearance; its least step is
+  0.05 mm.
 
 ## [0.6.0] - 2026-10-23
 

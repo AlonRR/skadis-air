@@ -3,8 +3,10 @@
 // Measured on the solid: the slots' widths through the middle, and the dots in a cut just inside the front.
 import type { CrossSection, Manifold } from 'manifold-3d';
 import { afterAll, describe, expect, it } from 'vitest';
+import { FIT_COUPON } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
 import { FIT_COUPON_TILES, fitCouponParams, makeFitCoupon } from '../src/fit-coupon.js';
+import { readValues } from '../src/settings.js';
 
 const engine = await loadEngine();
 const made: (Manifold | CrossSection)[] = [];
@@ -59,6 +61,20 @@ describe('the fit coupon', () => {
       .filter((b) => b.maxX - b.minX < 10 && b.maxY - b.minY > 10)
       .sort((a, b) => a.minX - b.minX);
     expect(slots.map((b) => Math.round((b.maxX - b.minX) * 100) / 100)).toEqual([5.2, 5.25, 5.3, 5.35]);
+  });
+
+  // Found by QA (Q8, 23 Oct 2026): a step of 0 made a coupon whose four slots had the same clearance, and so tested
+  // nothing. The least step is the control's own, 0.05 mm.
+  it('refuses a clearance step of 0, which would give every slot the same clearance, and takes the least step above it', () => {
+    const step = FIT_COUPON.settings.find((s) => s.key === 'clearanceStepMm');
+    expect(step?.kind === 'number' && step.min).toBe(0.05);
+    const zero = readValues(FIT_COUPON.settings, { clearanceStepMm: '0' });
+    expect(zero.ok).toBe(false);
+    if (!zero.ok) expect(zero.errors.map((e) => e.key)).toEqual(['clearanceStepMm']);
+    expect(readValues(FIT_COUPON.settings, { clearanceStepMm: '0.05' }).ok).toBe(true);
+    // and the library's own reader, for a caller that hands the numbers in directly
+    expect(() => fitCouponParams({ clearanceStepMm: 0 })).toThrow(RangeError);
+    expect(fitCouponParams({ clearanceStepMm: 0.05 }).clearanceStepMm).toBe(0.05);
   });
 
   it('has left and right open and top and bottom closed (D68); on one row that leaves square corners', () => {

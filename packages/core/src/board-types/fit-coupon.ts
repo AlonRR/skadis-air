@@ -30,7 +30,8 @@ export const FIT_COUPON = defineBoardType({
       label: 'Clearance step',
       unit: 'mm',
       default: 0.1,
-      min: 0,
+      // the least step above 0, the control's own: at 0 every slot has the same clearance, and the coupon tests nothing
+      min: 0.05,
       max: 0.3,
       step: 0.05,
       help: 'Added again for each tile after the first; the fourth tile has four dots.',

@@ -30,7 +30,8 @@ export function fitCouponParams(given: Partial<Omit<FitCouponParams, 'sides'>>):
     ...given,
     sides: { ...SIDES },
   };
-  if (!(p.clearanceStepMm >= 0)) throw new RangeError('The clearance step cannot be negative');
+  // at 0 every slot would have the same clearance (Q8)
+  if (!(p.clearanceStepMm > 0)) throw new RangeError('The clearance step must be more than 0 mm');
   return p;
 }
 
