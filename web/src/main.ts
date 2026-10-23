@@ -107,6 +107,8 @@ function rebuild(type: AnyBoardType, form: Form): void {
     // any build still running is for values the form no longer holds: its answer is dropped as a replaced one is
     latest += 1;
     shown = 0;
+    // and a wall's print list goes with it, as the single download is turned off: nothing to download (Q2)
+    showPanels(latest, [], '');
     setStatus('invalid', `Correct the settings marked above to make the ${what}.`);
     preview?.show(null, '');
     return;

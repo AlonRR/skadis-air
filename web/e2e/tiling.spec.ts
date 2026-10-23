@@ -149,6 +149,29 @@ test("closes the wall's sides when split, and they open again (D37)", async ({ p
   expect(await pressed()).toEqual(['true', 'true', 'true', 'true']);
 });
 
+// Found by QA (Q2, 23 Oct 2026): a height refused left the wall before it in the print list, and "Download all"
+// downloaded skadis-solid-4000x160-wall.zip.
+test("offers nothing to download while a wall's settings are refused, as for one board", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ready(page);
+  await choose(page, 'panels', 'split');
+  await page.locator('input[name="widthMm"]').fill('4000');
+  const status = page.getByTestId('board-status');
+  await expect(status).toContainText('Wall ready: 20 panels', { timeout: 60_000 });
+  const list = page.getByTestId('print-list');
+  await expect(list.getByRole('button', { name: 'Download all' })).toBeVisible();
+  await page.locator('input[name="heightMm"]').fill('2500');
+  await expect(page.getByTestId('error-heightMm')).toContainText('40 mm steps');
+  await expect(status).toHaveAttribute('data-state', 'invalid');
+  await expect(list).toBeHidden();
+  await expect(list.getByRole('button')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Download STL' })).toBeDisabled();
+  // the control: a height it takes makes the wall again, and its list comes back
+  await page.locator('input[name="heightMm"]').fill('2480');
+  await expect(status).toContainText('Wall ready', { timeout: 60_000 });
+  await expect(list.getByRole('button', { name: 'Download all' })).toBeVisible();
+});
+
 test('refuses one board larger than 400 mm, pointing to the panels (C51)', async ({ page }) => {
   await ready(page);
   await page.locator('input[name="widthMm"]').fill('440');
