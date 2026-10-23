@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-23
+
 ### Changed
 
 - The fit test coupon and the seam test pair are under Advanced, as "Test prints" at the top of every board's Advanced
