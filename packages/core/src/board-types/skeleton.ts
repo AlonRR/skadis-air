@@ -12,7 +12,7 @@ import {
 } from '../skeleton.js';
 import { defineBoardType } from './define.js';
 import { LATTICE_SETTINGS, latticeLabel, mm } from './lightened.js';
-import { BOARD_SETTINGS, boardLabel, boardParamsOf, cornerScrewsOf } from './solid.js';
+import { BOARD_SETTINGS, boardLabel, boardParamsOf } from './solid.js';
 
 export const SKELETON = defineBoardType({
   id: 'skeleton',
@@ -50,5 +50,5 @@ export const SKELETON = defineBoardType({
     const core = v.coreMm === SKELETON_DEFAULTS.coreMm ? '' : `-core-${mm(v.coreMm)}mm`;
     return `${boardLabel(v)}${latticeLabel(v)}${core}${mountingLabel(v)}`;
   },
-  screws: (v) => mountingScrews(mountingOf(v), v.thicknessMm, cornerScrewsOf(v)),
+  screws: (v) => mountingScrews(mountingOf(v), v.thicknessMm),
 });

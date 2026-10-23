@@ -4,6 +4,7 @@
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { afterAll, describe, expect, it } from 'vitest';
 import { makeSolidBoard, solidBoardParams, type SolidBoardParams } from '../src/board-solid.js';
+import { LIGHTENED, SKELETON, SOLID } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
 import {
   bottomSlotPlaces,
@@ -15,7 +16,8 @@ import {
   type MountingParams,
   screwPlaces,
 } from '../src/mounting.js';
-import { stadium } from '../src/rings.js';
+import { circle, stadium } from '../src/rings.js';
+import { defaultValues } from '../src/settings.js';
 import { ALL_OPEN, boardExtent, type Sides, slotPlaces } from '../src/slots.js';
 import { printPose } from '../src/print-pose.js';
 import { meshOf } from '../src/stl.js';
@@ -541,10 +543,11 @@ describe('the corner slots stay whole (D131)', () => {
   });
 });
 
-// A board whose open sides run between the slots (D282, D288 a): no corner screw at a corner one of whose sides runs
-// between them, where a screw 10 mm in lands on a slot; keyholes and lock screws as before, each standoff behind the
-// slot nearest its corner that keeps it on the board (D289 a).
-describe('between the slots (D289)', () => {
+/// A board whose open sides run between the slots (D282, D288 a): every corner has its screw (D371 a), at its usual
+// place, 10 mm in from both edges, where that is clear, else at the nearest place at least 10 mm in from both edges
+// with a normal corner's room round it; keyholes and lock screws as before, each standoff behind the slot nearest its
+// corner that keeps it on the board (D289 a).
+describe('between the slots (D289, D371)', () => {
   const states = ['open', 'closed'] as const;
   const everySides = Array.from({ length: 16 }, (_, m): Sides => ({
     left: states[m & 1] ?? 'open',
@@ -558,38 +561,207 @@ describe('between the slots (D289)', () => {
     sides,
     seams: 'between' as const,
   });
+  type Placed = { columns: number; rows: number; sides: Sides; seams: 'through' | 'between'; slotClearanceMm?: number };
 
-  it('has no corner screw at a corner whose side runs between the slots', () => {
-    expect(screwPlaces(between(3, 2, CLOSED))).toEqual([
-      [10, 10],
-      [110, 10],
-      [10, 70],
-      [110, 70],
+  /** The room round a hole whose centre is at (x, y), worked out here apart from the library (D371): its distance to
+   * the nearest slot's outline as the board cuts it, its clearance in, in the section at mid-thickness, where the owner
+   * measured it, or to the nearest edge. */
+  const roomAt = (board: Placed, [x, y]: readonly [number, number]) => {
+    const e = boardExtent(board.columns, board.rows, board.sides, board.seams);
+    const clearance = board.slotClearanceMm ?? 0.2;
+    const [w, h] = [5 + clearance, 15 + clearance];
+    const toSlots = slotPlaces(board.columns, board.rows, board.sides, board.seams).map((s) => {
+      const along = Math.max(s.yMm - (h - w) / 2, Math.min(s.yMm + (h - w) / 2, y));
+      return Math.hypot(x - s.xMm, y - along) - w / 2;
+    });
+    return Math.min(...toSlots, x - e.x0, e.x1 - x, y - e.y0, e.y1 - y);
+  };
+  /** What a corner through the slots has round its hole, 8.58 mm at the starting clearance, to 0.1 mm below: the
+   * least room a corner screw is given (D371: "use 8.5 mm as the threshold"). */
+  const leastRoom = (clearance = 0.2) => Math.floor((Math.hypot(10, 5) - (5 + clearance) / 2) * 10 + 1e-9) / 10;
+  const usualOf = (board: Placed): [number, number][] => {
+    const e = boardExtent(board.columns, board.rows, board.sides, board.seams);
+    return [
+      [e.x0 + 10, e.y0 + 10],
+      [e.x1 - 10, e.y0 + 10],
+      [e.x0 + 10, e.y1 - 10],
+      [e.x1 - 10, e.y1 - 10],
+    ];
+  };
+  const named = (h: { x: number; y: number; w: number }) =>
+    `${Math.round(h.x * 10) / 10},${Math.round(h.y * 10) / 10} ${Math.round(h.w * 10) / 10}`;
+
+  it('gives every corner of a 160 mm board between the slots all round its screw, as the owner measured it', () => {
+    const board = between(4, 4, ALL_OPEN);
+    expect(leastRoom()).toBe(8.5);
+    expect(screwPlaces(board)).toEqual([
+      [31.5, 20],
+      [160, 20],
+      [20, 160],
+      [148.5, 160],
     ]);
-    expect(screwPlaces(between(3, 2, ALL_OPEN))).toEqual([]);
-    expect(screwPlaces(between(3, 2, { ...CLOSED, left: 'open' }))).toEqual([
-      [110, 10],
-      [110, 70],
-    ]);
-    expect(screwPlaces(between(3, 2, { ...CLOSED, top: 'open' }))).toEqual([
-      [10, 10],
-      [110, 10],
-    ]);
+    // bottom right and top left at their usual place, 10 mm clear; the other two 21.5 mm along their edge, 8.9 mm clear
+    expect(screwPlaces(board).map((p) => Math.round(roomAt(board, p) * 10) / 10)).toEqual([8.9, 10, 10, 8.9]);
+    expect(usualOf(board).map((p) => roomAt(board, p) > 8.5)).toEqual([false, true, true, false]);
   });
 
-  it('discriminates: through the slots every corner keeps its screw, open or closed', () => {
-    expect(screwPlaces({ columns: 3, rows: 2, sides: ALL_OPEN })).toHaveLength(4);
-    expect(screwPlaces({ columns: 3, rows: 2 })).toHaveLength(4);
+  it('puts each at least 10 mm in from both edges and 8.5 mm clear, at its usual place where that is clear', () => {
+    let [kept, moved] = [0, 0];
+    for (const seams of ['through', 'between'] as const) {
+      for (const sides of everySides) {
+        for (const [columns, rows] of [
+          [2, 2],
+          [3, 2],
+          [2, 4],
+          [4, 3],
+        ] as const) {
+          for (const slotClearanceMm of [-0.5, 0.2, 1]) {
+            const board: Placed = { columns, rows, sides, seams, slotClearanceMm };
+            const e = boardExtent(columns, rows, sides, seams);
+            const places = screwPlaces(board);
+            const usual = usualOf(board);
+            expect(places).toHaveLength(4);
+            places.forEach((p, k) => {
+              const where = `${seams} ${JSON.stringify(sides)} ${columns}x${rows} ${slotClearanceMm}: corner ${k}`;
+              expect(Math.min(p[0] - e.x0, e.x1 - p[0], p[1] - e.y0, e.y1 - p[1]), where).toBeGreaterThanOrEqual(10);
+              expect(roomAt(board, p), where).toBeGreaterThanOrEqual(leastRoom(slotClearanceMm) - 1e-9);
+              if (slotClearanceMm === 0.2) expect(roomAt(board, p), where).toBeGreaterThanOrEqual(8.5);
+              const clear = roomAt(board, usual[k] ?? [0, 0]) >= leastRoom(slotClearanceMm) - 1e-9;
+              // through the slots, every usual place is clear, at every clearance
+              if (seams === 'through') expect(clear, where).toBe(true);
+              if (clear) {
+                expect(p, where).toEqual(usual[k]);
+                kept++;
+              } else {
+                // the nearest: no place on the 0.5 mm grid in from the usual one, nearer it and clear, was passed over
+                const [ux, uy] = usual[k] ?? [0, 0];
+                const d = Math.hypot(p[0] - ux, p[1] - uy);
+                const [sx, sy] = [k % 2 === 0 ? 1 : -1, k < 2 ? 1 : -1];
+                for (let i = 0; 0.5 * i < d; i++) {
+                  for (let j = 0; 0.5 * Math.hypot(i, j) < d - 1e-9; j++) {
+                    const q: [number, number] = [ux + 0.5 * sx * i, uy + 0.5 * sy * j];
+                    expect(roomAt(board, q) >= leastRoom(slotClearanceMm) - 1e-9, `${where} ${q.join(',')}`).toBe(
+                      false,
+                    );
+                  }
+                }
+                moved++;
+              }
+            });
+          }
+        }
+      }
+    }
+    // 2 seams x 16 sides x 4 sizes x 3 clearances x 4 corners = 1536 corners, of which some move between the slots
+    expect(kept + moved).toBe(1536);
+    expect(moved).toBeGreaterThan(0);
   });
 
-  it('cuts no hole where a corner screw would be on a slot, and the others as before', () => {
-    const given = { columns: 2, rows: 2, seams: 'between', sides: { ...CLOSED, left: 'open' } } as const;
-    const all = { ...given, sides: CLOSED };
-    const oneHole = (plain(all).volume() - mounted(all).volume()) / 4;
-    expect(oneHole).toBeGreaterThan(50);
-    // the two right corners' holes, and nothing at the left ones
-    expect(plain(given).volume() - mounted(given).volume()).toBeCloseTo(2 * oneHole, 3);
-    expect(mounted(given).genus()).toBe(plain(given).genus() + 2);
+  it('shares a screw between two corners whose places would come within 20 mm, on a board one tile across', () => {
+    let shared = 0;
+    for (const sides of everySides) {
+      for (const [columns, rows] of [
+        [1, 1],
+        [1, 3],
+        [3, 1],
+      ] as const) {
+        const board = between(columns, rows, sides);
+        const e = boardExtent(columns, rows, sides, 'between');
+        const places = screwPlaces(board);
+        expect(places.length).toBeGreaterThan(0);
+        for (const p of places) {
+          expect(Math.min(p[0] - e.x0, e.x1 - p[0], p[1] - e.y0, e.y1 - p[1])).toBeGreaterThanOrEqual(10);
+          expect(roomAt(board, p)).toBeGreaterThanOrEqual(8.5);
+        }
+        places.forEach((a, i) => {
+          for (const b of places.slice(i + 1)) expect(Math.hypot(a[0] - b[0], a[1] - b[1])).toBeGreaterThanOrEqual(20);
+        });
+        shared += 4 - places.length;
+        // the control: through the slots, a board one tile across keeps four screws, 20 mm apart
+        expect(screwPlaces({ ...board, seams: 'through' })).toHaveLength(4);
+      }
+    }
+    expect(shared).toBeGreaterThan(0);
+  });
+
+  for (const type of [SOLID, LIGHTENED, SKELETON]) {
+    it(`cuts a hole at each place and a standoff round it, on the ${type.id} board, every sides choice and both seams`, () => {
+      for (const seams of ['through', 'between'] as const) {
+        for (const sides of everySides) {
+          const values = {
+            ...defaultValues(type.settings),
+            widthMm: 80,
+            heightMm: 80,
+            sides,
+            seams,
+            standoffs: 'back' as const,
+          };
+          const places = screwPlaces({ columns: 2, rows: 2, sides, seams });
+          const where = `${type.id} ${seams} ${JSON.stringify(sides)}`;
+          expect(places, where).toHaveLength(4);
+          const expected = (widths: number[]) =>
+            places.flatMap(([x, y]) => widths.map((w) => named({ x, y, w }))).sort();
+          const board = keep(type.build(engine, values));
+          // through the board, a 4.5 mm hole at each place
+          const holes = roundHoles(keep(board.slice(2.5))).filter((h) => Math.abs(h.w - 4.5) < 0.05);
+          expect(holes.map(named).sort(), where).toEqual(expected([4.5]));
+          // halfway down the standoffs, a post 10 mm across round each screw's hole, and nothing else
+          expect(
+            roundHoles(keep(board.slice(-7.5)))
+              .map(named)
+              .sort(),
+            where,
+          ).toEqual(expected([4.5, 10]));
+        }
+      }
+    });
+  }
+
+  it('keeps a lattice board solid round each place, its pad there with it (D144)', () => {
+    for (const type of [LIGHTENED, SKELETON]) {
+      for (const sides of [ALL_OPEN, CLOSED, { ...CLOSED, left: 'open', bottom: 'open' }] as const) {
+        const values = {
+          ...defaultValues(type.settings),
+          widthMm: 120,
+          heightMm: 120,
+          sides,
+          seams: 'between' as const,
+        };
+        const board = keep(type.build(engine, values));
+        for (const [x, y] of screwPlaces({ columns: 3, rows: 3, sides, seams: 'between' })) {
+          // the pad, 13 mm across for a 4 mm screw, less a hair for the polygons, round the 4.5 mm hole, from near the
+          // back to below the countersink, which starts 2.75 mm up
+          const disc = keep(new engine.CrossSection([circle(x, y, 12.8)]));
+          const ring = keep(disc.subtract(keep(new engine.CrossSection([circle(x, y, 4.7)]))));
+          const inside = keep(keep(ring.extrude(2)).translate([0, 0, 0.5]));
+          expect(keep(board.intersect(inside)).volume(), `${type.id} ${JSON.stringify(sides)} ${x},${y}`).toBeCloseTo(
+            inside.volume(),
+            1,
+          );
+        }
+      }
+    }
+  });
+
+  it('leaves keyholes and lock screws behind their slots, and no hole at a corner screw place', () => {
+    for (const seams of ['through', 'between'] as const) {
+      // all open, all closed, and each side closed alone: 6 of the 16 choices, as each build takes a while
+      for (const sides of [0, 15, 1, 2, 4, 8].map((m) => everySides[m] ?? ALL_OPEN)) {
+        const board = { columns: 3, rows: 3, sides, seams };
+        for (const mounting of [
+          { screwHead: 'keyhole', lockScrews: false },
+          { screwHead: 'keyhole', lockScrews: true },
+          { screwHead: 'lock', lockScrews: false },
+        ] as const) {
+          const solid = mounted(board, { ...mounting, standoffHeightMm: 15 });
+          const holes = roundHoles(keep(solid.slice(2.5)));
+          for (const [x, y] of screwPlaces(board)) {
+            const near = holes.filter((h) => Math.hypot(h.x - x, h.y - y) < 3);
+            expect(near, `${seams} ${JSON.stringify(sides)} ${mounting.screwHead}`).toEqual([]);
+          }
+        }
+      }
+    }
   });
 
   it('stands each keyhole and bottom standoff behind the nearest slot that keeps it on the board, every side choice', () => {

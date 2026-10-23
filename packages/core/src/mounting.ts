@@ -12,8 +12,9 @@
 // a slot, with a pocket that leaves a hook its room behind that slot (D244); on a lattice board, the outline of the
 // frame round that slot, so it stands flush with it (D306); where the hook's room runs out of a standoff, its ceiling
 // rises at 45 degrees to the standoff's face (D369). On a board whose open sides run between
-// the slots (D282), a corner one of whose sides does has no screw, which would land on a slot, and each standoff
-// stands behind the slot nearest its corner that keeps it on the board (D289 a).
+// the slots (D282), a corner screw whose usual place would land on a slot goes to the nearest place with a normal
+// corner's room round it, its standoff with it (D371 a), and each standoff behind a slot stands behind the slot nearest
+// its corner that keeps it on the board (D289 a).
 // Any board type built on the solid board takes these as its third argument (BoardCuts).
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { type BoardCuts, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from './board-solid.js';
@@ -22,7 +23,7 @@ import type { Engine } from './engine.js';
 import { circle, HALF_STEP, ringedSolid, stadium } from './rings.js';
 import { defineSettings, type NumberSetting, SettingsProblem, type Values } from './settings.js';
 import { HOOK_DEPTH_MM, HOOK_DROP_MM, HOOK_WIDTH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
-import { ALL_OPEN, boardExtent, type Extent, type Side, slotPlaces } from './slots.js';
+import { ALL_OPEN, boardExtent, type Extent, slotPlaces } from './slots.js';
 
 export type ScrewHead = 'countersunk' | 'round' | 'keyhole' | 'lock' | 'none';
 
@@ -196,28 +197,15 @@ function checkStandoffs(m: MountingParams): void {
 }
 
 /** What each of a board's screws passes (D264): the board, and its standoffs when it has them; a keyhole's screw
- * stands in the wall instead, and a lock screw passes what the standoff leaves under its head. Between the slots,
- * which corners keep a screw, of the `cornerScrews` its sides leave it (D289 a). Refuses, as the build does, standoffs
- * too short for keyholes or lock screws, where a lock screw would pass less than nothing (Q9). */
-export function mountingScrews(m: MountingParams, thicknessMm: number, cornerScrews = 4): string | undefined {
+ * stands in the wall instead, and a lock screw passes what the standoff leaves under its head. Every corner has its
+ * screw, between the slots too (D371 a). Refuses, as the build does, standoffs too short for keyholes or lock screws,
+ * where a lock screw would pass less than nothing (Q9). */
+export function mountingScrews(m: MountingParams, thicknessMm: number): string | undefined {
   if (m.screwHead === 'none') return undefined;
   checkStandoffs(m);
   if (m.screwHead === 'lock') {
     const under = m.standoffHeightMm - HOOK_ROOM_MM - lockRecessMm(m.lockScrewMm);
     return `Each lock screw passes ${nice(under)} mm of standoff under its head, plus your wall plug.`;
-  }
-  if (m.screwHead !== 'keyhole' && cornerScrews === 0) {
-    return (
-      'No corner has a screw: each is on a side between the slots, where a screw would land on a slot. Keyholes hold ' +
-      'such a board.'
-    );
-  }
-  if (m.screwHead !== 'keyhole' && cornerScrews < 4) {
-    const only =
-      cornerScrews === 1
-        ? 'Only the corner whose sides are both closed has a screw.'
-        : `Only the ${cornerScrews} corners whose sides are both closed have a screw.`;
-    return `${only} ${mountingScrews(m, thicknessMm) ?? ''}`;
   }
   if (m.screwHead === 'keyhole') {
     const under = m.standoffHeightMm - HOOK_ROOM_MM - lockRecessMm(m.lockScrewMm);
@@ -256,24 +244,137 @@ function slotOf(b: MountingBoard): { widthMm: number; heightMm: number; chamferM
 
 const extentOfBoard = (b: MountingBoard): Extent =>
   boardExtent(b.columns, b.rows, b.sides ?? ALL_OPEN, b.seams ?? 'through');
-/** Whether a side of the board runs between the slots (D282). */
-const runsBetween = (b: MountingBoard, side: Side) => b.seams === 'between' && (b.sides ?? ALL_OPEN)[side] === 'open';
 
-/** The screw holes' centres: one in each corner tile, 10 mm in from both edges (D73), but at a corner one of whose sides
- * runs between the slots, where it would land on a slot (D289 a). Bottom left, bottom right, top left, top right. */
+/**
+ * The least room round a corner screw's hole (D371 a): what a corner through the slots has, from its hole's centre to
+ * the corner tile's slot in the section at mid-thickness, its clearance in, 8.58 mm at the starting clearance, taken
+ * down to the 0.1 mm, so 8.5 mm, the owner's figure; at any clearance a corner through the slots keeps its usual place.
+ */
+export function leastScrewRoomMm(board: Pick<MountingBoard, 'slotClearanceMm'>): number {
+  const slot = slotOf({ columns: 1, rows: 1, ...board });
+  const straight = (slot.heightMm - slot.widthMm) / 2;
+  const reach = Math.hypot(TILE_MM / 2 - SCREW_INSET_MM, TILE_MM / 2 - straight - SCREW_INSET_MM);
+  return Math.floor((reach - slot.widthMm / 2) * 10 + 1e-9) / 10;
+}
+
+/** The room round a hole whose centre is at (x, y) (D371 a): its distance to the nearest of the slots' outlines as the
+ * board cuts them, in the section at mid-thickness, where the owner measured it, or to the nearest edge. A chamfer
+ * would take the same 1 mm from every corner's room and the least alike, and move no screw. */
+function roomAt(board: MountingBoard, [x, y]: readonly [number, number]): number {
+  const [e, slot] = [extentOfBoard(board), slotOf(board)];
+  const straight = (slot.heightMm - slot.widthMm) / 2;
+  let room = Math.min(x - e.x0, e.x1 - x, y - e.y0, e.y1 - y);
+  for (const s of slotPlaces(board.columns, board.rows, board.sides ?? ALL_OPEN, board.seams ?? 'through')) {
+    const along = Math.max(s.yMm - straight, Math.min(s.yMm + straight, y));
+    room = Math.min(room, Math.hypot(x - s.xMm, y - along) - slot.widthMm / 2);
+  }
+  return room;
+}
+
+/** The step of the places a moved corner screw is looked for on, from its usual place in (D371 a). */
+const SCREW_SEARCH_STEP_MM = 0.5;
+/** How far from its usual place a corner screw is looked for, at most: a tile, far past where every board ends its
+ * search (14.1 mm, on a board one tile across). */
+const SCREW_SEARCH_MM = TILE_MM;
+/** Two corners whose screws would stand nearer than this share one, the first's (D371 a): the two screws of a board
+ * one tile across through the slots, which only a board one tile across between them comes nearer than. */
+const SHARED_SCREW_MM = 2 * SCREW_INSET_MM;
+
+/**
+ * Where a corner's screw goes (D371 a): its usual place, 10 mm in from both edges (D73), where that has a normal
+ * corner's room round it; else the nearest place at least 10 mm in from both edges that has, on a 0.5 mm grid, of two
+ * as near the one nearer the corner's bottom or top edge, as the keyhole standoffs choose (D289 a). Its corner is at
+ * (ux, uy) less 10 mm each way, toward (-sx, -sy).
+ */
+function screwPlaceOf(board: MountingBoard, [ux, uy]: readonly [number, number], [sx, sy]: readonly [number, number]) {
+  const least = leastScrewRoomMm(board);
+  if (roomAt(board, [ux, uy]) >= least - 1e-9) return [ux, uy] as const;
+  const e = extentOfBoard(board);
+  const step = SCREW_SEARCH_STEP_MM;
+  const far = SCREW_SEARCH_MM / step;
+  const [across, up] = [e.x1 - e.x0 - 2 * SCREW_INSET_MM, e.y1 - e.y0 - 2 * SCREW_INSET_MM].map((d) =>
+    Math.min(far, Math.floor(d / step + 1e-9)),
+  );
+  const steps: [number, number][] = [];
+  for (let i = 0; i <= (across ?? 0); i++) for (let j = 0; j <= (up ?? 0); j++) steps.push([i, j]);
+  // in whole steps, so two as near are as near exactly
+  steps.sort(([ai, aj], [bi, bj]) => ai * ai + aj * aj - (bi * bi + bj * bj) || aj - bj || ai - bi);
+  for (const [i, j] of steps) {
+    const place = [ux + sx * step * i, uy + sy * step * j] as const;
+    if (roomAt(board, place) >= least - 1e-9) return place;
+  }
+  throw new RangeError('A corner screw finds no place with room round it on this board');
+}
+
+/** The screw holes' centres: one for each corner, 10 mm in from both edges (D73), or where that would land on a slot,
+ * as between the slots, the nearest place with a normal corner's room round it (D371 a); a corner whose screw would
+ * stand within 20 mm of another's, which only a board one tile across between the slots has, shares that one, a usual
+ * place's before a moved one. Bottom left, bottom right, top left, top right, those of them that have their own. */
 export function screwPlaces(board: MountingBoard): readonly (readonly [number, number])[] {
   const [e, i] = [extentOfBoard(board), SCREW_INSET_MM];
-  const corners: [number, number, Side, Side][] = [
-    [e.x0 + i, e.y0 + i, 'left', 'bottom'],
-    [e.x1 - i, e.y0 + i, 'right', 'bottom'],
-    [e.x0 + i, e.y1 - i, 'left', 'top'],
-    [e.x1 - i, e.y1 - i, 'right', 'top'],
+  const corners: [[number, number], [number, number]][] = [
+    [
+      [e.x0 + i, e.y0 + i],
+      [1, 1],
+    ],
+    [
+      [e.x1 - i, e.y0 + i],
+      [-1, 1],
+    ],
+    [
+      [e.x0 + i, e.y1 - i],
+      [1, -1],
+    ],
+    [
+      [e.x1 - i, e.y1 - i],
+      [-1, -1],
+    ],
   ];
-  return corners.filter(([, , a, b]) => !runsBetween(board, a) && !runsBetween(board, b)).map(([x, y]) => [x, y]);
+  const places = corners.map(([usual, inward]) => {
+    const place = screwPlaceOf(board, usual, inward);
+    return { place, usual: place[0] === usual[0] && place[1] === usual[1] };
+  });
+  const kept: (typeof places)[number][] = [];
+  for (const p of [...places.filter((q) => q.usual), ...places.filter((q) => !q.usual)]) {
+    const near = kept.some(
+      (q) => Math.hypot(q.place[0] - p.place[0], q.place[1] - p.place[1]) < SHARED_SCREW_MM - 1e-9,
+    );
+    if (!near) kept.push(p);
+  }
+  return places.filter((p) => kept.includes(p)).map((p) => p.place);
 }
 
 /** How far a pad that nothing may be cut from reaches past a screw's countersink, all round (D144; C83's margin). */
 export const PAD_MARGIN_MM = 2;
+
+/** How near a pad may come to the frame round a slot and not reach it, on a lattice board: past the 2.8 mm a skeleton's
+ * pocket widens into a rim (D147, D161), so a pocket left between the two is not too narrow to taper. */
+const PAD_TO_FRAME_MM = 3;
+/** How far a pad that reaches the frame round a slot runs into it, so the two overlap rather than touch. */
+const PAD_INTO_FRAME_MM = 0.5;
+
+/**
+ * A corner screw's pad on a lattice board, its radius (D144, D371 a): the countersink and 2 mm all round, or where the
+ * frame round a slot comes nearer than 3 mm past that, as round a usual place between the slots that is clear by 10 to
+ * 13.5 mm, out to 0.5 mm into it, so no sliver of pocket is left between them, which a skeleton's taper turned inside
+ * out; through the slots the frame overlaps every pad, which stays as it was.
+ */
+function padRadiusMm(board: MountingBoard, [x, y]: readonly [number, number], radiusMm: number): number {
+  if (board.frameMm === undefined) return radiusMm;
+  const slot = slotOf(board);
+  const straight = (slot.heightMm - slot.widthMm) / 2;
+  const frames = slotPlaces(board.columns, board.rows, board.sides ?? ALL_OPEN, board.seams ?? 'through').map((s) => {
+    const along = Math.max(s.yMm - straight, Math.min(s.yMm + straight, y));
+    return Math.hypot(x - s.xMm, y - along) - slot.widthMm / 2 - (board.frameMm ?? 0);
+  });
+  let radius = radiusMm;
+  for (let grown = true; grown;) {
+    const reach = frames.filter((d) => d > radius && d < radius + PAD_TO_FRAME_MM);
+    grown = reach.length > 0;
+    if (grown) radius = Math.max(...reach) + PAD_INTO_FRAME_MM;
+  }
+  return radius;
+}
 
 /** A standoff's outline round the middle of the slot it stands behind. */
 type Outline = (place: readonly [number, number]) => Vec2[];
@@ -399,7 +500,7 @@ export function mountingPads(m: MountingParams, board: MountingBoard): Vec2[][] 
   if (m.screwHead === 'none' && m.standoffHeightMm === 0) return [];
   const padMm = screwHole(m.screwMm).countersinkMm + 2 * PAD_MARGIN_MM;
   if (m.screwHead !== 'keyhole' && m.screwHead !== 'lock')
-    return screwPlaces(board).map(([x, y]) => circle(x, y, padMm));
+    return screwPlaces(board).map(([x, y]) => circle(x, y, 2 * padRadiusMm(board, [x, y], padMm / 2)));
   const grow = standoffGrowMm(m, board);
   if (grow === undefined || board.frameMm === undefined || grow <= board.frameMm - FRAME_INSET_MM + 1e-9) return [];
   if (board.rows < 2 || board.columns < 2) return []; // refused by mountingCuts
@@ -570,7 +671,8 @@ export function mountingCuts(
     );
   }
   const bore = sunkRound(m, t); // a round head sunk in a counterbore, flush with the front (D279)
-  const places = screwPlaces(board);
+  // the corner screws' places, which keyholes and lock screws, behind the slots, never look for
+  const places = behindSlots ? [] : screwPlaces(board);
   const back = -m.standoffHeightMm - 1; // through the standoffs too, and a millimetre beyond
   const levels: [number, number][] = countersunk
     ? [
@@ -698,7 +800,8 @@ export const MOUNTING_SETTINGS = defineSettings([
     ],
     default: MOUNTING_DEFAULTS.screwHead,
     help:
-      'One in each corner, 10 mm in from both edges. A countersunk head keeps the front flat, and a round head is sunk ' +
+      'One in each corner, 10 mm in from both edges, or where that would land on a slot, as between the slots, the ' +
+      'nearest place with as much room round it. A countersunk head keeps the front flat, and a round head is sunk ' +
       'in a counterbore, flush too, where the board leaves 1 mm under it. Keyholes, ' +
       'in the top two standoffs, behind the top corner slots, let the board drop onto two countersunk screws ' +
       'standing about 4 mm out of the wall and lift off them; the front stays plain, and hooks still fit those slots. ' +

@@ -738,19 +738,16 @@ describe('what each screw passes, from the part itself (D264)', () => {
     );
   });
 
-  it('says between the slots which corners keep their screw, and when none does (D289)', () => {
+  it('says between the slots what each corner screw passes, as through them: every corner has one (D371)', () => {
     const some = { left: 'closed', right: 'open', bottom: 'closed', top: 'closed' };
-    expect(screws('solid', { seams: 'between', sides: some as never })).toBe(
-      "Only the 2 corners whose sides are both closed have a screw. Each corner screw passes the board's 5 mm, plus " +
-        'any standoff behind it and your wall plug.',
-    );
+    for (const id of ['solid', 'lightened', 'skeleton']) {
+      expect(screws(id, { seams: 'between', sides: some as never })).toBe(screws(id));
+      expect(screws(id, { seams: 'between' })).toBe(screws(id));
+      expect(screws(id, { seams: 'between', standoffs: 'back' })).toBe(screws(id, { standoffs: 'back' }));
+    }
     expect(screws('lightened', { seams: 'between' })).toBe(
-      'No corner has a screw: each is on a side between the slots, where a screw would land on a slot. Keyholes ' +
-        'hold such a board.',
+      "Each corner screw passes the board's 5 mm, plus any standoff behind it and your wall plug.",
     );
-    // closed all round, every corner keeps its screw
-    const closed = { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' };
-    expect(screws('solid', { seams: 'between', sides: closed as never })).toBe(screws('solid'));
   });
 
   it("says where a keyhole's screw stands, and what a lock screw passes", () => {

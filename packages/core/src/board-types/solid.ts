@@ -2,14 +2,7 @@
 // mounting (D73 to D75) after its own settings. The boards built on it (the lightened board) take its
 // settings, its board and its file name from here, so the two cannot drift apart.
 import { makeSolidBoard, solidBoardParams, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from '../board-solid.js';
-import {
-  MOUNTING_SETTINGS,
-  mountingCuts,
-  mountingLabel,
-  mountingOf,
-  mountingScrews,
-  screwPlaces,
-} from '../mounting.js';
+import { MOUNTING_SETTINGS, mountingCuts, mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
 import { TILE_MM } from '../skadis.js';
 import { MAX_PANEL_TILES, MAX_WALL_MM } from '../tiling.js';
 import { defineSettings, SettingsProblem, type Values } from '../settings.js';
@@ -64,8 +57,8 @@ export const BOARD_SETTINGS = defineSettings([
       'Where an open side runs. Through the slots, it cuts a line of them in half, and a neighbour has the other ' +
       'halves. Between the slots, it runs midway between two columns of them, or across the plate between two ' +
       "slots' ends, 10 mm right of or above where it would otherwise run, so every slot is whole; a board with one " +
-      'side of a pair open and the other closed is 10 mm larger or smaller that way. A corner on such a side has no ' +
-      'screw, which would land on a slot: keyholes or lock screws hold it.',
+      'side of a pair open and the other closed is 10 mm larger or smaller that way. A corner screw that would land ' +
+      'on a slot there moves in to the nearest place with as much room round it as a corner through the slots has.',
   },
   {
     kind: 'choice',
@@ -153,10 +146,6 @@ export function boardParamsOf(v: BoardValues): SolidBoardParams {
   });
 }
 
-/** How many corner screws a board's sides leave it: four, but between the slots (D289 a). */
-export const cornerScrewsOf = (v: BoardValues): number =>
-  screwPlaces({ columns: v.widthMm / TILE_MM, rows: v.heightMm / TILE_MM, sides: v.sides, seams: v.seams }).length;
-
 /** The file name's size and closed sides, and where its open sides run if not through the slots, as only a board with
  * an open side differs so: `240x200-closed-left-between-slots`. */
 export function boardLabel(v: BoardValues): string {
@@ -175,5 +164,5 @@ export const SOLID = defineBoardType({
     return makeSolidBoard(engine, params, mountingCuts(mountingOf(v), params));
   },
   label: (v) => `${boardLabel(v)}${mountingLabel(v)}`,
-  screws: (v) => mountingScrews(mountingOf(v), v.thicknessMm, cornerScrewsOf(v)),
+  screws: (v) => mountingScrews(mountingOf(v), v.thicknessMm),
 });
