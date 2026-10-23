@@ -21,34 +21,44 @@ to the printables page, use a better img for the main image", then "use a gifs a
 printed parts. Published at 18:46:30 UTC on 22 Oct 2026, from the owner's browser; since then a save in
 the editor is "Publish now", which changes the public page. The pictures and the text's GIFs below went up with one
 such save at 20:01:09 UTC that day (A310, A311), read back from Printables' API: the cover first, the eleven in order,
-the four GIFs in the text, "about 40 %"; the GIFs are served as the GIFs made, so they move. Another at 20:38:10 UTC put the turning cover first and the page tour second, the other ten after them as before (the owner's request that evening), read back the same way. At 21:01:37 UTC the page tour that opens on a wall took second place, read back the same way.
+the four GIFs in the text, "about 40 %"; the GIFs are served as the GIFs made, so they move. Another at 20:38:10 UTC put the turning cover first and the page tour second, the other ten after them as before (the owner's request that evening), read back the same way. At 21:01:37 UTC the page tour that opens on a wall took second place, read back the same way. On 23 Oct 2026 the owner approved a new set, a picture for each section of the page and the text's GIFs smaller, each with a line under it (A356; the Pictures below), made from `v0.6.0` for him to upload.
 
 ## Pictures
 
-In this order, the first the cover; each part the library's own, the feature a picture is about in orange, under a
-title in the page's font (`node scripts/printables/write-gallery.mjs .check/printables-gallery`, after `npm run build
--w skadis-air`; ffmpeg makes the GIFs):
+The set the owner approved on 23 Oct 2026 (A356): each picture about a section of the page, more or less ("each gif
+should represent a section of the page more or less, instead of a gif being of one type"), the connectors together with
+close-ups, and the text's GIFs smaller. Made from `v0.6.0`: the library's renders from the release's code (`node
+scripts/printables/write-gallery.mjs <folder>`, after `npm run build -w skadis-air`), each part the library's own, the
+feature a picture is about in orange, under a title in the page's font; the page's GIFs recorded from the published
+page (`node scripts/printables/write-page-gifs.mjs https://alonrr.github.io/skadis-air/ <folder>`); ffmpeg makes the
+GIFs. They are made again once a newer version is published (the owner: "once the newest version is published update
+the gifs"). The owner uploads and arranges them on Printables.
+
+In this order, the first the cover:
 
 | Picture | What it shows |
 | --- | --- |
 | `cover-turn.gif` | Skådis Air: the solid, lightened and skeleton boards, each turning on its own axis, countersunk, on keyholes and on lock screws (the owner, 22 Oct 2026: "have the main image have each of the boards rotating and give each a different type of Screw holes") |
-| `page-tour.gif` | The page: a wall in panels first, so its first frame shows one ("the second webpage view should also show the wall option, so that users know its an option right away"), then the board types and their mountings, the 3D view turned by hand ("have the second image be a gif of the webpage switching between different options and rotating"), from `write-page-gifs.mjs` |
+| `page-tour.gif` | The page: a wall in panels first, so its first frame shows one ("the second webpage view should also show the wall option, so that users know its an option right away"), then the board types and their mountings, the 3D view turned by hand ("have the second image be a gif of the webpage switching between different options and rotating"), from `write-page-gifs.mjs`, 800 wide |
 | `page-phone.gif` | The page on a phone (the owner, 23 Oct 2026: "add a gif of the mobile version to printables"): the board turned by a finger, the 3D view staying at the top as the form scrolls under it, the board types, a setting's help opened and shut, a wall in panels and back, from `write-page-gifs.mjs page-phone`, 480 wide |
-| `board-types.png` | The three kinds at 240 x 200 mm, each one's plastic against the solid board's, measured |
-| `turntable.gif` | The lightened board on keyholes, turning: the pockets, then the standoffs behind (a turn in 80 frames, the owner's 75 %) |
-| `skeleton-ibeam.png` | The skeleton board cut open: each member an I-beam |
-| `wall-together.gif` | Six panels of a wall coming together and opening again, half a slot each side of a seam |
-| `between-slots.png` | Four boards meeting between the slots, every slot whole |
-| `mounting.png` | From the back: keyholes on standoffs, and lock screws |
-| `slot-clip-in.gif` | A slot clip going into the slots behind a seam, and out again |
-| `standoffs.png` | The standoffs for 1, 2 and 4 boards |
-| `fit-coupon.png` | The fit coupon |
-| `page.png` | The page, from `write-images.mjs` |
+| `board-types.png` | The Board section: the three kinds at 240 x 200 mm, each one's plastic against the solid board's, as model volume (D313 is open: `v0.6.0`'s skeleton prints heavier than the lightened board) |
+| `wall-together.gif` | The Size and panels section: six panels of a wall coming together and opening again, half a slot each side of a seam |
+| `sides.png` | The Sides section: a board closed all round, four boards meeting at seams through the slots, half a slot each side, and four meeting between the slots, every slot whole; the closed edge and the seams in orange |
+| `mounting.png` | The Mounting section: from the back, keyholes on standoffs and lock screws; at the front, close-ups of a countersunk and a round-head hole, each cut through, its screw seated flush |
+| `connectors.png` | The Connectors section: the standoffs for 1, 2 and 4 boards and the slot clip, with close-ups of a hook's room between a shared standoff's posts, under four boards' corners, and of the ribs on a clip's peg |
+| `slot-clip-in.gif` | A slot clip going into the slots behind a seam, and out again, on boards with no screw holes (the owner: "the board connector clip gif should be on a board without screw holes") |
+
+Out of the gallery since A356: `turntable.gif` and `skeleton-ibeam.png`, now close-ups in the text at the boards;
+`standoffs.png`, folded into `connectors.png`; `between-slots.png`, into `sides.png`; `fit-coupon.png`, as the test
+prints are under Advanced (D357); and `page.png`, as the page tour shows the page.
 
 Every GIF loops with no jump, its last frame running on into its first (the owner: "make all of the gifs seamless").
-The text has four more, of the page in use (`write-page-gifs.mjs`, against the built page while it is served): a
-pointer goes to each control and uses it, each frame shown for as long as it really took, and each ends as it began,
-its first and last frames the same to the pixel. Where they go is marked in the text below.
+The text has six more, each where the text below marks it: four of the page in use (`write-page-gifs.mjs`), a pointer
+going to each control and using it, each frame shown for as long as it really took, each ending as it began, its first
+and last frames the same to the pixel; and the two close-ups. All six are 560 wide (the owner: "we might want to shrink
+the description gifs size"). Under each is a line in italics that says what it shows, starting with "ℹ️" (the owner:
+"maybe add a small italic 'whats in the image' with an 'i' under each image"); Printables' editor has italics but no
+smaller text.
 
 ## Settings
 
@@ -67,10 +77,15 @@ Pegboards for IKEA SKÅDIS hooks, in any size: solid, lightened or skeleton, til
 
 ## Description
 
+A line in square brackets marks where a picture goes, and is not part of the text; the line in italics under it is.
+
 **Make your own: <https://alonrr.github.io/skadis-air/>**. Choose a board, its size and its edges, see it in 3D, and
 download an STL or 3MF. Everything runs in the page; nothing is sent anywhere.
 
-_GIF `page-in-use.gif`: the page in use, a lightened board, its size, then a wall in panels._
+[GIF `page-in-use.gif`]
+
+_ℹ️ In the GIF: a lightened board sized 240 x 200 mm, then split into panels for a 1200 x 800 mm wall, and back to one
+solid board._
 
 The files here are ready to print at the page's starting values. For any other size, edge or mounting, use the page.
 
@@ -81,6 +96,17 @@ The files here are ready to print at the page's starting values. For any other s
   - **Lightened**: open pockets between the slots, a rim kept round each slot, in about 40 % of the solid board's
     plastic.
   - **Skeleton**: every rim and web an I-beam, thin through the middle, in about 32 %.
+
+[GIF `turntable.gif`]
+
+_ℹ️ In the GIF: the lightened board on keyholes, turning: its pockets and the rims round its slots, then the four
+standoffs behind it._
+
+[Picture `skeleton-ibeam.png`]
+
+_ℹ️ In the picture: a skeleton board cut open across a row of its members, each cut face an I-beam, wide at both faces
+and thin through the middle._
+
 - **Fit coupon**: four slots at four clearances, told apart by dots. Print it first and try a hook in each, to find
   the clearance your printer needs; the page takes it as "Slot clearance" under Advanced.
 - **Standoff** for 1, 2 and 4 boards: a 15 mm spacer between the boards and the wall (IKEA's are 20 mm), so hooks have
@@ -90,7 +116,10 @@ The files here are ready to print at the page's starting values. For any other s
   behind a seam by pegs in their slots, so it needs no screw holes. It is as deep as the gap behind the boards, so
   the wall holds it on; ribs on the pegs press into the slots.
 
-_GIF `page-types.gif`: each board type on the page, then the connectors._
+[GIF `page-types.gif`]
+
+_ℹ️ In the GIF: the lightened and skeleton boards, the fit test coupon under Advanced, then the standoff and the slot
+clip, and back to the solid board._
 
 ### On the page, beyond these files
 
@@ -107,9 +136,14 @@ _GIF `page-types.gif`: each board type on the page, then the connectors._
 - **A slot clip for seams between the slots**: a peg in the nearest slot each side, its bar on the diagonal.
 - **Printers**: 30 printers' beds by maker, or your own.
 
-_GIF `page-edges.gif`: closed sides, and open sides between the slots._
+[GIF `page-edges.gif`]
 
-_GIF `page-mounting.gif`: standoffs, keyholes seen from the back, and lock screws._
+_ℹ️ In the GIF: the top and right sides ticked closed, the open sides moved between the slots, and back._
+
+[GIF `page-mounting.gif`]
+
+_ℹ️ In the GIF: standoffs on the back, keyholes, the board seen from the back, lock screws, then the front again,
+countersunk and without standoffs._
 
 ### Printing
 
