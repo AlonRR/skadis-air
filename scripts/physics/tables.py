@@ -70,32 +70,52 @@ def pct(x: float | None) -> str:
     return "-" if x is None else f"{100 * x:.0f} %"
 
 
+def at_same_place(version: str, part: str, case_id: str, level: int, at: list, member: bool) -> float | None:
+    """A level's highest stress within 2 mm of `at`, from its saved stresses: the same place's value, so a peak whose
+    twin across the slot takes the lead at the other level is not read as a moved peak."""
+    import numpy as np
+
+    path = FIELDS / version / part / f"{case_id}-L{level}.npz"
+    if not path.exists():
+        return None
+    d = np.load(path)
+    near = np.linalg.norm(d["xyz"] - np.array(at, dtype=np.float32), axis=1) <= 2.0
+    region = (d["dfix"] > 1.0) & ((d["dload"] > 3.0) if member else (d["dload"] <= 3.0))
+    m = near & region
+    return float(d["vm"][m].max()) if m.any() else None
+
+
 def row(runs: dict, version: str, part: str, case_id: str) -> dict | None:
     one, two = runs.get((version, part, case_id, 1)), runs.get((version, part, case_id, 2))
     best = two or one
     if best is None:
         return None
-    vm = best["vmMember"]["value"]
-    sn = best["snMember"]["value"]
 
     # a hook's case: how far the hook's slot moves; any other: the part's largest movement
     def deflection(r: dict) -> float:
         return r["uLoad"][0] if "hook" in case_id else r["umax"]["value"]
 
-    u = deflection(best)
     out = {
         "best": best,
         "level": best["level"],
-        "vm": vm,
+        "vm": best["vmMember"]["value"],
         "vmAt": where(version, part, case_id, best["vmMember"]["at"]),
         "contact": best["vmContact"]["value"],
-        "sn": sn,
-        "u": u,
-        "dvm": change(one["vmMember"]["value"], two["vmMember"]["value"]) if one and two else None,
-        # a peak that moved more than 4 mm between the levels is two places, not one converging (C338)
-        "moved": (math.dist(one["vmMember"]["at"], two["vmMember"]["at"]) > 4.0 if one and two else None),
-        "du": change(deflection(one), deflection(two)) if one and two else None,
+        "sn": best["snMember"]["value"],
+        "u": deflection(best),
+        "dvm": None,
+        "dcontact": None,
+        "du": None,
+        "moved": None,
     }
+    if one and two:
+        out["du"] = change(deflection(one), deflection(two))
+        out["dcontact"] = change(one["vmContact"]["value"], two["vmContact"]["value"])
+        # the peak's change at its own place (C338): level 2's value within 2 mm of level 1's peak; a peak with no
+        # level 2 value near it has moved
+        same = at_same_place(version, part, case_id, 2, one["vmMember"]["at"], member=True)
+        out["moved"] = same is None or same < 0.8 * two["vmMember"]["value"]
+        out["dvm"] = change(one["vmMember"]["value"], two["vmMember"]["value"] if out["moved"] else same)
     out["converged"] = None if out["dvm"] is None else out["dvm"] < STRESS_TOL and out["du"] < DEFLECTION_TOL
     return out
 
@@ -105,7 +125,7 @@ def print_table(runs: dict, title: str, items: list) -> None:
     print(
         "| Part | Version | Case | Peak in the part (MPa) | Where | At the contact (MPa) | Across the layers (MPa) "
         "| Deflection, PLA / PETG / ASA (mm) | Holds in the part, PLA / PETG / ASA (kg) "
-        "| Holds at the contact, PLA / PETG / ASA (kg) | Mesh change, stress / deflection |"
+        "| Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / contact / deflection |"
     )
     print("|---|---|---|---|---|---|---|---|---|---|---|")
     for label, version, part, case_id in items:
@@ -118,11 +138,14 @@ def print_table(runs: dict, title: str, items: list) -> None:
         across = " / ".join(
             f"{W * m['strength'] / r['contact'] / G:.1f}" if r["contact"] else "-" for m in MATERIALS.values()
         )
-        conv = "level 1 only" if r["dvm"] is None else f"{pct(r['dvm'])} / {pct(r['du'])}"
-        if r["moved"]:
-            conv += " (peak moved)"
-        elif r["converged"] is False:
-            conv += " (not converged)"
+        if r["dvm"] is None:
+            conv = "level 1 only"
+        else:
+            conv = f"{pct(r['dvm'])} / {pct(r['dcontact'])} / {pct(r['du'])}"
+            if r["moved"]:
+                conv += " (peak moved)"
+            elif r["converged"] is False:
+                conv += " (not converged)"
         contact = "-" if r["contact"] is None else f"{r['contact']:.2f}"
         print(
             f"| {label} | {version} | {case_id} | {r['vm']:.2f} | {r['vmAt']} | {contact} | {r['sn']:.2f} | {defl} "

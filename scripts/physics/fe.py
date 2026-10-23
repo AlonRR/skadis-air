@@ -287,7 +287,13 @@ class Model:
         return f
 
     def solve(
-        self, k: sp.csr_matrix, f: np.ndarray, fixed_nodes: np.ndarray, method: str = "auto", rtol: float = 1e-8
+        self,
+        k: sp.csr_matrix,
+        f: np.ndarray,
+        fixed_nodes: np.ndarray,
+        method: str = "auto",
+        rtol: float = 1e-8,
+        direct_max: int = DIRECT_MAX,
     ) -> np.ndarray:
         """The displacements with these nodes held. "direct": PARDISO's Cholesky (mtype 2) on the upper triangle, as
         the held stiffness is symmetric and positive definite, about half the memory of the general LU (that took
@@ -299,7 +305,7 @@ class Model:
         u = np.zeros(self.ndof)
         kff = k[free][:, free].tocsr()
         if method == "auto":
-            method = "direct" if len(free) <= DIRECT_MAX else "amg"
+            method = "direct" if len(free) <= direct_max else "amg"
         self.solved_by = method
         if method == "direct":
             solver = pypardiso.PyPardisoSolver(mtype=2)

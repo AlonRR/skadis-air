@@ -32,6 +32,9 @@ E_REF = 1000.0  # MPa
 NU = float(os.environ.get("PHYSICS_NU", "0.35"))
 CONTACT_MM = 3.0  # a peak within this of a loaded face is the load's contact, not the part's own (C339)
 FIELDS = ROOT / ".check" / "physics" / "fields"
+# the solid board factors with more fill; PHYSICS_SOLID_DIRECT raises its limit for a run watched for memory
+SOLID_DIRECT_MAX = int(os.environ.get("PHYSICS_SOLID_DIRECT", "2200000"))
+VOLUME_TOL = 0.01  # a mesh this far off the part's volume is refused (the brief's "about 1 %")
 EXCLUDE_MM = 1.0  # stresses within this of a fixed surface are left out of the peak: a clamp's edge is singular (C338)
 
 # Mesh levels (C338): (global size, size near the loads and supports), mm. Level 2, every size 0.85 and 0.8 times
@@ -127,35 +130,40 @@ def save_field(version, part, case_id, level, model, vm_of, layer, dfix, dload, 
     )
 
 
-def mesh_with_retries(stl: str, size: float, refine: list):
+def mesh_with_retries(stl: str, size: float, refine: list, volume: float):
     """gmsh's remeshed surfaces can cross in a tight spot ("a segment and a facet intersect") or fail to
-    parametrise. Each retry moves every node: sizes a few % smaller or larger, the surfaces classified at 30, 35 or
-    45 degrees, and last at 50, which keeps a 45 degree chamfer in one patch with its neighbour (C338); which one
-    meshed is chance, so the run records it, and the volume control judges the result.
-    Returns the points, the tets and the attempt used: (angle, scale)."""
+    parametrise, and a 40 degree classification can misread a 45 degree taper, bulging the mesh. Each retry moves every
+    node: sizes a few % smaller or larger, the surfaces classified at 30, 35 or 45 degrees, at 50 last, which keeps a
+    45 degree chamfer in one patch with its neighbour; and the same STL with its long triangles split to 3 or 1.5 mm
+    (`<name>-r3.stl`, `-r15.stl`, Manifold's refineToLength, the same solid), whose parametrisation fails less
+    (C338). A mesh whose volume is more than VOLUME_TOL off the part's is refused and the next tried; past every try,
+    the closest is used and the run records it. Returns the points, the tets and the attempt: [angle, scale, which
+    STL]."""
     import fe
 
-    errors = []
-    for angle, scale in (
-        (40, 1.0),
-        (40, 0.97),
-        (40, 0.94),
-        (40, 1.03),
-        (40, 0.91),
-        (30, 1.0),
-        (30, 0.97),
-        (35, 1.0),
-        (45, 1.0),
-        (50, 1.0),
-        (50, 0.97),
-        (40, 0.88),
-    ):
+    attempts = [(40, 1.0, stl), (40, 0.97, stl), (40, 0.94, stl), (40, 1.03, stl)]
+    for tag in ("r3", "r15"):
+        refined = stl[: -len(".stl")] + f"-{tag}.stl"
+        if Path(refined).exists():
+            attempts += [(40, 1.0, refined), (30, 1.0, refined)]
+    attempts += [(a, sc, stl) for a, sc in ((40, 0.91), (30, 1.0), (30, 0.97), (35, 1.0), (45, 1.0), (50, 1.0))]
+    errors, best = [], None
+    for angle, scale, path in attempts:
         try:
             rs = [fe.Refine(r.centre, r.radius, r.size * scale, r.grow) for r in refine]
-            points, tets = fe.mesh_stl(stl, size * scale, rs, angle_deg=angle)
-            return points, tets, [angle, scale]
+            points, tets = fe.mesh_stl(path, size * scale, rs, angle_deg=angle)
         except Exception as error:  # gmsh raises a bare Exception
-            errors.append(f"{angle} deg x{scale}: {str(error).splitlines()[0]}")
+            errors.append(f"{angle} deg x{scale}{' refined' if path != stl else ''}: {str(error).splitlines()[0]}")
+            continue
+        err = abs(fe.Model.of(points, tets).volume() / volume - 1)
+        attempt = [angle, scale, Path(path).stem.rsplit("-", 1)[-1] if path != stl else "plain"]
+        if err <= VOLUME_TOL:
+            return points, tets, attempt
+        errors.append(f"{angle} deg x{scale}: volume {100 * err:.2f} % off")
+        if best is None or err < best[0]:
+            best = (err, points, tets, attempt + ["volume over the limit"])
+    if best is not None:
+        return best[1], best[2], best[3]
     raise RuntimeError("meshing failed: " + "; ".join(errors))
 
 
@@ -171,7 +179,7 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
     size, fine = levels[meta["type"]][level]
     timer = fe.Timer()
     refine = [fe.Refine(tuple(r["centre"]), r["radius"], fine) for r in case.get("refine", [])]
-    points, tets, attempt = mesh_with_retries(str(PARTS / version / f"{part}.stl"), size, refine)
+    points, tets, attempt = mesh_with_retries(str(PARTS / version / f"{part}.stl"), size, refine, meta["volume"])
     points, tets, slivers = fe.drop_slivers(points, tets)
     timer.mark("mesh")
     model = fe.Model.of(points, tets)
@@ -235,7 +243,9 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
     # nothing applied on a fixed node is lost: the load vector's sum is the applied force
     assert np.allclose(f.reshape(-1, 3).sum(axis=0), applied, atol=1e-9 * max(1, np.abs(applied).max()))
     timer.mark("loads")
-    u = model.solve(k, f, fixed_nodes)
+    # a thin lattice factors with far less fill than the chunky solid board: 3.1 million unknowns direct, 2.2 for the
+    # solid board, which conjugate gradients take past that (C338)
+    u = model.solve(k, f, fixed_nodes, direct_max=SOLID_DIRECT_MAX if meta["type"] == "solid" else 3_100_000)
     timer.mark("solve")
     # equilibrium: the supports' reactions balance what was applied
     reaction = (k @ u - f).reshape(-1, 3)[fixed_nodes].sum(axis=0)

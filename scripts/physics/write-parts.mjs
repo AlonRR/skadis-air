@@ -143,6 +143,16 @@ function write(name, solid, meta) {
   for (const p of parts) p.delete();
   const json = { name, version: args.version, volume: solid.volume(), genus: solid.genus(), bodies, bbox: bb, ...meta };
   writeFileSync(join(out, `${name}.stl`), toStl(meshOf(solid), name));
+  // the same solid with its long triangles split to 3 and to 1.5 mm: gmsh's surface parametrisation fails less on
+  // them, and which of them meshes is chance (C338)
+  for (const [tag, mm] of [
+    ['r3', 3],
+    ['r15', 1.5],
+  ]) {
+    const refined = solid.refineToLength(mm);
+    writeFileSync(join(out, `${name}-${tag}.stl`), toStl(meshOf(refined), name));
+    refined.delete();
+  }
   writeFileSync(join(out, `${name}.json`), JSON.stringify(json, null, 1));
   written.push(name);
   console.log(
