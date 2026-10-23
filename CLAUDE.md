@@ -178,6 +178,13 @@ bash tests/test-stl-check.sh      # the check's controls: an open cube and a deg
 Both need PrusaSlicer (`PSLICER`) and uv; the slicer profiles are scad-check.sh's defaults, overridable
 with `PRINTER`, `PRINT_PROFILE` and `FILAMENT`.
 
+What a slice prints over air, per layer (the keyhole printability pass, 23 Oct 2026):
+
+```bash
+uv run --no-project python scripts/checks/overhang-report.py FILE.gcode   # overhang perimeter and bridge mm per layer
+bash tests/test-overhang-report.sh  # its controls: known lengths, and travel, wipes and falling E that must not count
+```
+
 ## Figures
 
 `node scripts/figures/shoot.mjs <pass>` draws a design pass's figures, each part the library's own with a finding's
