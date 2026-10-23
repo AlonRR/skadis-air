@@ -31,7 +31,8 @@ E_REF = 1000.0  # MPa
 # Poisson's ratio, from no sheet (C331); PHYSICS_NU sets another for the sensitivity runs, which go to their own file
 NU = float(os.environ.get("PHYSICS_NU", "0.35"))
 CONTACT_MM = 3.0  # a peak within this of a loaded face is the load's contact, not the part's own (C339)
-FIELDS = ROOT / ".check" / "physics" / "fields"
+# a run at another Poisson's ratio (C331's sensitivity) keeps its stresses apart, so it cannot overwrite a reported run's
+FIELDS = ROOT / ".check" / "physics" / ("fields" if NU == 0.35 else f"fields-nu{NU:g}")
 # the solid board factors with more fill; PHYSICS_SOLID_DIRECT raises its limit for a run watched for memory
 SOLID_DIRECT_MAX = int(os.environ.get("PHYSICS_SOLID_DIRECT", "2200000"))
 VOLUME_TOL = 0.01  # a mesh this far off the part's volume is refused (the brief's "about 1 %")
@@ -54,6 +55,22 @@ LEVELS_WHOLE = {
     "lightened": {1: (1.5, 0.5), 2: (1.275, 0.4)},
     "skeleton": {1: (1.2, 0.5), 2: (1.02, 0.4)},
 }
+
+
+# Level 3 (C348): level 2's mesh with a ball of LEVEL3_SIZE round each of level 2's own peaks in the part (its peak
+# and its stress across the layers), for a result that did not converge from level 1 to level 2: the peak's own
+# convergence, at half level 2's finest size, where a whole board's level 3 would be past what this machine factors.
+LEVEL3_RADIUS, LEVEL3_SIZE = 4.0, 0.2
+
+
+def level3_spots(version: str, part: str, case_id: str) -> list:
+    for line in RESULTS.read_text().splitlines():
+        if line.strip():
+            r = json.loads(line)
+            if (r["version"], r["part"], r["case"], r["level"]) == (version, part, case_id, 2):
+                spots = [r["vmMember"]["at"], r["snMember"]["at"]]
+                return [spots[0]] + ([spots[1]] if np.linalg.norm(np.subtract(*spots)) > 2.0 else [])
+    raise ValueError(f"{version} {part} {case_id}: level 3 needs level 2's result")
 
 
 def single_level(part: str) -> bool:
@@ -202,9 +219,11 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
     meta = json.loads((PARTS / version / f"{part}.json").read_text())
     case = next(c for c in meta["cases"] if c["id"] == case_id)
     levels = LEVELS_WHOLE if case.get("mesh") == "whole-160" else LEVELS
-    size, fine = levels[meta["type"]][level]
+    size, fine = levels[meta["type"]][min(level, 2)]
     timer = fe.Timer()
     refine = [fe.Refine(tuple(r["centre"]), r["radius"], fine) for r in case.get("refine", [])]
+    if level == 3:
+        refine += [fe.Refine(tuple(c), LEVEL3_RADIUS, LEVEL3_SIZE) for c in level3_spots(version, part, case_id)]
     points, tets, attempt = mesh_with_retries(str(PARTS / version / f"{part}.stl"), size, refine, meta["volume"])
     points, tets, slivers = fe.drop_slivers(points, tets)
     timer.mark("mesh")
@@ -384,10 +403,63 @@ def done_keys() -> set:
     return keys
 
 
+def resave(version: str, part: str, case_id: str, level: int) -> int:
+    """Run a reported case again, in a process of its own as the batch does, so that it saves its surface (runs
+    reported before 23 Oct 2026, 14:00 saved none). A run is deterministic here (the same mesh and peaks to 1e-11 on
+    v0.4.2's skeleton window), and this checks it: a run whose peaks differ from the reported one's by more than 1e-6
+    is refused, its surface removed, so no figure shows a field that is not the table's."""
+    reported = None
+    for line in RESULTS.read_text().splitlines():
+        if line.strip():
+            r = json.loads(line)
+            if (r["version"], r["part"], r["case"], r["level"]) == (version, part, case_id, level):
+                reported = r
+    if reported is None:
+        print(f"{version} {part} {case_id} L{level}: not reported, nothing to save again")
+        return 1
+    field = FIELDS / version / part / f"{case_id}-L{level}.npz"  # the tables read it: kept, and put back on a refusal
+    kept = field.read_bytes() if field.exists() else None
+    proc = subprocess.run(
+        [sys.executable, __file__, "--one", version, part, case_id, str(level)], capture_output=True, text=True
+    )
+    again = next((json.loads(x) for x in reversed(proc.stdout.splitlines()) if x.startswith("{")), None)
+    surface = FIELDS / version / part / f"{case_id}-L{level}-surface.npz"
+    if proc.returncode != 0 or again is None:
+        if kept is not None:
+            field.write_bytes(kept)
+        print(f"{version} {part} {case_id} L{level}: FAILED: {proc.stderr.strip().splitlines()[-1:]}")
+        return 1
+    worst = max(
+        abs(again[k]["value"] - reported[k]["value"]) / abs(reported[k]["value"])
+        for k in ("vmMember", "vmContact", "snMember")
+        if reported[k]["value"]
+    )
+    if worst > 1e-6 or again["tets"] != reported["tets"]:
+        surface.unlink(missing_ok=True)
+        if kept is not None:
+            field.write_bytes(kept)
+        print(
+            f"{version} {part} {case_id} L{level}: REFUSED: {again['tets']} tets against {reported['tets']}, "
+            f"peaks {worst:.1e} apart"
+        )
+        return 1
+    print(f"{version} {part} {case_id} L{level}: saved, {again['tets']} tets, peaks {worst:.1e} from the reported")
+    return 0
+
+
+def not_converged(version: str, part: str, case_id: str) -> bool | None:
+    """Whether a case's level 2 moved too far from its level 1, as the tables judge it (C338)."""
+    from tables import load, row
+
+    r = row(load(), version, part, case_id)
+    return None if r is None or r["converged"] is None else not r["converged"]
+
+
 def estimate(version: str, part: str, case_id: str, level: int) -> float | None:
-    """A run's likely length in seconds, from its level 1 twin's: level 2 has about 1.8 times the elements; past what
-    PARDISO factors (a solid board's past 2.2 million unknowns) conjugate gradients take about 0.26 ms an unknown (the
-    solid 160 mm board's level 2, 2.5 million unknowns in 478 s)."""
+    """A run's likely length in seconds, from its level 1 twin's. Measured on the first 13 pairs (23 Oct 2026): level 2
+    has 1.4 to 1.65 times a lattice's unknowns and 1.72 times a solid board's, and took 1.6 to 2.3 times as long where
+    PARDISO factors it; past that (a solid board's past 2.2 million unknowns) conjugate gradients take about 0.26 ms an
+    unknown (the solid 160 mm board's level 2, 2.5 million unknowns in 478 s)."""
     one = None
     if RESULTS.exists():
         for line in RESULTS.read_text().splitlines():
@@ -400,14 +472,23 @@ def estimate(version: str, part: str, case_id: str, level: int) -> float | None:
     took = sum(one["times"].values()) + 20  # and the process's start
     if level == 1:
         return took
-    dofs = 1.75 * one["dofs"]
-    limit = SOLID_DIRECT_MAX if part.startswith("solid") else 3_100_000
-    return 2.6e-4 * dofs + 0.5 * took if dofs > limit else 2.5 * took
+    if level == 3:
+        return 1.3 * estimate(version, part, case_id, 2)
+    solid = part.startswith("solid")
+    dofs = (1.75 if solid else 1.65) * one["dofs"]
+    limit = SOLID_DIRECT_MAX if solid else 3_100_000
+    return 2.6e-4 * dofs + 0.5 * took if dofs > limit else 2.3 * took
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--one", nargs=4, metavar=("VERSION", "PART", "CASE", "LEVEL"))
+    ap.add_argument(
+        "--resave",
+        nargs=4,
+        metavar=("VERSION", "PART", "CASE", "LEVEL"),
+        help="run a reported case again to save its surface for the figures, refused unless its peaks are the reported",
+    )
     ap.add_argument("--versions")
     ap.add_argument("--only")
     ap.add_argument("--levels", default="1,2")
@@ -419,9 +500,12 @@ def main() -> int:
         v, p, c, lv = args.one
         print(json.dumps(run_one(v, p, c, int(lv))))
         return 0
+    if args.resave:
+        return resave(*args.resave[:3], int(args.resave[3]))
     versions = args.versions.split(",") if args.versions else sorted(d.name for d in PARTS.iterdir() if d.is_dir())
     levels = [int(x) for x in args.levels.split(",")]
     done = done_keys()
+    done_keys_only = set(done)
     if FAILURES.exists() and not args.retry_failed:
         for line in FAILURES.read_text().splitlines():
             if line.strip():
@@ -436,6 +520,12 @@ def main() -> int:
             for case in meta["cases"]:
                 for lv in levels:
                     if lv > 1 and single_level(part):
+                        continue
+                    # level 2 checks level 1's result: none, no check (the skeleton's wall, C346)
+                    if lv > 1 and (v, part, case["id"], lv - 1) not in done_keys_only:
+                        continue
+                    # level 3 only where level 1 to level 2 did not converge (C348)
+                    if lv == 3 and not_converged(v, part, case["id"]) is not True:
                         continue
                     if (v, part, case["id"], lv) not in done:
                         todo.append((v, part, case["id"], lv))

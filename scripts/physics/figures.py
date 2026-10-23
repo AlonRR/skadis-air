@@ -11,6 +11,7 @@ go to .check/physics/figures/; figures.mjs photographs them into docs/figures/ph
 
     uv run figures.py                 every figure whose run has a saved surface; the others named, with the run to redo
     uv run figures.py skeleton-today  these figures only
+    uv run figures.py --into <report> and the list of the figures, between the report's figures markers
 
 One scale per figure, viridis, from 0 to the part's own peak, the tables' value: past it (the load's contact, a held
 face's edge) the colour stays at the top, as the scale's end says. The colour at a point is the stress averaged over
@@ -51,14 +52,56 @@ PER = {"hook": "per hook", "shear": "per connector", "wall": "per hook"}
 FIGURES = [
     ("solid-today", "Solid board", "today", "solid-160", ["hook-mid", "hook-edge"], "on its four corner screws"),
     ("solid-v0.2.1", "Solid board", "v0.2.1", "solid-160", ["hook-mid", "hook-edge"], "on its four corner screws"),
-    ("lightened-today", "Lightened board", "today", "lightened-160", ["hook-mid", "hook-edge"], "on its four corner screws"),
-    ("lightened-v0.2.1", "Lightened board", "v0.2.1", "lightened-160", ["hook-mid", "hook-edge"], "on its four corner screws"),
-    ("skeleton-today", "Skeleton board", "today", "skeleton-160", ["hook-mid", "hook-edge"], "on its four corner screws"),
-    ("skeleton-v0.4.2", "Skeleton board", "v0.4.2", "skeleton-160", ["hook-mid", "hook-edge"], "on its four corner screws"),
-    ("skeleton-v0.2.1", "Skeleton board", "v0.2.1", "skeleton-160", ["hook-mid", "hook-edge"], "on its four corner screws"),
+    (
+        "lightened-today",
+        "Lightened board",
+        "today",
+        "lightened-160",
+        ["hook-mid", "hook-edge"],
+        "on its four corner screws",
+    ),
+    (
+        "lightened-v0.2.1",
+        "Lightened board",
+        "v0.2.1",
+        "lightened-160",
+        ["hook-mid", "hook-edge"],
+        "on its four corner screws",
+    ),
+    (
+        "skeleton-today",
+        "Skeleton board",
+        "today",
+        "skeleton-160",
+        ["hook-mid", "hook-edge"],
+        "on its four corner screws",
+    ),
+    (
+        "skeleton-v0.4.2",
+        "Skeleton board",
+        "v0.4.2",
+        "skeleton-160",
+        ["hook-mid", "hook-edge"],
+        "on its four corner screws",
+    ),
+    (
+        "skeleton-v0.2.1",
+        "Skeleton board",
+        "v0.2.1",
+        "skeleton-160",
+        ["hook-mid", "hook-edge"],
+        "on its four corner screws",
+    ),
     ("standoff-1", "Standoff for one board, 15 mm", "today", "standoff-1", ["shear"], "its wall face held"),
     ("slot-clip-2", "Slot clip for two boards", "today", "slot-clip-2", ["shear"], "one peg held in its slot"),
-    ("lightened-wall", "Two lightened panels joined by a slot clip", "today", "lightened-wall-2", ["wall-seam-hook"], ""),
+    (
+        "lightened-wall",
+        "Two lightened panels joined by a slot clip",
+        "today",
+        "lightened-wall-2",
+        ["wall-seam-hook"],
+        "",
+    ),
     ("solid-wall", "Two solid panels joined by a slot clip", "today", "solid-wall-2", ["wall-seam-hook"], ""),
 ]
 
@@ -126,29 +169,34 @@ def camera(position: np.ndarray, target: np.ndarray, fov: float, up=(0.0, 1.0, 0
 
 
 def views(bbox: dict, at: np.ndarray, n: np.ndarray) -> tuple[dict, dict, str]:
-    """The whole part from the side its weak spot faces, a little from above and the right; and the spot close up,
-    a face's from straight along its outward normal (a face at the bottom of a groove shows only so), a wall's from
-    between its normal and the board's face it is nearer."""
+    """Where the two views look from. A board, a plate seen from its front or back: the whole part from the side its
+    weak spot faces, a little from above and the right; the spot close up, a face's straight along its way out (a face
+    at the foot of a groove shows only so), a wall's from between that and the board's face it is nearer. A compact
+    part, a connector: both views from the spot's own way out, the whole a little from above and the right."""
     lo, hi = np.array(bbox["min"]), np.array(bbox["max"])
     mid = (lo + hi) / 2
-    if abs(n[2]) > 0.5:
-        side = 1.0 if n[2] > 0 else -1.0
-    else:
-        side = 1.0 if at[2] >= mid[2] else -1.0
-    seen = "the front" if side > 0 else "the back"
-    whole_dir = np.array([0.2 * side, 0.28, side])
-    whole_dir /= np.linalg.norm(whole_dir)
-    radius = 0.5 * np.linalg.norm(hi - lo)
+    size = hi - lo
+    radius = 0.5 * np.linalg.norm(size)
     fov = 30.0
-    whole = camera(mid + whole_dir * radius / math.sin(math.radians(fov / 2)) * 0.92, mid, fov)
-    if abs(n[2]) > 0.5:
-        zoom_dir = n + np.array([0.04, 0.06, 0.0])
+    field = min(26.0, 0.9 * float(np.max(size)))
+    plate = size[2] < 0.25 * min(size[0], size[1])
+    if plate:
+        side = (1.0 if n[2] > 0 else -1.0) if abs(n[2]) > 0.5 else (1.0 if at[2] >= mid[2] else -1.0)
+        seen = "the front" if side > 0 else "the back"
+        whole_dir = np.array([0.2 * side, 0.28, side])
+        if abs(n[2]) > 0.5:
+            zoom_dir = n + np.array([0.04, 0.06, 0.0])
+        else:
+            flat = n.copy()
+            flat[2] = 0
+            zoom_dir = flat / np.linalg.norm(flat) + np.array([0.0, 0.1, 0.8 * side])
     else:
-        flat = n.copy()
-        flat[2] = 0
-        zoom_dir = flat / np.linalg.norm(flat) + np.array([0.0, 0.1, 0.8 * side])
+        seen = "the side its weak spot is on"
+        whole_dir = n + np.array([0.35, 0.35, 0.35])
+        zoom_dir = n + np.array([0.06, 0.08, 0.1])
+    whole_dir /= np.linalg.norm(whole_dir)
     zoom_dir /= np.linalg.norm(zoom_dir)
-    field = min(26.0, 0.9 * float(np.max(hi - lo)))
+    whole = camera(mid + whole_dir * radius / math.sin(math.radians(fov / 2)) * 0.92, mid, fov)
     zoom = camera(at + zoom_dir * (field / 2) / math.tan(math.radians(fov / 2)), at, fov)
     return whole, zoom, seen
 
@@ -164,7 +212,7 @@ def write_scene(spec: tuple, runs: dict) -> str | None:
     level = r["level"]
     path = FIELDS / version / part / f"{case_id}-L{level}-surface.npz"
     if not path.exists():
-        return f"{fid}: no surface; redo: uv run python run.py --one {version} {part} {case_id} {level}"
+        return f"{fid}: no surface; save it: uv run python run.py --resave {version} {part} {case_id} {level}"
     d = np.load(path)
     xyz, tri = d["xyz"].astype(np.float64), d["tri"]
     meta = json.loads((PARTS / version / f"{part}.json").read_text())
@@ -174,8 +222,16 @@ def write_scene(spec: tuple, runs: dict) -> str | None:
     dfix = cKDTree(held_points).query(xyz)[0] if len(held_points) else np.full(len(xyz), np.inf)
     rgb = (colormaps["viridis"](np.clip(d["vmMean"] / peak, 0, 1))[:, :3] * 255).round().astype(np.uint8)
     rgb[dfix <= EXCLUDE_MM] = GREY
-    at = np.array(r["vmXyz"], dtype=float)
-    n = outward_normal(at, xyz, tri)
+    # the close-up is on the spot that sets the part's capacity in PLA: its peak, or its stress across the layers
+    governs = holds(r, pla)[1]
+    key = "vm" if governs == "y" else "sn"
+    at = np.array(r["vmXyz"] if governs == "y" else r["snXyz"], dtype=float)
+    skin = cKDTree(xyz)
+    depth, nearest = skin.query(at)
+    if depth > 0.15:  # a peak inside the part: seen from its nearest skin
+        n = (xyz[nearest] - at) / depth
+    else:
+        n = outward_normal(at, xyz, tri)
     whole, zoom, seen = views(meta["bbox"], at, n)
     # the scene's geometry, one binary file: positions, then the triangles, then the colours
     OUT.mkdir(parents=True, exist_ok=True)
@@ -188,11 +244,28 @@ def write_scene(spec: tuple, runs: dict) -> str | None:
     for name, m in MATERIALS.items():
         newtons, tag = holds(r, m)
         capacity.append(f"{name} {newtons:.0f} N, {newtons / G:.1f} kg ({'yield' if tag == 'y' else 'layers'})")
-    markers = [{"at": [float(c) for c in at], "text": f"{peak:.2f} MPa, the part's peak", "kind": "peak"}]
+
+    def under(point) -> str:
+        d = float(skin.query(point)[0])
+        return f" (inside, {d:.1f} mm under the skin)" if d > 0.15 else ""
+
+    markers = [{"at": list(r["vmXyz"]), "text": f"{peak:.2f} MPa, the part's peak{under(r['vmXyz'])}", "kind": "peak"}]
+    if math.dist(r["vmXyz"], r["snXyz"]) > 2.0:
+        markers.append(
+            {
+                "at": list(r["snXyz"]),
+                "text": f"{r['sn']:.2f} MPa across the layers{under(r['snXyz'])}",
+                "kind": "layers",
+            }
+        )
     contact_line = ""
     if r["contact"]:
         markers.append(
-            {"at": [float(c) for c in r["contactXyz"]], "text": f"{r['contact']:.2f} MPa at the contact", "kind": "contact"}
+            {
+                "at": [float(c) for c in r["contactXyz"]],
+                "text": f"{r['contact']:.2f} MPa at the contact",
+                "kind": "contact",
+            }
         )
         at_contact = " · ".join(
             f"{k} {10 * m['strength'] / r['contact']:.0f} N, {10 * m['strength'] / r['contact'] / G:.1f} kg"
@@ -203,16 +276,25 @@ def write_scene(spec: tuple, runs: dict) -> str | None:
     held = f", {held_by}" if held_by else ""
     scene = {
         "id": fid,
+        "case": case_id,
+        "level": level,
         "title": f"{what}, {version}: {CASES.get(case_id, case_id)} ({case_id})",
         "caption": [
             f"Von Mises stress in MPa per 10 N, the part modelled as solid plastic{held}; seen from {seen}, the weak "
             f"spot close up at the right ({zoom_field(meta)} mm across).",
-            f"The part's peak {where(version, part, case_id, r['vmXyz'])}. "
+            f"The part's peak {where(version, part, case_id, r['vmXyz'])}"
+            + (f"; across the layers {r['snAt']}" if governs == "l" and math.dist(r["vmXyz"], r["snXyz"]) > 2 else "")
+            + (
+                f" (at a held face's band, where the held face's idealisation sets it: 2 mm off it "
+                f"{r['band'][key]['beyond2']:.2f} MPa, C345)"
+                if r["band"][key]["atBand"]
+                else ""
+            )
+            + ". "
             + (
                 "Mesh level 1 only."
                 if r["dvm"] is None
-                else f"Mesh level {level_note(r)}: how far the part's peak, the contact's and the deflection moved from "
-                "level 1."
+                else f"Mesh level {level_note(r)} (from level 1: the part's peak / the contact's / the deflection)."
             ),
         ],
         "vertices": int(len(xyz)),
@@ -247,7 +329,33 @@ def mpl_hex(rgba) -> str:
     return "#" + "".join(f"{round(255 * c):02x}" for c in rgba[:3])
 
 
+def figure_list(runs: dict) -> str:
+    """The report's list of the figures: each one's picture, what it shows and the mesh level it is from."""
+    lines = []
+    for fid, what, version, part, cases, _ in FIGURES:
+        scene = OUT / f"{fid}.json"
+        if not scene.exists() or not (ROOT / "docs" / "figures" / "physics" / f"{fid}.png").exists():
+            lines.append(f"- **{what}, {version}**: not drawn yet, its run's surface not saved")
+            continue
+        s = json.loads(scene.read_text(encoding="utf-8"))
+        rows = [(c, row(runs, version, part, c)) for c in cases]
+        case_id, r = min(((c, x) for c, x in rows if x), key=lambda cr: holds(cr[1], MATERIALS["PLA"])[0])
+        if (s.get("case"), s.get("level")) != (case_id, r["level"]):
+            lines.append(f"- **{what}, {version}**: its picture is of an older result; drawn again with the rest")
+            continue
+        held = s["holds"][0]
+        lines.append(
+            f"- [{s['title']}](../figures/physics/{fid}.png): mesh level {level_note(r)}; {held[0].lower()}{held[1:]}"
+        )
+    return "\n".join(lines) + "\n"
+
+
 def main() -> int:
+    if len(sys.argv) > 2 and sys.argv[1] == "--into":
+        from tables import splice
+
+        splice(Path(sys.argv[2]), "figures", figure_list(load()))
+        return 0
     runs = load()
     wanted = set(sys.argv[1:])
     notes, written = [], []

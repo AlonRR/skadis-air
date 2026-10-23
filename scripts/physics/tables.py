@@ -52,7 +52,16 @@ def where(version: str, part: str, case_id: str, at: list | None) -> str:
             cx, cy = sel["rho"]["centre"]
             named.append((math.hypot(x - cx, y - cy), f"{sel['label']} ({cx:g}, {cy:g})"))
     if not named:
-        return f"({x:.1f}, {y:.1f}, {z:.1f})"
+        # a connector: how far from its held face, a box (C336), and where
+        for sel in case["fixed"]:
+            if "box" in sel:
+                lo, hi = sel["box"]
+                gap = [max(lo[i] - c, 0.0, c - hi[i]) for i, c in enumerate(at)]
+                named.append((math.hypot(*gap), sel["label"]))
+        if not named:
+            return f"({x:.1f}, {y:.1f}, {z:.1f})"
+        d, name = min(named)
+        return f"{d:.1f} mm from the {name}, at ({x:.1f}, {y:.1f}, {z:.1f})"
     d, name = min(named)
     face = "back" if z < 0.5 else "front" if z > 4.5 else "mid"
     if z < -0.5:
@@ -90,9 +99,31 @@ def at_same_place(
     return float(d["vm"][m].max()) if m.any() else None
 
 
+def band(version: str, part: str, case_id: str, level: int, wall: bool) -> dict:
+    """Whether the part's peaks lie at the edge of the 1 mm band round a held face, where no peak is read (C338): there
+    the held face's idealisation, every degree of freedom, sets the value as much as the part does, and the peak read
+    2 mm off the held faces is given beside it (C345)."""
+    import numpy as np
+
+    d = np.load(FIELDS / version / part / f"{case_id}-L{level}.npz")
+    ok = (d["dload"] > 3.0) & (d["dfix"] > 1.0)
+    if wall:
+        clip, panels = wall_regions(d["xyz"])
+        ok &= clip | panels
+    out = {}
+    for key, values in (("vm", d["vm"]), ("sn", d["sn"])):
+        k = int(np.argmax(np.where(ok, values, -np.inf)))
+        far = ok & (d["dfix"] > 2.0)
+        out[key] = {
+            "atBand": bool(d["dfix"][k] < 1.5),
+            "beyond2": float(values[far].max()) if far.any() else None,
+        }
+    return out
+
+
 def row(runs: dict, version: str, part: str, case_id: str) -> dict | None:
-    one, two = runs.get((version, part, case_id, 1)), runs.get((version, part, case_id, 2))
-    best = two or one
+    one, two, three = (runs.get((version, part, case_id, lv)) for lv in (1, 2, 3))
+    best = three or two or one
     if best is None:
         return None
 
@@ -102,7 +133,9 @@ def row(runs: dict, version: str, part: str, case_id: str) -> dict | None:
 
     # a wall's own peaks are its panels' and its clip's, read apart from the bonded pegs' edges (C337, C341)
     wall = "-wall-" in part
-    member = {lv: (wall_peaks(version, part, case_id, lv) if wall else r) for lv, r in ((1, one), (2, two)) if r}
+    member = {
+        lv: (wall_peaks(version, part, case_id, lv) if wall else r) for lv, r in ((1, one), (2, two), (3, three)) if r
+    }
     peak = member[best["level"]]
     out = {
         "best": best,
@@ -110,24 +143,32 @@ def row(runs: dict, version: str, part: str, case_id: str) -> dict | None:
         "vm": peak["vmMember"]["value"],
         "vmAt": where(version, part, case_id, peak["vmMember"]["at"]),
         "vmXyz": peak["vmMember"]["at"],
+        "snAt": where(version, part, case_id, peak["snMember"]["at"]),
+        "snXyz": peak["snMember"]["at"],
         "contact": best["vmContact"]["value"],
         "contactXyz": best["vmContact"]["at"],
         "sn": peak["snMember"]["value"],
+        "band": band(version, part, case_id, best["level"], wall),
         "u": deflection(best),
         "dvm": None,
         "dcontact": None,
         "du": None,
         "moved": None,
+        "from": None,
     }
-    if one and two:
-        out["du"] = change(deflection(one), deflection(two))
-        out["dcontact"] = change(one["vmContact"]["value"], two["vmContact"]["value"])
-        # the peak's change at its own place (C338): level 2's value within 2 mm of level 1's peak; a peak with no
-        # level 2 value near it has moved
-        at1, v2 = member[1]["vmMember"]["at"], member[2]["vmMember"]["value"]
-        same = at_same_place(version, part, case_id, 2, at1, member=True, wall=wall)
+    # convergence between the last two levels: 1 to 2, or 2 to 3 where level 3 refined round level 2's peaks (C348)
+    lo, hi = (2, 3) if three else (1, 2)
+    first, last = {1: one, 2: two, 3: three}[lo], {1: one, 2: two, 3: three}[hi]
+    if first and last:
+        out["from"] = lo
+        out["du"] = change(deflection(first), deflection(last))
+        out["dcontact"] = change(first["vmContact"]["value"], last["vmContact"]["value"])
+        # the peak's change at its own place (C338): the finer level's value within 2 mm of the coarser's peak; a
+        # peak with no value near it there has moved
+        at1, v2 = member[lo]["vmMember"]["at"], member[hi]["vmMember"]["value"]
+        same = at_same_place(version, part, case_id, hi, at1, member=True, wall=wall)
         out["moved"] = same is None or same < 0.8 * v2
-        out["dvm"] = change(member[1]["vmMember"]["value"], v2 if out["moved"] else same)
+        out["dvm"] = change(member[lo]["vmMember"]["value"], v2 if out["moved"] else same)
     out["converged"] = None if out["dvm"] is None else out["dvm"] < STRESS_TOL and out["du"] < DEFLECTION_TOL
     return out
 
@@ -154,6 +195,8 @@ def print_table(runs: dict, title: str, items: list) -> None:
             conv = "level 1 only"
         else:
             conv = f"{pct(r['dvm'])} / {pct(r['dcontact'])} / {pct(r['du'])}"
+            if r["from"] == 2:
+                conv += " (level 2 to 3)"
             if r["moved"]:
                 conv += " (peak moved)"
             elif r["converged"] is False:
@@ -218,7 +261,8 @@ def level_note(r: dict) -> str:
         return "1 only"
     moved = " (the part's peak moved)" if r["moved"] else ""
     verdict = "converged" if r["converged"] else "not converged"
-    return f"2, {verdict}{moved}: {pct(r['dvm'])} / {pct(r['dcontact'])} / {pct(r['du'])}"
+    since = " (from level 2)" if r["from"] == 2 else ""
+    return f"{r['level']}, {verdict}{moved}{since}: {pct(r['dvm'])} / {pct(r['dcontact'])} / {pct(r['du'])}"
 
 
 def print_headline(runs: dict, items: list) -> None:
@@ -247,12 +291,18 @@ def print_headline(runs: dict, items: list) -> None:
             newtons, tag = holds(r, m)
             cells.append(f"{newtons:.0f} N, {newtons / G:.1f} kg ({tag})")
         tag = holds(r, pla)[1]
-        spot = f"{'yield' if tag == 'y' else 'across the layers'}: {r['vmAt']}"
+        key = "vm" if tag == "y" else "sn"
+        spot = f"{'yield' if tag == 'y' else 'across the layers'}: {r['vmAt'] if tag == 'y' else r['snAt']}"
+        if r["band"][key]["atBand"]:
+            spot += f"; at a held face's band, 2 mm off it {r['band'][key]['beyond2']:.2f} against {r[key]:.2f} MPa"
         if r["contact"]:
             at_contact = [W * m["strength"] / r["contact"] for m in MATERIALS.values()]
-            contact = " / ".join(f"{n:.0f}" for n in at_contact) + " N (" + " / ".join(
-                f"{n / G:.1f}" for n in at_contact
-            ) + f" kg), {r['contact']:.2f} MPa"
+            contact = (
+                " / ".join(f"{n:.0f}" for n in at_contact)
+                + " N ("
+                + " / ".join(f"{n / G:.1f}" for n in at_contact)
+                + f" kg), {r['contact']:.2f} MPa"
+            )
         else:
             contact = "-"
         print(
@@ -379,6 +429,7 @@ def main() -> None:
     ]
     print_table(runs, "Two-panel walls joined by a slot clip, 10 N", walls)
     print_walls(runs, walls)
+    print_sensitivity(runs)
     done = len(runs)
     vol = [abs(r["volumeErr"]) for r in runs.values()]
     bal = [r["balance"] for r in runs.values()]
@@ -386,6 +437,40 @@ def main() -> None:
         f"{done} runs; mesh volume against Manifold's: largest difference {100 * max(vol):.2f} %; "
         f"reactions against loads: largest imbalance {max(bal):.1e}"
     )
+
+
+def print_sensitivity(runs: dict) -> None:
+    """C331: the one case run again at Poisson's ratios 0.30 and 0.40 (run.py --one with PHYSICS_NU, kept apart in
+    .check/physics/sensitivity-nu.jsonl), beside the reported run at 0.35."""
+    path = ROOT / ".check" / "physics" / "sensitivity-nu.jsonl"
+    if not path.exists():
+        return
+    others = [json.loads(x) for x in path.read_text().splitlines() if x.strip()]
+    if not others:
+        return
+    first = others[0]
+    key = (first["version"], first["part"], first["case"], first["level"])
+    ref = runs.get(key)
+    if ref is None:
+        return
+    print(f"### Poisson's ratio (C331): {key[0]}'s {key[1]}, {key[2]}, level {key[3]}")
+    print()
+    print(
+        "| Poisson's ratio | Peak in the part (MPa) | At the contact (MPa) | Across the layers (MPa) | Deflection (mm) |"
+    )
+    print("|---|---|---|---|---|")
+    for r in sorted([ref] + others, key=lambda x: x["nu"]):
+        cells = []
+        for k in ("vmMember", "vmContact", "snMember"):
+            change_ = "" if r is ref else f" ({100 * (r[k]['value'] / ref[k]['value'] - 1):+.0f} %)"
+            cells.append(f"{r[k]['value']:.2f}{change_}")
+        du = "" if r is ref else f" ({100 * (r['uLoad'][0] / ref['uLoad'][0] - 1):+.1f} %)"
+        print(
+            f"| {r['nu']:.2f}{' (the runs)' if r is ref else ''} | "
+            + " | ".join(cells)
+            + f" | {r['uLoad'][0]:.4f}{du} |"
+        )
+    print()
 
 
 def splice(report: Path, marker: str, text: str) -> None:
