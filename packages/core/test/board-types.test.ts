@@ -18,6 +18,7 @@ import {
 } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
 import { defaultValues, defineSettings, readValues } from '../src/settings.js';
+import { skeletonParams } from '../src/skeleton.js';
 
 const engine = await loadEngine();
 const made: Manifold[] = [];
@@ -409,6 +410,47 @@ describe('the skeleton board type (D146, D147, D161)', () => {
     const wide = buildBoard(engine, skeleton, { ...defaultValues(skeleton.settings), coreMm: 3.5 });
     expect(wide.ok).toBe(false);
     if (!wide.ok) expect(wide.problem).toContain('core');
+  });
+
+  // Found by QA (Q6, 23 Oct 2026): rim 6, web 6, core 5 said "This board cannot be made: A 2.5030015808114285 mm move is
+  // larger than the outline takes". A core wider than the 3 mm edge band asked the band to narrow to more than it is,
+  // which shrank the pockets beside it instead (22 of the 23 combinations a sweep of rims, webs and cores could not
+  // build, 23 Oct 2026); the 23rd, a 1.2 mm rim with 6 mm webs, leaves pockets too small to taper.
+  it('says in plain words what to change for a core it cannot make, before any geometry for a core wider than the band', () => {
+    const values = (rimMm: number, webMm: number, coreMm: number, size = 160) => ({
+      ...defaultValues(skeleton.settings),
+      widthMm: size,
+      heightMm: size,
+      rimMm,
+      webMm,
+      coreMm,
+    });
+    for (const [rim, web, core] of [
+      [6, 6, 5],
+      [6, 6, 6],
+      [4, 4, 4],
+      [5, 5, 3.1],
+    ] as const) {
+      const built = buildBoard(engine, skeleton, values(rim, web, core));
+      expect(built.ok ? 'built' : built.problem).toBe(
+        'The core cannot be wider than the rim, the webs or the 3 mm edge band',
+      );
+    }
+    // refused before the geometry: on the page's field, and by the library's reader alone
+    const field = readValues(skeleton.settings, { rimMm: '6', webMm: '6', coreMm: '5' });
+    expect(field.ok ? [] : field.errors).toEqual([{ key: 'coreMm', message: 'Core width must be from 0.8 to 3 mm' }]);
+    expect(readValues(skeleton.settings, { rimMm: '6', webMm: '6', coreMm: '3' }).ok).toBe(true);
+    expect(() => skeletonParams({ rimMm: 6, webMm: 6, coreMm: 5 })).toThrow('3 mm edge band');
+    // the control: a core as wide as the band, the rims and webs wider, is made
+    const band = buildBoard(engine, skeleton, values(6, 6, 3, 80));
+    expect(band.ok).toBe(true);
+    if (band.ok) made.push(band.solid);
+    // and pockets too small to taper are said in plain words too, with what to change
+    const small = buildBoard(engine, skeleton, values(1.2, 6, 0.8, 80));
+    expect(small.ok ? 'built' : small.problem).toBe(
+      'The pockets these rims and webs leave are too small to narrow to a 0.8 mm core: choose a wider core, or ' +
+        'narrower webs',
+    );
   });
 
   it('builds a board of the size asked for, with less plastic than the lightened board of the same values', () => {

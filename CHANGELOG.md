@@ -39,6 +39,9 @@ All notable changes to this project are recorded here. The format follows
   wall cut, for the default bed beside the bed's error.
 - A board type chosen within a moment of a size typed is the one made and downloaded: the type before it, whose build
   was still waiting out the typing, had been made last, under the new type's tick.
+- The skeleton board says in plain words what to change for a core it cannot make, where it said "A 2.503 mm move is
+  larger than the outline takes": a core wider than the 3 mm edge band is refused on its field, the Core width now
+  0.8 to 3 mm, and pockets too small to narrow to the core ask for a wider core or narrower webs.
 
 ## [0.6.0] - 2026-10-23
 

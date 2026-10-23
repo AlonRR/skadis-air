@@ -31,3 +31,28 @@ test('the skeleton board is chosen with the boards, warns about a thin core, and
   ]);
   expect(download.suggestedFilename()).toBe('skadis-skeleton-160x160.stl');
 });
+
+// Found by QA (Q6, 23 Oct 2026): rim 6, web 6, core 5 said "This board cannot be made: A 2.5030015808114285 mm move is
+// larger than the outline takes". A core wider than the 3 mm edge band is refused on its field, in plain words.
+test('refuses a core wider than the edge band on its field, in plain words, before making anything', async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  await page.goto('./');
+  const status = page.getByTestId('board-status');
+  await expect(status).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
+  await choose(page, 'boardType', 'skeleton');
+  const advanced = page.getByTestId('advanced');
+  await advanced.locator('summary').click();
+  await advanced.locator('input[name="rimMm"]').fill('6');
+  await advanced.locator('input[name="webMm"]').fill('6');
+  for (const core of ['5', '6', '3.1']) {
+    await advanced.locator('input[name="coreMm"]').fill(core);
+    await expect(page.getByTestId('error-coreMm')).toHaveText('Core width must be from 0.8 to 3 mm');
+    await expect(status).toHaveAttribute('data-state', 'invalid');
+  }
+  // the control: a core as wide as the band is made
+  await advanced.locator('input[name="coreMm"]').fill('3');
+  await expect(status).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
+  await expect(status).toHaveAttribute('data-file-name', 'skadis-skeleton-160x160-rim-6mm-web-6mm-core-3mm.stl');
+});

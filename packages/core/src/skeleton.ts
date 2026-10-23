@@ -17,6 +17,7 @@ import { grownRing } from './chamfer.js';
 import type { Engine } from './engine.js';
 import {
   bothCuts,
+  EDGE_BAND_MM,
   framedBoard,
   LATTICE_DEFAULTS,
   latticeMembers,
@@ -42,17 +43,24 @@ export const MIN_CORE_MM = 0.8;
 /** Below this a core is made, with a warning (D147). */
 export const WARN_CORE_MM = 1.2;
 
+/** The widest core made: the edge band's width (D144), which every member narrows to the core from (D147). A core
+ * wider than the band asked the band to narrow to more than it is, which shrank the pockets beside it instead, and
+ * failed as an offset larger than the outline (Q6). */
+export const MAX_CORE_MM = EDGE_BAND_MM;
+
 /** The skeleton asked for, with the starting values filled in, refused when it cannot be made. */
 export function skeletonParams(given: Partial<SkeletonParams>): SkeletonParams {
   const { coreMm, ...lattice } = given;
   const { rimMm, webMm } = latticeParams(lattice);
   const p: SkeletonParams = { rimMm, webMm, coreMm: coreMm ?? SKELETON_DEFAULTS.coreMm };
   if (!(p.coreMm >= MIN_CORE_MM)) throw new RangeError(`The core must be at least ${MIN_CORE_MM} mm wide`);
-  if (p.coreMm > p.rimMm || p.coreMm > p.webMm) {
-    throw new RangeError('The core cannot be wider than the rim or the webs');
+  if (p.coreMm > p.rimMm || p.coreMm > p.webMm || p.coreMm > MAX_CORE_MM) {
+    throw new RangeError(`The core cannot be wider than the rim, the webs or the ${MAX_CORE_MM} mm edge band`);
   }
   return p;
 }
+
+const nice = (n: number) => String(Math.round(n * 100) / 100);
 
 /** What a pocket's edge runs along: a member, which it widens into through the board, or a blend between two. */
 type Along = 'web' | 'rim' | 'band' | 'pad' | null;
@@ -180,9 +188,12 @@ export function skeletonMembers(
   shape.delete();
   const f = Math.min(FLANGE_MM, t / 2);
   const middle = t / 2 - f; // how far a taper reaches by the middle
-  const lofts = pockets.map((pocket) => {
+  const pocketRings = pockets.map((pocket) => {
     const rings = pocket.toPolygons();
     pocket.delete();
+    return rings;
+  });
+  const loftOf = (rings: Vec2[][]): Manifold => {
     const most = widening(rings, alongOf(rings, board, members, pads), p, members);
     // where the members bend: the flange, each kind's core, the middle; a blend, between two kinds, runs straight
     // from one of these depths to the next, less than 45 degrees, so the pocket keeps a few rings, not one a blend
@@ -215,7 +226,20 @@ export function skeletonMembers(
       [t + 1.5, rings],
     ];
     return loftedSolid(engine, levels);
-  });
+  };
+  const lofts: Manifold[] = [];
+  try {
+    for (const rings of pocketRings) lofts.push(loftOf(rings));
+  } catch (error) {
+    for (const m of lofts) m.delete();
+    if (!(error instanceof RangeError)) throw error;
+    // a pocket that turns inside out as it widens into its members: too small for the taper, said in plain words, not
+    // as the offset that failed (Q6; a 1.2 mm rim with 6 mm webs on an 80 mm board, 23 Oct 2026)
+    throw new RangeError(
+      `The pockets these rims and webs leave are too small to narrow to a ${nice(p.coreMm)} mm core: choose a wider ` +
+        'core, or narrower webs',
+    );
+  }
   const slab = Manifold.cube([e.x1 - e.x0 + 2.4, e.y1 - e.y0 + 2.4, t + 2.4]).translate([e.x0 - 1.2, e.y0 - 1.2, -1.2]);
   const cut = Manifold.union(lofts);
   const kept = slab.subtract(cut);

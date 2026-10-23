@@ -2,7 +2,14 @@
 // member narrows to under Advanced after the web, so the two boards cannot drift apart.
 import { MOUNTING_SETTINGS, mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
 import { defineSettings } from '../settings.js';
-import { makeSkeletonBoard, MIN_CORE_MM, SKELETON_DEFAULTS, skeletonParams, WARN_CORE_MM } from '../skeleton.js';
+import {
+  makeSkeletonBoard,
+  MAX_CORE_MM,
+  MIN_CORE_MM,
+  SKELETON_DEFAULTS,
+  skeletonParams,
+  WARN_CORE_MM,
+} from '../skeleton.js';
 import { defineBoardType } from './define.js';
 import { LATTICE_SETTINGS, latticeLabel, mm } from './lightened.js';
 import { BOARD_SETTINGS, boardLabel, boardParamsOf, cornerScrewsOf } from './solid.js';
@@ -22,9 +29,11 @@ export const SKELETON = defineBoardType({
       unit: 'mm',
       default: SKELETON_DEFAULTS.coreMm,
       min: MIN_CORE_MM,
-      max: 6,
+      // no wider than the edge band, which every member narrows to the core from: refused on the field, not left to
+      // fail in the geometry (Q6)
+      max: MAX_CORE_MM,
       step: 0.1,
-      warnOutside: [WARN_CORE_MM, 6], // D147: made, but thin
+      warnOutside: [WARN_CORE_MM, MAX_CORE_MM], // D147: made, but thin
       help: 'How thin the rims and webs get through the middle of the board, narrowing at 45 degrees from the faces.',
       advanced: true,
     },
