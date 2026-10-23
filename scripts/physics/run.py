@@ -130,6 +130,32 @@ def save_field(version, part, case_id, level, model, vm_of, layer, dfix, dload, 
     )
 
 
+def save_surface(version, part, case_id, level, model, vm, bf, fixed_mask, loaded) -> None:
+    """The part's skin with its stress, for the figures (figures.py): the boundary triangles, each surface point's von
+    Mises stress averaged over every element corner there and the largest of them, and which triangles are held and
+    which loaded. The largest at a corner is what the tables' peak reads; the average is what a figure colours."""
+    tri = model.mesh.facets[:, bf]  # (3, n) vertex ids
+    corners = model.mesh.t.ravel()  # corner-major (4, nel), as vm.T is
+    values = vm.T.ravel()
+    n = model.mesh.p.shape[1]
+    count = np.bincount(corners, minlength=n)
+    mean = np.bincount(corners, weights=values, minlength=n) / np.maximum(count, 1)
+    top = np.full(n, -np.inf)
+    np.maximum.at(top, corners, values)
+    used, local = np.unique(tri, return_inverse=True)
+    out = FIELDS / version / part
+    out.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(
+        out / f"{case_id}-L{level}-surface.npz",
+        xyz=model.mesh.p[:, used].T.astype(np.float32),
+        tri=local.reshape(3, -1).T.astype(np.int32),
+        vmMean=mean[used].astype(np.float32),
+        vmMax=top[used].astype(np.float32),
+        held=fixed_mask,
+        loaded=loaded,
+    )
+
+
 def mesh_with_retries(stl: str, size: float, refine: list, volume: float):
     """gmsh's remeshed surfaces can cross in a tight spot ("a segment and a facet intersect") or fail to
     parametrise, and a 40 degree classification can misread a 45 degree taper, bulging the mesh. Each retry moves every
@@ -269,6 +295,7 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
     save_field(
         version, part, case_id, level, model, vm_of=s, layer=meta.get("layerNormal", [0, 0, 1]), dfix=dist, dload=dload
     )
+    save_surface(version, part, case_id, level, model, vm, bf, fixed_mask, loaded)
     timer.mark("stress")
 
     def peak(values: np.ndarray, sign: float = 1.0, beyond: float = EXCLUDE_MM, region: str = "all") -> dict:
@@ -357,6 +384,27 @@ def done_keys() -> set:
     return keys
 
 
+def estimate(version: str, part: str, case_id: str, level: int) -> float | None:
+    """A run's likely length in seconds, from its level 1 twin's: level 2 has about 1.8 times the elements; past what
+    PARDISO factors (a solid board's past 2.2 million unknowns) conjugate gradients take about 0.26 ms an unknown (the
+    solid 160 mm board's level 2, 2.5 million unknowns in 478 s)."""
+    one = None
+    if RESULTS.exists():
+        for line in RESULTS.read_text().splitlines():
+            if line.strip():
+                r = json.loads(line)
+                if (r["version"], r["part"], r["case"], r["level"]) == (version, part, case_id, 1):
+                    one = r
+    if one is None:
+        return None
+    took = sum(one["times"].values()) + 20  # and the process's start
+    if level == 1:
+        return took
+    dofs = 1.75 * one["dofs"]
+    limit = SOLID_DIRECT_MAX if part.startswith("solid") else 3_100_000
+    return 2.6e-4 * dofs + 0.5 * took if dofs > limit else 2.5 * took
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--one", nargs=4, metavar=("VERSION", "PART", "CASE", "LEVEL"))
@@ -365,6 +413,7 @@ def main() -> int:
     ap.add_argument("--levels", default="1,2")
     ap.add_argument("--retry-failed", action="store_true")
     ap.add_argument("--budget", type=float, help="seconds: start no run that would likely end past them")
+    ap.add_argument("--order", help="name pieces, comma-separated: parts containing the first run first, and so on")
     args = ap.parse_args()
     if args.one:
         v, p, c, lv = args.one
@@ -390,14 +439,20 @@ def main() -> int:
                         continue
                     if (v, part, case["id"], lv) not in done:
                         todo.append((v, part, case["id"], lv))
+    if args.order:
+        pieces = args.order.split(",")
+        todo.sort(key=lambda item: next((i for i, k in enumerate(pieces) if k in item[1]), len(pieces)))
     print(f"{len(todo)} runs to do", flush=True)
     failed = 0
-    started, longest = time.time(), 0.0
+    started, longest, left = time.time(), 0.0, 0
     for i, (v, part, case, lv) in enumerate(todo, 1):
-        # a session's watch on a batch lasts 30 minutes: stop before a run that would likely outlast the budget
-        if args.budget and time.time() - started + 1.5 * longest > args.budget:
-            print(f"budget reached after {i - 1} runs; {len(todo) - i + 1} left for the next batch", flush=True)
-            return 0
+        # a session's watch on a batch lasts 30 minutes: start no run that would likely outlast the budget, judged by
+        # its level 1 twin where there is one, and take the next that fits
+        guess = estimate(v, part, case, lv)
+        if args.budget and time.time() - started + (guess if guess else 1.5 * longest) > args.budget:
+            left += 1
+            print(f"[{i}/{len(todo)}] left for the next batch: {v} {part} {case} L{lv} (about {guess or 0:.0f} s)")
+            continue
         t0 = time.time()
         proc = subprocess.run(
             [sys.executable, __file__, "--one", v, part, case, str(lv)], capture_output=True, text=True
@@ -434,7 +489,7 @@ def main() -> int:
             f"{time.time() - t0:.0f} s",
             flush=True,
         )
-    print(f"{len(todo)} runs, {len(todo) - failed} done, {failed} failed", flush=True)
+    print(f"{len(todo)} runs, {len(todo) - failed - left} done, {failed} failed, {left} left", flush=True)
     return 1 if failed else 0
 
 

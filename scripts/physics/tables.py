@@ -70,7 +70,9 @@ def pct(x: float | None) -> str:
     return "-" if x is None else f"{100 * x:.0f} %"
 
 
-def at_same_place(version: str, part: str, case_id: str, level: int, at: list, member: bool) -> float | None:
+def at_same_place(
+    version: str, part: str, case_id: str, level: int, at: list, member: bool, wall: bool = False
+) -> float | None:
     """A level's highest stress within 2 mm of `at`, from its saved stresses: the same place's value, so a peak whose
     twin across the slot takes the lead at the other level is not read as a moved peak."""
     import numpy as np
@@ -81,6 +83,9 @@ def at_same_place(version: str, part: str, case_id: str, level: int, at: list, m
     d = np.load(path)
     near = np.linalg.norm(d["xyz"] - np.array(at, dtype=np.float32), axis=1) <= 2.0
     region = (d["dfix"] > 1.0) & ((d["dload"] > 3.0) if member else (d["dload"] <= 3.0))
+    if wall:
+        clip, panels = wall_regions(d["xyz"])
+        region &= clip | panels
     m = near & region
     return float(d["vm"][m].max()) if m.any() else None
 
@@ -95,13 +100,19 @@ def row(runs: dict, version: str, part: str, case_id: str) -> dict | None:
     def deflection(r: dict) -> float:
         return r["uLoad"][0] if "hook" in case_id else r["umax"]["value"]
 
+    # a wall's own peaks are its panels' and its clip's, read apart from the bonded pegs' edges (C337, C341)
+    wall = "-wall-" in part
+    member = {lv: (wall_peaks(version, part, case_id, lv) if wall else r) for lv, r in ((1, one), (2, two)) if r}
+    peak = member[best["level"]]
     out = {
         "best": best,
         "level": best["level"],
-        "vm": best["vmMember"]["value"],
-        "vmAt": where(version, part, case_id, best["vmMember"]["at"]),
+        "vm": peak["vmMember"]["value"],
+        "vmAt": where(version, part, case_id, peak["vmMember"]["at"]),
+        "vmXyz": peak["vmMember"]["at"],
         "contact": best["vmContact"]["value"],
-        "sn": best["snMember"]["value"],
+        "contactXyz": best["vmContact"]["at"],
+        "sn": peak["snMember"]["value"],
         "u": deflection(best),
         "dvm": None,
         "dcontact": None,
@@ -113,9 +124,10 @@ def row(runs: dict, version: str, part: str, case_id: str) -> dict | None:
         out["dcontact"] = change(one["vmContact"]["value"], two["vmContact"]["value"])
         # the peak's change at its own place (C338): level 2's value within 2 mm of level 1's peak; a peak with no
         # level 2 value near it has moved
-        same = at_same_place(version, part, case_id, 2, one["vmMember"]["at"], member=True)
-        out["moved"] = same is None or same < 0.8 * two["vmMember"]["value"]
-        out["dvm"] = change(one["vmMember"]["value"], two["vmMember"]["value"] if out["moved"] else same)
+        at1, v2 = member[1]["vmMember"]["at"], member[2]["vmMember"]["value"]
+        same = at_same_place(version, part, case_id, 2, at1, member=True, wall=wall)
+        out["moved"] = same is None or same < 0.8 * v2
+        out["dvm"] = change(member[1]["vmMember"]["value"], v2 if out["moved"] else same)
     out["converged"] = None if out["dvm"] is None else out["dvm"] < STRESS_TOL and out["du"] < DEFLECTION_TOL
     return out
 
@@ -154,13 +166,126 @@ def print_table(runs: dict, title: str, items: list) -> None:
     print()
 
 
+def holds(r: dict, m: dict, contact: bool = False) -> tuple[float, str]:
+    """The load in N at which the model's peak reaches the material's strength (Q329), and what reaches it first: y
+    the part's peak against the yield along the layers, l its stress across the layers against their adhesion, and
+    with `contact`, c the hook's or the load's contact against the yield, the model's even pressure (C339)."""
+    options = [(W * m["strength"] / r["vm"], "y")]
+    if r["sn"] > 0:
+        options.append((W * m["across"] / r["sn"], "l"))
+    if contact and r["contact"]:
+        options.append((W * m["strength"] / r["contact"], "c"))
+    return min(options)
+
+
 def capacity(r: dict, m: dict) -> str:
-    """What the part holds before the model's peak reaches the material's strength, in kg: the lesser of its peak
-    against the yield along the layers and its stress across the layers against their adhesion, with which governs
-    (y yield, l the layers)."""
-    by_yield = W * m["strength"] / r["vm"] / G
-    by_layers = W * m["across"] / r["sn"] / G if r["sn"] > 0 else math.inf
-    return f"{by_yield:.1f} y" if by_yield <= by_layers else f"{by_layers:.1f} l"
+    """What the part holds before the model's peak reaches the material's strength, in kg, with which governs."""
+    newtons, tag = holds(r, m)
+    return f"{newtons / G:.1f} {tag}"
+
+
+def wall_peaks(version: str, part: str, case_id: str, level: int) -> dict:
+    """A wall's peaks in its panels and its clip (wall_regions), from the run's saved stresses, shaped as a run's own
+    peaks are: the bonded pegs' edges, singular as a clamp's are, left out (C337)."""
+    import numpy as np
+
+    d = np.load(FIELDS / version / part / f"{case_id}-L{level}.npz")
+    clip, panels = wall_regions(d["xyz"])
+    ok = (d["dfix"] > 1.0) & (d["dload"] > 3.0) & (clip | panels)
+    out = {}
+    for key, values in (("vmMember", d["vm"]), ("snMember", d["sn"])):
+        k = int(np.argmax(np.where(ok, values, -np.inf)))
+        out[key] = {"value": float(values[k]), "at": [round(float(c), 2) for c in d["xyz"][k]]}
+    return out
+
+
+LOADS = {
+    "hook": "one hook",
+    "spread-screws": "spread, on corner screws",
+    "spread-standoffs": "spread, on standoffs",
+    "spread-keyholes": "spread, on keyholes, hung (the brief's)",
+    "spread-keyholes-standing": "spread, on keyholes, standing on its standoffs (the design's)",
+    "shear": "10 N down",
+    "wall-seam-hook": "one hook at the seam, each panel on its screws",
+    "wall-spread": "spread, each panel on its screws",
+    "wall-seam-hook-outer-screws": "one hook at the seam, the wall's four outer screws",
+}
+
+
+def level_note(r: dict) -> str:
+    """The mesh level a row is from, and how far its part's peak, its contact's and its deflection moved to it."""
+    if r["dvm"] is None:
+        return "1 only"
+    moved = " (the part's peak moved)" if r["moved"] else ""
+    verdict = "converged" if r["converged"] else "not converged"
+    return f"2, {verdict}{moved}: {pct(r['dvm'])} / {pct(r['dcontact'])} / {pct(r['du'])}"
+
+
+def print_headline(runs: dict, items: list) -> None:
+    """What each part holds, per material, in N and kg (Q329): in the part, the lesser of its peak against the yield
+    (y) and its stress across the layers against their adhesion (l); and apart, at the load's contact against the yield,
+    the model's even pressure (C339). Per hook for one hook, per board for the spread load, per connector for a
+    connector. A row of two hook cases is the worse of them in the part, named."""
+    print("### What each part holds (Q329)")
+    print()
+    print(
+        "| Part | Version | Load | Case | In the part, PLA | PETG | ASA | Where | At the contact, PLA / PETG / ASA "
+        "| Mesh level: part / contact / deflection |"
+    )
+    print("|---|---|---|---|---|---|---|---|---|---|")
+    pla = MATERIALS["PLA"]
+    for label, version, part, cases in items:
+        rows = [(c, row(runs, version, part, c)) for c in cases]
+        rows = [(c, r) for c, r in rows if r is not None]
+        load = LOADS["hook" if cases[0].startswith("hook") else cases[0]]
+        if not rows:
+            print(f"| {label} | {version} | {load} | not run | | | | | | |")
+            continue
+        case_id, r = min(rows, key=lambda cr: holds(cr[1], pla)[0])
+        cells = []
+        for m in MATERIALS.values():
+            newtons, tag = holds(r, m)
+            cells.append(f"{newtons:.0f} N, {newtons / G:.1f} kg ({tag})")
+        tag = holds(r, pla)[1]
+        spot = f"{'yield' if tag == 'y' else 'across the layers'}: {r['vmAt']}"
+        if r["contact"]:
+            at_contact = [W * m["strength"] / r["contact"] for m in MATERIALS.values()]
+            contact = " / ".join(f"{n:.0f}" for n in at_contact) + " N (" + " / ".join(
+                f"{n / G:.1f}" for n in at_contact
+            ) + f" kg), {r['contact']:.2f} MPa"
+        else:
+            contact = "-"
+        print(
+            f"| {label} | {version} | {load} | {case_id} | " + " | ".join(cells) + f" | {spot} | {contact} "
+            f"| {level_note(r)} |"
+        )
+    print()
+
+
+def headline_items() -> list:
+    boards = ["solid", "lightened", "skeleton"]
+    items = []
+    for b in boards:
+        for v in VERSIONS:
+            if v == "v0.4.2" and b != "skeleton":
+                continue
+            items.append((b, v, f"{b}-160", ["hook-mid", "hook-edge"]))
+    for b in boards:
+        for v in VERSIONS:
+            if v == "v0.4.2" and b != "skeleton":
+                continue
+            for m in ("screws", "standoffs", "keyholes"):
+                items.append((b, v, f"{b}-80-{m}", [f"spread-{m}"]))
+            items.append((b, v, f"{b}-80-keyholes", ["spread-keyholes-standing"]))
+    items += [
+        ("standoff, 1 board", "today", "standoff-1", ["shear"]),
+        ("standoff, 4 boards", "today", "standoff-4", ["shear"]),
+        ("slot clip, 2 boards", "today", "slot-clip-2", ["shear"]),
+    ]
+    for b in boards:
+        for c in ("wall-seam-hook", "wall-spread", "wall-seam-hook-outer-screws"):
+            items.append((f"{b} wall", "today", f"{b}-wall-2", [c]))
+    return items
 
 
 FIELDS = ROOT / ".check" / "physics" / "fields"
@@ -214,6 +339,7 @@ def print_walls(runs: dict, items: list) -> None:
 
 def main() -> None:
     runs = load()
+    print_headline(runs, headline_items())
     boards = ["solid", "lightened", "skeleton"]
     hook_items = []
     spread_items = []
