@@ -287,7 +287,12 @@ clip (b4).
   Then say how the lips printed, whether the heads went in and held behind them, whether the board sat snug and
   straight, whether the hooks sat straight, and what it weighs. Before it was printed again the owner found the keyhole
   standoff wider than the lightened board's frame (22 Oct 2026), built that day as D306: print the board again,
-  `.check/test-print/skadis-trial-keyhole.stl` alone or on the trial plate.
+  `.check/test-print/skadis-trial-keyhole.stl` alone or on the trial plate. Printed again in PETG (the owner, 23 Oct
+  2026, with two photos): "there was some sag in the keyhole and at the back where the hook cutout is. We need to fix
+  the printability of the keyhole and hook cutout." Sliced, the lips over the head's channel print 92 mm of overhang
+  perimeter at z 18.8 and the hook rooms' ceilings 71 mm at z 13.2, where each room runs out of its standoff (2
+  keyholes, 4 standoffs; the STL check's profile, 22 Oct). A printability pass is trying fixes on a branch,
+  `feat/keyhole-printability`; the hanging is still to be done.
 
 ## Inputs from outside this repository
 
