@@ -399,3 +399,15 @@ class Timer:
         now = time.perf_counter()
         self.marks[name] = round(now - self.t0, 2)
         self.t0 = now
+
+
+if __name__ == "__main__":
+    # One mesh try in a process of its own (run.py's mesh_with_retries), so that a try gmsh never finishes can be
+    # stopped: one sat 13 minutes in a surface it could not mesh, on 23 Oct 2026 (C338).
+    import json
+    import sys
+
+    spec = json.loads(sys.argv[1])
+    balls = [Refine(tuple(r["centre"]), r["radius"], r["size"], r["grow"]) for r in spec["refine"]]
+    points, tets = mesh_stl(spec["stl"], spec["size"], balls, angle_deg=spec["angle"])
+    np.savez(spec["out"], points=points, tets=tets)

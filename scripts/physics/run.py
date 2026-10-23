@@ -36,6 +36,8 @@ FIELDS = ROOT / ".check" / "physics" / ("fields" if NU == 0.35 else f"fields-nu{
 # the solid board factors with more fill; PHYSICS_SOLID_DIRECT raises its limit for a run watched for memory
 SOLID_DIRECT_MAX = int(os.environ.get("PHYSICS_SOLID_DIRECT", "2200000"))
 VOLUME_TOL = 0.01  # a mesh this far off the part's volume is refused (the brief's "about 1 %")
+# a mesh try stopped past this, s: level 1's meshes took 3 to 83 s, and one try sat 13 minutes in a surface (C338)
+MESH_CAP = float(os.environ.get("PHYSICS_MESH_CAP", "300"))
 EXCLUDE_MM = 1.0  # stresses within this of a fixed surface are left out of the peak: a clamp's edge is singular (C338)
 
 # Mesh levels (C338): (global size, size near the loads and supports), mm. Level 2, every size 0.85 and 0.8 times
@@ -191,13 +193,32 @@ def mesh_with_retries(stl: str, size: float, refine: list, volume: float):
             attempts += [(40, 1.0, refined), (30, 1.0, refined)]
     attempts += [(a, sc, stl) for a, sc in ((40, 0.91), (30, 1.0), (30, 0.97), (35, 1.0), (45, 1.0), (50, 1.0))]
     errors, best = [], None
+    out = ROOT / ".check" / "physics" / "scratch" / f"mesh-{os.getpid()}.npz"
+    out.parent.mkdir(parents=True, exist_ok=True)
     for angle, scale, path in attempts:
-        try:
-            rs = [fe.Refine(r.centre, r.radius, r.size * scale, r.grow) for r in refine]
-            points, tets = fe.mesh_stl(path, size * scale, rs, angle_deg=angle)
-        except Exception as error:  # gmsh raises a bare Exception
-            errors.append(f"{angle} deg x{scale}{' refined' if path != stl else ''}: {str(error).splitlines()[0]}")
+        print(f"mesh try: {angle} deg x{scale} {Path(path).name}", file=sys.stderr, flush=True)
+        name = f"{angle} deg x{scale}{' refined' if path != stl else ''}"
+        # each try in a process of its own, stopped past MESH_CAP: gmsh can sit in a surface it cannot mesh (C338)
+        spec = {
+            "stl": path,
+            "size": size * scale,
+            "angle": angle,
+            "out": str(out),
+            "refine": [
+                {"centre": r.centre, "radius": r.radius, "size": r.size * scale, "grow": r.grow} for r in refine
+            ],
+        }
+        proc = run_capped([sys.executable, str(Path(__file__).with_name("fe.py")), json.dumps(spec)], MESH_CAP)
+        if proc is None:
+            errors.append(f"{name}: no mesh in {MESH_CAP:.0f} s, stopped")
             continue
+        if proc.returncode != 0 or not out.exists():
+            last = [x for x in proc.stderr.strip().splitlines() if x.strip()][-1:] or ["?"]
+            errors.append(f"{name}: {last[0]}")
+            continue
+        with np.load(out) as d:
+            points, tets = d["points"], d["tets"]
+        out.unlink()
         err = abs(fe.Model.of(points, tets).volume() / volume - 1)
         attempt = [angle, scale, Path(path).stem.rsplit("-", 1)[-1] if path != stl else "plain"]
         if err <= VOLUME_TOL:
@@ -403,6 +424,23 @@ def done_keys() -> set:
     return keys
 
 
+def run_capped(command: list, cap: float | None) -> subprocess.CompletedProcess | None:
+    """Run a case's process, killed with every process under it past `cap` seconds (None: no cap). On Windows a
+    venv's python.exe starts the interpreter as a child of its own, which a plain kill leaves running: one did, past its
+    window, on 23 Oct 2026. Returns None for a run that was killed."""
+    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    try:
+        out, err = proc.communicate(timeout=cap)
+    except subprocess.TimeoutExpired:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True)
+        else:
+            proc.kill()
+        proc.communicate()
+        return None
+    return subprocess.CompletedProcess(command, proc.returncode, out, err)
+
+
 def resave(version: str, part: str, case_id: str, level: int) -> int:
     """Run a reported case again, in a process of its own as the batch does, so that it saves its surface (runs
     reported before 23 Oct 2026, 14:00 saved none). A run is deterministic here (the same mesh and peaks to 1e-11 on
@@ -544,9 +582,15 @@ def main() -> int:
             print(f"[{i}/{len(todo)}] left for the next batch: {v} {part} {case} L{lv} (about {guess or 0:.0f} s)")
             continue
         t0 = time.time()
-        proc = subprocess.run(
-            [sys.executable, __file__, "--one", v, part, case, str(lv)], capture_output=True, text=True
-        )
+        cap = args.budget - (time.time() - started) - 15 if args.budget else None
+        proc = run_capped([sys.executable, __file__, "--one", v, part, case, str(lv)], cap)
+        if proc is None:  # outlasted what was left of the window: recorded, so the next window does not repeat it
+            failed += 1
+            with FAILURES.open("a") as fh:
+                why = f"outlasted the window's {cap:.0f} s left; run it alone with --retry-failed"
+                fh.write(json.dumps({"version": v, "part": part, "case": case, "level": lv, "error": why}) + "\n")
+            print(f"[{i}/{len(todo)}] FAILED {v} {part} {case} L{lv}: {why}", flush=True)
+            continue
         if proc.returncode != 0:
             failed += 1
             with FAILURES.open("a") as fh:

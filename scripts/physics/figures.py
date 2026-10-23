@@ -48,6 +48,7 @@ CASES = {
 }
 PER = {"hook": "per hook", "shear": "per connector", "wall": "per hook"}
 
+WALL_CASES = ["wall-seam-hook", "wall-spread", "wall-seam-hook-outer-screws"]
 # (id, what the part is, version, part, the cases of which the worse in the part is drawn, how the part is held)
 FIGURES = [
     ("solid-today", "Solid board", "today", "solid-160", ["hook-mid", "hook-edge"], "on its four corner screws"),
@@ -94,15 +95,8 @@ FIGURES = [
     ),
     ("standoff-1", "Standoff for one board, 15 mm", "today", "standoff-1", ["shear"], "its wall face held"),
     ("slot-clip-2", "Slot clip for two boards", "today", "slot-clip-2", ["shear"], "one peg held in its slot"),
-    (
-        "lightened-wall",
-        "Two lightened panels joined by a slot clip",
-        "today",
-        "lightened-wall-2",
-        ["wall-seam-hook"],
-        "",
-    ),
-    ("solid-wall", "Two solid panels joined by a slot clip", "today", "solid-wall-2", ["wall-seam-hook"], ""),
+    ("lightened-wall", "Two lightened panels joined by a slot clip", "today", "lightened-wall-2", WALL_CASES, ""),
+    ("solid-wall", "Two solid panels joined by a slot clip", "today", "solid-wall-2", WALL_CASES, ""),
 ]
 
 
@@ -220,7 +214,15 @@ def write_scene(spec: tuple, runs: dict) -> str | None:
     # colours: the averaged stress on one scale from 0 to the part's peak; held faces and 1 mm round them grey
     held_points = xyz[np.unique(tri[d["held"]])]
     dfix = cKDTree(held_points).query(xyz)[0] if len(held_points) else np.full(len(xyz), np.inf)
-    rgb = (colormaps["viridis"](np.clip(d["vmMean"] / peak, 0, 1))[:, :3] * 255).round().astype(np.uint8)
+    loaded_points = xyz[np.unique(tri[d["loaded"]])]
+    dload = cKDTree(loaded_points).query(xyz)[0] if len(loaded_points) else np.full(len(xyz), np.inf)
+    # a spike, a peak past twice the part's 99.9th percentile (a sharp inner corner, singular): the scale stops at that
+    # percentile, so the rest of the part still shows, and says the peak lies past it
+    own = d["vmMean"][(dfix > EXCLUDE_MM) & (dload > 3.0)]
+    p999 = float(np.percentile(own, 99.9)) if len(own) else peak
+    top = p999 if peak > 2 * p999 else peak
+    spike = top < peak
+    rgb = (colormaps["viridis"](np.clip(d["vmMean"] / top, 0, 1))[:, :3] * 255).round().astype(np.uint8)
     rgb[dfix <= EXCLUDE_MM] = GREY
     # the close-up is on the spot that sets the part's capacity in PLA: its peak, or its stress across the layers
     governs = holds(r, pla)[1]
@@ -272,7 +274,7 @@ def write_scene(spec: tuple, runs: dict) -> str | None:
             for k, m in MATERIALS.items()
         )
         contact_line = f"At the load's contact, the model's even pressure (C339), to the yield: {at_contact}"
-    ticks = nice_ticks(peak)
+    ticks = nice_ticks(top)
     held = f", {held_by}" if held_by else ""
     scene = {
         "id": fid,
@@ -294,7 +296,8 @@ def write_scene(spec: tuple, runs: dict) -> str | None:
             + (
                 "Mesh level 1 only."
                 if r["dvm"] is None
-                else f"Mesh level {level_note(r)} (from level 1: the part's peak / the contact's / the deflection)."
+                else f"Mesh level {level_note(r)}"
+                + ("." if r["from"] == 2 else " (from level 1: the part's peak / the contact's / the deflection).")
             ),
         ],
         "vertices": int(len(xyz)),
@@ -304,9 +307,13 @@ def write_scene(spec: tuple, runs: dict) -> str | None:
         "markers": markers,
         "scale": {
             "stops": [mpl_hex(colormaps["viridis"](i / 10)) for i in range(11)],
-            "top": peak,
-            "ticks": [[t / peak, f"{t:g}"] for t in ticks if t <= peak * 1.0001],
-            "end": f"{peak:.2f} and over",
+            "top": top,
+            "ticks": [[t / top, f"{t:g}"] for t in ticks if t <= top * 1.0001],
+            "end": (
+                f"{top:.2f} and over: the part's peak, {peak:.2f}, is a spike past the scale"
+                if spike
+                else f"{peak:.2f} and over"
+            ),
         },
         "grey": "held, and 1 mm round it: a clamp's edge, where no peak is read",
         "holds": [

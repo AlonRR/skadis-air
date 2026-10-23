@@ -162,6 +162,7 @@
           add('circle', { cx: x, cy: y, r: peak ? 9 : 7, fill: 'none', stroke: ring,
             'stroke-width': 2.5, 'stroke-dasharray': m.kind === 'contact' ? '4 3' : '' });
           const text = add('text', { x: tx + (left ? -6 : 6), y: ty + 5, 'text-anchor': left ? 'end' : 'start' });
+          if (m.kind !== 'contact') text.style.fill = ring; // a label in its ring's colour, so the two pair up
           const inside = m.text.includes('(inside');
           text.textContent = !hidden || inside ? m.text : i === 0 ? `${m.text} (out of sight here: the close-up)` : `${m.text} (out of sight)`;
           // the label on the side it fits, or pulled inside its view where neither side fits

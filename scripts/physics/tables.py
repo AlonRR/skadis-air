@@ -163,6 +163,11 @@ def row(runs: dict, version: str, part: str, case_id: str) -> dict | None:
         out["from"] = lo
         out["du"] = change(deflection(first), deflection(last))
         out["dcontact"] = change(first["vmContact"]["value"], last["vmContact"]["value"])
+        if three and one and two:
+            # level 3's ball refines round the part's peaks alone: it cannot test the deflection or the contact, so
+            # their change from level 1 to level 2 still stands, the larger of the two kept
+            out["du"] = max(out["du"], change(deflection(one), deflection(two)))
+            out["dcontact"] = max(out["dcontact"], change(one["vmContact"]["value"], two["vmContact"]["value"]))
         # the peak's change at its own place (C338): the finer level's value within 2 mm of the coarser's peak; a
         # peak with no value near it there has moved
         at1, v2 = member[lo]["vmMember"]["at"], member[hi]["vmMember"]["value"]
@@ -196,7 +201,9 @@ def print_table(runs: dict, title: str, items: list) -> None:
         else:
             conv = f"{pct(r['dvm'])} / {pct(r['dcontact'])} / {pct(r['du'])}"
             if r["from"] == 2:
-                conv += " (level 2 to 3)"
+                conv += (
+                    " (the part's peak level 2 to 3; the contact and the deflection the larger of 1 to 2 and 2 to 3)"
+                )
             if r["moved"]:
                 conv += " (peak moved)"
             elif r["converged"] is False:
@@ -261,7 +268,7 @@ def level_note(r: dict) -> str:
         return "1 only"
     moved = " (the part's peak moved)" if r["moved"] else ""
     verdict = "converged" if r["converged"] else "not converged"
-    since = " (from level 2)" if r["from"] == 2 else ""
+    since = " (the part's peak from level 2; the contact and the deflection from level 1)" if r["from"] == 2 else ""
     return f"{r['level']}, {verdict}{moved}{since}: {pct(r['dvm'])} / {pct(r['dcontact'])} / {pct(r['du'])}"
 
 

@@ -33,6 +33,34 @@ lightened and skeleton boards of today and v0.2.1 but v0.2.1's skeleton, v0.4.2'
 committed, as each is drawn again when its last run lands. Next: the runs above; the figures of v0.2.1's skeleton, the
 slot clip and the walls; the findings and the owner's questions.
 
+## Findings
+
+What each part holds is the load at which the model's peak reaches the material's strength (Q329): a ranking of the
+designs and a map of their weak spots, not a breaking load (the box above). PLA's figures below; PETG's are within
+about 10 % of PLA's, and ASA's are the lowest wherever the layers govern, as its interlayer adhesion is 11 MPa against
+17 and 18. Every capacity set across the layers (marked l in the tables) also carries Poisson's ratio, which no sheet
+gives: at 0.30 and 0.40 the stress across the layers moved -19 % and +30 % where the part's own peak moved 1 %
+([below](#poissons-ratio-c331-v042s-skeleton-hook-edge-hook-edge-level-1)).
+
+**One hook** (per hook, level 2 unless said):
+
+- **The solid board** holds the most by far: 469 N (47.8 kg) in the part today, 513 N in v0.2.1, both set across the
+  layers 1 mm from a corner screw's countersink, where the fully held countersink sets the value (C345: 2 mm off it the
+  stress is 0.22 against 0.36 MPa, so the board itself holds more). The hook's contact comes first, at 292 N. Old and
+  new are one board here, within 9 %.
+- **The lightened board** holds 119 N (12.2 kg) today against 72 N (7.4 kg) in v0.2.1, 65 % more: v0.2.1's weak spot
+  is across the layers 10 mm from the edge hook's slot, today's the yield where a web meets the left rim, 26 mm from
+  it. The hook's contact, 107 N on both, now comes first on today's.
+- **The skeleton board** went from 4 N (0.4 kg) in v0.2.1, at a sharp pocket corner by the slot whose stress rose with
+  each mesh (54 to 64 MPa, singular, so an upper bound), to 58 N (5.9 kg) in v0.4.2, its corners rounded, and back to
+  29 N (2.9 kg) today, **half v0.4.2's**. D314's stepped profile moved the weak spot to the step where a web meets the
+  left rim, 27 mm from the slot: 5.89 MPa across the layers there against v0.4.2's 1.91 anywhere. And the hook's body
+  pressing on the 0.4 mm front flange round the lower slot reads 19.3 MPa at the contact against v0.4.2's 9.3, so
+  today's contact holds 26 N against 55. D314 asked for a hook-load test print before release; these say where it
+  will break first. v0.4.2's own peak had not converged from level 1 to 2 (12 %); level 3 checks it (C348).
+
+The spread cases, the connectors and the walls follow as their level 2 runs land.
+
 ## The loads
 
 **What was found: IKEA publishes no load rating** for the SKÅDIS board, its hooks or its shelf. The pages checked,
@@ -138,6 +166,17 @@ its load (one did, by 23 %, before flat slivers were taken out of the meshes; C3
 | ASA | 464 | 69 | 70 |
 
 <!-- hand:end -->
+
+### The hand calculations against the model
+
+| Check, per 10 N | By hand | The model | Reading |
+|---|---|---|---|
+| The hook's prying push at the back tab and the lower slot | 10.0 N, on the nominal 27.6 mm between the patches | 9.2 to 9.8 N, each run's own from its patches' centres, 27.9 to 30.0 mm apart (logged); the moment 300 N mm in every run | agree within 8 %; the skeleton's back patch is 14 mm² against the solid board's 34, as its members behind the slot are narrower |
+| The rod's bearing on the slot's end | 0.74 MPa, even over 4.5 x 3 mm of straight wall | 0.61 MPa mean over the model's patch, 16.2 to 16.5 mm² of the slot's round end across the rod's 4.5 mm (logged); 1.75 MPa at the patch's edges on the solid board | the model's patch is a fifth larger than the hand's; the contact's peak is the even pressure's edge (C339) |
+| The standoff for one board, bent at its root | 1.59 MPa at the root, across its layers; 1.38 MPa 2 mm up its length | 2.11 MPa 1.01 mm off its held wall face, 1.30 MPa 2 mm off it (level 2) | within 6 % where the held face does not reach; at 1 mm the bonded face adds a third (C345) |
+| The slot clip's bar, 10 N carried 40 mm | 3.43 MPa in its own plane | 4.21 MPa at the bar's root by the loaded peg (level 1) | 1.23 times the bar's nominal: the root's concentration |
+| A board's members, the rim in its plane | 0.90 MPa (lightened, today), 2.15 (skeleton, today) | the parts' peaks 4.27 and 9.28 MPa, at a web's junction with the rim | 4.3 to 4.7 times the member's nominal: the junctions' concentration, which a member formula does not see |
+| A corner screw's distance from the board's edge | the rule wants 10.0 mm from the hole's edge | the board has 7.75 mm | the solid boards' peak across the layers is at the countersink (C345); a print-test question, not the model's |
 
 ## Results
 
@@ -349,7 +388,20 @@ prints what the part holds in PLA, PETG and ASA (Q329). `scripts/physics/figures
 
 ## Questions for the owner
 
-Pending, with the findings.
+Unnumbered here; the session that relays them gives them their IDs.
+
+- **The hook's real shape, measured** (a measurement): where a SKÅDIS hook's rod bears in its slot and how wide it
+  is, how far in front of the board's face its load hangs, and where on the board its body presses below. C332 assumed
+  a 4.5 mm rod on the slot's bottom end, the load 25 mm out (the small hook's depth on IKEA's page, an upper bound) and
+  the body round the slot 40 mm below; the contact's values, and the prying that sets the skeleton's stress across its
+  layers, scale with them.
+- **Today's skeleton against v0.4.2's** (a decision; recommended: keep D314 until the hook-load test print, T320, says
+  where it breaks): in the model D314's stepped profile halves what the skeleton holds under a hook, its weak spots the
+  step where a web meets a rim, across the layers, and the 0.4 mm front flange under the hook's body. If the print
+  breaks there, the options this points at are a radius where the flange steps to the core, or a thicker flange; each
+  would give back some of the filament D314 saved (built, 55.8 g against the lightened board's 67.7 g at 200 x 200 mm).
+- **The filament of the test prints** (a fact only the owner has): the hook-load prints are read against the column of
+  the filament they are printed in, PLA, PETG or ASA.
 
 ## Reproducing
 
