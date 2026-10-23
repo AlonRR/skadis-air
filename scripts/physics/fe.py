@@ -28,6 +28,8 @@ EDGES = ((0, 1), (1, 2), (0, 2), (0, 3), (1, 3), (2, 3))
 _A, _B = 0.5854101966249685, 0.1381966011250105
 QUAD = np.array([[_A, _B, _B, _B], [_B, _A, _B, _B], [_B, _B, _A, _B], [_B, _B, _B, _A]])
 QUAD_W = np.full(4, 0.25)
+# the most unknowns PARDISO factors here: 2.5 million took 23 GB in its Cholesky (23 Oct 2026), of 64 GB
+DIRECT_MAX = 2_600_000
 
 
 def lame(e_mpa: float, nu: float) -> tuple[float, float]:
@@ -129,6 +131,21 @@ def bar_mesh(length: float, width: float, height: float, size: float) -> tuple[n
     index = np.zeros(int(tags.max()) + 1, dtype=np.int64)
     index[tags.astype(np.int64)] = np.arange(len(tags))
     return coords.reshape(-1, 3).T.copy(), index[tets].T.copy()
+
+
+def drop_slivers(points: np.ndarray, tets: np.ndarray, quality: float = 1e-5) -> tuple[np.ndarray, np.ndarray, int]:
+    """Leave out tetrahedra flat enough to be no element: volume / (longest edge)^3 under `quality` (a regular one is
+    0.118). gmsh's HXT left one of 8.6e-18 in a skeleton board (23 Oct 2026), whose gradients made the stiffness
+    singular to PARDISO's Cholesky. What they leave out is next to no volume; the volume control still judges it."""
+    a, b, c, d = (points[:, tets[i]] for i in range(4))
+    vol = np.abs(np.einsum("ij,ij->j", b - a, np.cross(c - a, d - a, axis=0))) / 6
+    longest = np.max([np.linalg.norm(points[:, tets[i]] - points[:, tets[j]], axis=0) for i, j in EDGES], axis=0)
+    keep = vol / longest**3 >= quality
+    tets = tets[:, keep]
+    used = np.unique(tets)
+    remap = -np.ones(points.shape[1], dtype=np.int64)
+    remap[used] = np.arange(len(used))
+    return np.ascontiguousarray(points[:, used]), np.ascontiguousarray(remap[tets]), int((~keep).sum())
 
 
 # --- the model -----------------------------------------------------------------------------------
@@ -269,14 +286,51 @@ class Model:
             np.add.at(f, 3 * mids.ravel() + c, np.repeat(area[None, :] / 3, 3, axis=0).ravel() * traction[c])
         return f
 
-    def solve(self, k: sp.csr_matrix, f: np.ndarray, fixed_nodes: np.ndarray) -> np.ndarray:
+    def solve(
+        self, k: sp.csr_matrix, f: np.ndarray, fixed_nodes: np.ndarray, method: str = "auto", rtol: float = 1e-8
+    ) -> np.ndarray:
+        """The displacements with these nodes held. "direct": PARDISO's Cholesky (mtype 2) on the upper triangle, as
+        the held stiffness is symmetric and positive definite, about half the memory of the general LU (that took
+        31 GB for 1.6 million unknowns, 23 Oct 2026); "amg": conjugate gradients preconditioned by smoothed
+        aggregation with the six rigid-body modes, for problems too large to factor here (about 7 times slower on
+        0.6 million unknowns, the same answer to 1e-10); "auto": direct up to DIRECT_MAX unknowns."""
         fixed = (3 * fixed_nodes[:, None] + np.arange(3)[None, :]).ravel()
         free = np.setdiff1d(np.arange(self.ndof), fixed)
         u = np.zeros(self.ndof)
         kff = k[free][:, free].tocsr()
-        pypardiso.ps.remove_stored_factorization()
-        u[free] = pypardiso.spsolve(kff, f[free])
-        pypardiso.ps.free_memory(everything=True)
+        if method == "auto":
+            method = "direct" if len(free) <= DIRECT_MAX else "amg"
+        self.solved_by = method
+        if method == "direct":
+            solver = pypardiso.PyPardisoSolver(mtype=2)
+            u[free] = solver.solve(sp.triu(kff, format="csr"), f[free])
+            solver.free_memory(everything=True)
+            return u
+        import pyamg
+        from scipy.sparse.linalg import cg
+
+        x = self.nodes.T
+        modes = np.zeros((self.ndof, 6))
+        modes[0::3, 0] = modes[1::3, 1] = modes[2::3, 2] = 1
+        modes[0::3, 3], modes[1::3, 3] = -x[:, 1], x[:, 0]
+        modes[1::3, 4], modes[2::3, 4] = -x[:, 2], x[:, 1]
+        modes[0::3, 5], modes[2::3, 5] = x[:, 2], -x[:, 0]
+        ml = pyamg.smoothed_aggregation_solver(
+            kff, B=modes[free], symmetry="symmetric", strength=("symmetric", {"theta": 0.0}), max_coarse=2000
+        )
+        count = [0]
+        sol, info = cg(
+            kff,
+            f[free],
+            rtol=rtol,
+            M=ml.aspreconditioner(cycle="V"),
+            maxiter=5000,
+            callback=lambda _: count.__setitem__(0, count[0] + 1),
+        )
+        if info != 0:
+            raise RuntimeError(f"conjugate gradients did not converge in {count[0]} iterations")
+        self.iterations = count[0]
+        u[free] = sol
         return u
 
     def stresses(self, u: np.ndarray, e_mpa: float, nu: float, chunk: int = 50000) -> np.ndarray:

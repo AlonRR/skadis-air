@@ -284,6 +284,28 @@ for (const typeId of boardTypes) {
           loads: spread,
           refine: [...near(places), ...hookRefine],
         },
+        // a board on keyholes stands on its bottom standoffs, which press the wall (D190, D245): held as well (C340)
+        ...(id === 'keyholes'
+          ? [
+              {
+                id: 'spread-keyholes-standing',
+                fixed: [
+                  ...fixed,
+                  {
+                    label: 'bottom standoffs wall face',
+                    box: [
+                      [-1e9, -1e9, -STANDOFF_MM - 0.02],
+                      [1e9, 40, -STANDOFF_MM + 0.02],
+                    ],
+                    normal: [0, 0, -1],
+                    minDot: 0.99,
+                  },
+                ],
+                loads: spread,
+                refine: [...near(places), ...hookRefine, ...near(screwPlaces(grid).slice(0, 2))],
+              },
+            ]
+          : []),
       ],
     });
     solid.delete();
@@ -418,15 +440,13 @@ if (!args['boards-only']) {
     ];
     const outer = screws.filter(([x]) => x < 20 || x > 140);
     const seamHook = hook(panel, [80, 80], REF_N);
+    // every slot that takes a hook: a whole slot with one 40 mm below it, neither filled by the clip's pegs, at
+    // (60, 60) and (100, 60)
     const wallHooks = [
       [20, 60],
-      [60, 60],
       [20, 100],
-      [60, 100],
       [40, 80],
-      [100, 60],
       [140, 60],
-      [100, 100],
       [140, 100],
       [120, 80],
       [80, 80],

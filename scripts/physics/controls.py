@@ -10,7 +10,8 @@
     direction, against the beam formulas: tip deflection P L^3 / 3EI (with Timoshenko's shear term) and the bending
     stress M c / I at mid-span, each within TOL_BEAM; the same bar with linear (P1) tetrahedra is reported beside it,
     to show why the runs use P2;
-4. volume: a mesh's volume against the part's own volume from Manifold, within TOL_VOLUME, on an STL the library
+4. solver: the conjugate gradients the largest runs use against PARDISO, on the bar;
+5. volume: a mesh's volume against the part's own volume from Manifold, within TOL_VOLUME, on an STL the library
     wrote (.check/physics/controls/coupon.stl, written by write-parts.mjs --controls).
 """
 
@@ -29,6 +30,7 @@ from skfem.models.elasticity import lame_parameters, linear_elasticity
 TOL_BEAM = 0.03  # 3 %
 TOL_VOLUME = 0.01  # 1 %
 TOL_ASSEMBLY = 1e-9  # relative, entry by entry
+TOL_SOLVER = 1e-6  # relative, the largest movement
 E, NU = 1000.0, 0.35  # any modulus: the controls compare like with like
 BAR = dict(length=30.0, width=3.0, thick=0.9)
 P = 0.1  # N at the tip
@@ -154,6 +156,27 @@ def control_bar(seed: str | None, results: list) -> None:
     results[-1]["rows"] = rows
 
 
+def control_solver(seed: str | None, results: list) -> None:
+    """The iterative solver the largest runs use (C338) against PARDISO on the bar: the same answer within TOL_SOLVER.
+    Seeded: the conjugate gradients stopped at a tolerance of 0.5."""
+    points, tets = fe.bar_mesh(BAR["length"], BAR["width"], BAR["thick"], 0.45)
+    model = fe.Model.of(points, tets)
+    k = model.stiffness(E, NU)
+    bf, cen, _, _ = model.boundary()
+    f = model.traction_load(bf[cen[:, 0] > BAR["length"] - 1e-6], np.array([0, 0, -P]))
+    held = model.facet_nodes(bf[cen[:, 0] < 1e-6])
+    direct = model.solve(k, f, held, "direct")
+    amg = model.solve(k, f, held, "amg", rtol=0.5 if seed == "solver" else 1e-8)
+    diff = np.abs(amg - direct).max() / np.abs(direct).max()
+    check(
+        "solver",
+        diff < TOL_SOLVER,
+        f"conjugate gradients with smoothed aggregation against PARDISO: largest "
+        f"difference {diff:.1e} of the largest movement, {model.iterations} iterations (limit {TOL_SOLVER:g})",
+        results,
+    )
+
+
 def control_volume(seed: str | None, results: list) -> None:
     root = Path(__file__).resolve().parents[2]
     stl = root / ".check" / "physics" / "controls" / "coupon.stl"
@@ -173,13 +196,14 @@ def control_volume(seed: str | None, results: list) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--seed", choices=["modulus", "load", "volume", "assembly", "patch"])
+    ap.add_argument("--seed", choices=["modulus", "load", "volume", "assembly", "patch", "solver"])
     ap.add_argument("--json")
     args = ap.parse_args()
     results: list = []
     control_assembly(args.seed, results)
     control_patch(args.seed, results)
     control_bar(args.seed, results)
+    control_solver(args.seed, results)
     control_volume(args.seed, results)
     failed = [r["control"] for r in results if not r["ok"]]
     print(

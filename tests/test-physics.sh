@@ -45,6 +45,7 @@ expect 1 "a stiffness assembled at the wrong modulus fails the assembly control"
 expect 1 "a wrong exact energy fails the patch test" --seed patch
 expect 1 "a bar 10 % too stiff fails the beam control" --seed modulus
 expect 1 "a load 10 % too large fails the beam control" --seed load
+expect 1 "conjugate gradients stopped early fail the solver control" --seed solver
 expect 1 "a part's volume 2 % off fails the volume control" --seed volume
 echo
 echo "$pass passed, $fail failed"

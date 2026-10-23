@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -25,26 +26,30 @@ from scipy.spatial import cKDTree
 ROOT = Path(__file__).resolve().parents[2]
 PARTS = ROOT / ".check" / "physics" / "parts"
 RESULTS = ROOT / ".check" / "physics" / "results.jsonl"
-E_REF, NU = 1000.0, 0.35  # MPa; Poisson's ratio from no sheet (C331)
+FAILURES = ROOT / ".check" / "physics" / "failures.jsonl"  # skipped by the next batch unless --retry-failed
+E_REF = 1000.0  # MPa
+# Poisson's ratio, from no sheet (C331); PHYSICS_NU sets another for the sensitivity runs, which go to their own file
+NU = float(os.environ.get("PHYSICS_NU", "0.35"))
 CONTACT_MM = 3.0  # a peak within this of a loaded face is the load's contact, not the part's own (C339)
 FIELDS = ROOT / ".check" / "physics" / "fields"
 EXCLUDE_MM = 1.0  # stresses within this of a fixed surface are left out of the peak: a clamp's edge is singular (C338)
 
-# Mesh levels (C338): (global size, size near the loads and supports), mm. Level 2 is the convergence check. The
+# Mesh levels (C338): (global size, size near the loads and supports), mm. Level 2, every size 0.85 and 0.8 times
+# level 1's, is the convergence check: about 1.8 times the elements, which the direct solver still factors for most. The
 # global size is the board type's, by its thinnest member: the solid board is a 5 mm plate, the lattices' members
 # 3 mm (lightened) and 0.9 mm with a 0.4 mm flange (skeleton); the connectors are posts and bars 4 mm and more.
 LEVELS = {
-    "solid": {1: (1.5, 0.5), 2: (1.2, 0.35)},
-    "lightened": {1: (1.0, 0.5), 2: (0.8, 0.35)},
-    "skeleton": {1: (1.0, 0.5), 2: (0.8, 0.35)},
-    "standoff": {1: (1.0, 0.5), 2: (0.8, 0.35)},
-    "slot-clip": {1: (1.0, 0.5), 2: (0.8, 0.35)},
+    "solid": {1: (1.5, 0.5), 2: (1.275, 0.4)},
+    "lightened": {1: (1.0, 0.5), 2: (0.85, 0.4)},
+    "skeleton": {1: (1.0, 0.5), 2: (0.85, 0.4)},
+    "standoff": {1: (1.0, 0.5), 2: (0.85, 0.4)},
+    "slot-clip": {1: (1.0, 0.5), 2: (0.85, 0.4)},
 }
 # The whole 160 mm board under one hook: coarser away from the hook and the screws, where the stress is low and smooth.
 LEVELS_WHOLE = {
-    "solid": {1: (2.0, 0.5), 2: (1.6, 0.35)},
-    "lightened": {1: (1.5, 0.5), 2: (1.2, 0.35)},
-    "skeleton": {1: (1.2, 0.5), 2: (1.0, 0.35)},
+    "solid": {1: (2.0, 0.5), 2: (1.7, 0.4)},
+    "lightened": {1: (1.5, 0.5), 2: (1.275, 0.4)},
+    "skeleton": {1: (1.2, 0.5), 2: (1.02, 0.4)},
 }
 
 
@@ -124,14 +129,27 @@ def save_field(version, part, case_id, level, model, vm_of, layer, dfix, dload, 
 
 def mesh_with_retries(stl: str, size: float, refine: list):
     """gmsh's remeshed surfaces can cross in a tight spot ("a segment and a facet intersect") or fail to
-    parametrise. Each retry moves every node: sizes 3 and 6 % smaller and 3 % larger, then the surfaces classified
-    at 50 degrees instead of 40, which keeps a 45 degree chamfer in one patch with its neighbour (C338); the volume
-    control judges the result.
+    parametrise. Each retry moves every node: sizes a few % smaller or larger, the surfaces classified at 30, 35 or
+    45 degrees, and last at 50, which keeps a 45 degree chamfer in one patch with its neighbour (C338); which one
+    meshed is chance, so the run records it, and the volume control judges the result.
     Returns the points, the tets and the attempt used: (angle, scale)."""
     import fe
 
     errors = []
-    for angle, scale in ((40, 1.0), (40, 0.97), (40, 0.94), (40, 1.03), (50, 1.0), (50, 0.97)):
+    for angle, scale in (
+        (40, 1.0),
+        (40, 0.97),
+        (40, 0.94),
+        (40, 1.03),
+        (40, 0.91),
+        (30, 1.0),
+        (30, 0.97),
+        (35, 1.0),
+        (45, 1.0),
+        (50, 1.0),
+        (50, 0.97),
+        (40, 0.88),
+    ):
         try:
             rs = [fe.Refine(r.centre, r.radius, r.size * scale, r.grow) for r in refine]
             points, tets = fe.mesh_stl(stl, size * scale, rs, angle_deg=angle)
@@ -154,6 +172,7 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
     timer = fe.Timer()
     refine = [fe.Refine(tuple(r["centre"]), r["radius"], fine) for r in case.get("refine", [])]
     points, tets, attempt = mesh_with_retries(str(PARTS / version / f"{part}.stl"), size, refine)
+    points, tets, slivers = fe.drop_slivers(points, tets)
     timer.mark("mesh")
     model = fe.Model.of(points, tets)
     volume = model.volume()
@@ -221,6 +240,8 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
     # equilibrium: the supports' reactions balance what was applied
     reaction = (k @ u - f).reshape(-1, 3)[fixed_nodes].sum(axis=0)
     balance = float(np.abs(reaction + applied).max() / max(1e-12, np.abs(applied).max()))
+    if balance > 1e-6:  # a solution that does not balance its loads is not one: a near-singular stiffness
+        raise RuntimeError(f"the supports' reactions miss the applied load by {100 * balance:.1f} %")
 
     s = model.stresses(u, E_REF, NU)
     vm = fe.von_mises(s)
@@ -281,6 +302,9 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
         "tets": int(model.mesh.t.shape[1]),
         "dofs": int(model.ndof),
         "meshAttempt": attempt,
+        "slivers": slivers,
+        "solver": getattr(model, "solved_by", None),
+        "iterations": getattr(model, "iterations", None),
         "volume": round(volume, 2),
         "volumeManifold": round(meta["volume"], 2),
         "volumeErr": round(volume / meta["volume"] - 1, 5),
@@ -329,6 +353,8 @@ def main() -> int:
     ap.add_argument("--versions")
     ap.add_argument("--only")
     ap.add_argument("--levels", default="1,2")
+    ap.add_argument("--retry-failed", action="store_true")
+    ap.add_argument("--budget", type=float, help="seconds: start no run that would likely end past them")
     args = ap.parse_args()
     if args.one:
         v, p, c, lv = args.one
@@ -337,6 +363,11 @@ def main() -> int:
     versions = args.versions.split(",") if args.versions else sorted(d.name for d in PARTS.iterdir() if d.is_dir())
     levels = [int(x) for x in args.levels.split(",")]
     done = done_keys()
+    if FAILURES.exists() and not args.retry_failed:
+        for line in FAILURES.read_text().splitlines():
+            if line.strip():
+                f = json.loads(line)
+                done.add((f["version"], f["part"], f["case"], f["level"]))
     todo = []
     for v in versions:
         for part in json.loads((PARTS / v / "index.json").read_text()):
@@ -351,21 +382,42 @@ def main() -> int:
                         todo.append((v, part, case["id"], lv))
     print(f"{len(todo)} runs to do", flush=True)
     failed = 0
+    started, longest = time.time(), 0.0
     for i, (v, part, case, lv) in enumerate(todo, 1):
+        # a session's watch on a batch lasts 30 minutes: stop before a run that would likely outlast the budget
+        if args.budget and time.time() - started + 1.5 * longest > args.budget:
+            print(f"budget reached after {i - 1} runs; {len(todo) - i + 1} left for the next batch", flush=True)
+            return 0
         t0 = time.time()
         proc = subprocess.run(
             [sys.executable, __file__, "--one", v, part, case, str(lv)], capture_output=True, text=True
         )
         if proc.returncode != 0:
             failed += 1
+            with FAILURES.open("a") as fh:
+                why = proc.stderr.strip().splitlines()[-1:] or ["?"]
+                failure = {"version": v, "part": part, "case": case, "level": lv, "error": why[0]}
+                fh.write(json.dumps(failure) + "\n")
             print(
                 f"[{i}/{len(todo)}] FAILED {v} {part} {case} L{lv}: {proc.stderr.strip().splitlines()[-1:]}", flush=True
             )
             continue
-        line = proc.stdout.strip().splitlines()[-1]
+        # the run's result is its one JSON line; gmsh writes its own messages to the same stream, sometimes after it
+        r = None
+        for line in reversed(proc.stdout.strip().splitlines()):
+            if line.startswith("{"):
+                try:
+                    r = json.loads(line)
+                    break
+                except json.JSONDecodeError:
+                    continue
+        if r is None or r.get("case") != case:
+            failed += 1
+            print(f"[{i}/{len(todo)}] FAILED {v} {part} {case} L{lv}: no result line", flush=True)
+            continue
         with RESULTS.open("a") as fh:
-            fh.write(line + "\n")
-        r = json.loads(line)
+            fh.write(json.dumps(r) + "\n")
+        longest = max(longest, time.time() - t0)
         print(
             f"[{i}/{len(todo)}] {v} {part} {case} L{lv}: {r['tets']} tets, vol {100 * r['volumeErr']:+.2f} %, "
             f"vm {r['vm']['value']:.2f} MPa at {r['vm']['at']}, u {r['umax']['value']:.4f} mm, "

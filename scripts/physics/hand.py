@@ -95,6 +95,14 @@ def printed_box(width: float = 3.0, perimeters: float = 0.9, infill: float = 0.1
     return {"in": i_in / i_in_solid, "out": (walls + skins + fill) / i_out_solid}
 
 
+def printed_plate(skin: float = 0.6, infill: float = 0.15) -> dict:
+    """The solid board as it prints with sparse infill: two skins `skin` mm thick and 15 % infill between them
+    (inferred: a common profile's; the owner's is not known). Its stiffness against the solid plate's: in its plane
+    (the area) and through it (the second moment)."""
+    core = T - 2 * skin
+    return {"in": (2 * skin + infill * core) / T, "out": 1 - (1 - infill) * (core / T) ** 3}
+
+
 def main() -> None:
     sections = {}
     for path in sys.argv[1:]:
@@ -139,6 +147,11 @@ def main() -> None:
     print(
         f"- A 3 mm lightened member as printed: {100 * box['in']:.0f} % of the solid's stiffness in its plane, "
         f"{100 * box['out']:.0f} % through the board (computed, from relayed and inferred print settings)"
+    )
+    plate = printed_plate()
+    print(
+        f"- The solid board as printed with 0.6 mm skins and 15 % infill: {100 * plate['in']:.0f} % of the model's "
+        f"stiffness in its plane, {100 * plate['out']:.0f} % through it (computed, from inferred print settings)"
     )
     print()
     print(
