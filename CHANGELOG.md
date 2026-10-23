@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-23
+
 ### Added
 
 - The page as it stands on `main`, not released, at <https://alonrr.github.io/skadis-air/dev/>, under a banner that
