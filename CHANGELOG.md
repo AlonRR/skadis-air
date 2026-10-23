@@ -21,6 +21,7 @@ All notable changes to this project are recorded here. The format follows
 - A keyhole no longer prints its lips over air, a ledge round the slot that sagged into the head's channel.
 - Where the hook's room behind a corner slot runs out of its standoff, its ceiling rises at 45 degrees to the
   standoff's face, so it no longer ends in a curved edge printed over air; the hook's room is as before.
+- A connector whose settings are refused says "to make the connector", not "to make the board".
 
 ## [0.6.0] - 2026-10-23
 

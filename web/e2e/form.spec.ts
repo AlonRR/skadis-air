@@ -66,6 +66,17 @@ test('refuses a size off the 40 mm steps, and builds nothing from it', async ({ 
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'invalid');
 });
 
+// Found by QA (Q7, 23 Oct 2026): a standoff 60 mm tall was "Correct the settings marked above to make the board."
+test('says a connector it refuses is a connector, not a board', async ({ page }) => {
+  await ready(page);
+  await choose(page, 'typeGroup', 'connector');
+  await choose(page, 'boardType', 'standoff');
+  await page.locator('input[name="heightMm"]').fill('60');
+  const status = page.getByTestId('board-status');
+  await expect(status).toHaveAttribute('data-state', 'invalid');
+  await expect(status).toHaveText('Correct the settings marked above to make the connector.');
+});
+
 test('warns about a thickness outside 4 to 5.5 mm, and still builds it (C43)', async ({ page }) => {
   await ready(page);
   const thickness = page.locator('input[name="thicknessMm"]');

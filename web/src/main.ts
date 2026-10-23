@@ -97,15 +97,15 @@ function rebuild(type: AnyBoardType, form: Form): void {
   const read = readValues(type.settings, form.read());
   form.show(read.ok ? [] : read.errors, read.warnings);
   if (read.ok) form.screws(screwsOf(type, read.values));
+  const what = groupOf(type) === 'connector' ? 'connector' : 'board';
   if (!read.ok) {
     // any build still running is for values the form no longer holds: its answer is dropped as a replaced one is
     latest += 1;
     shown = 0;
-    setStatus('invalid', 'Correct the settings marked above to make the board.');
+    setStatus('invalid', `Correct the settings marked above to make the ${what}.`);
     preview?.show(null, '');
     return;
   }
-  const what = groupOf(type) === 'connector' ? 'connector' : 'board';
   const id = ++latest;
   shown = 0;
   showPanels(id, [], '');
