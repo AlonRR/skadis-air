@@ -291,7 +291,7 @@ clip (b4).
   standoffs. (a) A radius there; (b) as now. Recommended (a).
 
 - **T373** Measure an IKEA hook for the physics model: where its rod bears in the slot and how wide it is, how far in
-  front of the board its load hangs, and where its body presses below (the model assumed them, C331 to C336).
+  front of the board its load hangs, and where its body presses below (the model assumed them, C332 and C339).
 
 - **D371** Corner screws where a side runs between the slots (the owner, 23 Oct 2026: "round head and counter sunk
   don't work on 'between the slots' option"; [QA](research/2026-10-23-qa-sweep.md) Q14). D289 (a) left no screw at such a
