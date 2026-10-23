@@ -27,6 +27,7 @@ All notable changes to this project are recorded here. The format follows
 
 ### Fixed
 
+- A wall of one panel says "Wall ready: 1 panel", where it said "1 panels".
 - On a phone, a wall's "Download all" row is whole and scrolls away under the 3D view: it stayed on the screen
   as the page scrolled, drawn over the view, and was cut in half. Its label is now whole, "All 4 panels in one
   file", with its buttons on a line under it, where the buttons beside it cut it to "All 4 panels i…".

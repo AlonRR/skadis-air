@@ -9,6 +9,15 @@ async function ready(page: Page) {
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
 }
 
+// Seen in the phone GIF's frames (23 Oct 2026): a wall of one panel said "1 panels".
+test('a wall of one panel says "1 panel"', async ({ page }) => {
+  await ready(page);
+  await choose(page, 'panels', 'split');
+  await expect(page.getByTestId('board-status')).toHaveText('Wall ready: 1 panel, 1 to download below.', {
+    timeout: 30_000,
+  });
+});
+
 test('splits a board into panels for the bed, lists each size with its count, and downloads one', async ({ page }) => {
   test.setTimeout(90_000);
   await ready(page);

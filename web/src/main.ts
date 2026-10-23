@@ -123,7 +123,8 @@ function rebuild(type: AnyBoardType, form: Form): void {
     if (built.wall) {
       const count = built.wall.panels.reduce((n, line) => n + line.count, 0);
       warnAboutBed(0, 0); // every panel fits the bed it was cut for
-      setStatus('ready', `Wall ready: ${count} panels, ${built.wall.panels.length} to download below.`, fileName, size);
+      const panels = `${count} ${count === 1 ? 'panel' : 'panels'}`;
+      setStatus('ready', `Wall ready: ${panels}, ${built.wall.panels.length} to download below.`, fileName, size);
       const [wide, high] = [Math.round(max[0] - min[0]), Math.round(max[1] - min[1])];
       const wallName = `skadis-${type.id}-${wide}x${high}-wall`; // D183
       showPanels(id, built.wall.panels, wallName);
