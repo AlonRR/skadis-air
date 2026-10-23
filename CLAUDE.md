@@ -188,8 +188,10 @@ bash tests/test-overhang-report.sh  # its controls: known lengths, and travel, w
 ## Figures
 
 `node scripts/figures/shoot.mjs <pass>` draws a design pass's figures, each part the library's own with a finding's
-area in orange, into `.check/figures/<pass>/` (`boards-pass`, 21 Oct 2026; `boards-built` and `between-built`, the answers as built); a
-review copies them into `docs/figures/`. A scene seen from the back sets `camera.up`.
+area in orange, into `.check/figures/<pass>/` (`boards-pass`, 21 Oct 2026; `boards-built` and `between-built`, the answers as built;
+`keyhole-pass`, 23 Oct 2026, every face past 45 degrees down in orange, as the part prints); a
+review copies them into `docs/figures/`. A scene seen from the back sets `camera.up`. A pass may build its scenes from
+deeper modules of the library's build than `kit.lib` gives, as `keyhole-pass` does.
 
 ## The test print
 
