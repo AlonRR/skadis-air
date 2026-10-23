@@ -19,6 +19,7 @@ import {
   meshOf,
   panelCount,
   printedPart,
+  problemKeys,
   readValues,
   to3mf,
   toStl,
@@ -96,7 +97,7 @@ async function build(request: Extract<Request, { kind: 'build' }>): Promise<void
     } else {
       const built = buildBoard(ready, type, read.values);
       if (!built.ok) {
-        reply({ kind: 'built', id, ok: false, problem: built.problem });
+        reply({ kind: 'built', id, ok: false, problem: built.problem, keys: built.keys });
         return;
       }
       last = { id, type, bed: request.bed, solid: built.solid, panels: [], lines: [] };
@@ -122,7 +123,8 @@ async function build(request: Extract<Request, { kind: 'build' }>): Promise<void
     const wallReply = lines ? { wall: { panels: lines, slot: slotOf(read.values), shiftMm } } : {};
     reply({ kind: 'built', id, ok: true, parts: placed, min, max, ...wallReply }, transfer);
   } catch (error) {
-    reply({ kind: 'built', id, ok: false, problem: error instanceof RangeError ? error.message : String(error) });
+    const problem = error instanceof RangeError ? error.message : String(error);
+    reply({ kind: 'built', id, ok: false, problem, keys: problemKeys(error) });
   }
 }
 

@@ -28,6 +28,7 @@ import {
 } from './lightened.js';
 import { mountingCuts, mountingPads, type MountingParams } from './mounting.js';
 import { loftedSolid } from './rings.js';
+import { SettingsProblem } from './settings.js';
 import { SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import { slotPlaces } from './slots.js';
 
@@ -55,7 +56,9 @@ export function skeletonParams(given: Partial<SkeletonParams>): SkeletonParams {
   const p: SkeletonParams = { rimMm, webMm, coreMm: coreMm ?? SKELETON_DEFAULTS.coreMm };
   if (!(p.coreMm >= MIN_CORE_MM)) throw new RangeError(`The core must be at least ${MIN_CORE_MM} mm wide`);
   if (p.coreMm > p.rimMm || p.coreMm > p.webMm || p.coreMm > MAX_CORE_MM) {
-    throw new RangeError(`The core cannot be wider than the rim, the webs or the ${MAX_CORE_MM} mm edge band`);
+    throw new SettingsProblem(`The core cannot be wider than the rim, the webs or the ${MAX_CORE_MM} mm edge band`, [
+      'coreMm',
+    ]);
   }
   return p;
 }
@@ -235,9 +238,10 @@ export function skeletonMembers(
     if (!(error instanceof RangeError)) throw error;
     // a pocket that turns inside out as it widens into its members: too small for the taper, said in plain words, not
     // as the offset that failed (Q6; a 1.2 mm rim with 6 mm webs on an 80 mm board, 23 Oct 2026)
-    throw new RangeError(
+    throw new SettingsProblem(
       `The pockets these rims and webs leave are too small to narrow to a ${nice(p.coreMm)} mm core: choose a wider ` +
         'core, or narrower webs',
+      ['coreMm'],
     );
   }
   const slab = Manifold.cube([e.x1 - e.x0 + 2.4, e.y1 - e.y0 + 2.4, t + 2.4]).translate([e.x0 - 1.2, e.y0 - 1.2, -1.2]);

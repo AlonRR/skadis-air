@@ -22,7 +22,8 @@ A board type is one file and one line in a list (D11, the extension-registry pra
      page folds behind an "i" button beside the label (C317). A
      choice has its `options`, each a value and a label, and its starting value, one of them (C82);
    - `build(engine, values)`: the solid, from values typed by the settings above. A combination it
-     cannot make throws a `RangeError`, which the page shows as a problem instead of a board;
+     cannot make throws a `RangeError`, which the page shows as a problem instead of a board; a
+     `SettingsProblem`, a `RangeError` with the keys of the settings it belongs to, also marks those fields;
    - `label(values)`: the rest of the file name;
    - `screws(values)`, for a part that takes screws: what each passes, as a sentence the page shows under the
      screw size (D264), or nothing when it has none.

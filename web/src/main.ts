@@ -126,6 +126,11 @@ function rebuild(type: AnyBoardType, form: Form): void {
   answers.set('built', (built) => {
     if (built.kind !== 'built' || built.id !== latest) return; // a newer build replaced it
     if (!built.ok) {
+      // the fields it belongs to marked, as the form marks a value it refuses, the message kept on the status line (Q13)
+      form.show(
+        built.keys.map((key) => ({ key, message: built.problem })),
+        read.warnings,
+      );
       setStatus('problem', `This ${what} cannot be made: ${built.problem}`);
       preview?.show(null, '');
       return;

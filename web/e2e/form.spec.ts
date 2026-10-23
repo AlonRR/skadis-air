@@ -172,6 +172,49 @@ test('says so when a combination cannot be made, instead of building it', async 
   await expect(page.getByTestId('board-status')).toContainText('thicker');
 });
 
+// Found by QA (Q13, 23 Oct 2026): a problem that belongs to one setting showed only on the status line, no field
+// marked. The field is marked as the form marks a value it refuses, and the status line keeps the message.
+test('marks the setting a combination it cannot make belongs to, and keeps the message on the status line', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await ready(page);
+  const status = page.getByTestId('board-status');
+  const field = (name: string) => page.locator(`input[name="${name}"]`);
+  await page.getByTestId('advanced').locator('summary').click();
+  /** Sets the fields given, and checks that the problem is on the status line and beside each field it names. */
+  const refused = async (given: Record<string, string>, marked: string[], words: string) => {
+    for (const [name, value] of Object.entries(given)) await field(name).fill(value);
+    await expect(status).toHaveAttribute('data-state', 'problem');
+    await expect(status).toContainText(words);
+    for (const name of marked) {
+      await expect(page.getByTestId(`error-${name}`)).toContainText(words);
+      await expect(field(name)).toHaveAttribute('aria-invalid', 'true');
+    }
+  };
+  const made = async (given: Record<string, string>, cleared: string[]) => {
+    for (const [name, value] of Object.entries(given)) await field(name).fill(value);
+    await expect(status).toHaveAttribute('data-state', 'ready');
+    for (const name of cleared) {
+      await expect(page.getByTestId(`error-${name}`)).toBeEmpty();
+      await expect(field(name)).not.toHaveAttribute('aria-invalid', /.*/);
+    }
+  };
+  await refused({ thicknessMm: '3' }, ['thicknessMm'], 'A countersunk 4 mm screw needs a board at least 3.25 mm thick');
+  await made({ thicknessMm: '5' }, ['thicknessMm']);
+  await refused({ widthMm: '440', heightMm: '480' }, ['widthMm', 'heightMm'], 'One board is at most 400 mm a side');
+  await made({ widthMm: '160', heightMm: '160' }, ['widthMm', 'heightMm']);
+  await refused({ thicknessMm: '2.5', slotChamferMm: '1.5' }, ['slotChamferMm'], 'thicker than its two slot chamfers');
+  await made({ thicknessMm: '5', slotChamferMm: '1' }, ['slotChamferMm']);
+  await choose(page, 'screwHead', 'keyhole');
+  await refused({ standoffHeightMm: '10' }, ['standoffHeightMm'], 'choose standoffs at least 13.23 mm tall');
+  await made({ standoffHeightMm: '15' }, ['standoffHeightMm']);
+  await choose(page, 'boardType', 'skeleton');
+  await page.getByTestId('advanced').locator('summary').click();
+  await refused({ rimMm: '2', coreMm: '2.5' }, ['coreMm'], 'The core cannot be wider than the rim');
+  await made({ coreMm: '1.2' }, ['coreMm']);
+});
+
 test('offers screw holes and standoffs, and names the file for what differs from the start (D73 to D75)', async ({
   page,
 }) => {

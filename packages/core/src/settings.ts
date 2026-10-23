@@ -60,6 +60,23 @@ export interface Problem {
 export type ReadResult<S extends readonly Setting[]> =
   { ok: true; values: Values<S>; warnings: Problem[] } | { ok: false; errors: Problem[]; warnings: Problem[] };
 
+/**
+ * A combination of values a part cannot be made from that belongs to some of its settings, named by key: the page
+ * marks those fields as it marks a value it refuses, and keeps the message on the status line (Q13). A RangeError, as
+ * every value a build refuses is, so a caller that knows nothing of the keys reads it as before.
+ */
+export class SettingsProblem extends RangeError {
+  readonly keys: readonly string[];
+  constructor(message: string, keys: readonly string[]) {
+    super(message);
+    this.name = 'SettingsProblem';
+    this.keys = keys;
+  }
+}
+
+/** The settings a refusal names, none for one that names none. */
+export const problemKeys = (error: unknown): string[] => (error instanceof SettingsProblem ? [...error.keys] : []);
+
 export function defaultValues<const S extends readonly Setting[]>(settings: S): Values<S> {
   const values: Record<string, number | string | Sides> = {};
   for (const s of settings) values[s.key] = s.kind === 'sides' ? { ...s.default } : s.default;

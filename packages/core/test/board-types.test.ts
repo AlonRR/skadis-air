@@ -246,6 +246,49 @@ describe('the solid board type', () => {
     if (!built.ok) expect(built.problem).toContain('thicker');
   });
 
+  // Found by QA (Q13, 23 Oct 2026): a problem that belongs to one setting showed only on the status line, no field
+  // marked. Each such problem names its settings by key, so the page marks them as it marks a value it refuses.
+  it('names the settings to change for a combination it cannot make', () => {
+    const problem = (type: AnyBoardType, given: Record<string, string>) => {
+      const read = readValues(type.settings, given);
+      if (!read.ok) throw new Error(read.errors.map((e) => e.message).join('; '));
+      const built = buildBoard(engine, type, read.values);
+      if (built.ok) made.push(built.solid);
+      return built.ok ? 'built' : { problem: built.problem, keys: built.keys };
+    };
+    const cases: [AnyBoardType, Record<string, string>, string, string[]][] = [
+      [SKELETON, { rimMm: '2', coreMm: '2.5' }, 'The core cannot be wider than the rim', ['coreMm']],
+      [SOLID, { thicknessMm: '3' }, 'A countersunk 4 mm screw needs a board at least 3.25 mm thick', ['thicknessMm']],
+      [SOLID, { widthMm: '440' }, 'One board is at most 400 mm a side', ['widthMm']],
+      [SOLID, { widthMm: '440', heightMm: '480' }, 'One board is at most 400 mm a side', ['widthMm', 'heightMm']],
+      [SOLID, { heightMm: '440' }, 'One board is at most 400 mm a side', ['heightMm']],
+      [
+        SOLID,
+        { screwHead: 'keyhole', standoffs: 'back', standoffHeightMm: '10' },
+        'choose standoffs at least 13.23 mm tall',
+        ['standoffHeightMm'],
+      ],
+      [
+        LIGHTENED,
+        { screwHead: 'lock', standoffs: 'back', standoffHeightMm: '10' },
+        'choose standoffs at least',
+        ['standoffHeightMm'],
+      ],
+      [
+        SOLID,
+        { thicknessMm: '2.5', slotChamferMm: '1.5', screwHead: 'round' },
+        'The board must be thicker than its two slot chamfers together',
+        ['slotChamferMm'],
+      ],
+    ];
+    for (const [type, given, words, keys] of cases) {
+      expect(problem(type, given)).toEqual({ problem: expect.stringContaining(words), keys });
+    }
+    // the control: a problem of no one setting names none
+    const meet = problem(SOLID, { screwHead: 'keyhole', standoffs: 'back', widthMm: '40' });
+    expect(meet).toEqual({ problem: expect.stringContaining('need a board at least 80 x 80 mm'), keys: [] });
+  });
+
   it('names its file with its size, and the sides that are closed', () => {
     const v = defaultValues(solid.settings);
     expect(boardFileName(solid, { ...v, widthMm: 240, heightMm: 200 }, 'stl')).toBe('skadis-solid-240x200.stl');

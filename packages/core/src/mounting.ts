@@ -20,7 +20,7 @@ import { type BoardCuts, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from './b
 import { chamferedExtrusion, EDGE_CHAMFER_MM, HOLE_MOUTH_MM } from './chamfer.js';
 import type { Engine } from './engine.js';
 import { circle, HALF_STEP, ringedSolid, stadium } from './rings.js';
-import { defineSettings, type NumberSetting, type Values } from './settings.js';
+import { defineSettings, type NumberSetting, SettingsProblem, type Values } from './settings.js';
 import { HOOK_DEPTH_MM, HOOK_DROP_MM, HOOK_WIDTH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import { ALL_OPEN, boardExtent, type Extent, type Side, slotPlaces } from './slots.js';
 
@@ -187,9 +187,10 @@ function leastStandoffMm(m: MountingParams): number {
 function checkStandoffs(m: MountingParams): void {
   const least = leastStandoffMm(m);
   if (m.standoffHeightMm < least - 1e-9) {
-    throw new RangeError(
+    throw new SettingsProblem(
       `${m.screwHead === 'keyhole' ? 'Keyholes' : 'Lock screws'} stand the board off the wall, with a hook's room ` +
         `behind the slot in front of each: choose standoffs at least ${nice(least)} mm tall`,
+      ['standoffHeightMm'],
     );
   }
 }
@@ -562,9 +563,10 @@ export function mountingCuts(
   }
   const countersunk = m.screwHead === 'countersunk';
   if (countersunk && t - depth < MIN_PLAIN_HOLE_MM) {
-    throw new RangeError(
+    throw new SettingsProblem(
       `A countersunk ${nice(m.screwMm)} mm screw needs a board at least ${nice(depth + MIN_PLAIN_HOLE_MM)} mm ` +
         'thick; choose a round head or a smaller screw',
+      ['thicknessMm'],
     );
   }
   const bore = sunkRound(m, t); // a round head sunk in a counterbore, flush with the front (D279)

@@ -12,7 +12,7 @@ import {
 } from '../mounting.js';
 import { TILE_MM } from '../skadis.js';
 import { MAX_PANEL_TILES, MAX_WALL_MM } from '../tiling.js';
-import { defineSettings, type Values } from '../settings.js';
+import { defineSettings, SettingsProblem, type Values } from '../settings.js';
 import { ALL_OPEN } from '../slots.js';
 import { defineBoardType } from './define.js';
 
@@ -134,9 +134,11 @@ type BoardValues = Values<typeof BOARD_SETTINGS>;
 
 /** The solid board its settings describe; one board larger than a panel can be is refused (C51). */
 export function boardParamsOf(v: BoardValues): SolidBoardParams {
-  if (v.widthMm > MAX_PANEL_TILES * TILE_MM || v.heightMm > MAX_PANEL_TILES * TILE_MM) {
-    throw new RangeError(
+  const over = (['widthMm', 'heightMm'] as const).filter((key) => v[key] > MAX_PANEL_TILES * TILE_MM);
+  if (over.length > 0) {
+    throw new SettingsProblem(
       `One board is at most ${MAX_PANEL_TILES * TILE_MM} mm a side; choose "Split into panels" to make a wall`,
+      over,
     );
   }
   return solidBoardParams({

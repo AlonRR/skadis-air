@@ -5,6 +5,7 @@ import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { chamferedExtrusion, EDGE_CHAMFER_MM } from './chamfer.js';
 import type { Engine } from './engine.js';
 import { arc, CIRCLE_SEGMENTS, ringedSolid, stadium } from './rings.js';
+import { SettingsProblem } from './settings.js';
 export { CIRCLE_SEGMENTS } from './rings.js';
 import { BOARD_THICKNESS_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import {
@@ -50,7 +51,7 @@ export function solidBoardParams(
   }
   if (!(p.slotChamferMm >= 0)) throw new RangeError('The slot chamfer cannot be negative');
   if (!(p.thicknessMm > 2 * p.slotChamferMm)) {
-    throw new RangeError('The board must be thicker than its two slot chamfers together');
+    throw new SettingsProblem('The board must be thicker than its two slot chamfers together', ['slotChamferMm']);
   }
   if (!(p.cornerRadiusMm >= 0 && p.cornerRadiusMm <= TILE_MM / 2)) {
     throw new RangeError(`The corner radius must be from 0 to ${TILE_MM / 2} mm`);

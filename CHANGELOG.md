@@ -46,6 +46,9 @@ All notable changes to this project are recorded here. The format follows
   turned in their files, the zip and the 3MF alike, so each fits the bed as it is downloaded: on a Prusa MK4S a
   1000 x 640 mm wall's 200 x 240 mm panels came 200 x 240 mm for a 250 x 210 mm bed. One board that fits only
   turned comes turned too.
+- A combination of settings that cannot be made is shown beside the setting it belongs to as well as on the status
+  line: the core width, the thickness for a countersunk screw, the width or height of one board over 400 mm, the
+  standoff height for keyholes or lock screws, and the slot chamfer.
 
 ## [0.6.0] - 2026-10-23
 

@@ -60,7 +60,7 @@ export type Reply =
       max: [number, number, number];
       wall?: WallReply; // a wall's panels, one line for each kind, and the slots they cut
     }
-  | { kind: 'built'; id: number; ok: false; problem: string }
+  | { kind: 'built'; id: number; ok: false; problem: string; keys: string[] } // the settings to mark for it (Q13)
   | { kind: 'file'; id: number; ok: true; bytes: Uint8Array; type: string }
   | { kind: 'file'; id: number; ok: false; error: string };
 
