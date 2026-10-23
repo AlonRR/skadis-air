@@ -80,7 +80,7 @@ def pct(x: float | None) -> str:
 
 
 def at_same_place(
-    version: str, part: str, case_id: str, level: int, at: list, member: bool, wall: bool = False
+    version: str, part: str, case_id: str, level: int, at: list, member: bool, wall: bool = False, key: str = "vm"
 ) -> float | None:
     """A level's highest stress within 2 mm of `at`, from its saved stresses: the same place's value, so a peak whose
     twin across the slot takes the lead at the other level is not read as a moved peak."""
@@ -96,7 +96,7 @@ def at_same_place(
         clip, panels = wall_regions(d["xyz"])
         region &= clip | panels
     m = near & region
-    return float(d["vm"][m].max()) if m.any() else None
+    return float(d[key][m].max()) if m.any() else None
 
 
 def band(version: str, part: str, case_id: str, level: int, wall: bool) -> dict:
@@ -151,6 +151,9 @@ def row(runs: dict, version: str, part: str, case_id: str) -> dict | None:
         "band": band(version, part, case_id, best["level"], wall),
         "u": deflection(best),
         "dvm": None,
+        "dsn": None,
+        "risingVm": False,
+        "risingSn": False,
         "dcontact": None,
         "du": None,
         "moved": None,
@@ -174,7 +177,21 @@ def row(runs: dict, version: str, part: str, case_id: str) -> dict | None:
         same = at_same_place(version, part, case_id, hi, at1, member=True, wall=wall)
         out["moved"] = same is None or same < 0.8 * v2
         out["dvm"] = change(member[lo]["vmMember"]["value"], v2 if out["moved"] else same)
-    out["converged"] = None if out["dvm"] is None else out["dvm"] < STRESS_TOL and out["du"] < DEFLECTION_TOL
+        # a peak that rose 10 % or more at its own place: a sharp inner edge's signature, singular, so the value
+        # rises with each mesh and the capacity from it is an upper bound (C348)
+        out["risingVm"] = not out["moved"] and same > (1 + STRESS_TOL) * member[lo]["vmMember"]["value"]
+        # and the stress across the layers, which sets most capacities (C342), at its own place the same way
+        at1, s2 = member[lo]["snMember"]["at"], member[hi]["snMember"]["value"]
+        same = at_same_place(version, part, case_id, hi, at1, member=True, wall=wall, key="sn")
+        out["dsn"] = change(member[lo]["snMember"]["value"], s2 if same is None or same < 0.8 * s2 else same)
+        out["risingSn"] = (
+            same is not None and same >= 0.8 * s2 and same > (1 + STRESS_TOL) * member[lo]["snMember"]["value"]
+        )
+    out["converged"] = (
+        None
+        if out["dvm"] is None
+        else out["dvm"] < STRESS_TOL and (out["dsn"] or 0) < STRESS_TOL and out["du"] < DEFLECTION_TOL
+    )
     return out
 
 
@@ -183,7 +200,7 @@ def print_table(runs: dict, title: str, items: list) -> None:
     print(
         "| Part | Version | Case | Peak in the part (MPa) | Where | At the contact (MPa) | Across the layers (MPa) "
         "| Deflection, PLA / PETG / ASA (mm) | Holds in the part, PLA / PETG / ASA (kg) "
-        "| Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / contact / deflection |"
+        "| Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / layers / contact / deflection |"
     )
     print("|---|---|---|---|---|---|---|---|---|---|---|")
     for label, version, part, case_id in items:
@@ -199,7 +216,7 @@ def print_table(runs: dict, title: str, items: list) -> None:
         if r["dvm"] is None:
             conv = "level 1 only"
         else:
-            conv = f"{pct(r['dvm'])} / {pct(r['dcontact'])} / {pct(r['du'])}"
+            conv = f"{pct(r['dvm'])} / {pct(r['dsn'])} / {pct(r['dcontact'])} / {pct(r['du'])}"
             if r["from"] == 2:
                 conv += (
                     " (the part's peak level 2 to 3; the contact and the deflection the larger of 1 to 2 and 2 to 3)"
@@ -269,7 +286,7 @@ def level_note(r: dict) -> str:
     moved = " (the part's peak moved)" if r["moved"] else ""
     verdict = "converged" if r["converged"] else "not converged"
     since = " (the part's peak from level 2; the contact and the deflection from level 1)" if r["from"] == 2 else ""
-    return f"{r['level']}, {verdict}{moved}{since}: {pct(r['dvm'])} / {pct(r['dcontact'])} / {pct(r['du'])}"
+    return f"{r['level']}, {verdict}{moved}{since}: {pct(r['dvm'])} / {pct(r['dsn'])} / {pct(r['dcontact'])} / {pct(r['du'])}"
 
 
 def print_headline(runs: dict, items: list) -> None:
@@ -280,17 +297,17 @@ def print_headline(runs: dict, items: list) -> None:
     print("### What each part holds (Q329)")
     print()
     print(
-        "| Part | Version | Load | Case | In the part, PLA | PETG | ASA | Where | At the contact, PLA / PETG / ASA "
-        "| Mesh level: part / contact / deflection |"
+        "| Part | Version | Load | Case | In the part, PLA | PETG | ASA | Where | To the yield alone, PLA / PETG / ASA "
+        "| At the contact, PLA / PETG / ASA | Mesh level: part / layers / contact / deflection |"
     )
-    print("|---|---|---|---|---|---|---|---|---|---|")
+    print("|---|---|---|---|---|---|---|---|---|---|---|")
     pla = MATERIALS["PLA"]
     for label, version, part, cases in items:
         rows = [(c, row(runs, version, part, c)) for c in cases]
         rows = [(c, r) for c, r in rows if r is not None]
         load = LOADS["hook" if cases[0].startswith("hook") else cases[0]]
         if not rows:
-            print(f"| {label} | {version} | {load} | not run | | | | | | |")
+            print(f"| {label} | {version} | {load} | not run | | | | | | | |")
             continue
         case_id, r = min(rows, key=lambda cr: holds(cr[1], pla)[0])
         cells = []
@@ -302,6 +319,13 @@ def print_headline(runs: dict, items: list) -> None:
         spot = f"{'yield' if tag == 'y' else 'across the layers'}: {r['vmAt'] if tag == 'y' else r['snAt']}"
         if r["band"][key]["atBand"]:
             spot += f"; at a held face's band, 2 mm off it {r['band'][key]['beyond2']:.2f} against {r[key]:.2f} MPa"
+        if r["risingVm" if key == "vm" else "risingSn"]:
+            spot += "; rising with the mesh at its place, a sharp inner edge: an upper bound"
+        # the yield alone, from the part's peak, which converges where the stress across the layers often does not (C349)
+        to_yield = [W * m["strength"] / r["vm"] for m in MATERIALS.values()]
+        yield_only = (
+            " / ".join(f"{n:.0f}" for n in to_yield) + " N (" + " / ".join(f"{n / G:.1f}" for n in to_yield) + " kg)"
+        )
         if r["contact"]:
             at_contact = [W * m["strength"] / r["contact"] for m in MATERIALS.values()]
             contact = (
@@ -313,7 +337,9 @@ def print_headline(runs: dict, items: list) -> None:
         else:
             contact = "-"
         print(
-            f"| {label} | {version} | {load} | {case_id} | " + " | ".join(cells) + f" | {spot} | {contact} "
+            f"| {label} | {version} | {load} | {case_id} | "
+            + " | ".join(cells)
+            + f" | {spot} | {yield_only} | {contact} "
             f"| {level_note(r)} |"
         )
     print()

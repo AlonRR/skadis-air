@@ -4,7 +4,7 @@ Research date: 23 Oct 2026. The owner's decisions: D323 (hand calculations and a
 control), D324 (the boards from before the design passes beside today's), Q325 (IKEA's ratings as the loads), Q326
 (PLA, PETG and ASA from a maker's sheets) and Q327 (the three boards, the standoff, the slot clip and walls), all in
 [`status.md`](../status.md), and Q329 (b, 23 Oct 2026: no target load, each part's capacity in each material, in N and
-kg, and the stress shown on pictures of the parts). The choices made on the way are C330 to C348 in
+kg, and the stress shown on pictures of the parts). The choices made on the way are C330 to C349 in
 [`choices.md`](../choices.md).
 
 ## Status
@@ -22,44 +22,71 @@ kg, and the stress shown on pictures of the parts). The choices made on the way 
 
 ### Resume point
 
-Kept current at each checkpoint. **23 Oct 2026, the third checkpoint of the day's second session:** level 2 is done
-for every hook case and for 4 of the spread cases; 31 runs are left (the rest of the spread cases, the connectors, the
-walls), then level 3 (C348) for the 5 cases not yet converged, then one more try of the skeleton's wall at level 1
-(C346). Each window is one command, `run.py --levels 2 --order=-160,-80-,standoff-,slot-clip-,-wall- --budget 1680`,
-then `--levels 3`; `run.py` skips what `results.jsonl` holds and starts no run it cannot finish (C344), so the same
-command picks up where a window stopped. Each run now saves its surface for the figures; a run reported before that is
-run again by `run.py --resave`, refused unless its peaks are the reported ones (C347). Figures drawn so far: the solid,
-lightened and skeleton boards of today and v0.2.1 but v0.2.1's skeleton, v0.4.2's skeleton, the standoff; not yet
-committed, as each is drawn again when its last run lands. Next: the runs above; the figures of v0.2.1's skeleton, the
-slot clip and the walls; the findings and the owner's questions.
+Kept current at each checkpoint. **23 Oct 2026, evening:** level 2 is done for every hook, spread and connector case
+but one: today's lightened board on standoffs, whose level 2 meshed in no try within a window (reported at level 1).
+Level 3 (C348) ran for v0.4.2's skeleton under the edge hook and today's skeleton on standoffs. Left: the walls'
+governing case (one hook at the seam, the wall's four outer screws) at level 2, the lightened wall's running; one more
+try of the skeleton's wall at level 1 (C346); the figures of v0.4.2's skeleton and the walls, whose runs predate the
+surface file or are running. One window is one command: `run.py --levels 2 --order=-160,-80-,standoff-,slot-clip-,-wall-
+--budget 1680`, with `--only` and `--cases` to choose; `--levels 3` for level 3; `run.py` skips what `results.jsonl`
+holds, starts no run it cannot finish and kills one that outlasts its window (C344). A figure whose run predates the
+surface file is saved again by `run.py --resave`, refused unless its peaks are the reported ones (C347).
 
 ## Findings
 
 What each part holds is the load at which the model's peak reaches the material's strength (Q329): a ranking of the
-designs and a map of their weak spots, not a breaking load (the box above). PLA's figures below; PETG's are within
-about 10 % of PLA's, and ASA's are the lowest wherever the layers govern, as its interlayer adhesion is 11 MPa against
-17 and 18. Every capacity set across the layers (marked l in the tables) also carries Poisson's ratio, which no sheet
-gives: at 0.30 and 0.40 the stress across the layers moved -19 % and +30 % where the part's own peak moved 1 %
-([below](#poissons-ratio-c331-v042s-skeleton-hook-edge-hook-edge-level-1)).
+designs and a map of their weak spots, not a breaking load (the box above). PLA's figures below, all from the
+[headline table](#what-each-part-holds-q329); PETG's are within about 10 % of PLA's, and ASA's are the lowest wherever
+the layers govern, as its interlayer adhesion is 11 MPa against 17 and 18. **Two cautions on every capacity set
+across the layers (l):** that stress, normal to the layers of parts printed as 5 mm plates, moved 10 % or more between
+the mesh levels in 23 of the 44 cases run at two (C349), and 30 % with Poisson's ratio, which no sheet gives
+([below](#poissons-ratio-c331-v042s-skeleton-hook-edge-hook-edge-level-1)); so the table also gives what each part holds
+to the yield alone, from its peak, which converged in 31 of the 44.
 
-**One hook** (per hook, level 2 unless said):
+**One hook** (per hook):
 
-- **The solid board** holds the most by far: 469 N (47.8 kg) in the part today, 513 N in v0.2.1, both set across the
-  layers 1 mm from a corner screw's countersink, where the fully held countersink sets the value (C345: 2 mm off it the
-  stress is 0.22 against 0.36 MPa, so the board itself holds more). The hook's contact comes first, at 292 N. Old and
-  new are one board here, within 9 %.
-- **The lightened board** holds 119 N (12.2 kg) today against 72 N (7.4 kg) in v0.2.1, 65 % more: v0.2.1's weak spot
-  is across the layers 10 mm from the edge hook's slot, today's the yield where a web meets the left rim, 26 mm from
-  it. The hook's contact, 107 N on both, now comes first on today's.
+- **The solid board** holds the most: 469 N (47.8 kg) today, 513 N in v0.2.1, set across the layers 1 mm from a corner
+  screw's countersink, where the fully held countersink sets the value (C345: 2 mm off it the stress is 0.22 against
+  0.36 MPa); to the yield alone 550 N. The hook's contact comes first, at 292 N. Old and new are one board here.
+- **The lightened board** holds 119 N (12.2 kg) today, converged, at the yield where a web meets the left rim 26 mm from
+  the edge hook's slot, against 72 N (7.4 kg) in v0.2.1, across the layers 10 mm from it (86 N to the yield alone): 65 %
+  more. The hook's contact, 107 N on both, now comes first on today's.
 - **The skeleton board** went from 4 N (0.4 kg) in v0.2.1, at a sharp pocket corner by the slot whose stress rose with
-  each mesh (54 to 64 MPa, singular, so an upper bound), to 58 N (5.9 kg) in v0.4.2, its corners rounded, and back to
-  29 N (2.9 kg) today, **half v0.4.2's**. D314's stepped profile moved the weak spot to the step where a web meets the
-  left rim, 27 mm from the slot: 5.89 MPa across the layers there against v0.4.2's 1.91 anywhere. And the hook's body
-  pressing on the 0.4 mm front flange round the lower slot reads 19.3 MPa at the contact against v0.4.2's 9.3, so
-  today's contact holds 26 N against 55. D314 asked for a hook-load test print before release; these say where it
-  will break first. v0.4.2's own peak had not converged from level 1 to 2 (12 %); level 3 checks it (C348).
+  each mesh (54 to 64 MPa: an upper bound), to 67 N (6.8 kg) in v0.4.2, its corners rounded, converged, and back to
+  29 N (2.9 kg) today, converged: **43 % of v0.4.2's** (55 against 67 N to the yield alone). D314's stepped profile moved
+  the weak spot to the step where a web meets the left rim, 27 mm from the slot: 5.89 MPa across the layers there,
+  against at most 2.2 on v0.4.2's. And the hook's body pressing on the 0.4 mm front flange round the lower slot reads
+  19.3 MPa at the contact against v0.4.2's 10.0, so today's contact holds 26 N against 51. D314 asked for a hook-load
+  test print before release; these say where it will break first. (v0.4.2's edge hook had read 8.84 MPa at a web's
+  junction at level 2, not converged; level 3, refined there, read 6.81 elsewhere: a mesh effect, and its middle hook
+  governs.)
 
-The spread cases, the connectors and the walls follow as their level 2 runs land.
+**The spread load**, 10 N over an 80 mm board's two hooks (per board):
+
+- **On corner screws:** the solid board 761 N; the lightened 238 N today against 136 N in v0.2.1, at the yield, both
+  converged; the skeleton 72 N today, 124 N in v0.4.2, 21 N in v0.2.1.
+- **On standoffs, the weakest mounting for every board:** the solid board 83 N today, 92 N in v0.2.1; the lightened
+  47 N today (level 1 only: its level 2 would not mesh in any try) against 40 N; the skeleton 18 N today, 24 N in
+  v0.4.2, 17 N in v0.2.1. On every board the spot is across the layers at a bottom standoff's root on the board's back,
+  and on three of them (v0.2.1's lightened, v0.4.2's and today's skeleton) its stress rose at its place with each mesh: a
+  **sharp inner edge**, singular, so these are upper bounds and what the print holds there depends on the root's real radius (to the yield alone: 294, 127, 58 N today).
+- **On keyholes, hung from their lips alone** (the brief's case, which no board has): 10 to 25 N on every board, a
+  cantilever on 1.5 mm lips.
+- **On keyholes, standing on their bottom standoffs** (the design's, D190, D245): the solid board 437 N, the lightened
+  200 N, the skeleton 161 N today, against 112, 39 and 18 N in v0.2.1, and 188 N for v0.4.2's skeleton: today's keyhole
+  boards hold 4 to 9 times v0.2.1's.
+
+**The connectors** (per connector):
+
+- **The standoff** for one board holds 80 N (8.2 kg) across its layers 1 mm off its held wall face, the band C345 flags:
+  2 mm off it the stress is 1.30 against 2.11 MPa, the beam's 1.38 (about 130 N there); 243 N to the yield alone. For
+  four boards, 175 N.
+- **The slot clip** for two boards holds 53 N (5.4 kg) across the layers at its bar's root by the loaded peg, rising
+  with the mesh (an upper bound); 111 N to the yield alone.
+
+**The walls** (level 1; per hook): one hook in the seam's slot, the wall on its four outer screws alone, the clip
+carrying a panel's share: the solid wall 113 N across the layers, the lightened 164 N at the yield; with each panel on
+its own screws, 208 and 199 N. The clip is not the weak part: its peak is between a tenth and a half of the panels'.
 
 ## The loads
 
@@ -186,8 +213,8 @@ adhesion (l); at the contact, the stress within 3 mm of a loaded face against th
 pressure makes the value the model's as much as the hook's (C339). The first table gives each part's in N and kg, per
 hook for a hook, per board for the spread load, per connector for a connector; the case tables after it give kg. A
 wall's peaks are its panels' and its clip's, the bonded pegs' edges left out (C341). Deflection is the hook's slot's
-movement in a hook's case, the part's largest otherwise. *Mesh change* is how far the part's peak (at its own place,
-C338), the contact's peak and the deflection moved from level 1 to level 2. A row whose spot is *at a held face's band* lies just past the 1 mm
+movement in a hook's case, the part's largest otherwise. *Mesh change* is how far the part's peak and its stress across
+the layers (each at its own place, C338, C349), the contact's peak and the deflection moved from level 1 to level 2. A row whose spot is *at a held face's band* lies just past the 1 mm
 round a held face where no peak is read: the held face's idealisation, every degree of freedom, sets it as much as the
 part does, so its capacity is a lower bound and the reading 2 mm off the held faces, given beside it, is nearer the
 part's own (C345). Every capacity set across the layers (l) also moves with Poisson's ratio, -19 % and +30 % at 0.30
@@ -197,78 +224,78 @@ and 0.40 (the last table).
 
 ### What each part holds (Q329)
 
-| Part | Version | Load | Case | In the part, PLA | PETG | ASA | Where | At the contact, PLA / PETG / ASA | Mesh level: part / contact / deflection |
-|---|---|---|---|---|---|---|---|---|---|
-| solid | v0.2.1 | one hook | hook-mid | 513 N, 52.3 kg (l) | 514 N, 52.4 kg (y) | 332 N, 33.8 kg (l) | across the layers: 4.8 mm from countersink (10, 10), mid; at a held face's band, 2 mm off it 0.16 against 0.33 MPa | 298 / 275 / 245 N (30.4 / 28.0 / 25.0 kg), 1.71 MPa | 2, converged: 0 % / 6 % / 0 % |
-| solid | today | one hook | hook-mid | 469 N, 47.8 kg (l) | 497 N, 50.6 kg (l) | 304 N, 30.9 kg (l) | across the layers: 4.8 mm from countersink (10, 10), mid; at a held face's band, 2 mm off it 0.22 against 0.36 MPa | 292 / 269 / 240 N (29.7 / 27.4 / 24.5 kg), 1.75 MPa | 2, converged: 0 % / 7 % / 0 % |
-| lightened | v0.2.1 | one hook | hook-edge | 72 N, 7.4 kg (l) | 76 N, 7.8 kg (l) | 47 N, 4.8 kg (l) | across the layers: 10.5 mm from slot (20, 100), mid | 107 / 99 / 88 N (10.9 / 10.1 / 9.0 kg), 4.77 MPa | 2, converged: 5 % / 2 % / 0 % |
-| lightened | today | one hook | hook-edge | 119 N, 12.2 kg (y) | 110 N, 11.2 kg (y) | 98 N, 10.0 kg (y) | yield: 25.7 mm from slot (20, 100), mid | 107 / 99 / 88 N (10.9 / 10.1 / 9.0 kg), 4.76 MPa | 2, converged: 5 % / 1 % / 1 % |
-| skeleton | v0.2.1 | one hook | hook-edge | 4 N, 0.4 kg (l) | 5 N, 0.5 kg (l) | 3 N, 0.3 kg (l) | across the layers: 9.9 mm from slot (20, 100), mid | 36 / 33 / 30 N (3.7 / 3.4 / 3.0 kg), 14.15 MPa | 2, not converged: 14 % / 5 % / 1 % |
-| skeleton | v0.4.2 | one hook | hook-edge | 58 N, 5.9 kg (y) | 53 N, 5.4 kg (y) | 48 N, 4.8 kg (y) | yield: 25.8 mm from slot (20, 100), mid | 55 / 51 / 45 N (5.6 / 5.2 / 4.6 kg), 9.26 MPa | 2, not converged: 12 % / 0 % / 0 % |
-| skeleton | today | one hook | hook-edge | 29 N, 2.9 kg (l) | 31 N, 3.1 kg (l) | 19 N, 1.9 kg (l) | across the layers: 26.6 mm from slot (20, 100), mid | 26 / 24 / 22 N (2.7 / 2.5 / 2.2 kg), 19.32 MPa | 2, converged: 6 % / 6 % / 0 % |
-| solid | v0.2.1 | spread, on corner screws | spread-screws | 828 N, 84.4 kg (l) | 876 N, 89.3 kg (l) | 536 N, 54.6 kg (l) | across the layers: 4.9 mm from countersink (70, 10), mid; at a held face's band, 2 mm off it 0.10 against 0.21 MPa | 588 / 542 / 484 N (60.0 / 55.3 / 49.4 kg), 0.87 MPa | 1 only |
-| solid | v0.2.1 | spread, on standoffs | spread-standoffs | 69 N, 7.1 kg (l) | 73 N, 7.5 kg (l) | 45 N, 4.6 kg (l) | across the layers: 10.4 mm from slot (60, 60), back | 542 / 499 / 446 N (55.2 / 50.9 / 45.5 kg), 0.94 MPa | 1 only |
-| solid | v0.2.1 | spread, on keyholes, hung (the brief's) | spread-keyholes | 23 N, 2.4 kg (l) | 25 N, 2.5 kg (l) | 15 N, 1.5 kg (l) | across the layers: 5.2 mm from keyhole lip (10, 70), mid; at a held face's band, 2 mm off it 5.85 against 7.24 MPa | 318 / 293 / 262 N (32.4 / 29.9 / 26.7 kg), 1.60 MPa | 1 only |
-| solid | v0.2.1 | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 123 N, 12.5 kg (l) | 130 N, 13.3 kg (l) | 80 N, 8.1 kg (l) | across the layers: 5.0 mm from keyhole lip (70, 70), back | 510 / 470 / 420 N (52.0 / 47.9 / 42.8 kg), 1.00 MPa | 1 only |
-| solid | today | spread, on corner screws | spread-screws | 761 N, 77.6 kg (l) | 806 N, 82.2 kg (l) | 493 N, 50.2 kg (l) | across the layers: 4.8 mm from countersink (70, 10), mid; at a held face's band, 2 mm off it 0.10 against 0.22 MPa | 615 / 566 / 506 N (62.6 / 57.7 / 51.6 kg), 0.83 MPa | 2, not converged: 32 % / 0 % / 1 % |
-| solid | today | spread, on standoffs | spread-standoffs | 90 N, 9.2 kg (l) | 95 N, 9.7 kg (l) | 58 N, 5.9 kg (l) | across the layers: 9.9 mm from slot (20, 60), back | 452 / 416 / 372 N (46.1 / 42.5 / 37.9 kg), 1.13 MPa | 1 only |
-| solid | today | spread, on keyholes, hung (the brief's) | spread-keyholes | 25 N, 2.5 kg (l) | 26 N, 2.7 kg (l) | 16 N, 1.6 kg (l) | across the layers: 6.2 mm from keyhole lip (60, 64.5), z -13.8 | 72 / 67 / 60 N (7.4 / 6.8 / 6.1 kg), 7.06 MPa | 2, not converged: 19 % / 5 % / 11 % |
-| solid | today | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 386 N, 39.3 kg (l) | 408 N, 41.6 kg (l) | 250 N, 25.4 kg (l) | across the layers: 11.2 mm from slot (20, 60), back | 584 / 538 / 481 N (59.5 / 54.8 / 49.0 kg), 0.87 MPa | 1 only |
-| lightened | v0.2.1 | spread, on corner screws | spread-screws | 139 N, 14.1 kg (y) | 128 N, 13.0 kg (y) | 114 N, 11.6 kg (y) | yield: 7.1 mm from countersink (10, 70), back | 292 / 269 / 241 N (29.8 / 27.5 / 24.5 kg), 1.75 MPa | 1 only |
-| lightened | v0.2.1 | spread, on standoffs | spread-standoffs | 45 N, 4.6 kg (l) | 48 N, 4.9 kg (l) | 29 N, 3.0 kg (l) | across the layers: 9.1 mm from slot (60, 60), back | 292 / 269 / 240 N (29.7 / 27.4 / 24.5 kg), 1.75 MPa | 1 only |
-| lightened | v0.2.1 | spread, on keyholes, hung (the brief's) | spread-keyholes | 26 N, 2.7 kg (l) | 28 N, 2.9 kg (l) | 17 N, 1.7 kg (l) | across the layers: 4.3 mm from keyhole lip (10, 70), back | 170 / 157 / 140 N (17.3 / 16.0 / 14.3 kg), 3.00 MPa | 1 only |
-| lightened | v0.2.1 | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 44 N, 4.5 kg (l) | 46 N, 4.7 kg (l) | 28 N, 2.9 kg (l) | across the layers: 5.0 mm from keyhole lip (10, 70), back | 293 / 270 / 242 N (29.9 / 27.6 / 24.6 kg), 1.74 MPa | 1 only |
-| lightened | today | spread, on corner screws | spread-screws | 238 N, 24.3 kg (y) | 220 N, 22.4 kg (y) | 196 N, 20.0 kg (y) | yield: 7.4 mm from slot (20, 60), back | 304 / 280 / 250 N (30.9 / 28.5 / 25.5 kg), 1.68 MPa | 2, converged: 1 % / 0 % / 0 % |
-| lightened | today | spread, on standoffs | spread-standoffs | 47 N, 4.8 kg (l) | 50 N, 5.1 kg (l) | 31 N, 3.1 kg (l) | across the layers: 9.4 mm from slot (20, 60), back | 313 / 288 / 258 N (31.9 / 29.4 / 26.3 kg), 1.63 MPa | 1 only |
-| lightened | today | spread, on keyholes, hung (the brief's) | spread-keyholes | 22 N, 2.2 kg (l) | 23 N, 2.4 kg (l) | 14 N, 1.4 kg (l) | across the layers: 5.6 mm from keyhole lip (60, 64.5), z -14.2; at a held face's band, 2 mm off it 4.67 against 7.73 MPa | 92 / 85 / 76 N (9.4 / 8.7 / 7.7 kg), 5.53 MPa | 2, converged: 7 % / 6 % / 1 % |
-| lightened | today | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 253 N, 25.8 kg (l) | 244 N, 24.9 kg (y) | 164 N, 16.7 kg (l) | across the layers: 10.1 mm from slot (20, 60), back | 132 / 121 / 108 N (13.4 / 12.4 / 11.1 kg), 3.87 MPa | 1 only |
-| skeleton | v0.2.1 | spread, on corner screws | spread-screws | 20 N, 2.0 kg (l) | 21 N, 2.1 kg (l) | 13 N, 1.3 kg (l) | across the layers: 9.9 mm from slot below (60, 20), mid | 85 / 79 / 70 N (8.7 / 8.0 / 7.2 kg), 5.97 MPa | 1 only |
-| skeleton | v0.2.1 | spread, on standoffs | spread-standoffs | 21 N, 2.1 kg (l) | 22 N, 2.3 kg (l) | 14 N, 1.4 kg (l) | across the layers: 7.9 mm from slot (60, 60), mid | 104 / 96 / 86 N (10.6 / 9.8 / 8.8 kg), 4.89 MPa | 1 only |
-| skeleton | v0.2.1 | spread, on keyholes, hung (the brief's) | spread-keyholes | 7 N, 0.7 kg (l) | 7 N, 0.7 kg (l) | 4 N, 0.4 kg (l) | across the layers: 10.0 mm from slot (60, 60), back | 37 / 34 / 30 N (3.7 / 3.4 / 3.1 kg), 13.95 MPa | 1 only |
-| skeleton | v0.2.1 | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 16 N, 1.7 kg (l) | 17 N, 1.8 kg (l) | 11 N, 1.1 kg (l) | across the layers: 9.9 mm from slot (60, 60), mid | 87 / 80 / 71 N (8.8 / 8.2 / 7.3 kg), 5.88 MPa | 1 only |
-| skeleton | v0.4.2 | spread, on corner screws | spread-screws | 128 N, 13.0 kg (l) | 135 N, 13.8 kg (l) | 83 N, 8.4 kg (l) | across the layers: 8.7 mm from countersink (70, 70), mid | 177 / 163 / 146 N (18.1 / 16.6 / 14.9 kg), 2.88 MPa | 1 only |
-| skeleton | v0.4.2 | spread, on standoffs | spread-standoffs | 28 N, 2.9 kg (l) | 30 N, 3.0 kg (l) | 18 N, 1.9 kg (l) | across the layers: 9.4 mm from slot (20, 60), back | 158 / 146 / 130 N (16.1 / 14.9 / 13.3 kg), 3.22 MPa | 1 only |
-| skeleton | v0.4.2 | spread, on keyholes, hung (the brief's) | spread-keyholes | 13 N, 1.3 kg (l) | 14 N, 1.4 kg (l) | 8 N, 0.9 kg (l) | across the layers: 6.5 mm from keyhole lip (60, 64.5), z -14.0 | 72 / 67 / 60 N (7.4 / 6.8 / 6.1 kg), 7.04 MPa | 1 only |
-| skeleton | v0.4.2 | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 196 N, 20.0 kg (l) | 207 N, 21.1 kg (l) | 127 N, 12.9 kg (l) | across the layers: 7.4 mm from slot (60, 60), back | 129 / 119 / 106 N (13.2 / 12.1 / 10.8 kg), 3.95 MPa | 1 only |
-| skeleton | today | spread, on corner screws | spread-screws | 72 N, 7.4 kg (l) | 77 N, 7.8 kg (l) | 47 N, 4.8 kg (l) | across the layers: 9.8 mm from slot (60, 60), front | 60 / 55 / 49 N (6.1 / 5.6 / 5.0 kg), 8.55 MPa | 2, not converged: 5 % / 5 % / 7 % |
-| skeleton | today | spread, on standoffs | spread-standoffs | 29 N, 2.9 kg (l) | 31 N, 3.1 kg (l) | 19 N, 1.9 kg (l) | across the layers: 9.2 mm from slot (20, 60), back | 52 / 48 / 42 N (5.3 / 4.8 / 4.3 kg), 9.89 MPa | 1 only |
-| skeleton | today | spread, on keyholes, hung (the brief's) | spread-keyholes | 20 N, 2.0 kg (l) | 21 N, 2.1 kg (l) | 13 N, 1.3 kg (l) | across the layers: 6.0 mm from keyhole lip (20, 64.5), z -12.9 | 58 / 54 / 48 N (5.9 / 5.5 / 4.9 kg), 8.78 MPa | 1 only |
-| skeleton | today | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 166 N, 16.9 kg (l) | 176 N, 17.9 kg (l) | 107 N, 10.9 kg (l) | across the layers: 7.1 mm from slot (60, 60), back | 54 / 50 / 44 N (5.5 / 5.1 / 4.5 kg), 9.44 MPa | 1 only |
-| standoff, 1 board | today | 10 N down | shear | 80 N, 8.2 kg (l) | 85 N, 8.7 kg (l) | 52 N, 5.3 kg (l) | across the layers: 1.0 mm from the wall face, at (1.2, 3.9, 1.0); at a held face's band, 2 mm off it 1.30 against 2.11 MPa | 521 / 480 / 429 N (53.1 / 48.9 / 43.7 kg), 0.98 MPa | 2, converged: 9 % / 3 % / 0 % |
-| standoff, 4 boards | today | 10 N down | shear | 205 N, 20.9 kg (l) | 217 N, 22.1 kg (l) | 133 N, 13.5 kg (l) | across the layers: 7.0 mm from the wall face, at (10.7, -5.0, 7.0) | 1999 / 1842 / 1646 N (203.8 / 187.8 / 167.8 kg), 0.26 MPa | 1 only |
-| slot clip, 2 boards | today | 10 N down | shear | 67 N, 6.8 kg (l) | 71 N, 7.2 kg (l) | 43 N, 4.4 kg (l) | across the layers: 27.9 mm from the peg in its slot, at (10.7, 3.7, 7.0) | 524 / 483 / 432 N (53.4 / 49.2 / 44.0 kg), 0.97 MPa | 1 only |
-| solid wall | today | one hook at the seam, each panel on its screws | wall-seam-hook | 208 N, 21.2 kg (l) | 220 N, 22.4 kg (l) | 134 N, 13.7 kg (l) | across the layers: 5.7 mm from countersink (90, 110), front; at a held face's band, 2 mm off it 0.40 against 0.82 MPa | 322 / 297 / 266 N (32.9 / 30.3 / 27.1 kg), 1.58 MPa | 1 only |
-| solid wall | today | spread, each panel on its screws | wall-spread | 404 N, 41.2 kg (l) | 428 N, 43.6 kg (l) | 261 N, 26.6 kg (l) | across the layers: 5.9 mm from countersink (150, 110), front; at a held face's band, 2 mm off it 0.09 against 0.42 MPa | 1631 / 1503 / 1343 N (166.2 / 153.2 / 136.9 kg), 0.31 MPa | 1 only |
-| solid wall | today | one hook at the seam, the wall's four outer screws | wall-seam-hook-outer-screws | 113 N, 11.6 kg (l) | 120 N, 12.2 kg (l) | 73 N, 7.5 kg (l) | across the layers: 5.8 mm from countersink (150, 110), front; at a held face's band, 2 mm off it 0.67 against 1.50 MPa | 334 / 308 / 275 N (34.0 / 31.4 / 28.0 kg), 1.53 MPa | 1 only |
-| lightened wall | today | one hook at the seam, each panel on its screws | wall-seam-hook | 199 N, 20.3 kg (y) | 183 N, 18.7 kg (y) | 147 N, 15.0 kg (l) | yield: 12.9 mm from slot (80, 80), front | 211 / 195 / 174 N (21.6 / 19.9 / 17.8 kg), 2.41 MPa | 1 only |
-| lightened wall | today | spread, each panel on its screws | wall-spread | 398 N, 40.6 kg (y) | 367 N, 37.4 kg (y) | 308 N, 31.4 kg (l) | yield: 6.7 mm from countersink (150, 110), back | 902 / 832 / 743 N (92.0 / 84.8 / 75.7 kg), 0.57 MPa | 1 only |
-| lightened wall | today | one hook at the seam, the wall's four outer screws | wall-seam-hook-outer-screws | 164 N, 16.7 kg (y) | 151 N, 15.4 kg (y) | 123 N, 12.6 kg (l) | yield: 12.4 mm from slot (80, 80), front | 184 / 170 / 152 N (18.8 / 17.3 / 15.5 kg), 2.77 MPa | 1 only |
-| skeleton wall | today | one hook at the seam, each panel on its screws | not run | | | | | | |
-| skeleton wall | today | spread, each panel on its screws | not run | | | | | | |
-| skeleton wall | today | one hook at the seam, the wall's four outer screws | not run | | | | | | |
+| Part | Version | Load | Case | In the part, PLA | PETG | ASA | Where | To the yield alone, PLA / PETG / ASA | At the contact, PLA / PETG / ASA | Mesh level: part / layers / contact / deflection |
+|---|---|---|---|---|---|---|---|---|---|---|
+| solid | v0.2.1 | one hook | hook-mid | 513 N, 52.3 kg (l) | 514 N, 52.4 kg (y) | 332 N, 33.8 kg (l) | across the layers: 4.8 mm from countersink (10, 10), mid; at a held face's band, 2 mm off it 0.16 against 0.33 MPa | 558 / 514 / 459 N (56.9 / 52.4 / 46.8 kg) | 298 / 275 / 245 N (30.4 / 28.0 / 25.0 kg), 1.71 MPa | 2, not converged: 0 % / 28 % / 6 % / 0 % |
+| solid | today | one hook | hook-mid | 469 N, 47.8 kg (l) | 497 N, 50.6 kg (l) | 304 N, 30.9 kg (l) | across the layers: 4.8 mm from countersink (10, 10), mid; at a held face's band, 2 mm off it 0.22 against 0.36 MPa | 550 / 507 / 453 N (56.1 / 51.7 / 46.2 kg) | 292 / 269 / 240 N (29.7 / 27.4 / 24.5 kg), 1.75 MPa | 2, not converged: 0 % / 16 % / 7 % / 0 % |
+| lightened | v0.2.1 | one hook | hook-edge | 72 N, 7.4 kg (l) | 76 N, 7.8 kg (l) | 47 N, 4.8 kg (l) | across the layers: 10.5 mm from slot (20, 100), mid | 86 / 79 / 70 N (8.7 / 8.0 / 7.2 kg) | 107 / 99 / 88 N (10.9 / 10.1 / 9.0 kg), 4.77 MPa | 2, not converged: 5 % / 24 % / 2 % / 0 % |
+| lightened | today | one hook | hook-edge | 119 N, 12.2 kg (y) | 110 N, 11.2 kg (y) | 98 N, 10.0 kg (y) | yield: 25.7 mm from slot (20, 100), mid | 119 / 110 / 98 N (12.2 / 11.2 / 10.0 kg) | 107 / 99 / 88 N (10.9 / 10.1 / 9.0 kg), 4.76 MPa | 2, converged: 5 % / 2 % / 1 % / 1 % |
+| skeleton | v0.2.1 | one hook | hook-edge | 4 N, 0.4 kg (l) | 5 N, 0.5 kg (l) | 3 N, 0.3 kg (l) | across the layers: 9.9 mm from slot (20, 100), mid | 8 / 7 / 7 N (0.8 / 0.8 / 0.7 kg) | 36 / 33 / 30 N (3.7 / 3.4 / 3.0 kg), 14.15 MPa | 2, not converged: 14 % / 33 % / 5 % / 1 % |
+| skeleton | v0.4.2 | one hook | hook-mid | 67 N, 6.8 kg (y) | 62 N, 6.3 kg (y) | 55 N, 5.6 kg (y) | yield: 9.2 mm from slot (80, 80), mid | 67 / 62 / 55 N (6.8 / 6.3 / 5.6 kg) | 51 / 47 / 42 N (5.2 / 4.8 / 4.3 kg), 10.02 MPa | 2, converged: 5 % / 3 % / 10 % / 0 % |
+| skeleton | today | one hook | hook-edge | 29 N, 2.9 kg (l) | 31 N, 3.1 kg (l) | 19 N, 1.9 kg (l) | across the layers: 26.6 mm from slot (20, 100), mid | 55 / 51 / 45 N (5.6 / 5.2 / 4.6 kg) | 26 / 24 / 22 N (2.7 / 2.5 / 2.2 kg), 19.32 MPa | 2, converged: 6 % / 3 % / 6 % / 0 % |
+| solid | v0.2.1 | spread, on corner screws | spread-screws | 798 N, 81.3 kg (l) | 844 N, 86.1 kg (l) | 516 N, 52.6 kg (l) | across the layers: 4.6 mm from countersink (70, 10), mid; at a held face's band, 2 mm off it 0.09 against 0.21 MPa | 1513 / 1395 / 1246 N (154.3 / 142.2 / 127.0 kg) | 611 / 563 / 503 N (62.3 / 57.4 / 51.3 kg), 0.84 MPa | 2, not converged: 29 % / 4 % / 4 % / 1 % |
+| solid | v0.2.1 | spread, on standoffs | spread-standoffs | 92 N, 9.4 kg (l) | 97 N, 9.9 kg (l) | 60 N, 6.1 kg (l) | across the layers: 10.1 mm from slot (60, 60), back | 282 / 260 / 232 N (28.8 / 26.5 / 23.7 kg) | 577 / 532 / 475 N (58.8 / 54.2 / 48.4 kg), 0.88 MPa | 2, not converged: 23 % / 33 % / 6 % / 0 % |
+| solid | v0.2.1 | spread, on keyholes, hung (the brief's) | spread-keyholes | 15 N, 1.5 kg (l) | 16 N, 1.6 kg (l) | 10 N, 1.0 kg (l) | across the layers: 5.4 mm from keyhole lip (10, 70), mid; at a held face's band, 2 mm off it 4.17 against 11.28 MPa; rising with the mesh at its place, a sharp inner edge: an upper bound | 46 / 42 / 38 N (4.7 / 4.3 / 3.8 kg) | 298 / 274 / 245 N (30.3 / 28.0 / 25.0 kg), 1.71 MPa | 2, not converged: 9 % / 36 % / 6 % / 1 % |
+| solid | v0.2.1 | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 112 N, 11.4 kg (l) | 118 N, 12.1 kg (l) | 72 N, 7.4 kg (l) | across the layers: 5.0 mm from keyhole lip (10, 70), back | 324 / 299 / 267 N (33.0 / 30.4 / 27.2 kg) | 519 / 478 / 427 N (52.9 / 48.8 / 43.6 kg), 0.98 MPa | 2, converged: 5 % / 2 % / 2 % / 0 % |
+| solid | today | spread, on corner screws | spread-screws | 761 N, 77.6 kg (l) | 806 N, 82.2 kg (l) | 493 N, 50.2 kg (l) | across the layers: 4.8 mm from countersink (70, 10), mid; at a held face's band, 2 mm off it 0.10 against 0.22 MPa | 1442 / 1329 / 1187 N (147.0 / 135.4 / 121.0 kg) | 615 / 566 / 506 N (62.6 / 57.7 / 51.6 kg), 0.83 MPa | 2, not converged: 32 % / 6 % / 0 % / 1 % |
+| solid | today | spread, on standoffs | spread-standoffs | 83 N, 8.5 kg (l) | 88 N, 9.0 kg (l) | 54 N, 5.5 kg (l) | across the layers: 10.0 mm from slot (20, 60), back | 294 / 271 / 242 N (30.0 / 27.7 / 24.7 kg) | 520 / 479 / 428 N (53.0 / 48.8 / 43.6 kg), 0.98 MPa | 2, converged: 1 % / 7 % / 15 % / 1 % |
+| solid | today | spread, on keyholes, hung (the brief's) | spread-keyholes | 25 N, 2.5 kg (l) | 26 N, 2.7 kg (l) | 16 N, 1.6 kg (l) | across the layers: 6.2 mm from keyhole lip (60, 64.5), z -13.8 | 82 / 76 / 68 N (8.4 / 7.7 / 6.9 kg) | 72 / 67 / 60 N (7.4 / 6.8 / 6.1 kg), 7.06 MPa | 2, not converged: 19 % / 3 % / 5 % / 11 % |
+| solid | today | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 437 N, 44.5 kg (l) | 462 N, 47.1 kg (l) | 282 N, 28.8 kg (l) | across the layers: 11.2 mm from slot (60, 60), back | 617 / 569 / 508 N (62.9 / 58.0 / 51.8 kg) | 513 / 472 / 422 N (52.2 / 48.1 / 43.0 kg), 1.00 MPa | 2, not converged: 8 % / 41 % / 12 % / 2 % |
+| lightened | v0.2.1 | spread, on corner screws | spread-screws | 136 N, 13.8 kg (y) | 125 N, 12.8 kg (y) | 112 N, 11.4 kg (y) | yield: 7.1 mm from countersink (10, 70), back | 136 / 125 / 112 N (13.8 / 12.8 / 11.4 kg) | 292 / 269 / 240 N (29.8 / 27.4 / 24.5 kg), 1.75 MPa | 2, converged: 2 % / 7 % / 0 % / 0 % |
+| lightened | v0.2.1 | spread, on standoffs | spread-standoffs | 40 N, 4.1 kg (l) | 42 N, 4.3 kg (l) | 26 N, 2.6 kg (l) | across the layers: 9.2 mm from slot (20, 60), back; rising with the mesh at its place, a sharp inner edge: an upper bound | 116 / 107 / 96 N (11.8 / 10.9 / 9.7 kg) | 301 / 278 / 248 N (30.7 / 28.3 / 25.3 kg), 1.69 MPa | 2, not converged: 7 % / 11 % / 3 % / 0 % |
+| lightened | v0.2.1 | spread, on keyholes, hung (the brief's) | spread-keyholes | 23 N, 2.3 kg (l) | 24 N, 2.4 kg (l) | 15 N, 1.5 kg (l) | across the layers: 4.4 mm from keyhole lip (70, 70), back | 43 / 39 / 35 N (4.4 / 4.0 / 3.6 kg) | 177 / 163 / 146 N (18.1 / 16.7 / 14.9 kg), 2.88 MPa | 2, not converged: 5 % / 15 % / 4 % / 0 % |
+| lightened | v0.2.1 | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 39 N, 4.0 kg (l) | 42 N, 4.2 kg (l) | 25 N, 2.6 kg (l) | across the layers: 5.0 mm from keyhole lip (70, 70), back | 115 / 106 / 94 N (11.7 / 10.8 / 9.6 kg) | 293 / 270 / 241 N (29.9 / 27.5 / 24.6 kg), 1.74 MPa | 2, converged: 5 % / 0 % / 0 % / 1 % |
+| lightened | today | spread, on corner screws | spread-screws | 238 N, 24.3 kg (y) | 220 N, 22.4 kg (y) | 196 N, 20.0 kg (y) | yield: 7.4 mm from slot (20, 60), back | 238 / 220 / 196 N (24.3 / 22.4 / 20.0 kg) | 304 / 280 / 250 N (30.9 / 28.5 / 25.5 kg), 1.68 MPa | 2, not converged: 1 % / 69 % / 0 % / 0 % |
+| lightened | today | spread, on standoffs | spread-standoffs | 47 N, 4.8 kg (l) | 50 N, 5.1 kg (l) | 31 N, 3.1 kg (l) | across the layers: 9.4 mm from slot (20, 60), back | 127 / 117 / 105 N (13.0 / 12.0 / 10.7 kg) | 313 / 288 / 258 N (31.9 / 29.4 / 26.3 kg), 1.63 MPa | 1 only |
+| lightened | today | spread, on keyholes, hung (the brief's) | spread-keyholes | 22 N, 2.2 kg (l) | 23 N, 2.4 kg (l) | 14 N, 1.4 kg (l) | across the layers: 5.6 mm from keyhole lip (60, 64.5), z -14.2; at a held face's band, 2 mm off it 4.67 against 7.73 MPa | 48 / 44 / 39 N (4.9 / 4.5 / 4.0 kg) | 92 / 85 / 76 N (9.4 / 8.7 / 7.7 kg), 5.53 MPa | 2, not converged: 7 % / 13 % / 6 % / 1 % |
+| lightened | today | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 200 N, 20.3 kg (l) | 211 N, 21.5 kg (l) | 129 N, 13.2 kg (l) | across the layers: 10.1 mm from slot (20, 60), back; rising with the mesh at its place, a sharp inner edge: an upper bound | 237 / 218 / 195 N (24.1 / 22.2 / 19.9 kg) | 133 / 123 / 110 N (13.6 / 12.5 / 11.2 kg), 3.83 MPa | 2, not converged: 11 % / 17 % / 1 % / 3 % |
+| skeleton | v0.2.1 | spread, on corner screws | spread-screws | 21 N, 2.1 kg (l) | 22 N, 2.3 kg (l) | 14 N, 1.4 kg (l) | across the layers: 6.5 mm from countersink (70, 70), mid | 28 / 25 / 23 N (2.8 / 2.6 / 2.3 kg) | 109 / 101 / 90 N (11.1 / 10.3 / 9.2 kg), 4.66 MPa | 2, converged: 3 % / 6 % / 28 % / 1 % |
+| skeleton | v0.2.1 | spread, on standoffs | spread-standoffs | 17 N, 1.8 kg (l) | 18 N, 1.9 kg (l) | 11 N, 1.1 kg (l) | across the layers: 9.9 mm from slot (60, 60), mid | 29 / 27 / 24 N (3.0 / 2.7 / 2.4 kg) | 110 / 102 / 91 N (11.2 / 10.3 / 9.2 kg), 4.63 MPa | 2, not converged: 5 % / 17 % / 6 % / 0 % |
+| skeleton | v0.2.1 | spread, on keyholes, hung (the brief's) | spread-keyholes | 10 N, 1.0 kg (l) | 11 N, 1.1 kg (l) | 6 N, 0.7 kg (l) | across the layers: 8.2 mm from slot (60, 60), mid | 15 / 14 / 12 N (1.5 / 1.4 / 1.3 kg) | 52 / 48 / 43 N (5.3 / 4.9 / 4.4 kg), 9.79 MPa | 2, not converged (the part's peak moved): 39 % / 50 % / 42 % / 0 % |
+| skeleton | v0.2.1 | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 18 N, 1.8 kg (l) | 19 N, 1.9 kg (l) | 11 N, 1.2 kg (l) | across the layers: 9.9 mm from slot (60, 60), mid | 39 / 36 / 32 N (4.0 / 3.6 / 3.3 kg) | 104 / 95 / 85 N (10.6 / 9.7 / 8.7 kg), 4.93 MPa | 2, not converged (the part's peak moved): 37 % / 7 % / 19 % / 1 % |
+| skeleton | v0.4.2 | spread, on corner screws | spread-screws | 124 N, 12.7 kg (l) | 131 N, 13.4 kg (l) | 80 N, 8.2 kg (l) | across the layers: 8.5 mm from countersink (10, 70), mid | 158 / 145 / 130 N (16.1 / 14.8 / 13.3 kg) | 163 / 151 / 135 N (16.7 / 15.4 / 13.7 kg), 3.12 MPa | 2, converged: 3 % / 2 % / 8 % / 1 % |
+| skeleton | v0.4.2 | spread, on standoffs | spread-standoffs | 24 N, 2.4 kg (l) | 25 N, 2.5 kg (l) | 15 N, 1.6 kg (l) | across the layers: 9.4 mm from slot (20, 60), back; rising with the mesh at its place, a sharp inner edge: an upper bound | 88 / 81 / 73 N (9.0 / 8.3 / 7.4 kg) | 149 / 137 / 123 N (15.2 / 14.0 / 12.5 kg), 3.42 MPa | 2, not converged: 14 % / 16 % / 6 % / 0 % |
+| skeleton | v0.4.2 | spread, on keyholes, hung (the brief's) | spread-keyholes | 21 N, 2.2 kg (l) | 23 N, 2.3 kg (l) | 14 N, 1.4 kg (l) | across the layers: 5.7 mm from keyhole lip (60, 64.5), z -14.1; at a held face's band, 2 mm off it 4.44 against 7.91 MPa | 31 / 29 / 26 N (3.2 / 2.9 / 2.6 kg) | 88 / 81 / 73 N (9.0 / 8.3 / 7.4 kg), 5.77 MPa | 2, not converged: 20 % / 64 % / 22 % / 1 % |
+| skeleton | v0.4.2 | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 188 N, 19.2 kg (l) | 198 N, 20.2 kg (y) | 122 N, 12.4 kg (l) | across the layers: 9.3 mm from slot (20, 60), mid | 215 / 198 / 177 N (21.9 / 20.2 / 18.0 kg) | 118 / 109 / 97 N (12.1 / 11.1 / 9.9 kg), 4.31 MPa | 2, converged: 9 % / 7 % / 8 % / 1 % |
+| skeleton | today | spread, on corner screws | spread-screws | 72 N, 7.4 kg (l) | 77 N, 7.8 kg (l) | 47 N, 4.8 kg (l) | across the layers: 9.8 mm from slot (60, 60), front | 116 / 107 / 96 N (11.8 / 10.9 / 9.7 kg) | 60 / 55 / 49 N (6.1 / 5.6 / 5.0 kg), 8.55 MPa | 2, not converged: 5 % / 28 % / 5 % / 7 % |
+| skeleton | today | spread, on standoffs | spread-standoffs | 18 N, 1.9 kg (l) | 19 N, 2.0 kg (l) | 12 N, 1.2 kg (l) | across the layers: 9.8 mm from slot (20, 60), back; rising with the mesh at its place, a sharp inner edge: an upper bound | 58 / 54 / 48 N (5.9 / 5.5 / 4.9 kg) | 58 / 53 / 48 N (5.9 / 5.4 / 4.9 kg), 8.81 MPa | 3, not converged (the part's peak from level 2; the contact and the deflection from level 1): 11 % / 45 % / 10 % / 2 % |
+| skeleton | today | spread, on keyholes, hung (the brief's) | spread-keyholes | 20 N, 2.0 kg (l) | 21 N, 2.1 kg (l) | 13 N, 1.3 kg (l) | across the layers: 5.7 mm from keyhole lip (60, 64.5), z -14.1; at a held face's band, 2 mm off it 5.70 against 8.60 MPa | 23 / 21 / 19 N (2.3 / 2.2 / 1.9 kg) | 54 / 50 / 44 N (5.5 / 5.0 / 4.5 kg), 9.49 MPa | 2, converged: 1 % / 0 % / 8 % / 0 % |
+| skeleton | today | spread, on keyholes, standing on its standoffs (the design's) | spread-keyholes-standing | 161 N, 16.5 kg (l) | 171 N, 17.4 kg (l) | 104 N, 10.6 kg (l) | across the layers: 7.4 mm from slot (60, 60), back | 280 / 258 / 231 N (28.6 / 26.3 / 23.5 kg) | 51 / 47 / 42 N (5.1 / 4.7 / 4.2 kg), 10.10 MPa | 2, not converged: 26 % / 3 % / 6 % / 1 % |
+| standoff, 1 board | today | 10 N down | shear | 80 N, 8.2 kg (l) | 85 N, 8.7 kg (l) | 52 N, 5.3 kg (l) | across the layers: 1.0 mm from the wall face, at (1.2, 3.9, 1.0); at a held face's band, 2 mm off it 1.30 against 2.11 MPa | 243 / 224 / 200 N (24.8 / 22.9 / 20.4 kg) | 521 / 480 / 429 N (53.1 / 48.9 / 43.7 kg), 0.98 MPa | 2, not converged: 9 % / 12 % / 3 % / 0 % |
+| standoff, 4 boards | today | 10 N down | shear | 175 N, 17.8 kg (l) | 185 N, 18.9 kg (l) | 113 N, 11.5 kg (l) | across the layers: 7.0 mm from the wall face, at (-10.1, -5.0, 7.0) | 664 / 612 / 547 N (67.7 / 62.4 / 55.7 kg) | 2008 / 1850 / 1654 N (204.7 / 188.6 / 168.6 kg), 0.25 MPa | 2, converged: 2 % / 4 % / 0 % / 0 % |
+| slot clip, 2 boards | today | 10 N down | shear | 53 N, 5.4 kg (l) | 56 N, 5.8 kg (l) | 34 N, 3.5 kg (l) | across the layers: 27.7 mm from the peg in its slot, at (10.6, 3.3, 7.0); rising with the mesh at its place, a sharp inner edge: an upper bound | 111 / 103 / 92 N (11.4 / 10.5 / 9.4 kg) | 492 / 453 / 405 N (50.1 / 46.2 / 41.3 kg), 1.04 MPa | 2, not converged: 8 % / 20 % / 6 % / 0 % |
+| solid wall | today | one hook at the seam, each panel on its screws | wall-seam-hook | 208 N, 21.2 kg (l) | 220 N, 22.4 kg (l) | 134 N, 13.7 kg (l) | across the layers: 5.7 mm from countersink (90, 110), front; at a held face's band, 2 mm off it 0.40 against 0.82 MPa | 576 / 531 / 475 N (58.8 / 54.2 / 48.4 kg) | 322 / 297 / 266 N (32.9 / 30.3 / 27.1 kg), 1.58 MPa | 1 only |
+| solid wall | today | spread, each panel on its screws | wall-spread | 404 N, 41.2 kg (l) | 428 N, 43.6 kg (l) | 261 N, 26.6 kg (l) | across the layers: 5.9 mm from countersink (150, 110), front; at a held face's band, 2 mm off it 0.09 against 0.42 MPa | 1473 / 1357 / 1213 N (150.1 / 138.3 / 123.6 kg) | 1631 / 1503 / 1343 N (166.2 / 153.2 / 136.9 kg), 0.31 MPa | 1 only |
+| solid wall | today | one hook at the seam, the wall's four outer screws | wall-seam-hook-outer-screws | 113 N, 11.6 kg (l) | 120 N, 12.2 kg (l) | 73 N, 7.5 kg (l) | across the layers: 5.8 mm from countersink (150, 110), front; at a held face's band, 2 mm off it 0.67 against 1.50 MPa | 349 / 322 / 288 N (35.6 / 32.8 / 29.3 kg) | 334 / 308 / 275 N (34.0 / 31.4 / 28.0 kg), 1.53 MPa | 1 only |
+| lightened wall | today | one hook at the seam, each panel on its screws | wall-seam-hook | 199 N, 20.3 kg (y) | 183 N, 18.7 kg (y) | 147 N, 15.0 kg (l) | yield: 12.9 mm from slot (80, 80), front | 199 / 183 / 164 N (20.3 / 18.7 / 16.7 kg) | 211 / 195 / 174 N (21.6 / 19.9 / 17.8 kg), 2.41 MPa | 1 only |
+| lightened wall | today | spread, each panel on its screws | wall-spread | 398 N, 40.6 kg (y) | 367 N, 37.4 kg (y) | 308 N, 31.4 kg (l) | yield: 6.7 mm from countersink (150, 110), back | 398 / 367 / 328 N (40.6 / 37.4 / 33.4 kg) | 902 / 832 / 743 N (92.0 / 84.8 / 75.7 kg), 0.57 MPa | 1 only |
+| lightened wall | today | one hook at the seam, the wall's four outer screws | wall-seam-hook-outer-screws | 164 N, 16.7 kg (y) | 151 N, 15.4 kg (y) | 123 N, 12.6 kg (l) | yield: 12.4 mm from slot (80, 80), front | 164 / 151 / 135 N (16.7 / 15.4 / 13.8 kg) | 184 / 170 / 152 N (18.8 / 17.3 / 15.5 kg), 2.77 MPa | 1 only |
+| skeleton wall | today | one hook at the seam, each panel on its screws | not run | | | | | | | |
+| skeleton wall | today | spread, each panel on its screws | not run | | | | | | | |
+| skeleton wall | today | one hook at the seam, the wall's four outer screws | not run | | | | | | | |
 
 ### One hook, 10 N, on the 160 mm board held off the wall on its corner screws
 
-| Part | Version | Case | Peak in the part (MPa) | Where | At the contact (MPa) | Across the layers (MPa) | Deflection, PLA / PETG / ASA (mm) | Holds in the part, PLA / PETG / ASA (kg) | Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / contact / deflection |
+| Part | Version | Case | Peak in the part (MPa) | Where | At the contact (MPa) | Across the layers (MPa) | Deflection, PLA / PETG / ASA (mm) | Holds in the part, PLA / PETG / ASA (kg) | Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / layers / contact / deflection |
 |---|---|---|---|---|---|---|---|---|---|---|
-| solid | v0.2.1 | hook-mid | 0.91 | 8.6 mm from slot below (80, 40), back | 1.71 | 0.33 | 0.041 / 0.062 / 0.058 | 52.3 l / 52.4 y / 33.8 l | 30.4 / 28.0 / 25.0 | 0 % / 6 % / 0 % |
-| solid | v0.2.1 | hook-edge | 0.76 | 5.2 mm from countersink (10, 150), mid | 1.78 | 0.32 | 0.036 / 0.055 / 0.051 | 54.5 l / 57.7 l / 35.3 l | 29.2 / 27.0 / 24.1 | 0 % / 6 % / 1 % |
-| solid | today | hook-mid | 0.93 | 8.6 mm from slot below (80, 40), back | 1.75 | 0.36 | 0.041 / 0.062 / 0.059 | 47.8 l / 50.6 l / 30.9 l | 29.7 / 27.4 / 24.5 | 0 % / 7 % / 0 % |
-| solid | today | hook-edge | 0.76 | 8.6 mm from slot below (20, 60), back | 1.79 | 0.32 | 0.037 / 0.056 / 0.053 | 54.6 l / 57.8 l / 35.3 l | 29.0 / 26.8 / 23.9 | 0 % / 3 % / 0 % |
-| lightened | v0.2.1 | hook-mid | 6.00 | 10.4 mm from slot (80, 80), mid | 5.27 | 2.09 | 0.286 / 0.438 / 0.411 | 8.3 l / 8.0 y / 5.4 l | 9.9 / 9.1 / 8.1 | 1 % / 3 % / 0 % |
-| lightened | v0.2.1 | hook-edge | 5.96 | 8.4 mm from slot (20, 100), back | 4.77 | 2.36 | 0.191 / 0.292 / 0.274 | 7.4 l / 7.8 l / 4.8 l | 10.9 / 10.1 / 9.0 | 5 % / 2 % / 0 % |
-| lightened | today | hook-mid | 3.98 | 10.3 mm from slot (80, 80), back | 5.09 | 0.60 | 0.259 / 0.397 / 0.373 | 13.0 y / 12.0 y / 10.7 y | 10.2 / 9.4 / 8.4 | 1 % / 2 % / 0 % |
-| lightened | today | hook-edge | 4.27 | 25.7 mm from slot (20, 100), mid | 4.76 | 1.07 | 0.182 / 0.279 / 0.261 | 12.2 y / 11.2 y / 10.0 y | 10.9 / 10.1 / 9.0 | 5 % / 1 % / 1 % |
-| skeleton | v0.2.1 | hook-mid | 38.76 | 9.9 mm from slot (80, 80), mid | 15.53 | 23.94 | 0.469 / 0.719 / 0.674 | 0.7 l / 0.8 l / 0.5 l | 3.3 / 3.1 / 2.8 | 7 % / 9 % / 0 % |
-| skeleton | v0.2.1 | hook-edge | 63.50 | 9.9 mm from slot (20, 100), mid | 14.15 | 38.84 | 0.307 / 0.470 / 0.441 | 0.4 l / 0.5 l / 0.3 l | 3.7 / 3.4 / 3.0 | 14 % / 5 % / 1 % (not converged) |
-| skeleton | v0.4.2 | hook-mid | 7.64 | 9.2 mm from slot (80, 80), mid | 10.02 | 1.82 | 0.380 / 0.583 / 0.546 | 6.8 y / 6.3 y / 5.6 y | 5.2 / 4.8 / 4.3 | 5 % / 10 % / 0 % |
-| skeleton | v0.4.2 | hook-edge | 8.84 | 25.8 mm from slot (20, 100), mid | 9.26 | 1.91 | 0.256 / 0.393 / 0.368 | 5.9 y / 5.4 y / 4.8 y | 5.6 / 5.2 / 4.6 | 12 % / 0 % / 0 % (not converged) |
-| skeleton | today | hook-mid | 9.93 | 9.8 mm from slot (80, 80), front | 19.30 | 3.88 | 0.493 / 0.755 / 0.708 | 4.5 l / 4.7 l / 2.9 l | 2.7 / 2.5 / 2.2 | 1 % / 12 % / 0 % |
-| skeleton | today | hook-edge | 9.28 | 9.8 mm from slot (20, 100), front | 19.32 | 5.89 | 0.327 / 0.502 / 0.471 | 2.9 l / 3.1 l / 1.9 l | 2.7 / 2.5 / 2.2 | 6 % / 6 % / 0 % |
+| solid | v0.2.1 | hook-mid | 0.91 | 8.6 mm from slot below (80, 40), back | 1.71 | 0.33 | 0.041 / 0.062 / 0.058 | 52.3 l / 52.4 y / 33.8 l | 30.4 / 28.0 / 25.0 | 0 % / 28 % / 6 % / 0 % (not converged) |
+| solid | v0.2.1 | hook-edge | 0.76 | 5.2 mm from countersink (10, 150), mid | 1.78 | 0.32 | 0.036 / 0.055 / 0.051 | 54.5 l / 57.7 l / 35.3 l | 29.2 / 27.0 / 24.1 | 0 % / 3 % / 6 % / 1 % |
+| solid | today | hook-mid | 0.93 | 8.6 mm from slot below (80, 40), back | 1.75 | 0.36 | 0.041 / 0.062 / 0.059 | 47.8 l / 50.6 l / 30.9 l | 29.7 / 27.4 / 24.5 | 0 % / 16 % / 7 % / 0 % (not converged) |
+| solid | today | hook-edge | 0.76 | 8.6 mm from slot below (20, 60), back | 1.79 | 0.32 | 0.037 / 0.056 / 0.053 | 54.6 l / 57.8 l / 35.3 l | 29.0 / 26.8 / 23.9 | 0 % / 16 % / 3 % / 0 % (not converged) |
+| lightened | v0.2.1 | hook-mid | 6.00 | 10.4 mm from slot (80, 80), mid | 5.27 | 2.09 | 0.286 / 0.438 / 0.411 | 8.3 l / 8.0 y / 5.4 l | 9.9 / 9.1 / 8.1 | 1 % / 12 % / 3 % / 0 % (not converged) |
+| lightened | v0.2.1 | hook-edge | 5.96 | 8.4 mm from slot (20, 100), back | 4.77 | 2.36 | 0.191 / 0.292 / 0.274 | 7.4 l / 7.8 l / 4.8 l | 10.9 / 10.1 / 9.0 | 5 % / 24 % / 2 % / 0 % (not converged) |
+| lightened | today | hook-mid | 3.98 | 10.3 mm from slot (80, 80), back | 5.09 | 0.60 | 0.259 / 0.397 / 0.373 | 13.0 y / 12.0 y / 10.7 y | 10.2 / 9.4 / 8.4 | 1 % / 84 % / 2 % / 0 % (not converged) |
+| lightened | today | hook-edge | 4.27 | 25.7 mm from slot (20, 100), mid | 4.76 | 1.07 | 0.182 / 0.279 / 0.261 | 12.2 y / 11.2 y / 10.0 y | 10.9 / 10.1 / 9.0 | 5 % / 2 % / 1 % / 1 % |
+| skeleton | v0.2.1 | hook-mid | 38.76 | 9.9 mm from slot (80, 80), mid | 15.53 | 23.94 | 0.469 / 0.719 / 0.674 | 0.7 l / 0.8 l / 0.5 l | 3.3 / 3.1 / 2.8 | 7 % / 5 % / 9 % / 0 % |
+| skeleton | v0.2.1 | hook-edge | 63.50 | 9.9 mm from slot (20, 100), mid | 14.15 | 38.84 | 0.307 / 0.470 / 0.441 | 0.4 l / 0.5 l / 0.3 l | 3.7 / 3.4 / 3.0 | 14 % / 33 % / 5 % / 1 % (not converged) |
+| skeleton | v0.4.2 | hook-mid | 7.64 | 9.2 mm from slot (80, 80), mid | 10.02 | 1.82 | 0.380 / 0.583 / 0.546 | 6.8 y / 6.3 y / 5.6 y | 5.2 / 4.8 / 4.3 | 5 % / 3 % / 10 % / 0 % |
+| skeleton | v0.4.2 | hook-edge | 6.81 | 9.2 mm from slot (20, 100), mid | 9.28 | 2.16 | 0.257 / 0.394 / 0.369 | 7.6 y / 7.0 y / 5.2 l | 5.6 / 5.2 / 4.6 | 31 % / 12 % / 0 % / 0 % (the part's peak level 2 to 3; the contact and the deflection the larger of 1 to 2 and 2 to 3) (not converged) |
+| skeleton | today | hook-mid | 9.93 | 9.8 mm from slot (80, 80), front | 19.30 | 3.88 | 0.493 / 0.755 / 0.708 | 4.5 l / 4.7 l / 2.9 l | 2.7 / 2.5 / 2.2 | 1 % / 4 % / 12 % / 0 % |
+| skeleton | today | hook-edge | 9.28 | 9.8 mm from slot (20, 100), front | 19.32 | 5.89 | 0.327 / 0.502 / 0.471 | 2.9 l / 3.1 l / 1.9 l | 2.7 / 2.5 / 2.2 | 6 % / 3 % / 6 % / 0 % |
 
 ### The same hooks in windows of the board, their cut faces held: the local stress alone (C334)
 
-| Part | Version | Case | Peak in the part (MPa) | Where | At the contact (MPa) | Across the layers (MPa) | Deflection, PLA / PETG / ASA (mm) | Holds in the part, PLA / PETG / ASA (kg) | Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / contact / deflection |
+| Part | Version | Case | Peak in the part (MPa) | Where | At the contact (MPa) | Across the layers (MPa) | Deflection, PLA / PETG / ASA (mm) | Holds in the part, PLA / PETG / ASA (kg) | Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / layers / contact / deflection |
 |---|---|---|---|---|---|---|---|---|---|---|
 | solid | v0.2.1 | hook-mid | 0.70 | 10.5 mm from slot (80, 80), front | 1.47 | 0.19 | 0.010 / 0.015 / 0.014 | 74.7 y / 68.9 y / 58.4 l | 35.3 / 32.6 / 29.1 | level 1 only |
 | solid | v0.2.1 | hook-edge | 0.66 | 10.5 mm from slot (20, 100), front | 1.61 | 0.18 | 0.014 / 0.022 / 0.021 | 78.3 y / 72.2 y / 63.3 l | 32.4 / 29.8 / 26.7 | level 1 only |
@@ -287,48 +314,48 @@ and 0.40 (the last table).
 
 ### 10 N spread over an 80 mm board's hooks, on each mounting
 
-| Part | Version | Case | Peak in the part (MPa) | Where | At the contact (MPa) | Across the layers (MPa) | Deflection, PLA / PETG / ASA (mm) | Holds in the part, PLA / PETG / ASA (kg) | Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / contact / deflection |
+| Part | Version | Case | Peak in the part (MPa) | Where | At the contact (MPa) | Across the layers (MPa) | Deflection, PLA / PETG / ASA (mm) | Holds in the part, PLA / PETG / ASA (kg) | Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / layers / contact / deflection |
 |---|---|---|---|---|---|---|---|---|---|---|
-| solid | v0.2.1 | spread-screws | 0.42 | 5.2 mm from countersink (10, 70), mid | 0.87 | 0.21 | 0.006 / 0.010 / 0.009 | 84.4 l / 89.3 l / 54.6 l | 60.0 / 55.3 / 49.4 | level 1 only |
-| solid | v0.2.1 | spread-standoffs | 2.14 | 10.4 mm from slot (60, 60), back | 0.94 | 2.46 | 0.008 / 0.012 / 0.011 | 7.1 l / 7.5 l / 4.6 l | 55.2 / 50.9 / 45.5 | level 1 only |
-| solid | v0.2.1 | spread-keyholes | 8.81 | 5.0 mm from keyhole lip (70, 70), back | 1.60 | 7.24 | 0.645 / 0.989 / 0.927 | 2.4 l / 2.5 l / 1.5 l | 32.4 / 29.9 / 26.7 | level 1 only |
-| solid | v0.2.1 | spread-keyholes-standing | 1.49 | 5.0 mm from keyhole lip (70, 70), back | 1.00 | 1.38 | 0.009 / 0.014 / 0.013 | 12.5 l / 13.3 l / 8.1 l | 52.0 / 47.9 / 42.8 | level 1 only |
-| solid | today | spread-screws | 0.35 | 5.4 mm from countersink (70, 70), mid | 0.83 | 0.22 | 0.006 / 0.010 / 0.009 | 77.6 l / 82.2 l / 50.2 l | 62.6 / 57.7 / 51.6 | 32 % / 0 % / 1 % (not converged) |
-| solid | today | spread-standoffs | 1.64 | 9.6 mm from slot (20, 60), back | 1.13 | 1.89 | 0.008 / 0.012 / 0.011 | 9.2 l / 9.7 l / 5.9 l | 46.1 / 42.5 / 37.9 | level 1 only |
-| solid | today | spread-keyholes | 6.22 | 4.8 mm from keyhole lip (60, 64.5), z -12.7 | 7.06 | 6.90 | 0.343 / 0.526 / 0.493 | 2.5 l / 2.7 l / 1.6 l | 7.4 / 6.8 / 6.1 | 19 % / 5 % / 11 % (not converged) |
-| solid | today | spread-keyholes-standing | 0.74 | 11.5 mm from slot below (60, 20), back | 0.87 | 0.44 | 0.002 / 0.003 / 0.003 | 39.3 l / 41.6 l / 25.4 l | 59.5 / 54.8 / 49.0 | level 1 only |
-| lightened | v0.2.1 | spread-screws | 3.68 | 7.1 mm from countersink (10, 70), back | 1.75 | 0.83 | 0.040 / 0.061 / 0.057 | 14.1 y / 13.0 y / 11.6 y | 29.8 / 27.5 / 24.5 | level 1 only |
-| lightened | v0.2.1 | spread-standoffs | 3.83 | 7.8 mm from slot (20, 60), back | 1.75 | 3.74 | 0.041 / 0.063 / 0.059 | 4.6 l / 4.9 l / 3.0 l | 29.7 / 27.4 / 24.5 | level 1 only |
-| lightened | v0.2.1 | spread-keyholes | 12.25 | 5.0 mm from keyhole lip (10, 70), back | 3.00 | 6.44 | 1.608 / 2.466 / 2.312 | 2.7 l / 2.9 l / 1.7 l | 17.3 / 16.0 / 14.3 | level 1 only |
-| lightened | v0.2.1 | spread-keyholes-standing | 4.17 | 5.0 mm from keyhole lip (70, 70), back | 1.74 | 3.89 | 0.047 / 0.072 / 0.067 | 4.5 l / 4.7 l / 2.9 l | 29.9 / 27.6 / 24.6 | level 1 only |
-| lightened | today | spread-screws | 2.14 | 7.4 mm from slot (20, 60), back | 1.68 | 0.36 | 0.036 / 0.055 / 0.052 | 24.3 y / 22.4 y / 20.0 y | 30.9 / 28.5 / 25.5 | 1 % / 0 % / 0 % |
+| solid | v0.2.1 | spread-screws | 0.34 | 4.9 mm from countersink (70, 70), mid | 0.84 | 0.21 | 0.006 / 0.010 / 0.009 | 81.3 l / 86.1 l / 52.6 l | 62.3 / 57.4 / 51.3 | 29 % / 4 % / 4 % / 1 % (not converged) |
+| solid | v0.2.1 | spread-standoffs | 1.81 | 9.6 mm from slot (20, 60), back | 0.88 | 1.85 | 0.008 / 0.012 / 0.011 | 9.4 l / 9.9 l / 6.1 l | 58.8 / 54.2 / 48.4 | 23 % / 33 % / 6 % / 0 % (not converged) |
+| solid | v0.2.1 | spread-keyholes | 11.12 | 5.3 mm from keyhole lip (10, 70), mid | 1.71 | 11.28 | 0.649 / 0.995 / 0.933 | 1.5 l / 1.6 l / 1.0 l | 30.3 / 28.0 / 25.0 | 9 % / 36 % / 6 % / 1 % (not converged) |
+| solid | v0.2.1 | spread-keyholes-standing | 1.57 | 5.0 mm from keyhole lip (70, 70), back | 0.98 | 1.52 | 0.009 / 0.014 / 0.013 | 11.4 l / 12.1 l / 7.4 l | 52.9 / 48.8 / 43.6 | 5 % / 2 % / 2 % / 0 % |
+| solid | today | spread-screws | 0.35 | 5.4 mm from countersink (70, 70), mid | 0.83 | 0.22 | 0.006 / 0.010 / 0.009 | 77.6 l / 82.2 l / 50.2 l | 62.6 / 57.7 / 51.6 | 32 % / 6 % / 0 % / 1 % (not converged) |
+| solid | today | spread-standoffs | 1.73 | 10.5 mm from slot (60, 60), back | 0.98 | 2.04 | 0.008 / 0.012 / 0.011 | 8.5 l / 9.0 l / 5.5 l | 53.0 / 48.8 / 43.6 | 1 % / 7 % / 15 % / 1 % |
+| solid | today | spread-keyholes | 6.22 | 4.8 mm from keyhole lip (60, 64.5), z -12.7 | 7.06 | 6.90 | 0.343 / 0.526 / 0.493 | 2.5 l / 2.7 l / 1.6 l | 7.4 / 6.8 / 6.1 | 19 % / 3 % / 5 % / 11 % (not converged) |
+| solid | today | spread-keyholes-standing | 0.83 | 11.5 mm from slot below (20, 20), back | 1.00 | 0.39 | 0.002 / 0.003 / 0.003 | 44.5 l / 47.1 l / 28.8 l | 52.2 / 48.1 / 43.0 | 8 % / 41 % / 12 % / 2 % (not converged) |
+| lightened | v0.2.1 | spread-screws | 3.75 | 7.1 mm from countersink (10, 70), back | 1.75 | 0.89 | 0.039 / 0.060 / 0.057 | 13.8 y / 12.8 y / 11.4 y | 29.8 / 27.4 / 24.5 | 2 % / 7 % / 0 % / 0 % |
+| lightened | v0.2.1 | spread-standoffs | 4.40 | 9.2 mm from slot (60, 60), back | 1.69 | 4.26 | 0.041 / 0.063 / 0.059 | 4.1 l / 4.3 l / 2.6 l | 30.7 / 28.3 / 25.3 | 7 % / 11 % / 3 % / 0 % (not converged) |
+| lightened | v0.2.1 | spread-keyholes | 11.95 | 5.0 mm from keyhole lip (70, 70), back | 2.88 | 7.55 | 1.613 / 2.474 / 2.319 | 2.3 l / 2.4 l / 1.5 l | 18.1 / 16.7 / 14.9 | 5 % / 15 % / 4 % / 0 % (not converged) |
+| lightened | v0.2.1 | spread-keyholes-standing | 4.45 | 5.0 mm from keyhole lip (10, 70), back | 1.74 | 4.34 | 0.047 / 0.073 / 0.068 | 4.0 l / 4.2 l / 2.6 l | 29.9 / 27.5 / 24.6 | 5 % / 0 % / 0 % / 1 % |
+| lightened | today | spread-screws | 2.14 | 7.4 mm from slot (20, 60), back | 1.68 | 0.36 | 0.036 / 0.055 / 0.052 | 24.3 y / 22.4 y / 20.0 y | 30.9 / 28.5 / 25.5 | 1 % / 69 % / 0 % / 0 % (not converged) |
 | lightened | today | spread-standoffs | 4.00 | 9.4 mm from slot (60, 60), back | 1.63 | 3.59 | 0.038 / 0.058 / 0.054 | 4.8 l / 5.1 l / 3.1 l | 31.9 / 29.4 / 26.3 | level 1 only |
-| lightened | today | spread-keyholes | 10.67 | 4.4 mm from slot (20, 60), z -15.0 | 5.53 | 7.73 | 1.290 / 1.978 / 1.855 | 2.2 l / 2.4 l / 1.4 l | 9.4 / 8.7 / 7.7 | 7 % / 6 % / 1 % |
-| lightened | today | spread-keyholes-standing | 1.93 | 10.8 mm from slot below (20, 20), back | 3.87 | 0.67 | 0.006 / 0.009 / 0.008 | 25.8 l / 24.9 y / 16.7 l | 13.4 / 12.4 / 11.1 | level 1 only |
-| skeleton | v0.2.1 | spread-screws | 17.89 | 6.5 mm from countersink (70, 70), mid | 5.97 | 8.62 | 0.068 / 0.104 / 0.098 | 2.0 l / 2.1 l / 1.3 l | 8.7 / 8.0 / 7.2 | level 1 only |
-| skeleton | v0.2.1 | spread-standoffs | 18.37 | 7.9 mm from slot (60, 60), mid | 4.89 | 8.13 | 0.072 / 0.111 / 0.104 | 2.1 l / 2.3 l / 1.4 l | 10.6 / 9.8 / 8.8 | level 1 only |
-| skeleton | v0.2.1 | spread-keyholes | 46.71 | 10.0 mm from slot (60, 60), back | 13.95 | 25.66 | 2.217 / 3.399 / 3.187 | 0.7 l / 0.7 l / 0.4 l | 3.7 / 3.4 / 3.1 | level 1 only |
-| skeleton | v0.2.1 | spread-keyholes-standing | 18.03 | 10.0 mm from slot (60, 60), back | 5.88 | 10.34 | 0.085 / 0.130 / 0.122 | 1.7 l / 1.8 l / 1.1 l | 8.8 / 8.2 / 7.3 | level 1 only |
-| skeleton | v0.4.2 | spread-screws | 3.33 | 6.9 mm from slot (20, 60), mid | 2.88 | 1.33 | 0.052 / 0.080 / 0.075 | 13.0 l / 13.8 l / 8.4 l | 18.1 / 16.6 / 14.9 | level 1 only |
-| skeleton | v0.4.2 | spread-standoffs | 4.96 | 9.2 mm from slot (20, 60), back | 3.22 | 6.04 | 0.056 / 0.085 / 0.080 | 2.9 l / 3.0 l / 1.9 l | 16.1 / 14.9 / 13.3 | level 1 only |
-| skeleton | v0.4.2 | spread-keyholes | 19.52 | 26.1 mm from slot below (60, 20), mid | 7.04 | 13.00 | 1.703 / 2.611 / 2.448 | 1.3 l / 1.4 l / 0.9 l | 7.4 / 6.8 / 6.1 | level 1 only |
-| skeleton | v0.4.2 | spread-keyholes-standing | 2.16 | 10.8 mm from slot below (60, 20), back | 3.95 | 0.87 | 0.010 / 0.015 / 0.014 | 20.0 l / 21.1 l / 12.9 l | 13.2 / 12.1 / 10.8 | level 1 only |
-| skeleton | today | spread-screws | 4.40 | 6.9 mm from slot (60, 60), front | 8.55 | 2.35 | 0.070 / 0.107 / 0.101 | 7.4 l / 7.8 l / 4.8 l | 6.1 / 5.6 / 5.0 | 5 % / 5 % / 7 % (not converged) |
-| skeleton | today | spread-standoffs | 5.81 | 9.6 mm from slot (20, 60), back | 9.89 | 5.90 | 0.069 / 0.106 / 0.099 | 2.9 l / 3.1 l / 1.9 l | 5.3 / 4.8 / 4.3 | level 1 only |
-| skeleton | today | spread-keyholes | 22.01 | 25.9 mm from slot below (60, 20), front | 8.78 | 8.61 | 2.140 / 3.282 / 3.077 | 2.0 l / 2.1 l / 1.3 l | 5.9 / 5.5 / 4.9 | level 1 only |
-| skeleton | today | spread-keyholes-standing | 2.21 | 10.9 mm from slot below (60, 20), front | 9.44 | 1.02 | 0.057 / 0.087 / 0.082 | 16.9 l / 17.9 l / 10.9 l | 5.5 / 5.1 / 4.5 | level 1 only |
+| lightened | today | spread-keyholes | 10.67 | 4.4 mm from slot (20, 60), z -15.0 | 5.53 | 7.73 | 1.290 / 1.978 / 1.855 | 2.2 l / 2.4 l / 1.4 l | 9.4 / 8.7 / 7.7 | 7 % / 13 % / 6 % / 1 % (not converged) |
+| lightened | today | spread-keyholes-standing | 2.16 | 10.8 mm from slot below (20, 20), back | 3.83 | 0.85 | 0.006 / 0.009 / 0.009 | 20.3 l / 21.5 l / 13.2 l | 13.6 / 12.5 / 11.2 | 11 % / 17 % / 1 % / 3 % (not converged) |
+| skeleton | v0.2.1 | spread-screws | 18.46 | 6.5 mm from countersink (70, 70), mid | 4.66 | 8.14 | 0.069 / 0.105 / 0.099 | 2.1 l / 2.3 l / 1.4 l | 11.1 / 10.3 / 9.2 | 3 % / 6 % / 28 % / 1 % |
+| skeleton | v0.2.1 | spread-standoffs | 17.55 | 7.9 mm from slot (60, 60), mid | 4.63 | 9.81 | 0.072 / 0.111 / 0.104 | 1.8 l / 1.9 l / 1.1 l | 11.2 / 10.3 / 9.2 | 5 % / 17 % / 6 % / 0 % (not converged) |
+| skeleton | v0.2.1 | spread-keyholes | 33.62 | 8.2 mm from slot (20, 60), mid | 9.79 | 17.06 | 2.225 / 3.411 / 3.198 | 1.0 l / 1.1 l / 0.7 l | 5.3 / 4.9 / 4.4 | 39 % / 50 % / 42 % / 0 % (peak moved) |
+| skeleton | v0.2.1 | spread-keyholes-standing | 13.15 | 9.9 mm from slot (60, 60), mid | 4.93 | 9.70 | 0.084 / 0.129 / 0.121 | 1.8 l / 1.9 l / 1.2 l | 10.6 / 9.7 / 8.7 | 37 % / 7 % / 19 % / 1 % (peak moved) |
+| skeleton | v0.4.2 | spread-screws | 3.23 | 7.0 mm from slot (60, 60), mid | 3.12 | 1.37 | 0.053 / 0.081 / 0.076 | 12.7 l / 13.4 l / 8.2 l | 16.7 / 15.4 / 13.7 | 3 % / 2 % / 8 % / 1 % |
+| skeleton | v0.4.2 | spread-standoffs | 5.78 | 9.2 mm from slot (20, 60), back | 3.42 | 7.22 | 0.056 / 0.085 / 0.080 | 2.4 l / 2.5 l / 1.6 l | 15.2 / 14.0 / 12.5 | 14 % / 16 % / 6 % / 0 % (not converged) |
+| skeleton | v0.4.2 | spread-keyholes | 16.30 | 26.1 mm from slot below (60, 20), mid | 5.77 | 7.91 | 1.725 / 2.645 / 2.479 | 2.2 l / 2.3 l / 1.4 l | 9.0 / 8.3 / 7.4 | 20 % / 64 % / 22 % / 1 % (not converged) |
+| skeleton | v0.4.2 | spread-keyholes-standing | 2.37 | 10.8 mm from slot below (60, 20), back | 4.31 | 0.90 | 0.010 / 0.016 / 0.015 | 19.2 l / 20.2 y / 12.4 l | 12.1 / 11.1 / 9.9 | 9 % / 7 % / 8 % / 1 % |
+| skeleton | today | spread-screws | 4.40 | 6.9 mm from slot (60, 60), front | 8.55 | 2.35 | 0.070 / 0.107 / 0.101 | 7.4 l / 7.8 l / 4.8 l | 6.1 / 5.6 / 5.0 | 5 % / 28 % / 5 % / 7 % (not converged) |
+| skeleton | today | spread-standoffs | 8.78 | 9.6 mm from slot (20, 60), back | 8.81 | 9.24 | 0.070 / 0.107 / 0.101 | 1.9 l / 2.0 l / 1.2 l | 5.9 / 5.4 / 4.9 | 11 % / 45 % / 10 % / 2 % (the part's peak level 2 to 3; the contact and the deflection the larger of 1 to 2 and 2 to 3) (not converged) |
+| skeleton | today | spread-keyholes | 22.25 | 25.9 mm from slot below (60, 20), front | 9.49 | 8.60 | 2.150 / 3.297 / 3.091 | 2.0 l / 2.1 l / 1.3 l | 5.5 / 5.0 / 4.5 | 1 % / 0 % / 8 % / 0 % |
+| skeleton | today | spread-keyholes-standing | 1.82 | 10.9 mm from slot below (60, 20), front | 10.10 | 1.05 | 0.058 / 0.088 / 0.083 | 16.5 l / 17.4 l / 10.6 l | 5.1 / 4.7 / 4.2 | 26 % / 3 % / 6 % / 1 % (not converged) |
 
 ### The connectors, 10 N
 
-| Part | Version | Case | Peak in the part (MPa) | Where | At the contact (MPa) | Across the layers (MPa) | Deflection, PLA / PETG / ASA (mm) | Holds in the part, PLA / PETG / ASA (kg) | Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / contact / deflection |
+| Part | Version | Case | Peak in the part (MPa) | Where | At the contact (MPa) | Across the layers (MPa) | Deflection, PLA / PETG / ASA (mm) | Holds in the part, PLA / PETG / ASA (kg) | Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / layers / contact / deflection |
 |---|---|---|---|---|---|---|---|---|---|---|
-| standoff, 1 board | today | shear | 2.10 | 1.0 mm from the wall face, at (1.2, 3.9, 1.0) | 0.98 | 2.11 | 0.020 / 0.031 / 0.029 | 8.2 l / 8.7 l / 5.3 l | 53.1 / 48.9 / 43.7 | 9 % / 3 % / 0 % |
-| standoff, 4 boards | today | shear | 0.70 | 7.0 mm from the wall face, at (9.4, -5.0, 7.0) | 0.26 | 0.83 | 0.002 / 0.003 / 0.003 | 20.9 l / 22.1 l / 13.5 l | 203.8 / 187.8 / 167.8 | level 1 only |
-| slot clip, 2 boards | today | shear | 4.21 | 27.6 mm from the peg in its slot, at (10.4, -2.7, 7.0) | 0.97 | 2.54 | 0.229 / 0.351 / 0.329 | 6.8 l / 7.2 l / 4.4 l | 53.4 / 49.2 / 44.0 | level 1 only |
+| standoff, 1 board | today | shear | 2.10 | 1.0 mm from the wall face, at (1.2, 3.9, 1.0) | 0.98 | 2.11 | 0.020 / 0.031 / 0.029 | 8.2 l / 8.7 l / 5.3 l | 53.1 / 48.9 / 43.7 | 9 % / 12 % / 3 % / 0 % (not converged) |
+| standoff, 4 boards | today | shear | 0.77 | 7.0 mm from the wall face, at (-9.5, -5.0, 7.0) | 0.25 | 0.97 | 0.002 / 0.003 / 0.003 | 17.8 l / 18.9 l / 11.5 l | 204.7 / 188.6 / 168.6 | 2 % / 4 % / 0 % / 0 % |
+| slot clip, 2 boards | today | shear | 4.58 | 27.5 mm from the peg in its slot, at (10.3, -2.3, 7.0) | 1.04 | 3.19 | 0.229 / 0.351 / 0.329 | 5.4 l / 5.8 l / 3.5 l | 50.1 / 46.2 / 41.3 | 8 % / 20 % / 6 % / 0 % (not converged) |
 
 ### Two-panel walls joined by a slot clip, 10 N
 
-| Part | Version | Case | Peak in the part (MPa) | Where | At the contact (MPa) | Across the layers (MPa) | Deflection, PLA / PETG / ASA (mm) | Holds in the part, PLA / PETG / ASA (kg) | Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / contact / deflection |
+| Part | Version | Case | Peak in the part (MPa) | Where | At the contact (MPa) | Across the layers (MPa) | Deflection, PLA / PETG / ASA (mm) | Holds in the part, PLA / PETG / ASA (kg) | Holds at the contact, PLA / PETG / ASA (kg) | Mesh change: part / layers / contact / deflection |
 |---|---|---|---|---|---|---|---|---|---|---|
 | solid wall | today | wall-seam-hook | 0.88 | 5.7 mm from countersink (90, 10), front | 1.58 | 0.82 | 0.018 / 0.028 / 0.026 | 21.2 l / 22.4 l / 13.7 l | 32.9 / 30.3 / 27.1 | level 1 only |
 | solid wall | today | wall-spread | 0.35 | 5.9 mm from countersink (150, 110), front | 0.31 | 0.42 | 0.005 / 0.007 / 0.007 | 41.2 l / 43.6 l / 26.6 l | 166.2 / 153.2 / 136.9 | level 1 only |
@@ -359,7 +386,7 @@ and 0.40 (the last table).
 | 0.35 (the runs) | 6.49 | 8.39 | 2.40 | 0.2934 |
 | 0.40 | 6.41 (-1 %) | 8.22 (-2 %) | 3.12 (+30 %) | 0.2954 (+0.7 %) |
 
-84 runs; mesh volume against Manifold's: largest difference 0.98 %; reactions against loads: largest imbalance 1.3e-10
+110 runs; mesh volume against Manifold's: largest difference 0.98 %; reactions against loads: largest imbalance 3.1e-10
 
 <!-- tables:end -->
 
@@ -376,15 +403,15 @@ prints what the part holds in PLA, PETG and ASA (Q329). `scripts/physics/figures
 
 <!-- figures:begin -->
 
-- **Solid board, today**: not drawn yet, its run's surface not saved
-- [Solid board, v0.2.1: one hook in the middle slot, 10 N (hook-mid)](../figures/physics/solid-v0.2.1.png): mesh level 2, converged: 0 % / 6 % / 0 %; holds per hook, to the yield in the part or the layers' adhesion: pla 513 n, 52.3 kg (layers) · petg 514 n, 52.4 kg (yield) · asa 332 n, 33.8 kg (layers)
-- [Lightened board, today: one hook in a slot by the left edge, 10 N (hook-edge)](../figures/physics/lightened-today.png): mesh level 2, converged: 5 % / 1 % / 1 %; holds per hook, to the yield in the part or the layers' adhesion: pla 119 n, 12.2 kg (yield) · petg 110 n, 11.2 kg (yield) · asa 98 n, 10.0 kg (yield)
-- [Lightened board, v0.2.1: one hook in the middle slot, 10 N (hook-mid)](../figures/physics/lightened-v0.2.1.png): mesh level 2, converged: 5 % / 2 % / 0 %; holds per hook, to the yield in the part or the layers' adhesion: pla 81 n, 8.3 kg (layers) · petg 78 n, 8.0 kg (yield) · asa 53 n, 5.4 kg (layers)
-- [Skeleton board, today: one hook in a slot by the left edge, 10 N (hook-edge)](../figures/physics/skeleton-today.png): mesh level 2, converged: 6 % / 6 % / 0 %; holds per hook, to the yield in the part or the layers' adhesion: pla 29 n, 2.9 kg (layers) · petg 31 n, 3.1 kg (layers) · asa 19 n, 1.9 kg (layers)
-- [Skeleton board, v0.4.2: one hook in a slot by the left edge, 10 N (hook-edge)](../figures/physics/skeleton-v0.4.2.png): mesh level 2, not converged: 12 % / 0 % / 0 %; holds per hook, to the yield in the part or the layers' adhesion: pla 58 n, 5.9 kg (yield) · petg 53 n, 5.4 kg (yield) · asa 48 n, 4.8 kg (yield)
-- **Skeleton board, v0.2.1**: not drawn yet, its run's surface not saved
-- [Standoff for one board, 15 mm, today: 10 N down the wall (shear)](../figures/physics/standoff-1.png): mesh level 2, converged: 9 % / 3 % / 0 %; holds per connector, to the yield in the part or the layers' adhesion: pla 80 n, 8.2 kg (layers) · petg 85 n, 8.7 kg (layers) · asa 52 n, 5.3 kg (layers)
-- **Slot clip for two boards, today**: not drawn yet, its run's surface not saved
+- [Solid board, today: one hook in the middle slot, 10 N (hook-mid)](../figures/physics/solid-today.png): mesh level 2, not converged: 0 % / 16 % / 7 % / 0 %; holds per hook, to the yield in the part or the layers' adhesion: PLA 469 N, 47.8 kg (layers) · PETG 497 N, 50.6 kg (layers) · ASA 304 N, 30.9 kg (layers)
+- [Solid board, v0.2.1: one hook in the middle slot, 10 N (hook-mid)](../figures/physics/solid-v0.2.1.png): mesh level 2, not converged: 0 % / 28 % / 6 % / 0 %; holds per hook, to the yield in the part or the layers' adhesion: PLA 513 N, 52.3 kg (layers) · PETG 514 N, 52.4 kg (yield) · ASA 332 N, 33.8 kg (layers)
+- [Lightened board, today: one hook in a slot by the left edge, 10 N (hook-edge)](../figures/physics/lightened-today.png): mesh level 2, converged: 5 % / 2 % / 1 % / 1 %; holds per hook, to the yield in the part or the layers' adhesion: PLA 119 N, 12.2 kg (yield) · PETG 110 N, 11.2 kg (yield) · ASA 98 N, 10.0 kg (yield)
+- [Lightened board, v0.2.1: one hook in a slot by the left edge, 10 N (hook-edge)](../figures/physics/lightened-v0.2.1.png): mesh level 2, not converged: 5 % / 24 % / 2 % / 0 %; holds per hook, to the yield in the part or the layers' adhesion: PLA 72 N, 7.4 kg (layers) · PETG 76 N, 7.8 kg (layers) · ASA 47 N, 4.8 kg (layers)
+- [Skeleton board, today: one hook in a slot by the left edge, 10 N (hook-edge)](../figures/physics/skeleton-today.png): mesh level 2, converged: 6 % / 3 % / 6 % / 0 %; holds per hook, to the yield in the part or the layers' adhesion: PLA 29 N, 2.9 kg (layers) · PETG 31 N, 3.1 kg (layers) · ASA 19 N, 1.9 kg (layers)
+- **Skeleton board, v0.4.2**: its picture is of an older result; drawn again with the rest
+- [Skeleton board, v0.2.1: one hook in a slot by the left edge, 10 N (hook-edge)](../figures/physics/skeleton-v0.2.1.png): mesh level 2, not converged: 14 % / 33 % / 5 % / 1 %; holds per hook, to the yield in the part or the layers' adhesion: PLA 4 N, 0.4 kg (layers) · PETG 5 N, 0.5 kg (layers) · ASA 3 N, 0.3 kg (layers)
+- [Standoff for one board, 15 mm, today: 10 N down the wall (shear)](../figures/physics/standoff-1.png): mesh level 2, not converged: 9 % / 12 % / 3 % / 0 %; holds per connector, to the yield in the part or the layers' adhesion: PLA 80 N, 8.2 kg (layers) · PETG 85 N, 8.7 kg (layers) · ASA 52 N, 5.3 kg (layers)
+- [Slot clip for two boards, today: 10 N down the wall (shear)](../figures/physics/slot-clip-2.png): mesh level 2, not converged: 8 % / 20 % / 6 % / 0 %; holds per connector, to the yield in the part or the layers' adhesion: PLA 53 N, 5.4 kg (layers) · PETG 56 N, 5.8 kg (layers) · ASA 34 N, 3.5 kg (layers)
 - **Two lightened panels joined by a slot clip, today**: not drawn yet, its run's surface not saved
 - **Two solid panels joined by a slot clip, today**: not drawn yet, its run's surface not saved
 

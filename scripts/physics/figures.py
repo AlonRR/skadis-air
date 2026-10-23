@@ -297,7 +297,11 @@ def write_scene(spec: tuple, runs: dict) -> str | None:
                 "Mesh level 1 only."
                 if r["dvm"] is None
                 else f"Mesh level {level_note(r)}"
-                + ("." if r["from"] == 2 else " (from level 1: the part's peak / the contact's / the deflection).")
+                + (
+                    "."
+                    if r["from"] == 2
+                    else " (from level 1: the part's peak / across the layers / the contact's / the deflection)."
+                )
             ),
         ],
         "vertices": int(len(xyz)),

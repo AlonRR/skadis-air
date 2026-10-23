@@ -35,6 +35,8 @@ CONTACT_MM = 3.0  # a peak within this of a loaded face is the load's contact, n
 FIELDS = ROOT / ".check" / "physics" / ("fields" if NU == 0.35 else f"fields-nu{NU:g}")
 # the solid board factors with more fill; PHYSICS_SOLID_DIRECT raises its limit for a run watched for memory
 SOLID_DIRECT_MAX = int(os.environ.get("PHYSICS_SOLID_DIRECT", "2200000"))
+# and a lattice's: 3.1 million by default; PHYSICS_LATTICE_DIRECT raises it for a level 3 run watched for memory (C348)
+LATTICE_DIRECT_MAX = int(os.environ.get("PHYSICS_LATTICE_DIRECT", "3100000"))
 VOLUME_TOL = 0.01  # a mesh this far off the part's volume is refused (the brief's "about 1 %")
 # a mesh try stopped past this, s: level 1's meshes took 3 to 83 s, and one try sat 13 minutes in a surface (C338)
 MESH_CAP = float(os.environ.get("PHYSICS_MESH_CAP", "300"))
@@ -311,7 +313,7 @@ def run_one(version: str, part: str, case_id: str, level: int) -> dict:
     timer.mark("loads")
     # a thin lattice factors with far less fill than the chunky solid board: 3.1 million unknowns direct, 2.2 for the
     # solid board, which conjugate gradients take past that (C338)
-    u = model.solve(k, f, fixed_nodes, direct_max=SOLID_DIRECT_MAX if meta["type"] == "solid" else 3_100_000)
+    u = model.solve(k, f, fixed_nodes, direct_max=SOLID_DIRECT_MAX if meta["type"] == "solid" else LATTICE_DIRECT_MAX)
     timer.mark("solve")
     # equilibrium: the supports' reactions balance what was applied
     reaction = (k @ u - f).reshape(-1, 3)[fixed_nodes].sum(axis=0)
@@ -517,7 +519,7 @@ def estimate(version: str, part: str, case_id: str, level: int) -> float | None:
         return 1.3 * estimate(version, part, case_id, 2)
     solid = part.startswith("solid")
     dofs = (1.75 if solid else 1.65) * one["dofs"]
-    limit = SOLID_DIRECT_MAX if solid else 3_100_000
+    limit = SOLID_DIRECT_MAX if solid else LATTICE_DIRECT_MAX
     return 2.6e-4 * dofs + 0.5 * took if dofs > limit else 2.3 * took
 
 
