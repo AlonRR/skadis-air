@@ -26,6 +26,9 @@ All notable changes to this project are recorded here. The format follows
   while the field stood empty.
 - The fit test coupon refuses a clearance step of 0, which gave all four slots the same clearance; its least step is
   0.05 mm.
+- With keyholes or lock screws on standoffs too short for them, the note under the screw size no longer gives a
+  length less than nothing ("passes -9.3 mm of standoff"); it says nothing, and the status line says how tall the
+  standoffs must be.
 
 ## [0.6.0] - 2026-10-23
 

@@ -690,6 +690,23 @@ describe('what each screw passes, from the part itself (D264)', () => {
     );
   });
 
+  // Found by QA (Q9, 23 Oct 2026): a 5 mm lock screw on standoffs 3 mm tall said "Each lock screw passes -9.3 mm of
+  // standoff under its head", under a status that rightly said the board cannot be made.
+  it('gives no length under a lock screw on standoffs too short for it, and says what is short, as the build does', () => {
+    for (const given of [{ screwHead: 'lock' }, { screwHead: 'keyhole', lockScrews: 'bottom' }]) {
+      const values = (standoffHeightMm: string) => {
+        const read = readValues(SOLID.settings, { standoffs: 'back', lockScrewMm: '5', standoffHeightMm, ...given });
+        if (!read.ok) throw new Error(read.errors.map((e) => e.message).join('; '));
+        return read.values;
+      };
+      expect(() => SOLID.screws?.(values('3'))).toThrow('choose standoffs at least 14.3 mm tall');
+      const built = buildBoard(engine, SOLID, values('3'));
+      expect(built.ok ? '' : built.problem).toContain('choose standoffs at least 14.3 mm tall');
+      // the control: on the least standoff that is made, the 2 mm left under the head
+      expect(SOLID.screws?.(values('14.3'))).toContain('Each lock screw passes 2 mm of standoff under its head');
+    }
+  });
+
   it('says what the standoff and the slot clip put under a screw', () => {
     expect(screws('standoff')).toBe(
       'Each screw passes 20 mm of board and standoff, a 5 mm board on this 15 mm standoff, plus your wall plug.',

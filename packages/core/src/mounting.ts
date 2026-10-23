@@ -172,11 +172,35 @@ export function keyholeScrews(start: string, screwMm: number): string {
   );
 }
 
+/** The least standoff a board on keyholes or lock screws stands on, mm; 0 for screws in the corners. The lips, the
+ * head's seat and channel and a roof over it, then a hook's room behind the slot in front (D235, D244, D358); a lock
+ * screw's head in its recess behind the room, and some standoff under it (A248). */
+function leastStandoffMm(m: MountingParams): number {
+  const underLock = HOOK_ROOM_MM + lockRecessMm(m.lockScrewMm) + UNDER_HEAD_MM;
+  if (m.screwHead === 'lock') return underLock;
+  if (m.screwHead !== 'keyhole') return 0;
+  return Math.max(keyholeSeat(m.screwMm).depthMm + MIN_BEHIND_CHANNEL_MM + HOOK_ROOM_MM, m.lockScrews ? underLock : 0);
+}
+
+/** Refuses standoffs too short for the keyholes or lock screws they stand behind, saying how tall they must be: the
+ * build and what the screws pass alike, so neither gives a length the board cannot have (Q9). */
+function checkStandoffs(m: MountingParams): void {
+  const least = leastStandoffMm(m);
+  if (m.standoffHeightMm < least - 1e-9) {
+    throw new RangeError(
+      `${m.screwHead === 'keyhole' ? 'Keyholes' : 'Lock screws'} stand the board off the wall, with a hook's room ` +
+        `behind the slot in front of each: choose standoffs at least ${nice(least)} mm tall`,
+    );
+  }
+}
+
 /** What each of a board's screws passes (D264): the board, and its standoffs when it has them; a keyhole's screw
  * stands in the wall instead, and a lock screw passes what the standoff leaves under its head. Between the slots,
- * which corners keep a screw, of the `cornerScrews` its sides leave it (D289 a). */
+ * which corners keep a screw, of the `cornerScrews` its sides leave it (D289 a). Refuses, as the build does, standoffs
+ * too short for keyholes or lock screws, where a lock screw would pass less than nothing (Q9). */
 export function mountingScrews(m: MountingParams, thicknessMm: number, cornerScrews = 4): string | undefined {
   if (m.screwHead === 'none') return undefined;
+  checkStandoffs(m);
   if (m.screwHead === 'lock') {
     const under = m.standoffHeightMm - HOOK_ROOM_MM - lockRecessMm(m.lockScrewMm);
     return `Each lock screw passes ${nice(under)} mm of standoff under its head, plus your wall plug.`;
@@ -519,19 +543,8 @@ export function mountingCuts(
   // the standoffs behind the slots: on a lattice board the frame round the slot (D306); on the solid board a keyhole's
   // and its walls (D237), sized from its screw, or for lock screws alone, which have no such screw, a 4 mm screw's
   const [standoffScrewMm, outline] = [standoffScrewOf(m), standoffOutline(m, board)];
-  // the lips, the head's seat and channel and a roof over it, then a hook's room behind the slot in front (D235, D244,
-  // D358); a lock screw's head in its recess behind the room, and some standoff under it (A248)
   const recessMm = lockRecessMm(m.lockScrewMm);
-  const underLock = HOOK_ROOM_MM + recessMm + UNDER_HEAD_MM;
-  const leastStandoff = locked
-    ? underLock
-    : Math.max(keyholeSeat(m.screwMm).depthMm + MIN_BEHIND_CHANNEL_MM + HOOK_ROOM_MM, m.lockScrews ? underLock : 0);
-  if (behindSlots && m.standoffHeightMm < leastStandoff - 1e-9) {
-    throw new RangeError(
-      `${what} stand the board off the wall, with a hook's room behind the slot in front of each: choose ` +
-        `standoffs at least ${nice(leastStandoff)} mm tall`,
-    );
-  }
+  checkStandoffs(m);
   if (behindSlots && (board.rows < 2 || board.columns < 2)) {
     throw new RangeError(
       `${what} need a board at least ${2 * TILE_MM} x ${2 * TILE_MM} mm: on one tile, the top standoffs would ` +

@@ -188,6 +188,30 @@ test('offers lock screws alone, which bring their standoffs as keyholes do (D289
   await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 20 mm');
 });
 
+// Found by QA (Q9, 23 Oct 2026): "Each lock screw passes -9.3 mm of standoff under its head".
+test('says nothing under the screws while the standoffs are too short for the lock screws', async ({ page }) => {
+  await ready(page);
+  const [status, note] = [page.getByTestId('board-status'), page.getByTestId('screw-note')];
+  await page.getByTestId('advanced').locator('summary').click();
+  for (const pick of [
+    async () => choose(page, 'screwHead', 'lock'),
+    async () => {
+      await choose(page, 'screwHead', 'keyhole');
+      await choose(page, 'lockScrews', 'bottom');
+    },
+  ]) {
+    await pick();
+    await page.locator('input[name="lockScrewMm"]').fill('5');
+    await page.locator('input[name="standoffHeightMm"]').fill('3');
+    await expect(status).toHaveAttribute('data-state', 'problem');
+    await expect(status).toContainText('standoffs at least 14.3 mm');
+    await expect(note).toHaveText('');
+    // the control: tall enough, the note says what each lock screw passes
+    await page.locator('input[name="standoffHeightMm"]').fill('15');
+    await expect(note).toContainText('Each lock screw passes 2.7 mm of standoff under its head');
+  }
+});
+
 test('says a countersink too deep for a thin board cannot be made, and makes it with a round head', async ({
   page,
 }) => {
