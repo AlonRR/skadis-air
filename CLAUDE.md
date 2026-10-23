@@ -183,15 +183,16 @@ What a slice prints over air, per layer (the keyhole printability pass, 23 Oct 2
 ```bash
 uv run --no-project python scripts/checks/overhang-report.py FILE.gcode   # overhang perimeter and bridge mm per layer
 bash tests/test-overhang-report.sh  # its controls: known lengths, and travel, wipes and falling E that must not count
+node scripts/checks/write-keyhole-parts.mjs  # the keyhole parts as built, into .check/keyhole-parts/, to slice and report
 ```
 
 ## Figures
 
 `node scripts/figures/shoot.mjs <pass>` draws a design pass's figures, each part the library's own with a finding's
 area in orange, into `.check/figures/<pass>/` (`boards-pass`, 21 Oct 2026; `boards-built` and `between-built`, the answers as built;
-`keyhole-pass`, 23 Oct 2026, every face past 45 degrees down in orange, as the part prints); a
-review copies them into `docs/figures/`. A scene seen from the back sets `camera.up`. A pass may build its scenes from
-deeper modules of the library's build than `kit.lib` gives, as `keyhole-pass` does.
+`keyhole-pass`, 23 Oct 2026, every face past 45 degrees down in orange, as the part prints, retired when its options'
+switches went, C385); a review copies them into `docs/figures/`. A scene seen from the back sets `camera.up`. A pass may
+build its scenes from deeper modules of the library's build than `kit.lib` gives, as `keyhole-pass` did.
 
 ## The test print
 

@@ -236,9 +236,10 @@ describe('makeLightenedBoard (D141 to D144)', () => {
       expect(unbacked(b)).toBeLessThan(1e-3);
       expect(degenerateFacets(meshOf(b))).toBe(0);
     }
-    // flush: above the keyhole's roof the top standoffs cover the frame round their slots, all but its outer 0.15 mm
+    // flush: through the keyhole's roof the top standoffs cover the frame round their slots, all but its outer 0.15 mm;
+    // 13.5 mm behind the board, past where the ramp under each room's ceiling opens out of the standoff (D369)
     const frame = (grow: number) => shape([20, 140].map((x) => stadium(x, 140, 5.2, 15.2, grow)));
-    const roof = (b: Manifold) => keep(b.slice(-10));
+    const roof = (b: Manifold) => keep(b.slice(-13.5));
     for (const rimMm of [3, 6]) {
       const b = lightened({}, { rimMm }, keyholes);
       expect(keep(frame(1 + rimMm - 0.15).subtract(roof(b))).area()).toBeLessThan(1e-3);

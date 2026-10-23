@@ -325,7 +325,7 @@ describe('the solid board type', () => {
     if (keyholes.ok) made.push(keyholes.solid);
     const flat = buildBoard(engine, solid, { ...v, screwHead: 'keyhole' });
     expect(flat.ok).toBe(false);
-    if (!flat.ok) expect(flat.problem).toContain('standoffs at least 14.2 mm');
+    if (!flat.ok) expect(flat.problem).toContain('standoffs at least 13.23 mm');
   });
 });
 
@@ -566,10 +566,10 @@ describe('the slot clip connector type (D187 to D189, D194, D195, D261, C191, C1
     const keyhole = buildBoard(engine, slotClip, {
       ...defaultValues(slotClip.settings),
       fixing: 'keyhole',
-      depthMm: 14,
+      depthMm: 13,
     });
     expect(keyhole.ok).toBe(false);
-    if (!keyhole.ok) expect(keyhole.problem).toContain('14.2 mm');
+    if (!keyhole.ok) expect(keyhole.problem).toContain('13.23 mm');
   });
 
   it('names its file with the boards it joins, its depth, a fixing, and what differs from the start', () => {
@@ -671,12 +671,12 @@ describe('what each screw passes, from the part itself (D264)', () => {
   it("says where a keyhole's screw stands, and what a lock screw passes", () => {
     const keyholes = { screwHead: 'keyhole', standoffs: 'back' };
     expect(screws('solid', keyholes)).toBe(
-      "Each keyhole hangs on a pan-head screw left standing out of the wall, its head's underside 1.5 to 1.8 mm " +
-        'off it, the head 4.7 to 5 mm out.',
+      'Each keyhole hangs on a 4 mm countersunk screw (a 90 degree head) left standing out of the wall, the top of ' +
+        'its head 3.73 to 4.03 mm out.',
     );
     expect(screws('solid', { ...keyholes, lockScrews: 'bottom' })).toBe(
-      "Each keyhole hangs on a pan-head screw left standing out of the wall, its head's underside 1.5 to 1.8 mm " +
-        'off it, the head 4.7 to 5 mm out. Each lock screw passes 4.7 mm of standoff under its head, plus your ' +
+      'Each keyhole hangs on a 4 mm countersunk screw (a 90 degree head) left standing out of the wall, the top of ' +
+        'its head 3.73 to 4.03 mm out. Each lock screw passes 4.7 mm of standoff under its head, plus your ' +
         'wall plug.',
     );
   });
@@ -699,8 +699,8 @@ describe('what each screw passes, from the part itself (D264)', () => {
       "The screw passes 3.6 mm of the clip's bar under its head, plus your wall plug.",
     );
     expect(screws('slot-clip', { fixing: 'keyhole' })).toBe(
-      "The keyhole hangs on a pan-head screw left standing out of the wall, its head's underside 1.5 to 1.8 mm off " +
-        'it, the head 4.7 to 5 mm out.',
+      'The keyhole hangs on a 4 mm countersunk screw (a 90 degree head) left standing out of the wall, the top of ' +
+        'its head 3.73 to 4.03 mm out.',
     );
     expect(screws('slot-clip', { fixing: 'none' })).toBeUndefined();
   });

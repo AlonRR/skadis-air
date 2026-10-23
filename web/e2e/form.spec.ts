@@ -147,7 +147,7 @@ test('offers keyholes, which bring their standoffs, with lock screws under Advan
   // taking the standoffs off again would hang the board flat: a problem, saying why
   await choose(page, 'standoffs', 'none');
   await expect(status).toHaveAttribute('data-state', 'problem');
-  await expect(status).toContainText('standoffs at least 14.2 mm');
+  await expect(status).toContainText('standoffs at least 13.23 mm');
 });
 
 test('offers lock screws alone, which bring their standoffs as keyholes do (D289)', async ({ page }) => {

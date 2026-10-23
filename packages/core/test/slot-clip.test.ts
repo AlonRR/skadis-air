@@ -111,10 +111,10 @@ describe('slotClipParams: the starting values', () => {
   });
 
   it('refuses a keyhole in a clip too shallow for its lips, the head and a roof (C199)', () => {
-    // 8 mm of hooks' room, 1.5 mm of lips, the 3.5 mm channel for a 4 mm screw's head, and 1.2 mm of roof
-    expect(keyholeClipDepth(4)).toBeCloseTo(14.2, 9);
-    expect(() => slotClipParams({ fixing: 'keyhole', depthMm: 14 })).toThrow(/14\.2 mm/);
-    expect(slotClipParams({ fixing: 'keyhole', depthMm: 14.5 }).depthMm).toBe(14.5);
+    // 8 mm of hooks' room, the lips and the countersunk head's seat, 4.03 mm for a 4 mm screw (D358), and 1.2 mm of roof
+    expect(keyholeClipDepth(4)).toBeCloseTo(13.23, 9);
+    expect(() => slotClipParams({ fixing: 'keyhole', depthMm: 13 })).toThrow(/13\.23 mm/);
+    expect(slotClipParams({ fixing: 'keyhole', depthMm: 13.5 }).depthMm).toBe(13.5);
   });
 });
 
@@ -392,11 +392,12 @@ describe('a keyhole in the clip (D195, C199)', () => {
   });
 
   it("has the head's channel above the lips, as wide as the entry, from the entry up past the screw", () => {
-    const channel = only(outlines(keep(clip({ fixing: 'keyhole' }).slice(3))), ([minX, maxX]) => maxX - minX < 10);
+    // past the lips' 1.5 mm and the seat's 2.25 mm cone (D358), short of the channel's floor 4.03 mm in
+    const channel = only(outlines(keep(clip({ fixing: 'keyhole' }).slice(3.9))), ([minX, maxX]) => maxX - minX < 10);
     expect(round(channel)).toEqual(round([-4.5, 4.5, -9, 9]));
     // control: the channel takes more from the pad than the lips' opening does, by about 44 mm2
     const part = clip({ fixing: 'keyhole' });
-    expect(keep(part.slice(1.25)).area() - keep(part.slice(3)).area()).toBeGreaterThan(30); // above the chamfer (D270)
+    expect(keep(part.slice(1.25)).area() - keep(part.slice(3.9)).area()).toBeGreaterThan(30); // above the chamfer (D270)
   });
 
   it("goes in the middle of the ring's top for 4 boards, and leaves the hooks and the slots their room", () => {

@@ -6,6 +6,12 @@ hook cutout" (relayed, with two photos, 23 Oct 2026). This pass measures both, t
 one, against `printed-part-design`'s section on geometry that prints as drawn: no support and nothing sacrificial, and
 every overhang 45 degrees or less, or a bridge held at both ends.
 
+**Built 23 Oct 2026** (D358 a, D369 a; C381 to C386): the owner chose K1, the countersunk seat, and R1, the ramp,
+which every keyhole and hook room now are, on every board and in the slot clip. The prototypes' switches went with
+it, so what follows, up to [As built](#as-built-23-oct-2026), is the pass's record as it ran on
+`feat/keyhole-printability`: its figures were drawn by `scripts/figures/keyhole-pass.mjs` and its options written by
+`scripts/checks/write-keyhole-options.mjs`, both retired or rewritten with the switches (C385).
+
 Nothing on `main` changed. The options are prototypes on the branch `feat/keyhole-printability`, off unless asked for
 (C361): `keyholeSeat` and `roomExit` in the mounting, `keyholeSeat` in the slot clip. Each is measured as T151 printed
 it, written by `scripts/checks/write-keyhole-options.mjs` and sliced once through `scripts/checks/stl-check.sh` with
@@ -219,3 +225,49 @@ its test; verified: sliced).
   code).
 - **Arachne and gap fill**: as the boards' pass found, the profile writes no gap fill; the overhang perimeters here
   are Arachne's perimeters over air.
+
+## As built (23 Oct 2026)
+
+D358 a and D369 a are built (C381 to C386): K1's seat and R1's ramp, with nothing left to switch. Measured again on the
+parts as built, which `scripts/checks/write-keyhole-parts.mjs` writes through the page's own build:
+
+- **T151's file**, `.check/test-print/skadis-trial-keyhole.stl` (`node scripts/test-print/write-trial-plate.mjs
+  keyhole`), is the same past its 80-byte header as that script's `t151-board.stl` (verified: code, `cmp -i 80`). The
+  STL check passes it with its own filament, ASA: manifold, one part, one closed body, 1 h 56 min, 16.60 g (verified:
+  sliced).
+- **Sliced in PETG** (verified: sliced; `FILAMENT="PETG Basic NPETG087-ZX" bash scripts/checks/stl-check.sh`, then
+  `overhang-report.py`), 20.07 g and 1 h 56 min, it is K1 R1's row above to the tenth:
+
+| z | Overhang perimeter | Bridge infill | Of the bridge, over air | What it is |
+|---|---|---|---|---|
+| 4.2 | 0 | 3182.8 mm | 0.0 mm | internal bridge: the plate's first top layer over its infill |
+| 13.2 | 64.8 mm, 25.5 of it over air | 1858.3 mm | 618.1 mm | the rooms' ceilings, four standoffs |
+| 15.2 | 0 | 909.4 mm | 0.0 mm | internal bridge under the channels' floors, 1 mm higher than before as the channel is shallower |
+| 19.2 | 0 | 945.5 mm | 0.0 mm | internal bridge under the wall faces |
+
+- **Nothing prints at the lips**, where today's printed 92.1 mm of overhang perimeter and 333.2 mm of bridge at z 18.8.
+- **The rooms' first edges are eight straight lines**, each 8.10 mm long on an 8.10 mm chord, two at each of the four
+  standoffs (verified: sliced, the overhang perimeter's paths at z 13.2), held at both ends by the tab's walls.
+- **The slot clip for 2 boards with a keyhole**, 15 mm deep (`slot-clip-2-keyhole.stl`): no overhang perimeter; its
+  channel's roof a bridge held all round, at z 4.2, 449.6 mm, 89.6 of it over air; 6.73 g, 36 min; PASS (verified:
+  sliced). Its least depth is 13.23 mm, as the boards' least standoff.
+- **On the solid** (verified: code, `packages/core/test/keyhole-seat.test.ts`, each against a control that rebuilds
+  today's lips or ceiling from the built part, C382): nothing over the heads past 45 degrees and nothing where the rooms
+  run out of their standoffs, on the solid, lightened and skeleton boards, for 3, 4 and 5 mm screws, with lock screws
+  and without, and with lock screws alone; 1.2 mm between each room and its keyhole at the least standoff for each
+  screw, with a control half a millimetre closer that fails; the hook's 8 mm behind every slot; and the slot clip's
+  keyhole cut as the boards' are.
+- **The least standoff** is 13.23 mm for a 4 mm screw (12.61 for 3 mm, 13.85 for 5 mm), the seat 4.03 mm, a 1.2 mm
+  roof and the hook's 8 mm (verified: code); at the starting 15 mm the roof under the channel is 2.97 mm.
+- **What the page says** under the screw size: "Each keyhole hangs on a 4 mm countersunk screw (a 90 degree head) left
+  standing out of the wall, the top of its head 3.73 to 4.03 mm out." (verified: code, its test).
+
+**The lock screws' recesses are not changed** (C386), so with lock screws the board still prints a ledge over air
+round each lock screw's shank: 31.6 mm2 past 45 degrees over the two 2.5 mm heads, 125.5 mm2 over two 5 mm ones
+(computed, on the solid as built); sliced in PETG, 48.1 mm of overhang perimeter and 106.2 mm of bridge at z 15.6 for
+2.5 mm lock screws (`t151-board-lock-screws.stl`), 79.5 and 340.6 mm at z 17.6 for 5 mm ones (verified: sliced). With
+them the rooms' ceilings at z 13.2 print 143.0 and 159.6 mm of overhang perimeter (verified: sliced), the more as each
+bottom room's ceiling opens into its recess (inferred); the recess is as A248 built it, so it slices as it did before
+this change (inferred).
+A 45 degree seat there takes a countersunk lock screw, not the pan head that passes through the slot, so it is the
+owner's to choose.

@@ -6,6 +6,22 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Keyholes take a countersunk screw, its head 90 degrees, in place of a pan head, on the boards' top standoffs and in
+  the slot clip alike, so one screw holds a whole wall: the head seats on a 45 degree countersink behind the lips,
+  which centres it. A 4 mm screw is left standing with the top of its head 3.73 to 4.03 mm out of the wall, where a
+  pan head stood 4.7 to 5 mm out, and a board on such keyholes, or a slot clip with one, now needs standoffs or a
+  depth of at least 13.23 mm, where it needed 14.2. This is so the keyhole prints as drawn: a board prints face down,
+  and nothing over a countersunk head faces down more steeply than 45 degrees, where the pan head's flat lips were a
+  ledge over air.
+
+### Fixed
+
+- A keyhole no longer prints its lips over air, a ledge round the slot that sagged into the head's channel.
+- Where the hook's room behind a corner slot runs out of its standoff, its ceiling rises at 45 degrees to the
+  standoff's face, so it no longer ends in a curved edge printed over air; the hook's room is as before.
+
 ## [0.6.0] - 2026-10-23
 
 ### Changed

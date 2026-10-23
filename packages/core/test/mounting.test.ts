@@ -307,10 +307,9 @@ describe('keyholes, in the top standoffs behind the corner slots (D235, D244; D1
   const keyholeAt = (cut: CrossSection, x: number) => holesAt(cut, x, 60).filter((h) => h.maxX - h.minX < 10);
 
   it('are sized from the screw: the head twice the screw, the entry 1 mm wider, the slide as long (D157)', () => {
-    expect(keyhole(4)).toEqual({ slotMm: 4.5, entryMm: 9, slideMm: 9, channelMm: 3.5 });
+    expect(keyhole(4)).toEqual({ slotMm: 4.5, entryMm: 9, slideMm: 9 });
     const k = keyhole(3);
     expect([k.slotMm, k.entryMm, k.slideMm]).toEqual([3.5, 7, 7]);
-    expect(k.channelMm).toBeCloseTo(2.7, 9);
   });
 
   it("leave the board's face plain: nothing is cut from the front (D235)", () => {
@@ -345,7 +344,8 @@ describe('keyholes, in the top standoffs behind the corner slots (D235, D244; D1
   });
 
   it('hold the head in a channel as wide as the entry, behind the lips', () => {
-    const channel = keep(mounted(board, keyholes).slice(foot + 1.5 + 1.75));
+    // past the lips' 1.5 mm and the seat's 2.25 mm cone (D358), short of the channel's floor 4.03 mm in
+    const channel = keep(mounted(board, keyholes).slice(foot + 1.5 + 2.25 + 0.14));
     for (const x of middles) {
       const [hole] = keyholeAt(channel, x);
       expect(hole?.minY).toBeCloseTo(55.5 - 4.5, 2);
@@ -476,12 +476,13 @@ describe('keyholes, in the top standoffs behind the corner slots (D235, D244; D1
   });
 
   it("refuse standoffs too short for the keyhole, a roof over it and a hook's 8 mm of room (D190, D244, C99)", () => {
-    // 1.5 mm of lips, the 3.5 mm channel, a 1.2 mm roof and 8 mm of room: 14.2 mm for a 4 mm screw, 15 for 5 mm
-    expect(() => mounted(board, { screwHead: 'keyhole' })).toThrow(/standoffs at least 14\.2 mm/);
-    expect(() => mounted(board, { ...keyholes, standoffHeightMm: 14 })).toThrow(/standoffs at least 14\.2 mm/);
-    expect(mounted(board, { ...keyholes, standoffHeightMm: 14.2 }).genus()).toBeGreaterThan(0);
-    expect(() => mounted(board, { ...keyholes, screwMm: 5, standoffHeightMm: 14.9 })).toThrow(/at least 15 mm/);
-    expect(mounted(board, { ...keyholes, screwMm: 5, standoffHeightMm: 15 }).genus()).toBeGreaterThan(0);
+    // the lips and the countersunk head's seat, 4.03 mm for a 4 mm screw (D358), a 1.2 mm roof and 8 mm of room:
+    // 13.23 mm for a 4 mm screw, 13.85 for 5 mm
+    expect(() => mounted(board, { screwHead: 'keyhole' })).toThrow(/standoffs at least 13\.23 mm/);
+    expect(() => mounted(board, { ...keyholes, standoffHeightMm: 13 })).toThrow(/standoffs at least 13\.23 mm/);
+    expect(mounted(board, { ...keyholes, standoffHeightMm: 13.23 }).genus()).toBeGreaterThan(0);
+    expect(() => mounted(board, { ...keyholes, screwMm: 5, standoffHeightMm: 13.8 })).toThrow(/at least 13\.85 mm/);
+    expect(mounted(board, { ...keyholes, screwMm: 5, standoffHeightMm: 13.85 }).genus()).toBeGreaterThan(0);
     // a 5 mm lock screw's 4 mm head in its recess, behind the 8 mm room, and 2 mm of standoff under it: 14.3 mm
     const big = { ...keyholes, lockScrews: true, lockScrewMm: 5 };
     expect(() => mounted(board, { ...big, standoffHeightMm: 14.2 })).toThrow(/at least 14\.3 mm/);
