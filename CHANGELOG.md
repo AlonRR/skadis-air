@@ -11,7 +11,8 @@ All notable changes to this project are recorded here. The format follows
 - Between the slots, every corner has its screw. A corner whose usual place, 10 mm in from both edges, would land on
   a slot has its screw at the nearest place at least 10 mm in from both edges with as much room round it as a corner
   through the slots has, 8.5 mm to the nearest slot, and its standoff and a lattice board's pad with it: on a 160 mm
-  board open all round, the bottom left and top right screws move 21.5 mm along their edge. On a board one tile
+  board open all round, the bottom left and top right screws move 11.5 mm along their edge, to 21.5 mm from the
+  corner. On a board one tile
   across, two corners whose screws would stand within 20 mm of each other share one.
 - A setting that applies only with another choice is greyed out while it does not apply, and its value is not
   checked then, so a value left in it no longer stops the board: "Lock screws: at the bottom" applies only with
