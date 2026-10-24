@@ -235,7 +235,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | Q359 | **The keyholes' countersunk seat stays drawn for the owner's screws, 4 mm with 8 mm heads** ("the current heads (8mm) are the ones i use, we can make it a choice to change the screw size"): the size becomes a choice, D479 | 24 Oct 2026 |
 | D370 | **Lock screws use the same screw as the rest** ("they will use the same screw as the rest. i mean when a screw choice is made its made across all the screw locations, with advanced letting a user change per type of location e.g., keyhole, lock, connector/clip or other types we have"): how, D479 | 24 Oct 2026 |
 | D437 | **The reworked skeleton's radii are drawn with fewer facets** ("437 b"), the shape kept within 0.05 mm and measured so, for its build time: 24.9 s for a 400 x 400 mm board against 12.3 s before, 786,030 facets against 534,984 | 24 Oct 2026 |
-| D479 | **One screw size for every screw place** ("479 a"): `Screw size` in the main form, 4 mm with its 8 mm countersunk head to start; under Advanced, a size for each kind of place (keyholes, lock screws, the slot clip), each the same as the screw size unless set; lock screws start at 4 mm too, their slots grooved for the head | 24 Oct 2026 |
+| D479 | **One screw size for every screw place** ("479 a"): `Screw size` in the main form, 4 mm with its 8 mm countersunk head to start; under Advanced, a size for each kind of place (keyholes, lock screws, the slot clip), each the same as the screw size unless set; lock screws start at 4 mm too, their slots grooved for the head. Built 24 Oct 2026 (C495 to C509): each kind of place is "Same as the screw size" or "Own" under Advanced; lock screws from 3 mm are countersunk, passing the slot through an 8.5 mm groove and seating on a 45 degree countersink (D370's (a)), and up to 2.5 mm keep the pan head; the slot keeps its 5.2 mm for 4.2 mm up from where a hook rests (a real hook unmeasured, D414); a board kept by an older page builds with 4 mm lock screws; pictures drawn by `node scripts/figures/shoot.mjs screw-groove` | 24 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -360,6 +360,11 @@ clip (b4).
   the hook's tab measured first, its 4.5 mm width unmeasured (T373, D414), and the solid board's build worked out;
   (b) a relief cut into the plate under each wall instead, the hook's room whole, at the cost of plate, and of rim on
   the lattice boards; (c) as it is until a hook is measured. Recommended (a), once a hook's tab is measured.
+
+- **Q511** Should the screw size carry between the board types and the connectors (D479, C505)? Today a value carries
+  only within its group, boards to boards and connectors to connectors, so the slot clip's own `Screw size` is set
+  apart from the boards'. (a) Carry it across both groups, so one choice is the screw everywhere, as D370 put it
+  ("when a screw choice is made its made across all the screw locations"); (b) as built. Recommended (a).
 
 - **D414** T320 and T151 hang IKEA hooks, and the owner has none (24 Oct 2026). (a) Buy a pack of SKÅDIS hooks (the
   owner's step), which also lets T373 measure one; (b) print SKÅDIS hooks, weaker than steel, so a broken hook tests
