@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-24
+
 ### Changed
 
 - The design system's v0.8.1: the "i" button that folds a setting's help and the ring over the 3D view while a part is

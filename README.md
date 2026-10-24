@@ -11,7 +11,7 @@ adjust and to print.
 
 ## Status
 
-**Version 0.7.0: three kinds of board, walls of any size up to 1 km, and two connectors, on the page.** The page
+**Version 0.8.0: three kinds of board, walls of any size up to 1 km, and two connectors, on the page.** The page
 in `web/` makes a solid board of 40 mm tiles: you set its size, its thickness and which sides are open
 (half slots, to join a neighbour, or running between the slots so every slot is whole) or closed, give it screw holes in its corners (countersunk or for a
 round head, keyholes at the top so it lifts off its screws, or lock screws through its corner slots) and standoffs on the back, see it in 3D, and download it as an STL that lies as it
