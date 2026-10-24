@@ -336,6 +336,11 @@ clip (b4).
 - **Q418** Which phone can the share button be tested on: an iPhone, an Android phone, or both? Needed only if D417
   is (b) or (c).
 
+- **D419** The Sides control on narrow phones (A413's measurement, C490): it fits a 375 px phone with 8 px to spare,
+  but runs 7 px past its fieldset at 360 px and 47 px at 320 px, as it did before `v0.8.1`, and many Android phones
+  are 360 px wide (inferred, not measured here). (a) Let it shrink to fit below 375 px, with a browser test at 320, 360 and 375 px; (b) as it
+  is. Recommended (a).
+
 - **D414** T320 and T151 hang IKEA hooks, and the owner has none (24 Oct 2026). (a) Buy a pack of SKÅDIS hooks (the
   owner's step), which also lets T373 measure one; (b) print SKÅDIS hooks, weaker than steel, so a broken hook tests
   the hook rather than the board; (c) load the slots with a stand-in, a steel rod or bolt through a slot with a known
