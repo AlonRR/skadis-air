@@ -7,6 +7,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { makeSolidBoard, solidBoardParams } from '../src/board-solid.js';
 import { loadEngine } from '../src/engine.js';
 import { boardType } from '../src/board-types/index.js';
+import { circle } from '../src/rings.js';
 import { defaultValues } from '../src/settings.js';
 import { keyholeClipDepth, makeSlotClip, makeSlotFill, slotClipParams, type SlotClipParams } from '../src/slot-clip.js';
 import { ALL_OPEN } from '../src/slots.js';
@@ -361,9 +362,15 @@ describe('a screw through the clip (D195, C199)', () => {
   });
 
   it("leaves the post beside it whole: the countersink stops at the bar's board face (the review, 16 Oct 2026)", () => {
-    // 0.1 mm under the post's foot-to-room step, where the cone had gone on 1 mm past the bar and notched the post
-    const at = (part: Manifold) => keep(part.slice(12.9)).area();
-    expect(at(clip({ fixing: 'screw' }))).toBeCloseTo(at(clip()), 2);
+    // 0.9 mm above the bar's face, where the cone had gone on 1 mm past the bar and notched the post: the post's 20 mm
+    // round wholly the clip's there. Not the slice's area against a clip without the screw, as the post's root (D375)
+    // runs out less beside the countersink.
+    const post = keep(new engine.CrossSection([circle(20, 0, 20)]));
+    const notch = (part: Manifold) => keep(post.subtract(keep(part.slice(12.9)))).area();
+    expect(notch(clip({ fixing: 'screw' }))).toBeLessThan(0.01);
+    // the control: a cone run on 1 mm past the bar, as it was before the review, notches the post
+    const cone = keep(keep(engine.Manifold.cylinder(1, 4.5, 5.5, 64)).translate([5, 0, 12]));
+    expect(notch(keep(clip({ fixing: 'screw' }).subtract(cone)))).toBeGreaterThan(0.1);
   });
 
   it('goes above the seam for boards one above the other, and on the ring right of the seam for 4 boards', () => {

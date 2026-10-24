@@ -6,7 +6,8 @@
 //
 // It is as deep as the gap behind the boards (D187), so once they are up the wall holds it on. Next to the
 // boards only its posts reach them, for as far as a hook takes behind the board and a margin (C99), so a hook
-// fits in every slot the pegs leave free; the bar runs behind that, on the wall side. Built as it hangs, as
+// fits in every slot the pegs leave free; the bar runs behind that, on the wall side, each post's root on it run out
+// on a long eased curve, up to 3 mm into the hooks' room beside the post and no further (D375). Built as it hangs, as
 // the standoff is: its wall face on z = 0, the boards' back faces at z = depth, the pegs above that, centred
 // on the point between its pegs.
 //
@@ -33,6 +34,7 @@ import {
 } from './mounting.js';
 import { chamferedExtrusion, EDGE_CHAMFER_MM, longBlend, placed } from './chamfer.js';
 import { circle, HALF_STEP, ringedSolid, stadium } from './rings.js';
+import { insideRings, rootProfile, rootReach, rootSize } from './root.js';
 import { BOARD_THICKNESS_MM, GRID_PITCH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM } from './skadis.js';
 import { BETWEEN_SHIFT_MM, type Seams } from './slots.js';
 import { TUNNEL_DEPTH_MM } from './standoff.js';
@@ -86,6 +88,9 @@ const PEG_ROOT_MM = 0.5;
 /** A chamfer round each peg's root (D266): no sharp corner on the layer line where the peg meets its post. It fits
  * inside the slot's 1 mm back chamfer and keeps the 0.2 mm the peg has beside the slot's wall. */
 const ROOT_CHAMFER_MM = 0.8;
+/** How near a post's edge a point of the footprint lies to be on it, mm (D375): past the rounding of a point, short of
+ * any feature of the clip. */
+const JUNCTION_MM = 1e-6;
 /** The least bar behind the hooks' room, as the standoff's bridge behind its tunnel (C99). */
 const MIN_BAR_DEPTH_MM = 4;
 /** From the point between its pegs to each peg: half the grid, so each is the nearest whole slot. */
@@ -264,6 +269,97 @@ function screwCentre(p: Pick<SlotClipParams, 'boards' | 'seams' | 'screwHead' | 
  * the slots, the middle of its bar, on the seam (D290 a). */
 function keyholeCentre(boards: SlotClipBoards): [number, number] {
   return boards === '4' ? [0, HALF_GRID_MM] : [0, 0];
+}
+
+/** A point's key, to 10 nm, as an extrusion gives its outline's points back. */
+const pointKey = (x: number, y: number) => `${Math.round(x * 1e5)},${Math.round(y * 1e5)}`;
+
+/**
+ * The posts' rings with every point of the footprint's outline that lies on one of their edges put in it, where the
+ * footprint leaves a post for its bar (D375): so a post extruded from them stands on the footprint's own points, its
+ * side and the bar's meeting there exactly. Without them, the bar's corner lay on a post's side but for the rounding
+ * of a point: 96 of 162 clips (every layout, fixing, head and screw at 15, 20 and 30 mm) had edges not on two faces.
+ */
+function withJunctions(posts: readonly Vec2[][], footprint: readonly Vec2[][]): Vec2[][] {
+  const corners = footprint.flat();
+  return posts.map((ring) =>
+    ring.flatMap((a, i): Vec2[] => {
+      const b = ring[(i + 1) % ring.length] ?? a;
+      const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
+      const length2 = dx * dx + dy * dy;
+      const on = corners
+        .map((q) => ({ q, t: ((q[0] - a[0]) * dx + (q[1] - a[1]) * dy) / length2 }))
+        .filter(
+          ({ q, t }) =>
+            t > 1e-9 &&
+            t < 1 - 1e-9 &&
+            Math.abs((q[0] - a[0]) * dy - (q[1] - a[1]) * dx) / Math.sqrt(length2) < JUNCTION_MM,
+        )
+        .sort((u, v) => u.t - v.t);
+      return [a, ...on.map(({ q }) => q)];
+    }),
+  );
+}
+
+/** The unit normal to the right of the edge from a to b: out of the solid, which lies on an outline's left. */
+const outOf = (a: Vec2, b: Vec2): Vec2 => {
+  const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  return [(b[1] - a[1]) / length, -(b[0] - a[0]) / length];
+};
+
+/**
+ * The posts round the clip's pegs (D375): their outline from 1.5 mm inside the bar up to `depthMm`, the boards' back
+ * faces, the top edge chamfered, and each post's root on the bar's face, at `barMm`, its outline grown by each point's
+ * reach on the root's curve, `riseMm` up. The outline, the posts' own points and the footprint's where it leaves them
+ * (withJunctions), extruded in as many levels as that needs, each level moved to its height and its points out along
+ * the mitres of their edges: one mesh, the root and the post together, so the root meets no side of the post along a
+ * tangent, and a post's side lies on the bar's exactly, point for point, where it runs on down into it, as the posts
+ * extruded alone did. Tried otherwise, each left facets of no area or edges not on two faces: the root as a solid of
+ * its own, a hair inside the post, crossing the post's side at a few degrees (16 facets); the post lofted from rings,
+ * whose points are 32-bit (44); the post standing a tenth of a micron proud of the bar's side, which left a sliver
+ * where the keyhole pad's hull leaves a post at about 6 degrees between the slots (6 of 162 clips); and its outline
+ * grown by the root's reach in the bar as well, which did the same there.
+ */
+function rootedPosts(
+  engine: Engine,
+  outline: Vec2[][],
+  reachOf: (ring: readonly Vec2[]) => number[],
+  riseMm: number,
+  barMm: number,
+  depthMm: number,
+): Manifold {
+  // each level's height and how far out it moves a point by its reach: in the bar the post's own outline, then the
+  // root's curve from its foot a hair inside the bar's face up to where it leaves the post's side, then the post's own
+  // outline up to its top chamfer
+  const levels: [number, (reach: number) => number][] = [[barMm - 1.5, () => 0]];
+  const curve = rootProfile(riseMm);
+  for (let i = curve.length - 1; i >= 0; i--) {
+    const [up, share] = curve[i] ?? [0, 0];
+    levels.push([barMm + up, (reach) => reach * share]);
+  }
+  levels.push([depthMm - EDGE_CHAMFER_MM, () => 0], [depthMm, () => -EDGE_CHAMFER_MM]);
+  // each point's reach and its mitre, out of the solid: moved by the mitre times d, its two edges move d out
+  const points = new Map<string, { reach: number; mitre: Vec2 }>();
+  for (const ring of outline) {
+    const reach = reachOf(ring);
+    const n = ring.length;
+    const at = (i: number): Vec2 => ring[((i % n) + n) % n] ?? [0, 0];
+    ring.forEach((q, i) => {
+      const [n1, n2] = [outOf(at(i - 1), q), outOf(q, at(i + 1))];
+      const k = 1 / (1 + n1[0] * n2[0] + n1[1] * n2[1]);
+      points.set(pointKey(q[0], q[1]), { reach: reach[i] ?? 0, mitre: [k * (n1[0] + n2[0]), k * (n1[1] + n2[1])] });
+    });
+  }
+  const prism = engine.Manifold.extrude(outline, 1, levels.length - 2);
+  const posts = prism.warp((v) => {
+    const point = points.get(pointKey(v[0] ?? 0, v[1] ?? 0));
+    if (point === undefined) throw new Error("a point of a post is not on the posts' outline");
+    const [z, by] = levels[Math.round((v[2] ?? 0) * (levels.length - 1))] ?? [0, () => 0];
+    const d = by(point.reach);
+    [v[0], v[1], v[2]] = [(v[0] ?? 0) + d * point.mitre[0], (v[1] ?? 0) + d * point.mitre[1], z];
+  });
+  prism.delete();
+  return posts;
 }
 
 /** A peg with three ribs along each long side, its tip chamfered (C199) and its root (D266). */
@@ -494,10 +590,26 @@ export function makeSlotClip(engine: Engine, params: SlotClipParams): Manifold {
   const [w, h] = pegSize(p.pegClearanceMm);
   const edges = { bottomMm: EDGE_CHAMFER_MM, topMm: EDGE_CHAMFER_MM };
   const solids: Manifold[] = [chamferedExtrusion(engine, footprint, bar, edges)];
-  const rise = bar - 1.5;
-  const risen = chamferedExtrusion(engine, posts, p.depthMm - rise, { bottomMm: 0, topMm: EDGE_CHAMFER_MM });
-  let postSolid = risen.translate([0, 0, rise]);
-  risen.delete();
+  // Each post from 1.5 mm inside the bar up to the boards, its top chamfered, and its root on the bar's face rounded
+  // (D375): out over the face, inside the face's chamfer, as far as the face leaves it room, and clear of the screw's
+  // countersink or counterbore.
+  const face = keep(footprint.offset(-EDGE_CHAMFER_MM, 'Round')).toPolygons();
+  const screw = p.fixing === 'screw' ? screwCentre(p) : null;
+  const head = p.screwHead === 'round' ? counterbore(p.screwMm).acrossMm : screwHole(p.screwMm).countersinkMm;
+  const free = ([x, y]: Vec2) =>
+    insideRings(face, [x, y]) &&
+    (screw === null || Math.hypot(x - screw[0], y - screw[1]) >= head / 2 + SCREW_SPARE_MM);
+  // up to 3 mm into the hooks' 8 mm room, short of the post's top chamfer and a millimetre below it
+  const root = rootSize(TUNNEL_DEPTH_MM - EDGE_CHAMFER_MM - 1);
+  let postSolid = rootedPosts(
+    engine,
+    // the outlines as the extrusions have them, each simplified as chamferedExtrusion simplifies the footprint
+    withJunctions(keep(posts.simplify(0.005)).toPolygons(), keep(footprint.simplify(0.005)).toPolygons()),
+    (ring) => rootReach(ring, free, root.reachMm),
+    root.riseMm,
+    bar,
+    p.depthMm,
+  );
   if (p.grip === 'lip') {
     // a pocket round each split peg, so its halves are free to bend over their whole length (T268)
     const pockets = keep(

@@ -10,7 +10,7 @@ import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { boardFace, type BoardCuts, makeSolidBoard, type SolidBoardParams } from './board-solid.js';
 import { blendCorners } from './chamfer.js';
 import type { Engine } from './engine.js';
-import { mountingCuts, mountingPads, type MountingParams } from './mounting.js';
+import { type MountingBoard, mountingCuts, mountingPads, type MountingParams } from './mounting.js';
 import { stadium } from './rings.js';
 import { GRID_PITCH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import { slotPlaces } from './slots.js';
@@ -150,9 +150,20 @@ export function bothCuts(a: BoardCuts, b: BoardCuts): BoardCuts {
 }
 
 /** The board as its mounting sees it: with the frame round each slot, which the standoffs behind the slots stand inside
- * (D306). */
-export function framedBoard(board: SolidBoardParams, lattice: LatticeParams): SolidBoardParams & { frameMm: number } {
-  return { ...board, frameMm: latticeMembers(board, lattice).rimGrowMm };
+ * (D306), and its pockets at the back face, which a standoff's root keeps out of (D375): the lightened board's, which
+ * the skeleton's are at both faces. */
+export function framedBoard(
+  board: SolidBoardParams,
+  lattice: LatticeParams,
+): SolidBoardParams & Required<Pick<MountingBoard, 'frameMm' | 'pocketsOf'>> {
+  const members = latticeMembers(board, lattice);
+  const pocketsOf = (engine: Engine, pads: readonly Vec2[][]): Vec2[][] => {
+    const pockets = pocketShape(engine, board, members, pads);
+    const rings = pockets.toPolygons();
+    pockets.delete();
+    return rings;
+  };
+  return { ...board, frameMm: members.rimGrowMm, pocketsOf };
 }
 
 /** The lightened board: the solid board, its mounting, and the lattice's pockets. */

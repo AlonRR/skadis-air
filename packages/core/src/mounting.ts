@@ -14,13 +14,15 @@
 // rises at 45 degrees to the standoff's face (D369). On a board whose open sides run between
 // the slots (D282), a corner screw whose usual place would land on a slot goes to the nearest place with a normal
 // corner's room round it, its standoff with it (D371 a), and each standoff behind a slot stands behind the slot nearest
-// its corner that keeps it on the board (D289 a).
+// its corner that keeps it on the board (D289 a). Every standoff's root on the back runs out onto it on a long eased
+// curve, as far as the back leaves it room (D375, root.ts).
 // Any board type built on the solid board takes these as its third argument (BoardCuts).
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
-import { type BoardCuts, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from './board-solid.js';
-import { chamferedExtrusion, EDGE_CHAMFER_MM, HOLE_MOUTH_MM } from './chamfer.js';
+import { boardFace, type BoardCuts, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from './board-solid.js';
+import { EDGE_CHAMFER_MM, grownRing, HOLE_MOUTH_MM } from './chamfer.js';
 import type { Engine } from './engine.js';
-import { circle, HALF_STEP, ringedSolid, stadium } from './rings.js';
+import { circle, HALF_STEP, loftedSolid, ringedSolid, stadium } from './rings.js';
+import { densified, insideRings, rootProfile, rootReach, rootSize } from './root.js';
 import { defineSettings, type NumberSetting, SettingsProblem, type Values } from './settings.js';
 import { HOOK_DEPTH_MM, HOOK_DROP_MM, HOOK_WIDTH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import { ALL_OPEN, boardExtent, type Extent, slotPlaces } from './slots.js';
@@ -230,7 +232,12 @@ export function mountingScrews(m: MountingParams, thicknessMm: number): string |
  * board, how far the frame round each slot reaches past the slot's drawn edge, which the standoffs behind the slots
  * take as their outline (D306). */
 export type MountingBoard = Pick<SolidBoardParams, 'columns' | 'rows'> &
-  Partial<Pick<SolidBoardParams, 'sides' | 'seams' | 'slotClearanceMm' | 'slotChamferMm'>> & { frameMm?: number };
+  Partial<Pick<SolidBoardParams, 'sides' | 'seams' | 'slotClearanceMm' | 'slotChamferMm' | 'cornerRadiusMm'>> & {
+    frameMm?: number;
+    /** On a lattice board, its pockets at the back face, given the pads the mounting keeps solid: what a standoff's
+     * root keeps out of (D375). */
+    pocketsOf?: (engine: Engine, pads: readonly Vec2[][]) => Vec2[][];
+  };
 
 /** A board's slot as it cuts it: its drawn width and height, and its chamfer. */
 function slotOf(b: MountingBoard): { widthMm: number; heightMm: number; chamferMm: number } {
@@ -374,6 +381,62 @@ function padRadiusMm(board: MountingBoard, [x, y]: readonly [number, number], ra
     if (grown) radius = Math.max(...reach) + PAD_INTO_FRAME_MM;
   }
   return radius;
+}
+
+/** What a root keeps clear of beside a slot behind a board (D375): the slot's room, its chamfer and C83's 2 mm, the
+ * zone every standoff keeps out of. */
+const ROOT_SLOT_ROOM_MM = 2;
+/** And below it, the room a hook's back tab takes: its width and drop each with C99's 2 mm, as hookRoomOutline cuts it
+ * from a standoff behind a slot; the root's own margin keeps it 0.25 mm off. */
+const ROOT_HOOK_ROOM_MM = 2;
+/** How much of a standoff a root leaves plain above its foot's chamfer, at the least. */
+const ROOT_BELOW_FOOT_MM = 0.5;
+/** How far from a post a slot or a pocket can be and matter to its root, mm: past the post, the root and every room. */
+const ROOT_NEAR_MM = 40;
+
+/**
+ * Where on a board's back a standoff's root may run out to (D375): inside the outline, off the back's chamfer at an
+ * edge; out of every slot's room and the room a hook takes below it; on a lattice board, on a corner screw's pad, which
+ * nothing is cut from (D144), and off every pocket. The board's outline is convex, its corners rounded, so a point's
+ * room to its edge is the least of its distances to the outline's sides' lines.
+ */
+function backFree(
+  board: MountingBoard,
+  [cx, cy]: readonly [number, number],
+  { pad, pockets = [] }: { pad?: { centre: readonly [number, number]; radiusMm: number }; pockets?: Vec2[][] } = {},
+): (p: Vec2) => boolean {
+  const face = boardFace({
+    columns: board.columns,
+    rows: board.rows,
+    sides: board.sides ?? ALL_OPEN,
+    seams: board.seams ?? 'through',
+    cornerRadiusMm: board.cornerRadiusMm ?? SOLID_BOARD_DEFAULTS.cornerRadiusMm,
+  });
+  const sides = face.map((a, i) => {
+    const b = face[(i + 1) % face.length] ?? a;
+    const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    return { a, n: [-(b[1] - a[1]) / length, (b[0] - a[0]) / length] as const };
+  });
+  const slot = slotOf(board);
+  const straight = (slot.heightMm - slot.widthMm) / 2;
+  const clear = slot.widthMm / 2 + slot.chamferMm + ROOT_SLOT_ROOM_MM;
+  const [tab, drop] = [HOOK_WIDTH_MM / 2 + ROOT_HOOK_ROOM_MM, HOOK_DROP_MM + ROOT_HOOK_ROOM_MM];
+  const slots = slotPlaces(board.columns, board.rows, board.sides ?? ALL_OPEN, board.seams ?? 'through').filter(
+    (s) => Math.hypot(s.xMm - cx, s.yMm - cy) < ROOT_NEAR_MM,
+  );
+  const near = pockets.filter((ring) => ring.some(([x, y]) => Math.hypot(x - cx, y - cy) < ROOT_NEAR_MM));
+  return ([x, y]) => {
+    if (sides.some(({ a, n }) => (x - a[0]) * n[0] + (y - a[1]) * n[1] < EDGE_CHAMFER_MM)) return false;
+    for (const s of slots) {
+      const along = Math.max(s.yMm - straight, Math.min(s.yMm + straight, y));
+      if (Math.hypot(x - s.xMm, y - along) < clear) return false;
+      // the tab's room, from 1 mm past the slot's bottom end down, as it is cut (hookRoomOutline)
+      const bottom = s.yMm - slot.heightMm / 2;
+      if (Math.abs(x - s.xMm) < tab && y < bottom + 1 && y > bottom - drop) return false;
+    }
+    if (pad !== undefined && Math.hypot(x - pad.centre[0], y - pad.centre[1]) > pad.radiusMm) return false;
+    return !insideRings(near, [x, y]);
+  };
 }
 
 /** A standoff's outline round the middle of the slot it stands behind. */
@@ -731,42 +794,63 @@ export function mountingCuts(
   }
   if (m.standoffHeightMm > 0) {
     // From the standoff's foot into the middle of the plate, so the two overlap rather than touch; its foot, at the
-    // wall, chamfered as every part's outer edge is (D276).
+    // wall, chamfered as every part's outer edge is (D276); and its root on the board's back rounded (D375), from up
+    // to 3 mm up the standoff, below its foot's chamfer, out over the back as far as the back leaves it room.
     const foot = Math.min(EDGE_CHAMFER_MM, m.standoffHeightMm / 2);
-    const post: [number, number][] = [
-      [-m.standoffHeightMm, -foot],
-      [-m.standoffHeightMm + foot, 0],
-      [t / 2, 0],
-    ];
+    const root = rootSize(m.standoffHeightMm - foot - ROOT_BELOW_FOOT_MM);
+    /** A standoff of this outline, its root rounded out to `free`'s room, one mesh from its foot into the plate. */
+    const standoff = (engine: Engine, drawn: Vec2[], free: (p: Vec2) => boolean) => {
+      const ring = densified(drawn);
+      const reach = rootReach(ring, free, root.reachMm);
+      // grown out of the solid, which lies on the ring's left: by a negative amount
+      const out = (by: readonly number[]): Vec2[][] => [
+        grownRing(
+          ring,
+          by.map((d) => -d),
+        ),
+      ];
+      return loftedSolid(engine, [
+        [-m.standoffHeightMm, out(ring.map(() => -foot))],
+        [-m.standoffHeightMm + foot, [ring]],
+        // the root's curve, from where it leaves the standoff's side to its foot a hair inside the plate; its first
+        // level is the standoff's own outline
+        ...rootProfile(root.riseMm).map(([up, share]): [number, Vec2[][]] => [-up, out(reach.map((r) => r * share))]),
+        // and back in to the standoff's outline in the middle of the plate, inside it, so its end is the outline's
+        [t / 2, [ring]],
+      ]);
+    };
     // its points half a step round, off the diagonal on which a rounded corner's chamfer has its own: where a post
     // stands past that chamfer, at a 20 mm corner and a 5 mm screw, the two met on one line and left two facets of
     // no area in the printed part (D276)
-    const round = (engine: Engine, [x, y]: readonly [number, number]) =>
-      ringedSolid(engine, (grow) => circle(x, y, standoffDiameterMm, grow, HALF_STEP), post);
+    const padMm = screwHole(m.screwMm).countersinkMm + 2 * PAD_MARGIN_MM;
+    const round = (engine: Engine, place: readonly [number, number]) => {
+      const ring = circle(place[0], place[1], standoffDiameterMm, 0, HALF_STEP);
+      // on a lattice board, the root on the screw's pad (D144)
+      const onPad =
+        board.frameMm === undefined ? {} : { pad: { centre: place, radiusMm: padRadiusMm(board, place, padMm / 2) } };
+      return standoff(engine, ring, backFree(board, place, onPad));
+    };
     // with keyholes or lock screws alone, the standoffs behind the slots: the frame's outline on a lattice board (D306),
     // the keyhole and its walls on the solid board (D244)
     // The standoff from its foot into the plate, less the hook's room from the room's ceiling up past the standoff's
     // top, taken out before the standoff joins the plate: the plate fills the room's top, so it stops at the board's
     // back face and never cuts the plate. Two prisms joined round the room instead shared their outer walls where
-    // they overlapped and left degenerate facets (D244, D245).
-    const pad = (engine: Engine, place: readonly [number, number]) => {
-      const section = new engine.CrossSection([outline(place)]);
-      const tall = chamferedExtrusion(engine, section, m.standoffHeightMm + t / 2, { bottomMm: foot, topMm: 0 });
-      const whole = tall.translate([0, 0, -m.standoffHeightMm]);
+    // they overlapped and left degenerate facets (D244, D245). Its root is rounded as a post's is (D375); on a lattice
+    // board, where it stands flush with the frame round its slot (D306), the root runs out only where a web or the edge
+    // band meets the frame, off every pocket.
+    const pad = (engine: Engine, place: readonly [number, number], pockets: Vec2[][]) => {
       const room = hookRoomCutter(engine, place, board, standoffScrewMm);
+      const whole = standoff(engine, outline(place), backFree(board, place, { pockets }));
       const solid = whole.subtract(room);
-      for (const s of [tall, whole, room]) s.delete();
-      section.delete();
+      for (const s of [whole, room]) s.delete();
       return solid;
     };
-    cuts.extraSolids = (engine: Engine): Manifold[] =>
-      behindSlots
-        ? [
-            // at the bottom, behind the corner slots as at the top (D245), the lock screws through them (A248)
-            ...bottoms.map((p) => pad(engine, p)),
-            ...tops.map((p) => pad(engine, p)),
-          ]
-        : places.map((p) => round(engine, p));
+    cuts.extraSolids = (engine: Engine): Manifold[] => {
+      if (!behindSlots) return places.map((p) => round(engine, p));
+      const pockets = board.pocketsOf?.(engine, mountingPads(m, board)) ?? [];
+      // at the bottom, behind the corner slots as at the top (D245), the lock screws through them (A248)
+      return [...bottoms, ...tops].map((p) => pad(engine, p, pockets));
+    };
   }
   return cuts;
 }

@@ -59,7 +59,11 @@ A type built on the solid board passes `makeSolidBoard` a third argument instead
 clearance per slot (`clearanceOf`), more to cut away (`extraCutters`), as the fit coupon does, and
 more to add before anything is cut (`extraSolids`), and a solid the plate is kept inside (`within`), as the
 skeleton board keeps only its members (`skeleton.ts`). Two parts' cuts go together with `bothCuts`, as the
-lightened board joins its pockets to the mounting's holes (`lightened.ts`).
+lightened board joins its pockets to the mounting's holes (`lightened.ts`). A lattice board hands the mounting
+its board through `framedBoard(board, lattice)`, with the frame round each slot (`frameMm`), which a standoff
+behind a slot stands flush with (D306), and its pockets at the back face (`pocketsOf`), which every standoff's
+root keeps off (D375); a lattice whose back face is not the lightened board's pockets gives its own `pocketsOf`,
+and `packages/core/test/root.test.ts` holds both lattice types to it.
 
 **A board that takes all of the solid board's settings** lists `BOARD_SETTINGS` from
 `board-types/solid.ts`, then its own, then `MOUNTING_SETTINGS`, and builds from `boardParamsOf(values)`

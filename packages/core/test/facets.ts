@@ -14,3 +14,19 @@ export function degenerateFacets(mesh: MeshData): number {
   }
   return count;
 }
+
+/** The edges, between corners as 32-bit floats, that do not lie on exactly two facets: a mesh a slicer reads as closed
+ * has none, as scad-tools' stl-mesh.py counts "edges on more than two faces" (D375). */
+export function edgesNotOnTwoFacets(mesh: MeshData): number {
+  const corner = (v: number) => [0, 1, 2].map((d) => Math.fround(mesh.positions[v * 3 + d] ?? 0)).join(',');
+  const edges = new Map<string, number>();
+  for (let t = 0; t < mesh.triangles.length / 3; t++) {
+    const corners = [0, 1, 2].map((k) => corner(mesh.triangles[t * 3 + k] ?? 0));
+    corners.forEach((a, k) => {
+      const b = corners[(k + 1) % 3] ?? a;
+      const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+      edges.set(key, (edges.get(key) ?? 0) + 1);
+    });
+  }
+  return [...edges.values()].filter((n) => n !== 2).length;
+}

@@ -17,6 +17,11 @@ All notable changes to this project are recorded here. The format follows
   checked then, so a value left in it no longer stops the board: "Lock screws: at the bottom" applies only with
   keyholes, the standoff height only with standoffs on the back, keyholes or lock screws, and the lock screw size
   only with lock screws, at the bottom with keyholes or as the screw holes. Each one's help says when it applies.
+- Where a standoff meets a board's back, and where the slot clip's posts meet its bar, the part runs out onto the face
+  on a rounded root, up to 1.5 mm out and 3 mm up the post, as far as the face leaves it room: clear of every slot and
+  hook, inside the edge's chamfer, and on a lightened or skeleton board only over the frame, the webs and the pads,
+  never over a pocket. The physics tests found each of these a sharp inner edge, and a standoff's root the weakest
+  place on every board on standoffs. Nothing of a root prints over air.
 
 ### Fixed
 
