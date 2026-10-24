@@ -16,6 +16,7 @@
       #head h1 { font-size: 22px; margin: 0 0 6px; }
       #head p { margin: 0; color: #495057; }
       #legend { position: absolute; left: 28px; bottom: 18px; display: flex; gap: 22px; color: #495057; }
+      #legend span#bar::before { display: none; }
       #legend span::before { content: ''; display: inline-block; width: 14px; height: 14px; margin-right: 7px;
         vertical-align: -2px; border-radius: 3px; background: var(--c); opacity: var(--o, 1); }
       canvas { position: absolute; left: 0; top: 110px; }
@@ -36,6 +37,16 @@
         item.textContent = text;
         item.style.setProperty('--c', colour);
         document.getElementById('legend').append(item);
+      }
+      // optional: a colour bar for a scene coloured by value, { stops: [hex...], from, to }
+      if (s.bar) {
+        const bar = document.createElement('span');
+        bar.id = 'bar';
+        bar.textContent = `${s.bar.from}`;
+        const strip = document.createElement('i');
+        strip.style.cssText = `display:inline-block;width:240px;height:14px;margin:0 8px;vertical-align:-2px;border-radius:3px;background:linear-gradient(90deg,${s.bar.stops.join(',')})`;
+        bar.append(strip, document.createTextNode(s.bar.to));
+        document.getElementById('legend').append(bar);
       }
       const [W, H] = [1200, 700];
       const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -58,21 +69,29 @@
       for (const m of s.meshes) {
         const g = new THREE.BufferGeometry();
         g.setAttribute('position', new THREE.Float32BufferAttribute(m.positions, 3));
+        // optional: a colour a vertex (the model's stress), smooth shaded; and `wire`, every facet's edge drawn
+        if (m.colors) g.setAttribute('color', new THREE.Float32BufferAttribute(m.colors, 3));
         g.setIndex(m.triangles);
         const flat = g.toNonIndexed();
         flat.computeVertexNormals();
         const see = m.opacity < 1;
         const material = new THREE.MeshStandardMaterial({
-          color: m.color, roughness: 0.75, metalness: 0, flatShading: true,
-          transparent: see, opacity: m.opacity, depthWrite: !see, side: see ? THREE.DoubleSide : THREE.FrontSide,
+          color: m.colors ? 0xffffff : m.color, vertexColors: Boolean(m.colors), roughness: 0.75, metalness: 0,
+          flatShading: !m.colors,
+          transparent: see, opacity: m.opacity, depthWrite: !see, side: see || m.colors ? THREE.DoubleSide : THREE.FrontSide, // a saved skin's facets are not all wound alike
           polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
         });
         const mesh = new THREE.Mesh(flat, material);
         mesh.renderOrder = see ? 2 : 0;
         scene.add(mesh);
+        if (m.wire) {
+          const lines = new THREE.LineSegments(new THREE.WireframeGeometry(g), new THREE.LineBasicMaterial({ color: m.wire }));
+          lines.renderOrder = 1;
+          scene.add(lines);
+        }
         if (m.edges) {
           const dark = new THREE.Color(m.color).multiplyScalar(0.45);
-          const lines = new THREE.LineSegments(new THREE.EdgesGeometry(g, 28), new THREE.LineBasicMaterial({ color: dark, transparent: see, opacity: see ? 0.6 : 1 }));
+          const lines = new THREE.LineSegments(new THREE.EdgesGeometry(g, m.edgeAngle ?? 28), new THREE.LineBasicMaterial({ color: dark, transparent: see, opacity: see ? 0.6 : 1 }));
           lines.renderOrder = see ? 3 : 1;
           scene.add(lines);
         }

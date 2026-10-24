@@ -16,19 +16,22 @@ export const COLOURS = {
   wall: '#dee2e6',
 };
 
-export async function makeKit(repo) {
-  const lib = await import(pathToFileURL(join(repo, 'packages/core/dist/index.js')).href);
+/** `dist` names another build of the library under `repo`, for a figure that sets two builds side by side. */
+export async function makeKit(repo, dist = 'packages/core/dist') {
+  const lib = await import(pathToFileURL(join(repo, dist, 'index.js')).href);
   const engine = await lib.loadEngine();
   const { Manifold } = engine;
   const box = (x0, x1, y0, y1, z0, z1) => Manifold.cube([x1 - x0, y1 - y0, z1 - z0]).translate([x0, y0, z0]);
   const cylinder = (x, y, r, z0, z1, top = r) => Manifold.cylinder(z1 - z0, r, top, 96).translate([x, y, z0]);
-  /** A solid as the page draws it: its points rounded to a micron, and whether its edges are drawn. */
-  const mesh = (solid, color, opacity = 1, edges = true) => {
+  /** A solid as the page draws it: its points rounded to a micron, whether its edges are drawn, and a colour for
+   * every facet's edge (`wire`), to show how finely a surface is made. */
+  const mesh = (solid, color, opacity = 1, edges = true, wire) => {
     const m = lib.meshOf(solid);
     return {
       color,
       opacity,
       edges,
+      wire,
       positions: Array.from(m.positions, (v) => Math.round(v * 1000) / 1000),
       triangles: Array.from(m.triangles),
     };
@@ -38,9 +41,9 @@ export async function makeKit(repo) {
     mesh(part.subtract(region), COLOURS.grey),
     mesh(part.intersect(region), COLOURS.orange),
   ];
-  /** A page type's part at its starting values and the given ones, as it is built (not as it prints). */
+  /** A page type's part (its id, or the type itself) at its starting values and the given ones, as it is built (not as it prints). */
   const built = (id, given = {}) => {
-    const type = lib.boardType(id);
+    const type = typeof id === 'string' ? lib.boardType(id) : id;
     const read = lib.readValues(type.settings, { ...lib.defaultValues(type.settings), ...given });
     if (!read.ok) throw new Error(`${id}: ${read.errors.map((e) => e.message).join('; ')}`);
     const made = lib.buildBoard(engine, type, read.values);
