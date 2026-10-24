@@ -215,10 +215,10 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D358 | **A keyhole's head seats on a 45 degree countersink, for a countersunk screw** ("358 a"; the keyhole printability pass, `docs/research/2026-10-23-keyhole-printability.md` on `feat/keyhole-printability`): its flat lips printed over air (T151's print, 23 Oct 2026); the seat runs at 45 degrees from the slot to the head's channel, so nothing over the head faces down past 45 degrees at the 15 mm standoffs, and the head centres in it. The slot clip's keyhole takes the same seat, so one screw holds a whole wall; the lock screws' head recesses get the same treatment. The screw becomes a 4 mm countersunk one, 90 degrees, its head taken as DIN 7991's 8 x 2.48 mm until Q359 measures the owner's; to be released after T151's reprint confirms it, as D353 held the slimmer skeleton. Built 23 Oct 2026 (C381 to C385; the lock screws' recesses not, C386) | 23 Oct 2026 |
 | D369 | **Where a hook's room runs out of its standoff, its ceiling rises at 45 degrees to the standoff's face** ("369 a"; the same pass): the flat ceiling's edge there printed over air, eight curved paths at T151's four standoffs; the ramp leaves eight straight lines held at both ends, keeps the hook's 8 mm and the 1.2 mm under the channel, and is hidden behind the board. Built 23 Oct 2026 (C381 to C383) | 23 Oct 2026 |
 | A376 | **`v0.7.0` is released** ("376 y now"): the QA sweep's Q1 to Q13 and D358's countersunk keyholes with D369's ramps, before T151's reprint of the seat, by the owner's choice | 23 Oct 2026 |
-| D371 | **Every corner gets its screw where a side runs between the slots** ("371 a"; the owner: "round head and counter sunk don't work on 'between the slots' option"; replacing D289's no screw at such a corner): at its usual place, 10 mm in from both edges, where that is clear of the slots, else at the nearest place at least 10 mm in from both edges with a normal corner's room round it, 8.5 mm, its standoff with it; measured on a 160 x 160 board with every side between the slots, two corners keep the usual place and two move 11.5 mm along the edge ([QA](research/2026-10-23-qa-sweep.md) Q14) | 23 Oct 2026 |
-| D372 | **A setting that applies only with another choice is greyed out and not checked while it does not apply**, its help saying when it does ("372 a"; QA Q15): "Lock screws: at the bottom" without keyholes, the standoff height without standoffs, the lock screw size without lock screws | 23 Oct 2026 |
+| D371 | **Every corner gets its screw where a side runs between the slots** ("371 a"; the owner: "round head and counter sunk don't work on 'between the slots' option"; replacing D289's no screw at such a corner): at its usual place, 10 mm in from both edges, where that is clear of the slots, else at the nearest place at least 10 mm in from both edges with a normal corner's room round it, 8.5 mm, its standoff with it; measured on a 160 x 160 board with every side between the slots, two corners keep the usual place and two move 11.5 mm along the edge ([QA](research/2026-10-23-qa-sweep.md) Q14). Built 23 Oct 2026 (C420 to C423), on `main` 24 Oct | 23 Oct 2026 |
+| D372 | **A setting that applies only with another choice is greyed out and not checked while it does not apply**, its help saying when it does ("372 a"; QA Q15): "Lock screws: at the bottom" without keyholes, the standoff height without standoffs, the lock screw size without lock screws. Built 23 Oct 2026 (C424 to C426), on `main` 24 Oct | 23 Oct 2026 |
 | D374 | **The slimmer skeleton is reworked before T320 prints it** ("374 b"; the physics tests: per hook it held 43 % of the released skeleton, 31 against 62 N in PETG, [report](research/2026-10-23-physics-tests.md)): a radius at the step behind the front's flange where a web meets the rim, and a thicker front flange where a hook's body presses, each weighed in PETG and modelled again, the best of them for T320. Carried out on 24 Oct 2026 on the branch `feat/skeleton-rework`, not on `main`: no variant reaches the released skeleton's 62 N per hook, so none is chosen (D408) | 23 Oct 2026 |
-| D375 | **A rounded root where the standoffs and the slot clip's bar meet the part** ("375 a"; the physics tests: each a sharp inner edge, its stress rising with every finer mesh, the weakest place on every board on standoffs) | 23 Oct 2026 |
+| D375 | **A rounded root where the standoffs and the slot clip's bar meet the part** ("375 a"; the physics tests: each a sharp inner edge, its stress rising with every finer mesh, the weakest place on every board on standoffs). Built 24 Oct 2026 (C427 to C435): a parabola up to 1.5 mm out and 3 mm up the post; before and after in the [physics report](research/2026-10-23-physics-tests.md), D375, which raised D409 to D411 | 23 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -375,6 +375,27 @@ clip (b4).
 - **A407** Make the Printables files, pictures and GIFs again once, after D371, D372 and D375 are released: `v0.7.0`
   changes none of the 13 files (each built from `v0.6.0` and `v0.7.0` and compared byte for byte, 24 Oct 2026), while
   D375 changes the slot clip's and D371 and D375 the mounting's pictures. Recommended yes.
+
+- **D409** The slot clip's root (D375): it rounds the bar's root across its middle but stops 1.25 mm short of the
+  bar's chamfered sides, where the post still meets the bar on a sharp edge. In-plane bending peaks at those sides, so
+  that edge now sets the clip's capacity, its modelled stress rising with every finer mesh: 78 N in PLA at level 2 and
+  54 N at level 3, both upper bounds (53 N before, an upper bound too). (a) Run the root on over the bar's side
+  chamfer; (b) end the side chamfer short of the posts, so the root reaches the side; (c) as built. (a) and (b) both
+  change how the clip looks. Recommended (a): the bar keeps its chamfered edges everywhere and the post meets it on a
+  curve all round (inferred, not yet modelled).
+
+- **D410** The lightened board's standoff roots (D375): the screw's pad (D144) leaves a root 1.25 mm of room, and
+  beside a slot's 2 mm room (C83) none, where the board's peak now sits: 78 N in PLA at level 3, from 47 N before
+  (level 1); across the layers 2.0 to 2.6 MPa, not rising past level 2. (a) A wider pad round each standoff, more
+  plastic and a larger solid patch on the back; (b) as built. Recommended (b): it now holds about what the skeleton on
+  standoffs does (73 N), its stress converges, and a wider pad spends plastic where the board's point is to save it.
+
+- **D411** The keyhole standoffs' hook rooms: their inner walls meet on sharp inner edges, where the stress peaks when
+  a keyhole board hangs (relayed from the D375 pass, 24 Oct 2026; not modelled before and after, as D358 and D369
+  changed those parts after the physics report). (a) Model today's keyhole boards, round those edges where a hook
+  keeps its full 8 mm, and model them again; (b) as they are, until T151's hanging shows how the board holds.
+  Recommended (a): by the model it is the keyhole board's weakest place, and a radius kept outside the hook's 8 mm
+  costs the hook nothing.
 
 ## Inputs from outside this repository
 
