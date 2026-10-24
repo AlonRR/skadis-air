@@ -15,7 +15,7 @@
 // the slots (D282), a corner screw whose usual place would land on a slot goes to the nearest place with a normal
 // corner's room round it, its standoff with it (D371 a), and each standoff behind a slot stands behind the slot nearest
 // its corner that keeps it on the board (D289 a). Every standoff's root on the back runs out onto it on a long eased
-// curve, as far as the back leaves it room (D375, root.ts).
+// curve, as far as the back leaves it room (D375, root.ts), and so do the walls of a hook's room round its slot (D411).
 // Any board type built on the solid board takes these as its third argument (BoardCuts).
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { boardFace, type BoardCuts, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from './board-solid.js';
@@ -637,9 +637,82 @@ function hookRoomOutline(
  * end's edge (1.2 + 0.5) / root 2 = 1.20 mm off (MIN_BEHIND_CHANNEL_MM). */
 const RAMP_SHORT_MM = 0.5;
 
+/** A point's key, to 10 nm, as an extrusion gives its outline's points back. */
+const pointKey = (x: number, y: number) => `${Math.round(x * 1e5)},${Math.round(y * 1e5)}`;
+
+/** The unit normal to the left of the edge from a to b: into the region an outline's ring has on its left. */
+const into = (a: Vec2, b: Vec2): Vec2 => {
+  const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  return [-(b[1] - a[1]) / length, (b[0] - a[0]) / length];
+};
+
+/**
+ * A hook's room behind the slot whose middle is at (x, y), as a cutter: its outline from HOOK_ROOM_MM behind the
+ * board's back to past the plate's middle, and where its walls meet the back, a rounded root on each wall, as a
+ * standoff's outside has (D411, D375): the room's outline moved into the room at each level of the root's curve by
+ * each point's reach, from 3 mm behind the back down to its foot a hair inside the plate, and on into the plate so, so
+ * what the cutter leaves of the standoff there lies in the plate. A root keeps out of all a hook takes (C429): the slot
+ * as the board cuts it and its chamfer, which slotClearZone keeps, and the back tab's room exactly as hookRoomOutline
+ * cuts it, its width and drop each with C99's 2 mm; so the walls round the slot, 1.5 mm past its chamfer, have a root
+ * 1.25 mm out with the margin, and the tab's walls none. One extrusion of the outline, each level moved to its height
+ * and its points into the room along the mitres of their edges, in 64-bit points, so the tab's walls, which no root
+ * moves, still lie in the planes the ramp's sides go on in (D369).
+ */
+function roomWithRoots(
+  engine: Engine,
+  rings: Vec2[][],
+  [x, y]: readonly [number, number],
+  slot: { widthMm: number; heightMm: number; chamferMm: number },
+  thicknessMm: number,
+): Manifold {
+  const bottom = y - slot.heightMm / 2;
+  const [tabHalf, drop] = [HOOK_WIDTH_MM / 2 + 2, HOOK_DROP_MM + 2];
+  const hook = [stadium(x, y, slot.widthMm, slot.heightMm, slot.chamferMm)];
+  const free = (p: Vec2) =>
+    insideRings(rings, p) &&
+    !insideRings(hook, p) &&
+    !(Math.abs(p[0] - x) < tabHalf && p[1] > bottom - drop && p[1] < bottom + 1);
+  const root = rootSize(HOOK_ROOM_MM / 2);
+  // the levels, from the room's ceiling to past the plate's middle: [z, the share of each point's reach it is moved]
+  const levels: [number, number][] = [
+    [-HOOK_ROOM_MM, 0],
+    ...rootProfile(root.riseMm).map(([up, share]): [number, number] => [-up, share]),
+    [thicknessMm / 2 + 1, 1],
+  ];
+  // each point's reach, had on the ring turned round, so the standoff lies on its left and its normal runs out into the
+  // room; and its mitre into the room, which lies on the ring's left: moved by the mitre times d, its two edges move d in
+  const points = new Map<string, { reach: number; mitre: Vec2 }>();
+  for (const ring of rings) {
+    const n = ring.length;
+    const at = (i: number): Vec2 => ring[((i % n) + n) % n] ?? [0, 0];
+    const turned = rootReach(
+      ring.map((_, i) => at(n - 1 - i)),
+      free,
+      root.reachMm,
+    );
+    const reach = ring.map((_, i) => turned[n - 1 - i] ?? 0);
+    ring.forEach((q, i) => {
+      const [n1, n2] = [into(at(i - 1), q), into(q, at(i + 1))];
+      const k = 1 / (1 + n1[0] * n2[0] + n1[1] * n2[1]);
+      points.set(pointKey(q[0], q[1]), { reach: reach[i] ?? 0, mitre: [k * (n1[0] + n2[0]), k * (n1[1] + n2[1])] });
+    });
+  }
+  const prism = engine.Manifold.extrude(rings, 1, levels.length - 2);
+  const room = prism.warp((v) => {
+    const point = points.get(pointKey(v[0] ?? 0, v[1] ?? 0));
+    if (point === undefined) throw new Error("a point of a hook's room is not on its outline");
+    const [z, share] = levels[Math.round((v[2] ?? 0) * (levels.length - 1))] ?? [0, 0];
+    const d = share * point.reach;
+    [v[0], v[1], v[2]] = [(v[0] ?? 0) + d * point.mitre[0], (v[1] ?? 0) + d * point.mitre[1], z];
+  });
+  prism.delete();
+  return room;
+}
+
 /**
  * The room a hook takes behind the slot whose middle is at (x, y) (D244), which the standoff behind it leaves empty:
- * hookRoomOutline from HOOK_ROOM_MM behind the board's back to past its middle; and under its ceiling over the hook's
+ * hookRoomOutline from HOOK_ROOM_MM behind the board's back to past its middle, its walls' roots on the back rounded
+ * where they leave a hook all it takes (roomWithRoots, D411); and under its ceiling over the hook's
  * back tab, a wedge as wide as the tab, rising at 45 degrees toward the wall from 0.5 mm short of the keyhole's
  * channel to the tab's end, so where the room runs out of the standoff its ceiling ends on a 45 degree face, not an
  * edge over air (D369). The wedge meets the room on the ceiling's plane and its sides go on in the tab's, so no two
@@ -655,9 +728,7 @@ export function hookRoomCutter(
   const { CrossSection, Manifold } = engine;
   const slot = slotOf(board);
   const outline = hookRoomOutline(engine, place, slot);
-  const tall = outline.extrude(HOOK_ROOM_MM + board.thicknessMm / 2 + 1);
-  const room = tall.translate([0, 0, -HOOK_ROOM_MM]);
-  tall.delete();
+  const room = roomWithRoots(engine, outline.toPolygons(), place, slot, board.thicknessMm);
   outline.delete();
   const [x, y] = place;
   const k = keyhole(screwMm);

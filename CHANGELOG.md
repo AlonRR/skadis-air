@@ -29,6 +29,9 @@ All notable changes to this project are recorded here. The format follows
   place on every board on standoffs. Nothing of a root prints over air.
 - On the slot clip, each post's rounded root runs on over the bar's chamfered sides, where it stopped short of them,
   so the post meets the bar on a curve all the way across and the bar keeps its chamfered edges.
+- In a standoff behind a slot, where the walls of the hook's room meet the board's back round the slot, they run out
+  onto the back on the same rounded root, up to 1.25 mm into the room and 3 mm up its walls; the room keeps all a
+  hook takes, the slot and its chamfer and the back tab's room with its 2 mm all round, as before.
 
 ### Fixed
 

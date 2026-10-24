@@ -8,7 +8,7 @@
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { afterAll, describe, expect, it } from 'vitest';
 import { makeSolidBoard, solidBoardParams, type SolidBoardParams } from '../src/board-solid.js';
-import { LIGHTENED, SKELETON } from '../src/board-types/index.js';
+import { LIGHTENED, SKELETON, SOLID } from '../src/board-types/index.js';
 import { EDGE_CHAMFER_MM } from '../src/chamfer.js';
 import { loadEngine } from '../src/engine.js';
 import {
@@ -21,7 +21,9 @@ import {
   screwPlaces,
 } from '../src/mounting.js';
 import { printPose } from '../src/print-pose.js';
-import { defaultValues } from '../src/settings.js';
+import { stadium } from '../src/rings.js';
+import { defaultValues, SettingsProblem } from '../src/settings.js';
+import { HOOK_DROP_MM, HOOK_WIDTH_MM } from '../src/skadis.js';
 import { makeSlotClip, slotClipParams, type SlotClipParams } from '../src/slot-clip.js';
 import { ALL_OPEN, type Seams, type Sides } from '../src/slots.js';
 import { meshOf } from '../src/stl.js';
@@ -153,12 +155,30 @@ describe("each round standoff's root on the board's back (D375)", () => {
   });
 });
 
+/** The room a hook takes behind the slot at (x, y), as hookRoomOutline cuts it from a standoff behind a slot: the slot
+ * at the starting clearance, 5.2 x 15.2 mm, grown by its 1 mm chamfer and 1.5 mm more, and below it the back tab's
+ * room, its 4.5 mm width and 8.25 mm drop each with C99's 2 mm, from 1 mm up the slot's bottom end. */
+function hookRoom([x, y]: readonly [number, number], grow = 0): CrossSection {
+  const bottom = y - 15.2 / 2;
+  const [half, drop] = [HOOK_WIDTH_MM / 2 + 2 + grow, HOOK_DROP_MM + 2 + grow];
+  const tab: Vec2[] = [
+    [x - half, bottom - drop],
+    [x + half, bottom - drop],
+    [x + half, bottom + 1],
+    [x - half, bottom + 1],
+  ];
+  return keep(new engine.CrossSection([stadium(x, y, 5.2, 15.2, 2.5 + grow), tab], 'NonZero'));
+}
+
 describe("each standoff behind a slot, its root on the solid board's back (D375)", () => {
   const board = { columns: 2, rows: 2, sides: CLOSED };
   const places = [...keyholePlaces(board), ...bottomSlotPlaces(board)];
-  /** What a section near a standoff gains at z0 over its section at z1, mm2. */
+  /** What a section near a standoff gains at z0 over its section at z1, outside the hook's room, which has a root of
+   * its own (D411), mm2. */
+  const outside = (solid: Manifold, z: number, place: readonly [number, number]) =>
+    keep(near(solid, z, place, 16).subtract(hookRoom(place))).area();
   const gained = (solid: Manifold, place: readonly [number, number], [z0, z1]: [number, number]) =>
-    near(solid, z0, place, 16).area() - near(solid, z1, place, 16).area();
+    outside(solid, z0, place) - outside(solid, z1, place);
 
   for (const mounting of [
     { screwHead: 'keyhole', lockScrews: false },
@@ -462,4 +482,109 @@ describe("the slot clip's posts, their roots on over the bar's side chamfer (D40
     expect(refused).toBe(18);
     expect(built).toBe(132);
   }, 120_000);
+});
+
+describe("the walls of a hook's room in each standoff behind a slot, their roots on the back (D411)", () => {
+  const MOUNTINGS = [
+    { screwHead: 'keyhole', lockScrews: 'none' },
+    { screwHead: 'keyhole', lockScrews: 'bottom' },
+    { screwHead: 'lock', lockScrews: 'none' },
+  ] as const;
+  /** A board of a type, 80 x 80 mm closed all round on 15 mm standoffs, its standoffs behind its four corner slots. */
+  const board = (type: typeof SOLID | typeof LIGHTENED | typeof SKELETON, given: object) =>
+    keep(
+      type.build(engine, {
+        ...defaultValues(type.settings),
+        widthMm: 80,
+        heightMm: 80,
+        sides: CLOSED,
+        standoffs: 'back',
+        standoffHeightMm: 15,
+        ...given,
+      }),
+    );
+  const places = [
+    ...keyholePlaces({ columns: 2, rows: 2, sides: CLOSED }),
+    ...bottomSlotPlaces({ columns: 2, rows: 2, sides: CLOSED }),
+  ];
+  /** What a slice holds inside a region round a place, mm2. */
+  const inside = (solid: Manifold, z: number, region: CrossSection) =>
+    keep(keep(solid.slice(z)).intersect(region)).area();
+
+  for (const type of [SOLID, LIGHTENED, SKELETON]) {
+    for (const mounting of MOUNTINGS) {
+      it(`round the slot, not where the tab goes: the ${type.id} board, ${mounting.screwHead}s, lock screws ${mounting.lockScrews}`, () => {
+        const solid = board(type, mounting);
+        for (const place of places) {
+          const where = `${type.id} ${mounting.screwHead} ${mounting.lockScrews} at ${place.join(', ')}`;
+          const room = hookRoom(place);
+          // 0.02 mm behind the back, the root round the room's walls by the slot: the room's 10.2 x 20.2 mm stadium,
+          // 52.0 mm round, less its lower arc where the tab's room meets it, 10.0 mm, 42 mm of wall, the root 1.5 mm
+          // past the slot's chamfer less its 0.25 mm margin, 1.25 mm out, 0.72 of it there: 0.9 mm, 38 mm2 at most,
+          // less where it eases in to the tab's walls
+          expect(inside(solid, -0.02, room), where).toBeGreaterThan(25);
+          expect(inside(solid, -0.02, room), where).toBeLessThan(42 * 1.25 * OFF_FACE);
+          // 1 mm behind, (1 - sqrt(1.05 / 3.05))^2 = 0.17 of its reach out, 0.21 mm, under 9 mm2
+          expect(inside(solid, -1, room), where).toBeLessThan(42 * 1.25 * 0.17 + 0.5);
+          // and from 3.2 mm behind the back to the room's ceiling, the room as it was, empty
+          for (const z of [-RISE_MM - 0.2, -5, -7.9])
+            expect(inside(solid, z, room), `${where} at ${z}`).toBeLessThan(0.001);
+          // never in what a hook takes: the slot and its chamfer and the 0.25 mm margin, and the tab's room as it is cut
+          const slot = keep(new engine.CrossSection([stadium(place[0], place[1], 5.2, 15.2, 1.25)]));
+          const tab = keep(room.subtract(keep(new engine.CrossSection([stadium(place[0], place[1], 5.2, 15.2, 2.5)]))));
+          for (const z of [-0.02, -0.5, -1, -2, -2.9]) {
+            expect(inside(solid, z, slot), `${where}, the slot, at ${z}`).toBeLessThan(0.001);
+            expect(inside(solid, z, tab), `${where}, the tab, at ${z}`).toBeLessThan(0.001);
+          }
+        }
+      });
+    }
+  }
+
+  it('as the board prints face down, faces up all the way, the roots in the rooms too: nothing over air', () => {
+    for (const type of [SOLID, LIGHTENED, SKELETON]) {
+      for (const mounting of MOUNTINGS) {
+        // the back 5 mm up as the board prints, the roots from there to 3 mm up the walls
+        const printed = keep(printPose(board(type, mounting)));
+        expect(facingDown(printed, 5.001, 5 + RISE_MM + 0.1), `${type.id} ${JSON.stringify(mounting)}`).toBe(0);
+      }
+    }
+  });
+
+  it('exports closed with no facet of no area, every board type, size and mounting behind the slots', () => {
+    let [checked, refused] = [0, 0];
+    for (const type of [SOLID, LIGHTENED, SKELETON]) {
+      for (const size of [
+        { widthMm: 80, heightMm: 80, sides: CLOSED, seams: 'through' },
+        { widthMm: 120, heightMm: 160, sides: CLOSED, seams: 'through' },
+        { widthMm: 160, heightMm: 120, sides: ALL_OPEN, seams: 'through' },
+        { widthMm: 160, heightMm: 160, sides: ALL_OPEN, seams: 'between' },
+      ] as const) {
+        for (const mounting of [
+          ...MOUNTINGS,
+          { screwHead: 'keyhole', lockScrews: 'bottom', lockScrewMm: 3 }, // a head too wide for the slot: a groove
+          { screwHead: 'keyhole', lockScrews: 'none', screwMm: 3 },
+          { screwHead: 'keyhole', lockScrews: 'none', screwMm: 5 },
+        ]) {
+          const given = { ...size, ...mounting };
+          let built: Manifold;
+          try {
+            built = board(type, given);
+          } catch (error) {
+            if (!(error instanceof SettingsProblem)) throw error;
+            refused++;
+            continue;
+          }
+          const mesh = meshOf(built);
+          expect(edgesNotOnTwoFacets(mesh), `${type.id} ${JSON.stringify(given)}`).toBe(0);
+          expect(degenerateFacets(mesh), `${type.id} ${JSON.stringify(given)}`).toBe(0);
+          checked++;
+        }
+      }
+    }
+    // the skeleton refuses one: between the slots, a 5 mm screw's keyhole standoffs leave pockets beside them too
+    // small for its taper, as it did before D411
+    expect(refused).toBe(1);
+    expect(checked).toBe(3 * 4 * 6 - 1);
+  }, 180_000);
 });
