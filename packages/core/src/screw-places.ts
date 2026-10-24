@@ -112,8 +112,9 @@ export const LOCK_SCREW = {
   label: 'Lock screw',
   when: 'With lock screws, at the bottom with keyholes or as the screw holes',
   help:
-    "their diameter. A head up to 5 mm across, about a 2.5 mm screw's, passes through the slot; a larger one, as a " +
-    "4 mm screw's 8 mm head, gets a groove cut in the slot's sides to pass, above where a hook rests.",
+    'their diameter. Up to 2.5 mm, a pan head 5 mm across passes through the slot and sits in a flat recess. From ' +
+    "3 mm, as the screw size's 4 mm, a countersunk screw: its head, twice the screw across, passes through a groove " +
+    "cut in the slot's sides, above where a hook rests, and seats on a 45 degree countersink, as a keyhole's does.",
   min: 2,
   max: 5,
   appliesWhen: (v) => v['screwHead'] === 'lock' || (v['screwHead'] === 'keyhole' && v['lockScrews'] === 'bottom'),

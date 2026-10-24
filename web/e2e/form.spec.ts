@@ -247,11 +247,10 @@ test('offers keyholes, which bring their standoffs, with lock screws under Advan
     'data-file-name',
     'skadis-solid-160x160-keyholes-lock-screws-standoffs-15mm.stl',
   );
-  // taking the standoffs off again would hang the board flat: a problem, saying why; at least 13.5 mm, for the lock
-  // screws' 4 mm heads, the screw size's (D479)
+  // taking the standoffs off again would hang the board flat: a problem, saying why
   await choose(page, 'standoffs', 'none');
   await expect(status).toHaveAttribute('data-state', 'problem');
-  await expect(status).toContainText('standoffs at least 13.5 mm');
+  await expect(status).toContainText('standoffs at least 13.23 mm');
 });
 
 test('offers lock screws alone, which bring their standoffs as keyholes do (D289)', async ({ page }) => {
@@ -277,15 +276,17 @@ test('says nothing under the screws while the standoffs are too short for the lo
     },
   ]) {
     await pick();
-    await choose(page, 'lockScrewSize', 'own'); // their own size (D479)
+    // a 5 mm lock screw of its own, countersunk on its seat (D479, D370 a), with 3 mm keyholes, which take less
+    await choose(page, 'lockScrewSize', 'own');
     await page.locator('input[name="lockScrewMm"]').fill('5');
+    await page.locator('input[name="screwMm"]').fill('3');
     await page.locator('input[name="standoffHeightMm"]').fill('3');
     await expect(status).toHaveAttribute('data-state', 'problem');
-    await expect(status).toContainText('standoffs at least 14.3 mm');
+    await expect(status).toContainText('standoffs at least 13.15 mm');
     await expect(note).toHaveText('');
     // the control: tall enough, the note says what each lock screw passes
     await page.locator('input[name="standoffHeightMm"]').fill('15');
-    await expect(note).toContainText('Each lock screw passes 2.7 mm of standoff under its head');
+    await expect(note).toContainText('Each lock screw passes 3.85 mm of standoff under its head');
   }
 });
 

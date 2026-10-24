@@ -312,3 +312,71 @@ describe("the slot clip's keyhole takes the same seat (D358)", () => {
     expect(degenerateFacets(meshOf(clip))).toBe(0);
   });
 });
+
+// The lock screws at the screw size are the same countersunk screw as the keyholes' (D479; D370 a, "countersunk lock
+// screws in a 45 degree seat, like the keyholes"): each head seats on a 45 degree countersink from the shank's hole out
+// to the 8.5 mm its groove takes, so nothing over it faces down more steeply as the board prints face down, where a pan
+// head's recess had a flat floor over air. A lock screw small enough that its pan head passes the slot, 2.5 mm or less,
+// keeps the pan head's recess, as before.
+describe('a lock screw whose head needs a groove seats on a 45 degree countersink (D479, D370 a)', () => {
+  /** Round the bottom standoffs' lock screws as the board prints: past the room's ceiling, up to the wall face. */
+  const overLocks = (x: number, y: number, z: number) =>
+    [20, 60].some((sx) => Math.hypot(x - (80 - sx), y - 20) < 4.4) &&
+    z > T + MIN_KEYHOLE_STANDOFF_MM + 0.01 &&
+    z < T + H - 0.01;
+
+  it("control: a 2.5 mm lock screw's pan head recess has its flat floor over air, round the shank", () => {
+    // the floor between the 3 mm hole and the 5.4 mm recess: pi x (2.7^2 - 1.5^2) = 15.8 mm2 at each lock screw
+    const pan = steepDown(printed(mounted({ lockScrews: true, lockScrewMm: 2.5 })), overLocks);
+    expect(pan).toBeGreaterThan(2 * 15);
+    expect(pan).toBeLessThan(2 * 16);
+  });
+
+  for (const kind of KINDS) {
+    it(
+      `leaves nothing over the head steeper than 45 degrees, on the ${kind} board, at every screw size, or alone`,
+      () => {
+        for (const m of [...SCREWS.map((screwMm) => ({ screwMm, lockScrews: true })), { screwHead: 'lock' as const }]) {
+          const over = steepDown(printed(mounted(m, kind)), overLocks);
+          expect({ ...m, over: Math.round(over * 100) / 100 }).toEqual({ ...m, over: 0 });
+        }
+      },
+      SLOW,
+    );
+  }
+
+  it("widens at 45 degrees from the shank's 4.5 mm hole to the 8.5 mm the head and its groove take", () => {
+    // a 4 mm countersunk head, 2.48 mm tall, 0.25 mm of it in the hole, its top 0.3 mm short of the hook's 8 mm of
+    // room: it bears 2.53 mm behind the room, where the countersink starts, and the countersink is 2 mm deep
+    const b = mounted({ lockScrews: true });
+    const floor = -8 - (0.62 * 4 - 0.25 + 0.3);
+    const window = keep(Section.square([9.6, 9.6]).translate([20 - 4.8, 20 - 4.8]));
+    const across = (z: number) =>
+      2 * Math.sqrt((window.area() - keep(keep(b.slice(z)).intersect(window)).area()) / Math.PI);
+    expect(across(floor - 0.5)).toBeCloseTo(4.5, 1);
+    expect(across(floor + 0.5)).toBeCloseTo(5.5, 1);
+    expect(across(floor + 1.5)).toBeCloseTo(7.5, 1);
+    expect(across(floor + 2.3)).toBeCloseTo(8.5, 1);
+    // the control: a 2.5 mm lock screw's pan head, its 5.4 mm recess flat from its 3 mm hole, 2.3 mm behind the room
+    const pan = mounted({ lockScrews: true, lockScrewMm: 2.5 });
+    const panAcross = (z: number) =>
+      2 * Math.sqrt((window.area() - keep(keep(pan.slice(z)).intersect(window)).area()) / Math.PI);
+    expect(panAcross(-8 - 2.3 - 0.25)).toBeCloseTo(3, 1);
+    expect(panAcross(-8 - 2.3 + 0.25)).toBeCloseTo(5.4, 1);
+  });
+
+  it(
+    'builds clean, with no degenerate facet, as built and as printed',
+    () => {
+      for (const kind of KINDS) {
+        for (const m of [{ lockScrews: true }, { screwHead: 'lock' as const }, { lockScrews: true, screwMm: 5 }]) {
+          const part = mounted(m, kind);
+          expect(part.decompose().map(keep)).toHaveLength(1);
+          expect(degenerateFacets(meshOf(part))).toBe(0);
+          expect(degenerateFacets(meshOf(printed(part)))).toBe(0);
+        }
+      }
+    },
+    SLOW,
+  );
+});

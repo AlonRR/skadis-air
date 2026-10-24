@@ -490,10 +490,11 @@ describe('keyholes, in the top standoffs behind the corner slots (D235, D244; D1
     expect(mounted(board, { ...keyholes, standoffHeightMm: 13.23 }).genus()).toBeGreaterThan(0);
     expect(() => mounted(board, { ...keyholes, screwMm: 5, standoffHeightMm: 13.8 })).toThrow(/at least 13\.85 mm/);
     expect(mounted(board, { ...keyholes, screwMm: 5, standoffHeightMm: 13.85 }).genus()).toBeGreaterThan(0);
-    // a 5 mm lock screw's 4 mm head in its recess, behind the 8 mm room, and 2 mm of standoff under it: 14.3 mm
-    const big = { ...keyholes, lockScrews: true, lockScrewMm: 5 };
-    expect(() => mounted(board, { ...big, standoffHeightMm: 14.2 })).toThrow(/at least 14\.3 mm/);
-    expect(mounted(board, { ...big, standoffHeightMm: 14.3 }).genus()).toBeGreaterThan(0);
+    // a 5 mm lock screw's countersunk head on its seat, 3.15 mm behind the 8 mm room, and 2 mm of standoff under it:
+    // 13.15 mm, more than 3 mm keyholes take (D479, D370 a)
+    const big = { ...keyholes, screwMm: 3, lockScrews: true, lockScrewMm: 5 };
+    expect(() => mounted(board, { ...big, standoffHeightMm: 13.1 })).toThrow(/at least 13\.15 mm/);
+    expect(mounted(board, { ...big, standoffHeightMm: 13.15 }).genus()).toBeGreaterThan(0);
   });
 
   it('export with no degenerate facet, with lock screws or without, open or closed', () => {
@@ -912,12 +913,13 @@ describe('lock screws alone (D289)', () => {
   });
 
   it("need standoffs tall enough for the hook's room, the head and some standoff under it", () => {
-    // 8 mm of room, a 4 mm screw's 3.2 mm head in a recess 0.3 mm deeper, and 2 mm under it (D479: the screw size)
+    // 8 mm of room, a 4 mm countersunk head on its seat 2.53 mm behind it, and 2 mm under it (D479: the screw size,
+    // D370 a: on a 45 degree countersink)
     expect(() => mountingCuts(mountingParams({ screwHead: 'lock' }), { columns: 3, rows: 3, thicknessMm: 5 })).toThrow(
-      /standoffs at least 13.5 mm/,
+      /standoffs at least 12.53 mm/,
     );
     expect(() =>
-      mountingCuts(mountingParams({ screwHead: 'lock', standoffHeightMm: 13.5 }), {
+      mountingCuts(mountingParams({ screwHead: 'lock', standoffHeightMm: 12.53 }), {
         columns: 3,
         rows: 3,
         thicknessMm: 5,

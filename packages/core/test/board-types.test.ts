@@ -916,23 +916,25 @@ describe('what each screw passes, from the part itself (D264)', () => {
     );
     expect(screws('solid', { ...keyholes, lockScrews: 'bottom' })).toBe(
       'Each keyhole hangs on a 4 mm countersunk screw (a 90 degree head) left standing out of the wall, the top of ' +
-        'its head 3.73 to 4.03 mm out. Each lock screw passes 3.5 mm of standoff under its head, plus your ' +
+        'its head 3.73 to 4.03 mm out. Each lock screw passes 4.47 mm of standoff under its head, plus your ' +
         'wall plug.',
     );
     // the keyholes' own size names their screw; the lock screws keep the screw size's (D479)
     expect(screws('solid', { ...keyholes, lockScrews: 'bottom', keyholeScrewSize: 'own', keyholeScrewMm: 5 })).toBe(
       'Each keyhole hangs on a 5 mm countersunk screw (a 90 degree head) left standing out of the wall, the top of ' +
-        'its head 4.35 to 4.65 mm out. Each lock screw passes 3.5 mm of standoff under its head, plus your ' +
+        'its head 4.35 to 4.65 mm out. Each lock screw passes 4.47 mm of standoff under its head, plus your ' +
         'wall plug.',
     );
   });
 
   it('says what each lock screw passes, with lock screws alone (D289), at the screw size unless their own (D479)', () => {
+    // a 4 mm countersunk head on its 45 degree seat: 2.48 mm tall, 0.25 mm of it in the hole, its top 0.3 mm short of
+    // the hook's 8 mm of room, so it bears 2.53 mm behind the room and the screw passes 15 - 10.53 mm (D479, D370 a)
     expect(screws('solid', { screwHead: 'lock', standoffs: 'back' })).toBe(
-      'Each lock screw passes 3.5 mm of standoff under its head, plus your wall plug.',
+      'Each lock screw passes 4.47 mm of standoff under its head, plus your wall plug.',
     );
     expect(screws('skeleton', { screwHead: 'lock', standoffs: 'back', seams: 'between' })).toBe(
-      'Each lock screw passes 3.5 mm of standoff under its head, plus your wall plug.',
+      'Each lock screw passes 4.47 mm of standoff under its head, plus your wall plug.',
     );
     // a 2.5 mm lock screw of its own, as the start was before D479: its 2.3 mm head in a recess 2.3 mm deep
     expect(screws('solid', { screwHead: 'lock', standoffs: 'back', lockScrewSize: 'own', lockScrewMm: 2.5 })).toBe(
@@ -943,7 +945,9 @@ describe('what each screw passes, from the part itself (D264)', () => {
   // Found by QA (Q9, 23 Oct 2026): a 5 mm lock screw on standoffs 3 mm tall said "Each lock screw passes -9.3 mm of
   // standoff under its head", under a status that rightly said the board cannot be made.
   it('gives no length under a lock screw on standoffs too short for it, and says what is short, as the build does', () => {
-    for (const given of [{ screwHead: 'lock' }, { screwHead: 'keyhole', lockScrews: 'bottom' }]) {
+    // a 5 mm lock screw of its own, countersunk on its seat, 3.15 mm behind the hook's 8 mm of room, and 2 mm under it:
+    // 13.15 mm, more than 3 mm keyholes take (D479, D370 a)
+    for (const given of [{ screwHead: 'lock' }, { screwHead: 'keyhole', lockScrews: 'bottom', screwMm: '3' }]) {
       const values = (standoffHeightMm: string) => {
         const read = readValues(SOLID.settings, {
           standoffs: 'back',
@@ -955,11 +959,11 @@ describe('what each screw passes, from the part itself (D264)', () => {
         if (!read.ok) throw new Error(read.errors.map((e) => e.message).join('; '));
         return read.values;
       };
-      expect(() => SOLID.screws?.(values('3'))).toThrow('choose standoffs at least 14.3 mm tall');
+      expect(() => SOLID.screws?.(values('3'))).toThrow('choose standoffs at least 13.15 mm tall');
       const built = buildBoard(engine, SOLID, values('3'));
-      expect(built.ok ? '' : built.problem).toContain('choose standoffs at least 14.3 mm tall');
+      expect(built.ok ? '' : built.problem).toContain('choose standoffs at least 13.15 mm tall');
       // the control: on the least standoff that is made, the 2 mm left under the head
-      expect(SOLID.screws?.(values('14.3'))).toContain('Each lock screw passes 2 mm of standoff under its head');
+      expect(SOLID.screws?.(values('13.15'))).toContain('Each lock screw passes 2 mm of standoff under its head');
     }
   });
 

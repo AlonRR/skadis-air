@@ -25,10 +25,13 @@ All notable changes to this project are recorded here. The format follows
   head. Under Advanced, the keyholes, the lock screws and the slot clip's screw each offer "Same as the screw size" or
   "Own", their own size greyed out until "Own" is chosen. The standoff connector's holes, which the boards' corner
   screws go through, take the screw size itself.
-- Lock screws start at the screw size, 4 mm, where they started at 2.5 mm. An 8 mm head does not pass a slot 5.2 mm
-  wide, so each lock screw's slot has a groove in its sides for the head, 8.5 mm across round the slot's middle; the
-  slot keeps its 5.2 mm for 4.2 mm up from its bottom end, where a hook rests. A 2.5 mm lock screw, whose head passes
-  the slot, is still made by choosing "Own". A file named `-lock-screws` now has 4 mm lock screws.
+- Lock screws start at the screw size, 4 mm, where they started at 2.5 mm, and are the same countersunk screw as the
+  rest. An 8 mm head does not pass a slot 5.2 mm wide, so each lock screw's slot has a groove in its sides for the head,
+  8.5 mm across round the slot's middle; the slot keeps its 5.2 mm for 4.2 mm up from its bottom end, where a hook
+  rests. Behind the hook's room the head seats on a 45 degree countersink, as a keyhole's head does, where a pan head's
+  recess had a flat floor printed over air. A lock screw of its own size up to 2.5 mm, whose pan head passes the slot,
+  keeps the flat recess, as before; from 3 mm it is countersunk too. A file named `-lock-screws` now has 4 mm lock
+  screws, and lock screws alone need standoffs at least 12.53 mm tall, where 2.5 mm ones needed 12.3 mm.
 - A board kept in the browser by an older page still builds, its lock screws at the screw size; the size it held for
   them stays in their own size, greyed out, until "Own" is chosen.
 

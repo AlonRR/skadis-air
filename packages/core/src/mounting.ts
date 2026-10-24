@@ -107,10 +107,21 @@ function sunkRound(m: Pick<MountingParams, 'screwHead' | 'screwMm'>, thicknessMm
   const bore = counterbore(m.screwMm);
   return m.screwHead === 'round' && thicknessMm - bore.deepMm >= MIN_PLAIN_HOLE_MM ? bore : null;
 }
-/** A lock screw's head goes in a recess its height and 0.3 mm deep (A248). */
-const lockRecessMm = (lockScrewMm: number) => panHead(lockScrewMm).tallMm + 0.3;
-/** Whether a head too wide to pass a slot, which gets a groove in the slot's sides (A248). */
-const grooved = (lockScrewMm: number) => panHead(lockScrewMm).acrossMm > HEAD_THROUGH_SLOT_MM;
+/** Whether a lock screw's head, twice the screw across, is too wide to pass a slot, and gets a groove in the slot's
+ * sides (A248): from a 3 mm screw. Such a lock screw is a countersunk one, as the screw size's is, and seats on a 45
+ * degree countersink, as a keyhole's head does (D479, D370 a, D358); one whose head passes the slot, up to a 2.5 mm
+ * screw's 5 mm, a pan head in a flat recess, as before. */
+export const countersunkLock = (lockScrewMm: number) => panHead(lockScrewMm).acrossMm > HEAD_THROUGH_SLOT_MM;
+const grooved = countersunkLock;
+/** A lock screw's shank's hole: the screw and 0.5 mm, as every screw's (C83). */
+const lockHoleMm = (lockScrewMm: number) => lockScrewMm + 0.5;
+/** How far behind the hook's room a lock screw's head bears (A248): a pan head on the floor of a recess its height and
+ * 0.3 mm deep; a countersunk head on a 45 degree countersink from the shank's hole, the top of the head 0.3 mm short of
+ * the room, as the keyhole's seat leaves its channel's 0.3 mm (D479, D358). */
+const lockRecessMm = (lockScrewMm: number) =>
+  countersunkLock(lockScrewMm)
+    ? countersunkHead(lockScrewMm).tallMm - (lockHoleMm(lockScrewMm) - lockScrewMm) / 2 + 0.3
+    : panHead(lockScrewMm).tallMm + 0.3;
 /** How wide a lock screw's recess is: its head and the room round it (A248). */
 const lockRecessAcross = (lockScrewMm: number) =>
   panHead(lockScrewMm).acrossMm + (grooved(lockScrewMm) ? GROOVE_ROOM_MM : HEAD_ROOM_MM);
@@ -862,16 +873,31 @@ export function mountingCuts(
   };
   // A lock screw goes in through its corner slot, head and all: its shank's hole from the wall up through the
   // standoff, and its head in a recess just behind the hook's room, so the slot still takes a hook; a head too wide
-  // to pass the slot gets a groove, the recess carried on up through the slot's sides (A248).
+  // to pass the slot gets a groove, the recess carried on up through the slot's sides (A248). Such a head is a
+  // countersunk one, and bears on a 45 degree countersink from the shank's hole out to the recess, one solid of rings
+  // with them, so nothing over the head faces down more steeply as a board prints face down (D479, D370 a, D358); a
+  // pan head, small enough to pass the slot, bears on the recess's flat floor.
+  const lockHole = lockHoleMm(m.lockScrewMm);
   const lockScrew = (engine: Engine, [x, y]: readonly [number, number]): Manifold[] => {
     const floor = -HOOK_ROOM_MM - recessMm;
-    const shank = ringedSolid(engine, (grow) => circle(x, y, m.lockScrewMm + 0.5, grow), [
+    if (countersunkLock(m.lockScrewMm)) {
+      const cone = (lockRecessAcross(m.lockScrewMm) - lockHole) / 2;
+      return [
+        ringedSolid(engine, (grow) => circle(x, y, lockHole, grow), [
+          [-m.standoffHeightMm - 1, 0],
+          [floor, 0],
+          [floor + cone, cone],
+          [t + 1, cone],
+        ]),
+      ];
+    }
+    const shank = ringedSolid(engine, (grow) => circle(x, y, lockHole, grow), [
       [-m.standoffHeightMm - 1, 0],
       [floor + 0.5, 0],
     ]);
     const recess = ringedSolid(engine, (grow) => circle(x, y, lockRecessAcross(m.lockScrewMm), grow), [
       [floor, 0],
-      [grooved(m.lockScrewMm) ? t + 1 : -HOOK_ROOM_MM + 0.5, 0],
+      [-HOOK_ROOM_MM + 0.5, 0],
     ]);
     return [shank, recess];
   };

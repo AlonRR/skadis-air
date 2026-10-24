@@ -176,7 +176,7 @@ test('builds a board from the choices a page before D479 kept in the browser, th
   await expect(chosen(page, 'screwHead')).toHaveValue('lock');
   await expect(status(page)).toHaveAttribute('data-file-name', 'skadis-solid-160x160-lock-screws-standoffs-15mm.stl');
   await expect(fieldOf(page, 'screwMm').getByTestId('screw-note')).toHaveText(
-    'Each lock screw passes 3.5 mm of standoff under its head, plus your wall plug.',
+    'Each lock screw passes 4.47 mm of standoff under its head, plus your wall plug.',
   );
   // the 2.5 mm kept, greyed out, where "Own" takes it
   await advanced(page).locator('summary').click();
