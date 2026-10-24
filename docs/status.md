@@ -219,6 +219,14 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D372 | **A setting that applies only with another choice is greyed out and not checked while it does not apply**, its help saying when it does ("372 a"; QA Q15): "Lock screws: at the bottom" without keyholes, the standoff height without standoffs, the lock screw size without lock screws. Built 23 Oct 2026 (C424 to C426), on `main` 24 Oct | 23 Oct 2026 |
 | D374 | **The slimmer skeleton is reworked before T320 prints it** ("374 b"; the physics tests: per hook it held 43 % of the released skeleton, 31 against 62 N in PETG, [report](research/2026-10-23-physics-tests.md)): a radius at the step behind the front's flange where a web meets the rim, and a thicker front flange where a hook's body presses, each weighed in PETG and modelled again, the best of them for T320. Carried out on 24 Oct 2026 on the branch `feat/skeleton-rework`, not on `main`: no variant reaches the released skeleton's 62 N per hook, so none is chosen (D408) | 23 Oct 2026 |
 | D375 | **A rounded root where the standoffs and the slot clip's bar meet the part** ("375 a"; the physics tests: each a sharp inner edge, its stress rising with every finer mesh, the weakest place on every board on standoffs). Built 24 Oct 2026 (C427 to C435): a parabola up to 1.5 mm out and 3 mm up the post; before and after in the [physics report](research/2026-10-23-physics-tests.md), D375, which raised D409 to D411 | 23 Oct 2026 |
+| A407 | **The Printables files, pictures and GIFs are made again, once, after D371, D372 and D375 are released** ("407 y") | 24 Oct 2026 |
+| D408 | **The slimmer skeleton's step radius (r05) is modelled with a 1 mm radius where the edge band meets a web, and the better of the two becomes the skeleton T320 prints** ("408 a"; the rework on the branch `feat/skeleton-rework`: r05 holds 44 N per hook in PETG at 56.12 g, and the band's radius alone lifts an edge hook to 49 N) | 24 Oct 2026 |
+| D409 | **The slot clip's root runs on over the bar's side chamfer** ("409 a"), so the post meets the bar on a curve all round, and the sharp edge left at the bar's sides, which sets the clip's capacity since D375, goes | 24 Oct 2026 |
+| D410 | **The lightened board's standoff pads stay as they are** ("410 b"): with D375 it holds 78 N in PLA on standoffs, about the skeleton's 73 N | 24 Oct 2026 |
+| D411 | **The keyhole standoffs' hook rooms are modelled, their inner edges rounded where a hook keeps its full 8 mm, and modelled again** ("411 a") | 24 Oct 2026 |
+| D354 | **The aim is an option to open the part in the user's own slicer, and on a phone in a slicer app if one can be reached** (the owner: "the intention is an option to open the users prefered slicer, also if possible to open the users slicer phone app, needs research"): researched before anything is built, from [the first research](research/2026-10-23-send-to-printer.md) on | 24 Oct 2026 |
+| Q355 | **No analytics and no other collection of data from users; a file goes to an external service only when the user asks, after a warning and the user's confirmation** (the owner: "if a user wishes to send to an external service we will warn and ask conformation. the rule is that we dont have any analytics or other data collection methods from users"); a rule in [`CLAUDE.md`](../CLAUDE.md) | 24 Oct 2026 |
+| T373 | **Not done: the owner has no IKEA hooks** ("i dont own any ikea hooks"); the model's hook stays assumed (C332, C339), and D414 asks how T320 and T151 load their slots | 24 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -282,21 +290,6 @@ clip (b4).
   (c) no skeleton. Recommended (a). D314 is answered (c), 23 Oct 2026: the skeleton built so prints 55.80 g at
   200 x 200 mm, sliced as above (C315).
 
-- **T373** Measure an IKEA hook for the physics model: where its rod bears in the slot and how wide it is, how far in
-  front of the board its load hangs, and where its body presses below (the model assumed them, C332 and C339).
-
-- **D354** How a part reaches the user's printer ([research](research/2026-10-23-send-to-printer.md), 23 Oct 2026,
-  for the owner's "look into how to upload the print to the user printer"). A page with no server can hand a part to
-  nothing but the user's own download: every "open in slicer" link and print service fetches an https address itself,
-  every printer wants G-code, PrusaLink sends no CORS headers, and Bambu's printers speak protocols a page cannot (all
-  relayed from the research, which read the sources). (a) A line beside the download buttons on making downloads open
-  in the slicer; (b) (a), and "open in OrcaSlicer, Cura or Bambu Studio" links for fixed preset sizes published with
-  the page; (c) neither. Recommended (a).
-
-- **Q355** Is the page's "nothing is sent to a server" a promise to keep strictly, or may it become "only your
-  settings are sent, to build the file"? One-click opening of custom sizes needs the second, and a paid server
-  function (a board takes 0.67 to 2.1 s to build).
-
 - **T215** Photos of printed parts for the Printables page. The page is public since 18:46:30 UTC on 22 Oct 2026
   (Printables' API, `datePublished`), published from the owner's browser after Q309, not by an agent (inferred: no
   agent click there), and in the Designer Challenge, its AI answer then "No — fully human-made" (seen 20:01 UTC).
@@ -322,36 +315,28 @@ clip (b4).
   `feat/keyhole-countersunk`: `.check/test-print/skadis-trial-keyhole.stl`, written again from it, is the board to
   print again, and sliced in PETG Basic prints nothing over air at the lips and the rooms' first edges as eight
   straight lines held at both ends (`docs/research/2026-10-23-keyhole-printability.md`, "As built"). It is released
-  once this print shows the countersunk heads seat and hold; the hanging is still to be done.
+  once this print shows the countersunk heads seat and hold; the hanging is still to be done. The owner has no IKEA
+  hooks (24 Oct 2026), so the hanging waits on D414.
 
-- **D408** The slimmer skeleton after its rework (D374 b, carried out on 24 Oct 2026 on the branch
-  `feat/skeleton-rework`; its report, `docs/research/2026-10-23-skeleton-rework.md` there, is not on `main` yet). No
-  variant of D374 (b) reaches the released skeleton's 62 N per hook in PETG. Each at 200 x 200 mm, sliced in PETG Basic
-  as D313 was, and per hook in PETG at the physics tests' mesh level 2:
+- **A413** The design system's `v0.8.1` holds the help toggle and the loading ring this page asked for (A319), its
+  D94 and D95. Adopt it: copy its `tokens.css` and `components/bundle.css` into `web/public/design-system/`, rename
+  the page's classes to the system's (`.label-row` to `.ws-label-row`, `.info` to `.ws-help-toggle`, `.stage-busy`
+  and its parts to `.ws-busy`), and drop the page's own rules for them. It also found Sides inside a fieldset
+  overflowing a 375 px phone in its own preview (316 px wide in 309 px), which the page's layout is to be checked
+  for. Recommended yes.
 
-  | Profile | Grams | Per hook |
-  | --- | --- | --- |
-  | D314, as built in `72aabde` | 55.80 | 31 N |
-  | A 0.5 mm radius at the step (r05) | 56.12 | 44 N |
-  | A 1 mm radius at the step | 57.00 | 44 N |
-  | A 0.6 mm front flange | 57.53 | 32 N |
-  | Both, r05 and the 0.6 mm flange | 57.81 | 42 N |
-  | Measured only, outside D374 (b): a 1 mm radius in plan where the edge band meets a web | 55.79 | 40 N, an edge hook 49 N |
-  | The released skeleton, `v0.4.2`'s | 69.6 | 62 N |
-  | The lightened board | 67.65 | 110 N |
+- **D414** T320 and T151 hang IKEA hooks, and the owner has none (24 Oct 2026). (a) Buy a pack of SKÅDIS hooks (the
+  owner's step), which also lets T373 measure one; (b) print SKÅDIS hooks, weaker than steel, so a broken hook tests
+  the hook rather than the board; (c) load the slots with a stand-in, a steel rod or bolt through a slot with a known
+  weight, which loads a slot's rim but not a hook's lever on it. Recommended (a): a board's real load comes through
+  IKEA's steel hooks.
 
-  Under a hook at the board's edge, D314 is weakest not at the front step but in the edge band's 45 degree back
-  taper, at a pocket's tip between two webs; the radius in plan there lifts that case to 49 N, and with r05 the two are
-  estimated at about 49 N (inferred, not modelled). The model ranks the profiles; it is not a breaking load (solid
-  plastic, no layer bonding), and boards alike round a slot read about 13 % apart. The lightened board is lighter and
-  stronger than the released skeleton. (a) Model r05 with the band's radius first (one batch, no plastic added), and
-  make the better of it and r05 the skeleton, for T320 to print; (b) r05 now, for T320; (c) keep the released skeleton,
-  which leaves D313's (c), no skeleton, as the honest answer; (d) D314 as built. Recommended (a): T320 is the real test,
-  and (a) gives it the strongest of the light profiles at the same weight.
+- **A415** Release `v0.8.0` once D409 and D411 are built, with A413 if it is yes: D371, D372, D375, D409 and D411, the
+  skeleton still held for T320 (D353). Then A407's Printables refresh, once. Recommended yes.
 
 - **T320** Print the skeleton's hook-load test board, 160 x 160 mm with countersunk screw holes, screw it up on
   standoffs or spacers, hang hooks in several slots, the corner ones among them, and load them as the board would
-  really be used; say whether any rim or web cracks or bends, most of all round the hook slots. It waits on D408: the
+  really be used; say whether any rim or web cracks or bends, most of all round the hook slots. It waits on D408 (a)'s profile and on hooks to hang (D414): the
   board is made again from the profile chosen (`.check/test-print/skadis-skeleton-160x160-hook-test.stl` holds D314's
   today, checked byte for byte on 24 Oct 2026).
 
@@ -371,31 +356,6 @@ clip (b4).
   (22 Oct 2026), and the page was in the Designer Challenge. Was that the owner's decision? If so it replaces D236
   ("Yes — AI-assisted creation"); if not, setting it back takes the page out of the contest, whose rules refuse a
   model so labelled (Q309). No agent sets that answer.
-
-- **A407** Make the Printables files, pictures and GIFs again once, after D371, D372 and D375 are released: `v0.7.0`
-  changes none of the 13 files (each built from `v0.6.0` and `v0.7.0` and compared byte for byte, 24 Oct 2026), while
-  D375 changes the slot clip's and D371 and D375 the mounting's pictures. Recommended yes.
-
-- **D409** The slot clip's root (D375): it rounds the bar's root across its middle but stops 1.25 mm short of the
-  bar's chamfered sides, where the post still meets the bar on a sharp edge. In-plane bending peaks at those sides, so
-  that edge now sets the clip's capacity, its modelled stress rising with every finer mesh: 78 N in PLA at level 2 and
-  54 N at level 3, both upper bounds (53 N before, an upper bound too). (a) Run the root on over the bar's side
-  chamfer; (b) end the side chamfer short of the posts, so the root reaches the side; (c) as built. (a) and (b) both
-  change how the clip looks. Recommended (a): the bar keeps its chamfered edges everywhere and the post meets it on a
-  curve all round (inferred, not yet modelled).
-
-- **D410** The lightened board's standoff roots (D375): the screw's pad (D144) leaves a root 1.25 mm of room, and
-  beside a slot's 2 mm room (C83) none, where the board's peak now sits: 78 N in PLA at level 3, from 47 N before
-  (level 1); across the layers 2.0 to 2.6 MPa, not rising past level 2. (a) A wider pad round each standoff, more
-  plastic and a larger solid patch on the back; (b) as built. Recommended (b): it now holds about what the skeleton on
-  standoffs does (73 N), its stress converges, and a wider pad spends plastic where the board's point is to save it.
-
-- **D411** The keyhole standoffs' hook rooms: their inner walls meet on sharp inner edges, where the stress peaks when
-  a keyhole board hangs (relayed from the D375 pass, 24 Oct 2026; not modelled before and after, as D358 and D369
-  changed those parts after the physics report). (a) Model today's keyhole boards, round those edges where a hook
-  keeps its full 8 mm, and model them again; (b) as they are, until T151's hanging shows how the board holds.
-  Recommended (a): by the model it is the keyhole board's weakest place, and a radius kept outside the hook's 8 mm
-  costs the hook nothing.
 
 ## Inputs from outside this repository
 

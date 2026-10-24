@@ -34,6 +34,8 @@ built in TypeScript on Manifold and run in the browser.
   shared with the `C` choices. End every reply with the open items.
 - **Every SKÅDIS number comes from a cited source** and stays `<<CONFIRM>>` until the owner has
   measured it (Q3). Never a number from memory.
+- **Simple jobs go to a smaller model** (the owner, 24 Oct 2026): an agent given a mechanical or simple job runs
+  on a smaller, cheaper model where that saves tokens; design work and hard geometry keep the default.
 
 ## Units
 
@@ -117,6 +119,14 @@ if public from commit 1.
   design's geometry is not. Cite it by its page, rebuild the idea, never copy its files in.
   Never commit a vendor PDF; extract the facts into Markdown and link the source.
 - **Split docs by audience**: reader documentation and working notes are different files.
+
+## The user's data
+
+- **No analytics and no other collection of data from users** (Q355, 24 Oct 2026): the page sends nothing about
+  who uses it or how, anywhere.
+- **A file goes to an external service only when the user asks**, after a warning that names the service and what
+  it will receive, and the user's confirmation. Until such a feature exists, the page's "nothing is sent to a
+  server" stays true.
 
 ## Licensing
 
