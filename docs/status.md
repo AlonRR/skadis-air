@@ -354,6 +354,14 @@ clip (b4).
   `feat/skeleton-rework` and its `-r2` (rebased into `-r2b`). `feat/keyhole-countersunk`,
   `feat/keyhole-printability` and `feat/physics` hold commits not on `main` and stay. Recommended yes.
 
+- **D439** The keyhole boards' weak spot, by D411's physics ([report](research/2026-10-23-physics-tests.md), D411):
+  where the hook room's walls beside the hook's back tab meet the board's back, a sharp edge D411 left, as the tab's
+  room there (C99's 2 mm) is the hook's (C429). (a) Let the root take that 2 mm near the back: the lightened keyhole
+  board goes from 135 to 215 N in PLA, modelled, for 21.7 mm3 more, the tab keeping 0.5 mm at the back face; it needs
+  the hook's tab measured first, its 4.5 mm width unmeasured (T373, D414), and the solid board's build worked out;
+  (b) a relief cut into the plate under each wall instead, the hook's room whole, at the cost of plate, and of rim on
+  the lattice boards; (c) as it is until a hook is measured. Recommended (a), once a hook's tab is measured.
+
 - **D419** The Sides control on narrow phones (A413's measurement, C490, made again on both builds, 24 Oct 2026):
   300 px wide, it fits a 375 px phone's fieldset (308 px inside). At 360 px it runs 7 px into the fieldset's padding,
   still inside its border; at 320 px it ends at 334 px, 30 px past the fieldset and 14 px past the screen's edge,
