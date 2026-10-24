@@ -8,6 +8,10 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- The design system's v0.8.1: the "i" button that folds a setting's help and the ring over the 3D view while a part is
+  made are now the design system's own, in place of the page's rules for them. Nothing on the page changes: shot at
+  1280 px in both themes and at 375 px, with each help folded and unfolded and the ring showing, every shot is the same.
+
 - Between the slots, every corner has its screw. A corner whose usual place, 10 mm in from both edges, would land on
   a slot has its screw at the nearest place at least 10 mm in from both edges with as much room round it as a corner
   through the slots has, 8.5 mm to the nearest slot, and its standoff and a lattice board's pad with it: on a 160 mm

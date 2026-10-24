@@ -10,7 +10,7 @@ import { choose, rgb, token } from './design-system.js';
 const preview = (page: Page) => page.getByTestId('preview');
 const status = (page: Page) => page.getByTestId('board-status');
 const indicator = (page: Page) => page.getByTestId('preview-busy');
-const ring = (page: Page) => indicator(page).locator('.stage-busy__ring');
+const ring = (page: Page) => indicator(page).locator('.ws-busy__ring');
 const canvasOpacity = (page: Page) =>
   preview(page)
     .locator('canvas')
@@ -170,6 +170,41 @@ test('a drag on the ring turns the view, as a drag anywhere on the drawing does'
   await expect(preview(page)).toHaveAttribute('aria-busy', 'true'); // still the old part: the drag turned it
 });
 
+// The markup is the design system's (v0.8.1, D95), and the page keeps no rules of its own for it.
+test("the ring is the design system's: its markup after the stage message, and no stopgap class left", async ({
+  page,
+}) => {
+  await ready(page);
+  const markup = await page.evaluate(() => {
+    const view = document.querySelector('[data-testid="preview"]');
+    const busy = document.querySelector('[data-testid="preview-busy"]');
+    return {
+      class: busy?.className,
+      hidden: busy?.getAttribute('aria-hidden'),
+      parent: busy?.parentElement === view,
+      afterMessage: busy?.previousElementSibling?.className,
+      inner: busy?.innerHTML.trim(),
+      old: document.querySelectorAll('.stage-busy, .stage-busy__chip, .stage-busy__ring').length,
+    };
+  });
+  expect(markup).toEqual({
+    class: 'ws-busy',
+    hidden: 'true',
+    parent: true,
+    afterMessage: 'ws-stage__message',
+    inner: '<span class="ws-busy__chip"><span class="ws-busy__ring"></span></span>',
+    old: 0,
+  });
+  // the delay, the fade and the turn are the design system's tokens, which the page no longer declares itself
+  for (const name of ['--busy-delay', '--busy-fade', '--busy-turn']) {
+    const value = await page.evaluate(
+      (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim(),
+      name,
+    );
+    expect(value, name).not.toBe('');
+  }
+});
+
 test.describe('with reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
 
@@ -196,8 +231,8 @@ for (const scheme of ['light', 'dark'] as const) {
       }, selector);
     const css = async (name: string) => `rgb(${(await token(page, name)).join(', ')})`;
     // the dashes run from the border colour to the action colour; the inside and the gaps are the chip's colour
-    const dashes = (await style('.stage-busy__ring')).image;
+    const dashes = (await style('.ws-busy__ring')).image;
     for (const name of ['--action', '--border', '--surface-raised']) expect(dashes).toContain(await css(name));
-    expect(rgb((await style('.stage-busy__chip')).colour)).toEqual(await token(page, '--surface-raised'));
+    expect(rgb((await style('.ws-busy__chip')).colour)).toEqual(await token(page, '--surface-raised'));
   });
 }

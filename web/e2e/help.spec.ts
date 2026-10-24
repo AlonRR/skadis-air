@@ -73,6 +73,43 @@ test('the i button shows and hides its help, aria-expanded in step, by mouse and
   await expect(help).toBeHidden();
 });
 
+// The markup is the design system's Help (v0.8.1, D94): the page keeps no rules of its own for it.
+test("the i buttons and their rows are the design system's Help, with no stopgap class left", async ({ page }) => {
+  await ready(page);
+  await openAdvanced(page);
+  const toggles = form(page).locator('button[aria-expanded]');
+  expect(await toggles.count()).toBeGreaterThan(10);
+  const wrong = await toggles.evaluateAll((buttons) =>
+    buttons.flatMap((b) => {
+      const row = b.parentElement;
+      const help = document.getElementById(b.getAttribute('aria-controls') ?? '');
+      const kids = [...(row?.children ?? [])];
+      const key = b.getAttribute('aria-controls') ?? '';
+      const problems: string[] = [];
+      if (b.className !== 'ws-btn ws-btn--quiet ws-help-toggle') problems.push(`class "${b.className}"`);
+      if (b.getAttribute('type') !== 'button') problems.push('type');
+      if (row === null || !row.classList.contains('ws-label-row')) problems.push('row');
+      // the row holds the label (or the legend's words) and the toggle, and nothing else
+      if (kids.length !== 2 || kids[1] !== b) problems.push(`row children ${kids.length}`);
+      if (help === null || !help.classList.contains('ws-note') || !help.hidden) problems.push('help');
+      if (row?.tagName === 'LEGEND') {
+        const words = kids[0];
+        if (words?.tagName !== 'SPAN' || row.parentElement?.getAttribute('aria-labelledby') !== words.id) {
+          problems.push('legend');
+        }
+      }
+      return problems.map((p) => `${key}: ${p}`);
+    }),
+  );
+  expect(wrong).toEqual([]);
+  expect(await page.locator('.label-row, .info').count()).toBe(0);
+  // a fieldset with a toggle is named by its words alone, not by the toggle's name too
+  const legend = form(page).locator('legend.ws-label-row');
+  expect(await legend.count()).toBeGreaterThan(0);
+  const words = (await legend.first().locator('span').first().textContent()) ?? '';
+  await expect(form(page).locator('fieldset[aria-labelledby]').first()).toHaveAccessibleName(words);
+});
+
 test('a folded help is still the description of its control for a screen reader, and stays out of its name (C317)', async ({
   page,
 }) => {

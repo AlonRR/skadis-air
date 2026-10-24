@@ -78,7 +78,7 @@ const note = (text: string, id?: string) => element('p', { class: 'ws-note', ...
 
 /**
  * A setting's help, folded behind an "i" button beside its label (C317), so the form is not a wall of notes: the
- * design system's toggle for a section that cannot be a `details` (its Disclosure, v0.6.0), a Button saying in
+ * design system's Help (v0.8.1, D94; before it the page's own rules), a quiet Button saying in
  * `aria-expanded` whether the help shows and naming it in `aria-controls`, the help `hidden` while folded and,
  * shown, under its label and above its control, in the form's flow, so what is under it moves down (D318). Its
  * icon is the font's "info", named in `aria-label` as the Stepper's arrows are. The help stays the control's
@@ -92,7 +92,7 @@ function helpFor(s: Setting): { info: HTMLButtonElement; help: HTMLElement } | u
   help.hidden = true;
   const info = element('button', {
     type: 'button',
-    class: 'ws-btn ws-btn--quiet info',
+    class: 'ws-btn ws-btn--quiet ws-help-toggle',
     'aria-expanded': 'false',
     'aria-controls': help.id,
     'aria-label': `About ${s.label.toLowerCase()}`,
@@ -109,7 +109,7 @@ function helpFor(s: Setting): { info: HTMLButtonElement; help: HTMLElement } | u
 /** A label, and beside it the "i" button of the setting's help when it has one, in one row (C317). */
 function labelRow(label: HTMLElement, info: HTMLElement | undefined): HTMLElement {
   if (info === undefined) return label;
-  const row = element('div', { class: 'label-row' });
+  const row = element('div', { class: 'ws-label-row' });
   row.append(label, info);
   return row;
 }
@@ -255,7 +255,7 @@ function sidesField(s: SidesSetting, changed: () => void, start?: unknown): Fiel
   // is closed, and the legend says so in words (C121). The help's "i" button sits in the legend, beside its words,
   // which alone name the fieldset (C317).
   const folded = helpFor(s);
-  const legend = element('legend', folded === undefined ? {} : { class: 'label-row' });
+  const legend = element('legend', folded === undefined ? {} : { class: 'ws-label-row' });
   const words = element('span', { id: idOf(s.key, 'legend') }, `${s.label} (ticked = closed)`);
   legend.append(words, ...(folded === undefined ? [] : [folded.info]));
   if (folded !== undefined) field.setAttribute('aria-labelledby', words.id);

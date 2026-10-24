@@ -52,6 +52,14 @@
   hides them in Firefox, the pseudo-elements in Chromium and WebKit; neither alone hides all three (measured) */
 .ws-stepper > .ws-input[type=number]{appearance:textfield}
 .ws-stepper > .ws-input::-webkit-inner-spin-button,.ws-stepper > .ws-input::-webkit-outer-spin-button{appearance:none;margin:0}
+/* Help (D94): a label, or a legend's words, and the "i" that shows and hides its help, in one row as tall as the
+  label's line. The toggle is a control-h square, a touch target each way, pulled into that line by control-pad-y
+  above and below, so the row grows no taller; its icon, alone, keeps no gap for a label. A legend keeps its own
+  place, and the row's margin is the label's, which the first item under a legend gives up */
+.ws-label-row{display:flex;align-items:center;margin-top:var(--space-3)}
+.ws-label-row > .ws-label,legend.ws-label-row{margin-top:0}
+.ws-help-toggle{flex:none;min-width:var(--control-h);padding:0 var(--space-2);margin-block:calc(-1 * var(--control-pad-y))}
+.ws-help-toggle > .ws-ic{margin-right:0}
 /* Select (D69): the native select, a Field's input drawn from tokens, in a span.ws-select that draws its chevron.
   appearance:none takes the browser's own arrow away, which each engine draws its own way and WebKit at 42.5px
   tall (measured), and the chevron is a Codicon (chevron-down) from the font, so it is text: it takes ink, and in
@@ -170,6 +178,23 @@
 /* A message over the stage while the part loads or cannot be drawn; empty, it takes no room */
 .ws-stage__message{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);max-width:calc(100% - 2 * var(--space-4));margin:0;padding:var(--space-2) var(--space-3);border-radius:var(--radius-sm);text-align:center;color:var(--ink-muted);background:var(--surface-raised)}
 .ws-stage__message:empty{padding:0}
+/* The busy ring (D95): while a part is rebuilt the tool marks the view aria-busy, and after busy-delay, so a quick
+  rebuild never flickers, the part on show, the old one, dims and twelve dashes turn round a ring over it, on a chip
+  of the raised surface; the message under it, which says nothing true while a part is made, is hidden. The system's
+  one motion and its one gradient: the dashes run from border to action at the head, and the chip's colour paints
+  the ring's inside and the gaps, so the ring needs no mask and is right only on its chip. It turns in twelve steps
+  a second, only once shown, as a page drawn in software draws a frame for each step and no more (Skådis Air's C316);
+  with reduced motion it shows and does not turn, and at rest nothing turns. It is for the eye: the status line says
+  it in words, a drag goes through it, and unmarked it goes at once */
+.ws-busy{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;visibility:hidden;opacity:0}
+.ws-busy__chip{padding:var(--space-3);border-radius:50%;background:var(--surface-raised)}
+.ws-busy__ring{display:block;width:var(--control-h);height:var(--control-h);border-radius:50%;background:radial-gradient(closest-side,var(--surface-raised) 52%,transparent 53%),repeating-conic-gradient(transparent 0 20deg,var(--surface-raised) 20.5deg 29.5deg,transparent 30deg),conic-gradient(var(--border),var(--action))}
+.ws-stage__view[aria-busy=true] > .ws-busy{visibility:visible;opacity:1;transition:visibility var(--busy-fade) var(--busy-delay),opacity var(--busy-fade) var(--busy-delay)}
+.ws-stage__view[aria-busy=true] > :is(canvas,svg){opacity:var(--opacity-disabled);transition:opacity var(--busy-fade) var(--busy-delay)}
+.ws-stage__view[aria-busy=true] > .ws-stage__message{visibility:hidden}
+.ws-stage__view[aria-busy=true] .ws-busy__ring{animation:ws-busy-turn var(--busy-turn) steps(12) var(--busy-delay) infinite}
+@keyframes ws-busy-turn{to{transform:rotate(1turn)}}
+@media (prefers-reduced-motion:reduce){.ws-stage__view[aria-busy=true] .ws-busy__ring{animation:none}}
 .ws-status{display:flex;flex-wrap:wrap;align-items:center;column-gap:var(--space-4);row-gap:0;justify-content:space-between;min-height:var(--status-h);padding:var(--space-1) var(--space-4);border-top:var(--line) solid var(--divider);background:var(--surface-raised);font:var(--text-label-caps);color:var(--ink-muted)}
 .ws-plan{position:sticky;top:var(--stage-phone-h);z-index:1;display:flex;align-items:center;gap:var(--space-4);justify-content:space-between;padding:var(--space-3) var(--space-4);border-top:var(--line) solid var(--divider);background:var(--surface-raised)}
 /* The plan bar is one row on every screen: the sentence, at most two lines (the height of the button),

@@ -60,94 +60,6 @@
       [data-state='problem'] {
         color: var(--error);
       }
-      /* While a change is being built (C316) the part on show is the old one: after a moment, so a quick rebuild
-        does not flicker, it dims and a ring turns over it, until the new part is drawn or the form says it cannot
-        be made. preview.ts marks the view aria-busy for that time. The ring is for the eye alone, as the status
-        line under the stage says it in words; a drag goes through it to the drawing; it covers the view's message,
-        which says nothing true while a part is made; nothing turns at rest, and with reduced motion it does not
-        turn at all. Out of the view's grid, so it moves nothing at rest. It turns in twelve steps a second, a dash
-        a step, never smoothly: in the browser test's Chromium, which draws in software, eight pages at once took 42
-        to 138 s to open and make six boards each with the ring turning smoothly, 15 to 34 s in steps and 15 to 32 s
-        with no ring, and the browser test failed 28 of its 105 tests (C316). */
-      :root {
-        --busy-delay: 0.4s;
-        --busy-fade: 0.15s;
-      }
-      .stage-busy {
-        position: absolute;
-        inset: 0;
-        display: grid;
-        place-items: center;
-        pointer-events: none;
-        visibility: hidden;
-        opacity: 0;
-      }
-      .stage-busy__chip {
-        padding: var(--space-3);
-        border-radius: 50%;
-        background: var(--surface-raised);
-      }
-      /* Twelve dashes round a ring, from the border colour to the action colour at the head, which leads as it
-        turns clockwise. The inside and the gaps are painted in the chip's colour, which is why the ring needs no
-        mask: it stays right only on the chip. */
-      .stage-busy__ring {
-        display: block;
-        width: var(--control-h);
-        height: var(--control-h);
-        border-radius: 50%;
-        background:
-          radial-gradient(closest-side, var(--surface-raised) 52%, transparent 53%),
-          repeating-conic-gradient(transparent 0 20deg, var(--surface-raised) 20.5deg 29.5deg, transparent 30deg),
-          conic-gradient(var(--border), var(--action));
-      }
-      .ws-stage__view[aria-busy='true'] > .stage-busy {
-        visibility: visible;
-        opacity: 1;
-        transition:
-          visibility 0s var(--busy-delay),
-          opacity var(--busy-fade) var(--busy-delay);
-      }
-      .ws-stage__view[aria-busy='true'] > canvas {
-        opacity: var(--opacity-disabled);
-        transition: opacity var(--busy-fade) var(--busy-delay);
-      }
-      .ws-stage__view[aria-busy='true'] > .ws-stage__message {
-        visibility: hidden;
-      }
-      .ws-stage__view[aria-busy='true'] .stage-busy__ring {
-        animation: stage-busy-turn 1s steps(12) var(--busy-delay) infinite;
-      }
-      @keyframes stage-busy-turn {
-        to {
-          transform: rotate(1turn);
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .ws-stage__view[aria-busy='true'] .stage-busy__ring {
-          animation: none;
-        }
-      }
-      /* A setting's label and the "i" button that shows and hides its help (C317), until the design system has
-        one: a quiet Button a control's size, 36 px or 44 px on a touch screen, pulled into its label's one line
-        (control-pad-y above and below) so the row grows no taller, its icon alone and centred. */
-      .label-row {
-        display: flex;
-        align-items: center;
-      }
-      div.label-row {
-        margin-top: var(--space-3);
-      }
-      .label-row > .ws-label {
-        margin-top: 0;
-      }
-      .info {
-        min-width: var(--control-h);
-        padding: 0 var(--space-2);
-        margin-block: calc(-1 * var(--control-pad-y));
-      }
-      .info > .ws-ic {
-        margin-right: 0;
-      }
       /* A help shown sits between its label and its control (D318), so it keeps a gap above the control. */
       .help {
         margin-bottom: var(--space-2);
@@ -172,9 +84,10 @@
       <section class="ws-stage" aria-label="The board in 3D">
         <div class="ws-stage__view" data-testid="preview" data-state="loading">
           <p class="ws-stage__message" data-testid="preview-message" aria-live="polite"></p>
-          <!-- Over the old part while a change is being built (C316), shown by the page's rules above -->
-          <div class="stage-busy" data-testid="preview-busy" aria-hidden="true">
-            <span class="stage-busy__chip"><span class="stage-busy__ring"></span></span>
+          <!-- Over the old part while a change is being built (C316): the design system's busy ring (D95), shown
+            while preview.ts marks the view aria-busy -->
+          <div class="ws-busy" data-testid="preview-busy" aria-hidden="true">
+            <span class="ws-busy__chip"><span class="ws-busy__ring"></span></span>
           </div>
           <!-- The 3D view's own controls (the design system's D25, D30, D36): on a phone or a short screen,
             Zoom and the views wait in the View... menu -->
