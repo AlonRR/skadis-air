@@ -229,6 +229,11 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | T373 | **Not done: the owner has no IKEA hooks** ("i dont own any ikea hooks"); the model's hook stays assumed (C332, C339), and D414 asks how T320 and T151 load their slots | 24 Oct 2026 |
 | A413 | **The design system's `v0.8.1` is adopted** ("413 y"): its help toggle and loading ring (its D94 and D95, asked for in A319) replace the page's own rules for them, and the page is checked for Sides overflowing a 375 px phone. Built 24 Oct 2026 (C485 to C492): nothing on the page moved (18 of 18 screenshots the same, both builds served on ports of their own; the agent's first set came from an old server holding its port); Sides fits a 375 px phone (300 px in 308) but not 360 px (7 px over) or 320 px (47 px over), as before the release (C490), asked in D419 | 24 Oct 2026 |
 | A415 | **`v0.8.0` is released once D409 and D411 are built, with A413** ("415 y"): D371, D372, D375, D409, D411 and the design system's `v0.8.1`, the skeleton still held for T320 (D353); then A407's Printables refresh, once. Released 24 Oct 2026 | 24 Oct 2026 |
+| T457 | **The Printables page carries `v0.8.0`'s set** ("457 done"): published by the owner at 10:57:40 UTC on 24 Oct 2026, read back from Printables' API: the nine pictures in order, six of them new; the three slot clips' files new, the other ten as before; five of the text's six GIFs new, each with its line (A407) | 24 Oct 2026 |
+| A438 | **Nine superseded branches deleted on Gitea** ("438 y"), each checked unchanged first; none was on GitHub | 24 Oct 2026 |
+| D419 | **Sides shrinks to fit below 375 px** ("419 a"), with a browser test at 320, 360 and 375 px | 24 Oct 2026 |
+| Q359 | **The keyholes' countersunk seat stays drawn for the owner's screws, 4 mm with 8 mm heads** ("the current heads (8mm) are the ones i use, we can make it a choice to change the screw size"): the size becomes a choice, D479 | 24 Oct 2026 |
+| D370 | **Lock screws use the same screw as the rest** ("they will use the same screw as the rest. i mean when a screw choice is made its made across all the screw locations, with advanced letting a user change per type of location e.g., keyhole, lock, connector/clip or other types we have"): how, D479 | 24 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -348,12 +353,6 @@ clip (b4).
   radii, the shape kept within 0.05 mm and measured so; (c) no radii, D314's sharp step. Recommended (b): T320 tests
   the profile, which (b) keeps, and a board that builds in half the time keeps the page answering.
 
-- **A438** Delete nine branches on Gitea whose work is all on `main` or carried on: `docs/open-in-slicer`,
-  `feat/d371-d372-d375` and its `-r2`, `feat/design-system-v081`, `feat/printables-v060`,
-  `feat/test-prints-advanced` and `fix/qa-2026-10-23` (on `main`, by `git cherry` or as landed), and
-  `feat/skeleton-rework` and its `-r2` (rebased into `-r2b`). `feat/keyhole-countersunk`,
-  `feat/keyhole-printability` and `feat/physics` hold commits not on `main` and stay. Recommended yes.
-
 - **D439** The keyhole boards' weak spot, by D411's physics ([report](research/2026-10-23-physics-tests.md), D411):
   where the hook room's walls beside the hook's back tab meet the board's back, a sharp edge D411 left, as the tab's
   room there (C99's 2 mm) is the hook's (C429). (a) Let the root take that 2 mm near the back: the lightened keyhole
@@ -361,6 +360,15 @@ clip (b4).
   the hook's tab measured first, its 4.5 mm width unmeasured (T373, D414), and the solid board's build worked out;
   (b) a relief cut into the plate under each wall instead, the hook's room whole, at the cost of plate, and of rim on
   the lattice boards; (c) as it is until a hook is measured. Recommended (a), once a hook's tab is measured.
+
+- **D479** The screw settings (Q359, D370). Today one size, `Screw size` under Advanced (3 to 5 mm, starting at 4 mm),
+  serves the corner holes, the keyholes, the standoffs and the slot clip's screw, and lock screws have their own,
+  `Lock screw size` (starting at 2.5 mm, its 5 mm pan head passing a slot). (a) One `Screw size` in the main form, 4 mm
+  with its 8 mm countersunk head to start, at every screw place; under Advanced, a size for each kind of place
+  (keyholes, lock screws, the slot clip), each the same as the screw size unless set. Lock screws then start at 4 mm,
+  and an 8 mm head does not pass a 5 mm slot, so each lock screw's slot gets a groove in its sides for the head
+  (pictures in `docs/figures/explain-2026-10-24/`, being made); (b) as (a), but lock screws keep their own start,
+  2.5 mm, so their slots stay plain. Recommended (a), as the owner put it, once the pictures show the groove.
 
 - **D419** The Sides control on narrow phones (A413's measurement, C490, made again on both builds, 24 Oct 2026):
   300 px wide, it fits a 375 px phone's fieldset (308 px inside). At 360 px it runs 7 px into the fieldset's padding,
@@ -382,15 +390,6 @@ clip (b4).
 
 - **A321** After T320, release the skeleton D408 chooses, with its files and pictures on Printables and D313's grams in
   the text and the board-types picture. First asked for `v0.5.0`, which D353 released without it.
-
-- **Q359** Are 4 mm countersunk wood screws with a 90 degree head right for the keyholes? If so, the head of the
-  screw to be used, measured: the seat (D358) is drawn for an 8 mm head 2.48 mm tall (DIN 7991), `<<CONFIRM>>`.
-
-- **D370** The lock screws' head recesses still print a small ledge over air (31.6 mm² with 2.5 mm heads, 125.5 mm²
-  with 5 mm ones). (a) Countersunk lock screws in a 45 degree seat, like the keyholes; (b) the pan head kept, its
-  recess's ceiling bridged from both sides, the face its head bears on shrinking from 12.6 to 5.6 mm² for a 2.5 mm
-  screw; (c) as they are. Recommended (c) for now: T151's print did not include them, so it is not known that they sag
-  badly, and (a) changes the screw again (A248 sized its pan head to pass through a slot).
 
 - **Q312** The Printables page's answer to "was AI used" read "No — fully human-made" once the owner had published it
   (22 Oct 2026), and the page was in the Designer Challenge. Was that the owner's decision? If so it replaces D236

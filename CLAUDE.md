@@ -34,6 +34,9 @@ built in TypeScript on Manifold and run in the browser.
   shared with the `C` choices. End every reply with the open items.
 - **Every SKÅDIS number comes from a cited source** and stays `<<CONFIRM>>` until the owner has
   measured it (Q3). Never a number from memory.
+- **A part that needs a brim to stay on the bed is redesigned instead** (the owner, 24 Oct 2026: "if a print needs
+  a brim it should be reworked"): a wider foot or less chamfer on the bed edge, and marks such as a trial's dots on
+  the face that is up as it prints, not the bed face.
 - **Simple jobs go to a smaller model** (the owner, 24 Oct 2026): an agent given a mechanical or simple job runs
   on a smaller, cheaper model where that saves tokens; design work and hard geometry keep the default.
 
