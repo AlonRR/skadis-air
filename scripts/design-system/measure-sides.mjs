@@ -5,6 +5,8 @@
 // as the design system's v0.8.1 preview found it overflowing a 375 px phone (309 px inside its fieldset).
 //
 //   node scripts/design-system/measure-sides.mjs http://127.0.0.1:4199/ [width ...]
+//
+// Serve the build with --strictPort, as help-busy-shots.mjs says, or this measures whatever holds the port.
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';

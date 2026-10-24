@@ -227,7 +227,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D354 | **The aim is an option to open the part in the user's own slicer, and on a phone in a slicer app if one can be reached** (the owner: "the intention is an option to open the users prefered slicer, also if possible to open the users slicer phone app, needs research"): researched before anything is built, from [the first research](research/2026-10-23-send-to-printer.md) on; researched 24 Oct 2026 ([open in slicer](research/2026-10-24-open-in-slicer.md)), raising D417 | 24 Oct 2026 |
 | Q355 | **No analytics and no other collection of data from users; a file goes to an external service only when the user asks, after a warning and the user's confirmation** (the owner: "if a user wishes to send to an external service we will warn and ask conformation. the rule is that we dont have any analytics or other data collection methods from users"); a rule in [`CLAUDE.md`](../CLAUDE.md) | 24 Oct 2026 |
 | T373 | **Not done: the owner has no IKEA hooks** ("i dont own any ikea hooks"); the model's hook stays assumed (C332, C339), and D414 asks how T320 and T151 load their slots | 24 Oct 2026 |
-| A413 | **The design system's `v0.8.1` is adopted** ("413 y"): its help toggle and loading ring (its D94 and D95, asked for in A319) replace the page's own rules for them, and the page is checked for Sides overflowing a 375 px phone. Built 24 Oct 2026 (C485 to C492): nothing on the page moved; Sides fits a 375 px phone (300 px in 308) but not 360 px (7 px over) or 320 px (47 px over), as before the release (C490), asked in D419 | 24 Oct 2026 |
+| A413 | **The design system's `v0.8.1` is adopted** ("413 y"): its help toggle and loading ring (its D94 and D95, asked for in A319) replace the page's own rules for them, and the page is checked for Sides overflowing a 375 px phone. Built 24 Oct 2026 (C485 to C492): nothing on the page moved (18 of 18 screenshots the same, both builds served on ports of their own; the agent's first set came from an old server holding its port); Sides fits a 375 px phone (300 px in 308) but not 360 px (7 px over) or 320 px (47 px over), as before the release (C490), asked in D419 | 24 Oct 2026 |
 | A415 | **`v0.8.0` is released once D409 and D411 are built, with A413** ("415 y"): D371, D372, D375, D409, D411 and the design system's `v0.8.1`, the skeleton still held for T320 (D353); then A407's Printables refresh, once | 24 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
@@ -336,9 +336,10 @@ clip (b4).
 - **Q418** Which phone can the share button be tested on: an iPhone, an Android phone, or both? Needed only if D417
   is (b) or (c).
 
-- **D419** The Sides control on narrow phones (A413's measurement, C490): it fits a 375 px phone with 8 px to spare,
-  but runs 7 px past its fieldset at 360 px and 47 px at 320 px, as it did before `v0.8.1`, and many Android phones
-  are 360 px wide (inferred, not measured here). (a) Let it shrink to fit below 375 px, with a browser test at 320, 360 and 375 px; (b) as it
+- **D419** The Sides control on narrow phones (A413's measurement, C490, made again on both builds, 24 Oct 2026):
+  300 px wide, it fits a 375 px phone's fieldset (308 px inside). At 360 px it runs 7 px into the fieldset's padding,
+  still inside its border; at 320 px it ends at 334 px, 30 px past the fieldset and 14 px past the screen's edge,
+  where the page clips it. The same before and after `v0.8.1`; many Android phones are 360 px wide (inferred). (a) Let it shrink to fit below 375 px, with a browser test at 320, 360 and 375 px; (b) as it
   is. Recommended (a).
 
 - **D414** T320 and T151 hang IKEA hooks, and the owner has none (24 Oct 2026). (a) Buy a pack of SKÅDIS hooks (the

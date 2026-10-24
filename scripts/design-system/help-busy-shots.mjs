@@ -7,8 +7,12 @@
 // icon sits from its box's centre. Nothing here names the page's classes: a toggle is a button with
 // `aria-controls` and `aria-expanded` in the form, so the same script shoots the page before and after.
 //
-//   npm run build -w skadis-air-web && npm run preview -w skadis-air-web -- --port 4199
+//   npm run build -w skadis-air-web && npm run preview -w skadis-air-web -- --host 127.0.0.1 --port 4199 --strictPort
 //   node scripts/design-system/help-busy-shots.mjs http://127.0.0.1:4199/ .check/design-system-v081/before
+//
+// Keep --strictPort and check the page served is the build meant (its index.html against web/out/site's): without
+// it vite takes another address or port when that one is busy, and these shots read whatever holds it (24 Oct 2026,
+// when the first set came from an older server's build).
 //
 // PW_CHROMIUM_PATH picks the Chromium, as for the browser test.
 import { mkdirSync } from 'node:fs';
