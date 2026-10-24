@@ -234,7 +234,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D419 | **Sides shrinks to fit below 375 px** ("419 a"), with a browser test at 320, 360 and 375 px. Built 24 Oct 2026 (C458 to C462): the board's drawing narrows, the buttons keep their size | 24 Oct 2026 |
 | Q359 | **The keyholes' countersunk seat stays drawn for the owner's screws, 4 mm with 8 mm heads** ("the current heads (8mm) are the ones i use, we can make it a choice to change the screw size"): the size becomes a choice, D479 | 24 Oct 2026 |
 | D370 | **Lock screws use the same screw as the rest** ("they will use the same screw as the rest. i mean when a screw choice is made its made across all the screw locations, with advanced letting a user change per type of location e.g., keyhole, lock, connector/clip or other types we have"): how, D479 | 24 Oct 2026 |
-| D437 | **The reworked skeleton's radii are drawn with fewer facets** ("437 b"), the shape kept within 0.05 mm and measured so, for its build time: 24.9 s for a 400 x 400 mm board against 12.3 s before, 786,030 facets against 534,984 | 24 Oct 2026 |
+| D437 | **The reworked skeleton's radii are drawn with fewer facets** ("437 b"), the shape kept within 0.05 mm and measured so, for its build time: 24.9 s for a 400 x 400 mm board against 12.3 s before, 786,030 facets against 534,984. Built 24 Oct 2026 on `feat/skeleton-rework-r4`, held from `main` until T320 (C481 to C484, C493, C494): the edge band's rounding keeps its fine points only within 2 mm of a web and the board is simplified within 0.001 mm, so a 400 x 400 mm board builds in 18.5 s against 24.4 s, its shape within 0.0073 mm of D408's, the same 56.11 g; most of the time is inside the geometry engine | 24 Oct 2026 |
 | D479 | **One screw size for every screw place** ("479 a"): `Screw size` in the main form, 4 mm with its 8 mm countersunk head to start; under Advanced, a size for each kind of place (keyholes, lock screws, the slot clip), each the same as the screw size unless set; lock screws start at 4 mm too, their slots grooved for the head. Built 24 Oct 2026 (C495 to C509): each kind of place is "Same as the screw size" or "Own" under Advanced; lock screws from 3 mm are countersunk, passing the slot through an 8.5 mm groove and seating on a 45 degree countersink (D370's (a)), and up to 2.5 mm keep the pan head; the slot keeps its 5.2 mm for 4.2 mm up from where a hook rests (a real hook unmeasured, D414); a board kept by an older page builds with 4 mm lock screws; pictures drawn by `node scripts/figures/shoot.mjs screw-groove` | 24 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
@@ -361,6 +361,12 @@ clip (b4).
   (b) a relief cut into the plate under each wall instead, the hook's room whole, at the cost of plate, and of rim on
   the lattice boards; (c) as it is until a hook is measured. Recommended (a), once a hook's tab is measured.
 
+- **D512** The skeleton's last facets (D437, C483, C484): about 5 to 7 % more of a 400 x 400 mm board's facets go with a
+  coarser simplify (0.01 mm) or the step's arc in 3 runs, the shape moving up to 0.025 mm, but each fails one of two
+  existing tests: the edge band between the slots at least 0.95 mm wide, and the lightened board within 0.1 mm3 of its
+  outline (D282). (a) Loosen those two tests and take the facets; (b) keep the tests, and the 24 % faster build already
+  gained. Recommended (b): the tests guard real minimums, and a few percent is little.
+
 - **Q511** Should the screw size carry between the board types and the connectors (D479, C505)? Today a value carries
   only within its group, boards to boards and connectors to connectors, so the slot clip's own `Screw size` is set
   apart from the boards'. (a) Carry it across both groups, so one choice is the screw everywhere, as D370 put it
@@ -374,9 +380,10 @@ clip (b4).
 
 - **T320** Print the skeleton's hook-load test board, 160 x 160 mm with countersunk screw holes, screw it up on
   standoffs or spacers, hang hooks in several slots, the corner ones among them, and load them as the board would
-  really be used; say whether any rim or web cracks or bends, most of all round the hook slots. It waits on D408 (a)'s profile and on hooks to hang (D414): the
-  board is made again from the profile chosen (`.check/test-print/skadis-skeleton-160x160-hook-test.stl` holds D314's
-  today, checked byte for byte on 24 Oct 2026).
+  really be used; say whether any rim or web cracks or bends, most of all round the hook slots. It waits on hooks to hang (D414). Its board is made again
+  from D408 (a)'s profile with D437 (b)'s meshing, on `feat/skeleton-rework-r4` (24 Oct 2026):
+  `.check/test-print/skadis-skeleton-160x160-hook-test.stl`, one closed body, 37.25 g and 4 h 33 min in PETG Basic,
+  nothing over air; D314's board kept beside it as `-d314`.
 
 - **A321** After T320, release the skeleton D408 chooses, with its files and pictures on Printables and D313's grams in
   the text and the board-types picture. First asked for `v0.5.0`, which D353 released without it.
