@@ -224,7 +224,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D409 | **The slot clip's root runs on over the bar's side chamfer** ("409 a"), so the post meets the bar on a curve all round, and the sharp edge left at the bar's sides, which sets the clip's capacity since D375, goes | 24 Oct 2026 |
 | D410 | **The lightened board's standoff pads stay as they are** ("410 b"): with D375 it holds 78 N in PLA on standoffs, about the skeleton's 73 N | 24 Oct 2026 |
 | D411 | **The keyhole standoffs' hook rooms are modelled, their inner edges rounded where a hook keeps its full 8 mm, and modelled again** ("411 a") | 24 Oct 2026 |
-| D354 | **The aim is an option to open the part in the user's own slicer, and on a phone in a slicer app if one can be reached** (the owner: "the intention is an option to open the users prefered slicer, also if possible to open the users slicer phone app, needs research"): researched before anything is built, from [the first research](research/2026-10-23-send-to-printer.md) on | 24 Oct 2026 |
+| D354 | **The aim is an option to open the part in the user's own slicer, and on a phone in a slicer app if one can be reached** (the owner: "the intention is an option to open the users prefered slicer, also if possible to open the users slicer phone app, needs research"): researched before anything is built, from [the first research](research/2026-10-23-send-to-printer.md) on; researched 24 Oct 2026 ([open in slicer](research/2026-10-24-open-in-slicer.md)), raising D417 | 24 Oct 2026 |
 | Q355 | **No analytics and no other collection of data from users; a file goes to an external service only when the user asks, after a warning and the user's confirmation** (the owner: "if a user wishes to send to an external service we will warn and ask conformation. the rule is that we dont have any analytics or other data collection methods from users"); a rule in [`CLAUDE.md`](../CLAUDE.md) | 24 Oct 2026 |
 | T373 | **Not done: the owner has no IKEA hooks** ("i dont own any ikea hooks"); the model's hook stays assumed (C332, C339), and D414 asks how T320 and T151 load their slots | 24 Oct 2026 |
 | A413 | **The design system's `v0.8.1` is adopted** ("413 y"): its help toggle and loading ring (its D94 and D95, asked for in A319) replace the page's own rules for them, and the page is checked for Sides overflowing a 375 px phone | 24 Oct 2026 |
@@ -319,6 +319,22 @@ clip (b4).
   straight lines held at both ends (`docs/research/2026-10-23-keyhole-printability.md`, "As built"). It is released
   once this print shows the countersunk heads seat and hold; the hanging is still to be done. The owner has no IKEA
   hooks (24 Oct 2026), so the hanging waits on D414.
+
+- **D417** What to build for opening a part in the user's slicer (D354;
+  [research](research/2026-10-24-open-in-slicer.md), 24 Oct 2026). A static page cannot hand a part made in the browser
+  to a slicer by a link: every slicer's link takes a web address that the slicer downloads itself, and a part made in
+  the browser has none (verified from the slicers' sources). What works with nothing uploaded is the download itself,
+  opened by the slicer the computer associates with `.stl` or `.3mf`. On phones, Chrome for Android shares no `.stl` or
+  `.3mf` from a page (verified: Chromium's list of permitted types), Safari on iOS has no such list (from WebKit's
+  source; untested on a phone), and no phone slicer or printer app is known to take a mesh from the browser.
+  (a) A "My slicer" setting, kept in the browser and sent nowhere, that tailors the help on making downloads open in
+  that slicer; (b) (a), and a share button on phones that hands the file to the phone's share sheet where the browser
+  allows it and otherwise downloads it, tested on a real phone first; (c) (b), and "Open in <slicer>" links for preset
+  sizes published with the page, which the slicer downloads from the page's site, with a line saying so; (d) none.
+  Recommended (b).
+
+- **Q418** Which phone can the share button be tested on: an iPhone, an Android phone, or both? Needed only if D417
+  is (b) or (c).
 
 - **D414** T320 and T151 hang IKEA hooks, and the owner has none (24 Oct 2026). (a) Buy a pack of SKÅDIS hooks (the
   owner's step), which also lets T373 measure one; (b) print SKÅDIS hooks, weaker than steel, so a broken hook tests
