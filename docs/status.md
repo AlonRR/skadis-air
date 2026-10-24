@@ -220,7 +220,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D374 | **The slimmer skeleton is reworked before T320 prints it** ("374 b"; the physics tests: per hook it held 43 % of the released skeleton, 31 against 62 N in PETG, [report](research/2026-10-23-physics-tests.md)): a radius at the step behind the front's flange where a web meets the rim, and a thicker front flange where a hook's body presses, each weighed in PETG and modelled again, the best of them for T320. Carried out on 24 Oct 2026 on the branch `feat/skeleton-rework`, not on `main`: no variant reaches the released skeleton's 62 N per hook, so none is chosen (D408) | 23 Oct 2026 |
 | D375 | **A rounded root where the standoffs and the slot clip's bar meet the part** ("375 a"; the physics tests: each a sharp inner edge, its stress rising with every finer mesh, the weakest place on every board on standoffs). Built 24 Oct 2026 (C427 to C435): a parabola up to 1.5 mm out and 3 mm up the post; before and after in the [physics report](research/2026-10-23-physics-tests.md), D375, which raised D409 to D411 | 23 Oct 2026 |
 | A407 | **The Printables files, pictures and GIFs are made again, once, after D371, D372 and D375 are released** ("407 y") | 24 Oct 2026 |
-| D408 | **The slimmer skeleton's step radius (r05) is modelled with a 1 mm radius where the edge band meets a web, and the better of the two becomes the skeleton T320 prints** ("408 a"; the rework on the branch `feat/skeleton-rework`: r05 holds 44 N per hook in PETG at 56.12 g, and the band's radius alone lifts an edge hook to 49 N) | 24 Oct 2026 |
+| D408 | **The slimmer skeleton's step radius (r05) is modelled with a 1 mm radius where the edge band meets a web, and the better of the two becomes the skeleton T320 prints** ("408 a"; built 24 Oct 2026 on `feat/skeleton-rework-r2b`, held from `main` until T320: r05 with the band's radius, 56.11 g at 200 x 200 mm and 48 N per hook in PETG at mesh level 1, its edge case not meshing at level 2, against r05's 44 N; C470 to C478; the rework on the branch `feat/skeleton-rework`: r05 holds 44 N per hook in PETG at 56.12 g, and the band's radius alone lifts an edge hook to 49 N) | 24 Oct 2026 |
 | D409 | **The slot clip's root runs on over the bar's side chamfer** ("409 a"), so the post meets the bar on a curve all round, and the sharp edge left at the bar's sides, which sets the clip's capacity since D375, goes | 24 Oct 2026 |
 | D410 | **The lightened board's standoff pads stay as they are** ("410 b"): with D375 it holds 78 N in PLA on standoffs, about the skeleton's 73 N | 24 Oct 2026 |
 | D411 | **The keyhole standoffs' hook rooms are modelled, their inner edges rounded where a hook keeps its full 8 mm, and modelled again** ("411 a") | 24 Oct 2026 |
@@ -341,6 +341,18 @@ clip (b4).
 
 - **Q418** Which phone can the share button be tested on: an iPhone, an Android phone, or both? Needed only if D417
   is (b) or (c).
+
+- **D437** The reworked skeleton (D408) builds about twice as slowly: a 400 x 400 mm board in 24.9 s against 12.3 s,
+  a 200 x 200 mm one in 5.4 s against 2.5 s, with 786,030 facets against 534,984 (measured in Node on the branch),
+  the radii's arcs adding most of them (inferred). (a) As it is; (b) before it is released, fewer facets round the
+  radii, the shape kept within 0.05 mm and measured so; (c) no radii, D314's sharp step. Recommended (b): T320 tests
+  the profile, which (b) keeps, and a board that builds in half the time keeps the page answering.
+
+- **A438** Delete nine branches on Gitea whose work is all on `main` or carried on: `docs/open-in-slicer`,
+  `feat/d371-d372-d375` and its `-r2`, `feat/design-system-v081`, `feat/printables-v060`,
+  `feat/test-prints-advanced` and `fix/qa-2026-10-23` (on `main`, by `git cherry` or as landed), and
+  `feat/skeleton-rework` and its `-r2` (rebased into `-r2b`). `feat/keyhole-countersunk`,
+  `feat/keyhole-printability` and `feat/physics` hold commits not on `main` and stay. Recommended yes.
 
 - **D419** The Sides control on narrow phones (A413's measurement, C490, made again on both builds, 24 Oct 2026):
   300 px wide, it fits a 375 px phone's fieldset (308 px inside). At 360 px it runs 7 px into the fieldset's padding,
