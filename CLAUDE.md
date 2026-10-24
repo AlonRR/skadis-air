@@ -145,6 +145,7 @@ bash tests/test-hooks.sh          # the kit's controls for both hooks, end to en
 bash tests/test-yamllint.sh       # .yamllint.yaml passes this repo's YAML, refuses broken YAML
 bash tests/test-workflow.sh       # the CI and Pages workflows against the kit's first-run bugs, their rules and actionlint, with controls
 bash tests/test-latest-release.sh # the release the page is built from: the highest vX.Y.Z on main (A291), with controls
+bash tests/test-trial-standoffs.sh  # the trial standoffs: dots in the board face, none in the bed face, bed contact (C465), with controls
 pre-commit run --all-files        # the hooks; run by hand before EVERY commit (see below)
 uvx --from "reuse[charset-normalizer]" reuse lint   # every file has a licence and a copyright notice
 ```
@@ -203,7 +204,7 @@ node scripts/checks/write-keyhole-parts.mjs  # the keyhole parts as built, into 
 
 `node scripts/figures/shoot.mjs <pass>` draws a design pass's figures, each part the library's own with a finding's
 area in orange, into `.check/figures/<pass>/` (`boards-pass`, 21 Oct 2026; `boards-built` and `between-built`, the answers as built;
-`keyhole-pass`, 23 Oct 2026, every face past 45 degrees down in orange, as the part prints, retired when its options'
+`standoff-foot`, 24 Oct 2026, the 1-board standoff's foot, C467; `keyhole-pass`, 23 Oct 2026, every face past 45 degrees down in orange, as the part prints, retired when its options'
 switches went, C385); a review copies them into `docs/figures/`. A scene seen from the back sets `camera.up`. A pass may
 build its scenes from deeper modules of the library's build than `kit.lib` gives, as `keyhole-pass` did.
 

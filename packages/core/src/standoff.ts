@@ -38,6 +38,10 @@ const ROOM_MARGIN_MM = 2;
 export const TUNNEL_DEPTH_MM = HOOK_DEPTH_MM + ROOM_MARGIN_MM;
 /** The least bar behind the hooks' room, on the wall side (C99). */
 const MIN_BRIDGE_MM = 4;
+/** The chamfer on the wall-side edge, which prints on the bed (C463): two 0.2 mm layers, so it still reads as a chamfer
+ * and keeps the first layer's squish off the edge, and leaves a 1-board standoff 76 % of its outline's area to hold the
+ * bed with, 47.3 of 62.5 mm2, where the parts' 1 mm left 49 %. */
+export const BED_CHAMFER_MM = 0.4;
 /** How far inside the bar the posts rise from, where nothing of the bar's chamfer is, as the slot clip's (D270). */
 const POST_ROOT_MM = 1.5;
 /** How far down from the board face a tight section reaches (D267). */
@@ -113,7 +117,7 @@ export function makeStandoff(engine: Engine, params: StandoffParams): Manifold {
     CrossSection.union(centres.map(([x, y]) => keep(new CrossSection([circle(x, y, standoffDiameterMm)])))),
   );
   const h = p.heightMm;
-  const edges = { bottomMm: EDGE_CHAMFER_MM, topMm: EDGE_CHAMFER_MM };
+  const edges = { bottomMm: BED_CHAMFER_MM, topMm: EDGE_CHAMFER_MM };
   let plain: Manifold;
   if (p.boards === '1') {
     plain = chamferedExtrusion(engine, posts, h, edges);

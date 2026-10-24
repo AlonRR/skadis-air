@@ -210,6 +210,28 @@ describe("a tight section at the standoff's board face, for the trial (D267)", (
   });
 });
 
+describe('what the standoff holds the bed with (C463; the owner, 24 Oct 2026: a print that needs a brim is reworked)', () => {
+  // The section 0.1 mm above the bed, as the first layer's, against the flat outline's own, 3 mm up: above the wall
+  // chamfer and the hole's mouth, below where a shared standoff's posts rise from its bar.
+  const contact = (part: Manifold) => keep(part.slice(0.1)).area();
+  const outline = (part: Manifold) => keep(part.slice(3)).area();
+
+  it('is at least 45 mm2 for one board, three quarters of its outline, from the 30.7 mm2 (49 %) it had', () => {
+    const part = standoff({ boards: '1', heightMm: 15 });
+    expect(contact(part)).toBeGreaterThanOrEqual(45);
+    expect(contact(part) / outline(part)).toBeGreaterThanOrEqual(0.75);
+  });
+
+  it('is three quarters of its outline for every choice of boards, and with the trial pilot too', () => {
+    for (const boards of ['1', '2', '2-stacked', '4'] as const) {
+      for (const pilotMm of [undefined, 3.2]) {
+        const part = standoff({ boards, pilotMm });
+        expect(contact(part) / outline(part), `${boards} ${pilotMm ?? 'no'} pilot`).toBeGreaterThanOrEqual(0.75);
+      }
+    }
+  });
+});
+
 describe("how the standoff looks (D270; the connectors' design pass, finding 5)", () => {
   /** Each separate outline in a slice, as [minX, maxX, minY, maxY]. */
   const bounds = (part: Manifold, z: number) =>
@@ -228,10 +250,10 @@ describe("how the standoff looks (D270; the connectors' design pass, finding 5)"
     return keep(keep(part.slice(z)).intersect(dot)).area() > 0;
   };
 
-  it('chamfers its outside edges 1 mm at the wall and at the board, and its hole 0.5 mm at each end', () => {
+  it('chamfers its outside edges 0.4 mm at the wall (C463) and 1 mm at the board, and its hole 0.5 mm at each end', () => {
     const part = standoff();
-    // a quarter of a millimetre in from each face: the ring 8.5 mm across, the hole 5 mm
-    expect(widths(part, 0.25)).toEqual([5, 8.5]);
+    // a quarter of a millimetre in from each face: at the wall the ring 9.7 mm across, at the board 8.5, the hole 5
+    expect(widths(part, 0.25)).toEqual([5, 9.7]);
     expect(widths(part, 19.75)).toEqual([5, 8.5]);
     // and between them, as before: 10 mm, the hole 4.5
     expect(widths(part, 10)).toEqual([4.5, 10]);

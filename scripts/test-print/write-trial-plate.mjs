@@ -5,7 +5,9 @@
 // lightened board on keyholes and its standoffs (T151); the slot clip's two trial grips (T268), three ribbed clips
 // with nubs 0.35, 0.45 and 0.55 mm proud and a clip with split, lipped pegs and the two fills that lock them; and the
 // standoff's tight section (D267), three 1-board standoffs with pilots 0.8, 0.85 and 0.9 times the 4 mm screw. Each
-// of a set of three carries 1, 2 or 3 dots recessed in its bed face, in that order. The trial parts are the
+// of a set of three carries 1, 2 or 3 dots recessed 0.4 mm in that order: the clips' in their bed face, the
+// standoffs' in the board face, which is up as they print, so the dots cost them no bed contact (C464, 24 Oct 2026;
+// the marks are in trial-standoffs.mjs). The trial parts are the
 // library's, with settings the page does not offer until a print says they work. Laid in rows 10 mm apart. Reads
 // the library's build, so run `npm run build -w skadis-air` first; `npm run trial-plate` does both and checks it.
 //
@@ -25,14 +27,13 @@ import {
   loadEngine,
   makeSlotClip,
   makeSlotFill,
-  makeStandoff,
   meshOf,
   printedPart,
   readValues,
   slotClipParams,
-  standoffParams,
   toStl,
 } from '../../packages/core/dist/index.js';
+import { dotted, trialStandoffs } from './trial-standoffs.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const out = join(root, '.check', 'test-print');
@@ -42,7 +43,7 @@ const only = process.argv[2];
 const stem = ['grips', 'keyhole', 'standoffs'].includes(only) ? `skadis-trial-${only}` : 'skadis-trial-grips-keyhole';
 
 const engine = await loadEngine();
-const { CrossSection, Manifold } = engine;
+const { Manifold } = engine;
 
 /** A page type's part at its starting values and the given ones, as the page downloads it. */
 function pagePart(id, given) {
@@ -54,29 +55,8 @@ function pagePart(id, given) {
   return printedPart(type, built.solid);
 }
 
-/** `count` dots 0.4 mm deep (two layers) in a part's bed face, at the points given, so a set of three tells apart. */
-function dotted(solid, points, count, acrossMm) {
-  if (count === 0) return solid;
-  const dots = points.slice(0, count).map(([x, y]) => {
-    const disc = new CrossSection([
-      Array.from({ length: 24 }, (_, k) => [
-        x + (acrossMm / 2) * Math.cos((2 * Math.PI * k) / 24),
-        y + (acrossMm / 2) * Math.sin((2 * Math.PI * k) / 24),
-      ]),
-    ]);
-    const dot = disc.extrude(1.4).translate([0, 0, -1]);
-    disc.delete();
-    return dot;
-  });
-  const cut = Manifold.union(dots);
-  const marked = solid.subtract(cut);
-  for (const m of [...dots, cut]) m.delete();
-  return marked;
-}
-
 const clipAt = (given) => makeSlotClip(engine, slotClipParams({ boards: '2', fixing: 'none', ...given }));
 const NUBS = [0.35, 0.45, 0.55]; // proud of the peg: 0.15, 0.25 and 0.35 mm past the slot's straight wall
-const PILOTS = [0.8, 0.85, 0.9].map((k) => k * 4);
 const LIP = slotClipParams({ boards: '2', fixing: 'none', grip: 'lip' });
 
 // built in this order, clips, then standoffs, then the keyhole board: Manifold numbers its meshes as they are made, so
@@ -85,6 +65,7 @@ const clips = [
   ...NUBS.map((nubMm, k) => ({
     name: `slot clip, nubs ${nubMm} mm (T268)`,
     solid: dotted(
+      engine,
       clipAt({ nubMm }),
       [
         [-3, 0],
@@ -105,15 +86,7 @@ const clips = [
     return { name: 'fill for the split pegs (T268)', solid: laid };
   }),
 ];
-const standoffs = PILOTS.map((pilotMm, k) => ({
-  name: `standoff, pilot ${pilotMm.toFixed(2)} mm (D267)`,
-  solid: dotted(
-    makeStandoff(engine, standoffParams({ boards: '1', pilotMm })),
-    [90, 130, 170].map((a) => [3.6 * Math.cos((a * Math.PI) / 180), 3.6 * Math.sin((a * Math.PI) / 180)]),
-    k + 1,
-    1,
-  ),
-}));
+const standoffs = trialStandoffs(engine);
 const grips = [...clips, ...standoffs];
 const keyhole = [
   {

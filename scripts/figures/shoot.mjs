@@ -26,7 +26,7 @@ if (!pass || !existsSync(join(here, `${pass}.mjs`))) {
 const out = join(repo, '.check', 'figures', pass);
 mkdirSync(out, { recursive: true });
 const { build } = await import(pathToFileURL(join(here, `${pass}.mjs`)).href);
-const scenes = build(await makeKit(repo));
+const scenes = await build(await makeKit(repo)); // a pass may build its scenes asynchronously
 writeFileSync(join(out, 'scenes.json'), JSON.stringify(scenes));
 
 const { chromium } = createRequire(join(repo, 'web', 'package.json'))('@playwright/test');

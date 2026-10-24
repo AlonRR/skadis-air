@@ -12,6 +12,15 @@ All notable changes to this project are recorded here. The format follows
   past the fieldset, 14 px past the screen, at 320 px. It now takes no more than its fieldset, the board's drawing
   between its buttons giving way and the buttons keeping their size. At 375 px and wider it is as it was.
 
+### Changed
+
+- The standoff connector's wall-side edge takes a 0.4 mm chamfer, not 1 mm, so it holds the bed with more: a 1-board
+  standoff's first layer (the section 0.1 mm up) goes from 30.7 to 47.2 mm2, a 2-board one's from 172.6 to 213.2 and a
+  4-board one's from 553.4 to 644.8. The board side keeps its 1 mm chamfer. A print that needs a brim is redesigned
+  instead (C463).
+- The trial standoffs plate's dots are in the face that is up as the standoffs print, not the bed face, so they cost no
+  contact and nothing prints over air (C464, T274).
+
 ## [0.8.0] - 2026-10-24
 
 ### Changed
