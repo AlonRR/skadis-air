@@ -12,7 +12,7 @@ const root = process.env.HIST_ROOT ?? join(process.cwd(), '..');
 const out = join(process.cwd(), '.check', 'board-history-stl');
 mkdirSync(out, { recursive: true });
 const big = { widthMm: 200, heightMm: 200 };
-for (const s of HISTORY) {
+const state = async (s) => {
   const kit = await makeKit(join(root, s.tree));
   const stl = kit.lib.toStl;
   if (typeof stl !== 'function') throw new Error(`${s.label}: this build has no toStl`);
@@ -24,4 +24,6 @@ for (const s of HISTORY) {
     writeFileSync(join(out, `${name}.stl`), stl(kit.lib.meshOf(solid), name));
     console.log(join(out, `${name}.stl`));
   }
-}
+};
+// one library build at a time
+await HISTORY.reduce((done, s) => done.then(() => state(s)), Promise.resolve());

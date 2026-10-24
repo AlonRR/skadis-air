@@ -144,15 +144,19 @@ export async function build() {
   const only = process.env.BH_ONLY?.toLowerCase().split(',');
   const scenes = [];
   const numbers = {};
-  for (const s of HISTORY) {
-    if (only && !only.includes(s.label.toLowerCase())) continue;
+  const state = async (s) => {
     const kit = await makeKit(join(root, s.tree));
     scenes.push(...viewsOf(s, kit));
     const big = { widthMm: 200, heightMm: 200 };
     const [solid, board] = [kit.built('solid', big), kit.built(s.type, big)];
     numbers[s.label] = { solidMm3: solid.volume(), boardMm3: board.volume() };
     console.log(s.label, JSON.stringify(numbers[s.label]));
-  }
+  };
+  // one library build at a time, the scenes in the states' order
+  await HISTORY.filter((s) => !only || only.includes(s.label.toLowerCase())).reduce(
+    (done, s) => done.then(() => state(s)),
+    Promise.resolve(),
+  );
   writeFileSync(
     join(process.cwd(), '.check', 'figures', 'board-history', 'numbers.json'),
     JSON.stringify(numbers, null, 2),

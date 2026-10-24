@@ -61,10 +61,7 @@ section p{margin:2px 24px}.meta{color:#495057}.num{font-weight:600}
 const { chromium } = createRequire(join(repo, 'web', 'package.json'))('@playwright/test');
 const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM_PATH || undefined });
 const tab = await browser.newPage({ viewport: { width: 1200, height: 800 } });
-for (const [type, title] of [
-  ['lightened', 'Lightened board: L1 to L3'],
-  ['skeleton', 'Skeleton board: S1 to S5'],
-]) {
+const sheet = async ([type, title]) => {
   const file = join(dir, `${type}-sheet.html`);
   writeFileSync(
     file,
@@ -77,5 +74,10 @@ for (const [type, title] of [
   await tab.waitForLoadState('load');
   await tab.screenshot({ path: join(dir, `${type}.png`), fullPage: true });
   console.log(join(dir, `${type}.png`));
-}
+};
+// one tab, so the sheets one after another
+await [
+  ['lightened', 'Lightened board: L1 to L3'],
+  ['skeleton', 'Skeleton board: S1 to S5'],
+].reduce((done, entry) => done.then(() => sheet(entry)), Promise.resolve());
 await browser.close();
