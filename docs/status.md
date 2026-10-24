@@ -227,6 +227,8 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D354 | **The aim is an option to open the part in the user's own slicer, and on a phone in a slicer app if one can be reached** (the owner: "the intention is an option to open the users prefered slicer, also if possible to open the users slicer phone app, needs research"): researched before anything is built, from [the first research](research/2026-10-23-send-to-printer.md) on | 24 Oct 2026 |
 | Q355 | **No analytics and no other collection of data from users; a file goes to an external service only when the user asks, after a warning and the user's confirmation** (the owner: "if a user wishes to send to an external service we will warn and ask conformation. the rule is that we dont have any analytics or other data collection methods from users"); a rule in [`CLAUDE.md`](../CLAUDE.md) | 24 Oct 2026 |
 | T373 | **Not done: the owner has no IKEA hooks** ("i dont own any ikea hooks"); the model's hook stays assumed (C332, C339), and D414 asks how T320 and T151 load their slots | 24 Oct 2026 |
+| A413 | **The design system's `v0.8.1` is adopted** ("413 y"): its help toggle and loading ring (its D94 and D95, asked for in A319) replace the page's own rules for them, and the page is checked for Sides overflowing a 375 px phone | 24 Oct 2026 |
+| A415 | **`v0.8.0` is released once D409 and D411 are built, with A413** ("415 y"): D371, D372, D375, D409, D411 and the design system's `v0.8.1`, the skeleton still held for T320 (D353); then A407's Printables refresh, once | 24 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -318,21 +320,11 @@ clip (b4).
   once this print shows the countersunk heads seat and hold; the hanging is still to be done. The owner has no IKEA
   hooks (24 Oct 2026), so the hanging waits on D414.
 
-- **A413** The design system's `v0.8.1` holds the help toggle and the loading ring this page asked for (A319), its
-  D94 and D95. Adopt it: copy its `tokens.css` and `components/bundle.css` into `web/public/design-system/`, rename
-  the page's classes to the system's (`.label-row` to `.ws-label-row`, `.info` to `.ws-help-toggle`, `.stage-busy`
-  and its parts to `.ws-busy`), and drop the page's own rules for them. It also found Sides inside a fieldset
-  overflowing a 375 px phone in its own preview (316 px wide in 309 px), which the page's layout is to be checked
-  for. Recommended yes.
-
 - **D414** T320 and T151 hang IKEA hooks, and the owner has none (24 Oct 2026). (a) Buy a pack of SKÅDIS hooks (the
   owner's step), which also lets T373 measure one; (b) print SKÅDIS hooks, weaker than steel, so a broken hook tests
   the hook rather than the board; (c) load the slots with a stand-in, a steel rod or bolt through a slot with a known
   weight, which loads a slot's rim but not a hook's lever on it. Recommended (a): a board's real load comes through
   IKEA's steel hooks.
-
-- **A415** Release `v0.8.0` once D409 and D411 are built, with A413 if it is yes: D371, D372, D375, D409 and D411, the
-  skeleton still held for T320 (D353). Then A407's Printables refresh, once. Recommended yes.
 
 - **T320** Print the skeleton's hook-load test board, 160 x 160 mm with countersunk screw holes, screw it up on
   standoffs or spacers, hang hooks in several slots, the corner ones among them, and load them as the board would
