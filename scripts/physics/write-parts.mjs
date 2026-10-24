@@ -93,7 +93,8 @@ const standoffFaces = (h) => [
   },
 ];
 /** The keyholes' lips, where the screw's head bears: today's are cut in the top standoffs' wall faces (D235), v0.2.1's
- * in the board's front, the head in a channel there; the head is 2 x the screw across (D157). */
+ * in the board's front, the head in a channel there; the head is 2 x the screw across (D157). Since D358 the head is a
+ * countersunk one and bears on the lips' 45 degree seat, from the slot's edge out to the head's rim, not on a flat. */
 function keyholeLips(values, board) {
   const k = keyhole(values.screwMm);
   const headR = values.screwMm;
@@ -105,6 +106,20 @@ function keyholeLips(values, board) {
   } else {
     rests = screwPlaces(board).slice(2);
     lipZ = T - k.channelMm;
+  }
+  if (typeof lib.keyholeSeat === 'function') {
+    // the seat's cone faces up and in at 45 degrees, from the slot's edge at the lips' top to the head's rim
+    const rise = headR - k.slotMm / 2;
+    return rests.map(([x, y]) => ({
+      label: 'keyhole seat',
+      rho: { centre: [x, y], range: [0, headR + 0.02] },
+      box: [
+        [-1e9, -1e9, lipZ - 0.02],
+        [1e9, 1e9, lipZ + rise + 0.02],
+      ],
+      normal: [0, 0, 1],
+      minDot: 0.6,
+    }));
   }
   return rests.map(([x, y]) => ({
     label: 'keyhole lip',
