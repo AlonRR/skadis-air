@@ -20,10 +20,13 @@ kg, and the stress shown on pictures of the parts). The choices made on the way 
 | 7. Figures | done: eleven, in `docs/figures/physics/` ([below](#the-figures-c343)), by `scripts/physics/figures.py`, `figure.html` and `figures.mjs` |
 | 8. The report | this file; its tables are `scripts/physics/tables.py`'s output, as of the last run |
 | 9. D375's rounded roots | done, 24 Oct 2026: the boards on standoffs and the clip again, to level 2, level 3 for the lightened board and the clip ([below](#d375-the-rounded-roots-before-and-after-24-oct-2026)) |
+| 10. D409 and D411 | done, 24 Oct 2026: the clip with its roots over the bar's chamfer, to level 2, converged ([below](#d409-the-clips-roots-over-the-bars-side-chamfer-before-and-after-24-oct-2026)); the solid and lightened boards on keyholes before and after, to level 2, and the tab's walls rounded as a measure ([below](#d411-the-hook-rooms-walls-before-and-after-24-oct-2026)) |
 
 ### Resume point
 
-Kept current at each checkpoint. **23 Oct 2026, the last:** the runs are done as far as this machine takes them.
+Kept current at each checkpoint. **24 Oct 2026, D409 and D411:** their runs are in their own worktree's
+`.check/physics` ([reproducing](#reproducing)); what is left there is the solid board's tab walls rounded, whose part
+did not mesh. **23 Oct 2026:** the runs are done as far as this machine takes them.
 Level 2 for every hook, spread and connector case but one (today's lightened board on standoffs, which no try meshed);
 level 3 for the two skeleton cases that decide a before and after; the walls at level 1, their level 2 past a window;
 the skeleton's wall not solved ([not done](#not-done-and-why)). Eleven figures. To take it further: `run.py --levels 2
@@ -452,7 +455,116 @@ same, so on the clip D375 moves the weak spot rather than removing it. Running t
 or ending that chamfer short of the posts, would be the next step there; either changes how the clip looks.
 
 The boards on keyholes were not run: their parts changed after the report (D358, D369), so there is no before here to
-set them against.
+set them against. D411 runs them ([below](#d411-the-hook-rooms-walls-before-and-after-24-oct-2026)).
+
+## D409: the clip's roots over the bar's side chamfer, before and after (24 Oct 2026)
+
+The owner's D409 (a): each post's root runs on over the bar's chamfered sides, its foot just under the bar's top
+wherever it ends (C450 to C452). The before is D375's after above, on the part as `eedd90b` builds it (verified: both
+11 501.24 mm3 by Manifold); the after `--version d409`. The clip for 2 boards, one peg held in its slot and 10 N down
+on the other (C336).
+
+| | Holds, PLA / PETG / ASA (N) | To the yield alone, PLA (N) | Where, across the layers | Across the layers, levels 1 / 2 / 3 (MPa) | Mesh change |
+|---|---|---|---|---|---|
+| Before (D375) | 54 / 57 / 35 (l), level 3; 78 / 83 / 51 at level 2 | 115 (level 3) | where the root ran out short of the bar's chamfered side, beside the loaded peg's post, (11.2, 4.9, 7.0) | 1.74 / 2.17 / 3.15, rising at its place: a sharp inner edge, an upper bound | level 2 to 3: part 19 %, layers 31 %: not converged |
+| After (D409) | 104 / 110 / 67 (l), level 2 | 139 | on the root's own curve, 0.3 mm above the bar's face and 0.7 mm out from the post's side, beside the loaded peg's post, (10.0, 3.5, 7.3) | 1.56 / 1.64 / not run | level 1 to 2: part 1 %, layers 5 %, deflection 0 %: converged, so no level 3 (C348) |
+
+**What it says.** The sharp edge D375 left at the bar's sides is gone: the clip's weak spot is now on the root's curve
+itself, its stress converged, and it holds 104 N in PLA, twice D375's 54 N at level 3 and a third more than its 78 N
+at level 2, both of which were upper bounds. The peak of the part as a whole, against the yield, is the bar's own
+bending at the held peg's post, 3.63 and 3.66 MPa at the two levels, as before D409 (3.88 and 3.59): 139 N in PLA to the
+yield alone. The root still runs out to nothing where the bar's side meets the post's round, within the 0.25 mm the
+foot keeps off the bar's side, about 1.2 mm round the post (C450); no peak is there.
+
+**Plastic and printing.** 5.0 mm3 more clip with its screw, 5.4 mm3 with none (Manifold: 11 456.43 against 11 451.41,
+11 506.66 against 11 501.24 mm3), 0.006 g of PETG; sliced in PETG both read 6.11 and 6.03 g before and after. As it
+prints, wall face down, `overhang-report.py` finds no overhang perimeter before or after, and bridge infill over air
+only where it was, at the same layers (z 6.2 and 14.2, 13.7 and 13.9 mm at 14.2, 4.0 and 4.4 mm at 6.2), against
+`eedd90b`'s parts (`scripts/checks/write-root-parts.mjs`).
+
+## D411: the hook rooms' walls, before and after (24 Oct 2026)
+
+The owner's D411 (a): today's boards on keyholes modelled, the inner edges of their hook rooms rounded where a hook
+keeps its full 8 mm, and modelled again. These are the first runs of the boards on keyholes since D358 and D369: the
+runs now hold a keyhole on its 45 degree seat (C453), where they held a flat D358 took away. The design's case, the
+board standing on its bottom standoffs as well (C340), on the 80 mm boards closed all round on 15 mm standoffs: the
+lightened board, T151's, and the solid one. The before is `eedd90b`'s parts (`--version before`), the after
+`--version d411`; and `d411-tab-a`, a build not on the branch with the root on the tab's walls too (below). Per 10 N,
+spread over the board's two hooks.
+
+| Board | Version | Holds in the part, PLA / PETG / ASA (N) | At the hook's contact, PLA / PETG / ASA (N) | Where, in the part | Levels, mesh change |
+|---|---|---|---|---|---|
+| Lightened, T151's | Before (`eedd90b`) | 254 / 234 / 165 (y) | 135 / 124 / 111 | yield: 10.8 mm from slot below (60, 20), back | levels 1, 2: part 4 %, layers 7 %, contact 2 %, deflection 1 %; converged; at a sharp edge, an upper bound (below) |
+| Lightened, T151's | After (D411) | 133 / 123 / 110 (y) | 128 / 118 / 105 | yield: 10.8 mm from slot below (20, 20), back | levels 1, 2: part 2 %, layers 7 %, contact 3 %, deflection 0 %; converged; at a sharp edge, an upper bound (below) |
+| Lightened, T151's | The tab's walls too (not built) | 215 / 227 / 139 (l) | 380 / 350 / 313 | across the layers: 10.8 mm from slot (20, 60), z -2.4 | levels 1, 2: part 9 %, layers 13 %, contact 4 %, deflection 1 %; not converged |
+| Solid | Before (`eedd90b`) | 437 / 403 / 285 (y) | 627 / 578 / 517 | yield: 11.5 mm from slot below (20, 20), back | levels 1, 2: part 40 %, layers 33 %, contact 65 %, deflection 4 %; the peak moved; not converged; at a sharp edge, an upper bound (below) |
+| Solid | After (D411) | 214 / 227 / 139 (l) | 394 / 363 / 324 | across the layers: 5.4 mm from keyhole seat (20, 64.5), z -12.0 | levels 1, 2: part 12 %, layers 52 %, contact 1 %, deflection 0 %; not converged; at the held seat's band (C345), 2 mm off it 0.44 MPa |
+| Solid | The tab's walls too (not built) | its part did not mesh | | | |
+
+The solid board's after reads lower than its before for another reason: its stress across the layers peaks at the
+band round a keyhole's held seat both before and after, 12 mm behind the back where D411 changes nothing, 0.39 and
+0.79 MPa at level 2 and 0.37 and 0.44 MPa 2 mm off the held faces, and it moved 52 % between the levels: the held
+face's value as much as the part's (C345). Its yield, at the tab walls' edges, reads 437 N before and 626 N after.
+
+**Where the stress is.** On both boards, in every run, the peak is where a wall of a hook's room beside the hook's
+back tab meets the board's back, 1 to 2 mm above where the room leaves its standoff's bottom face: on the bottom
+standoffs it is the part's peak, and on the top ones, 2 mm from where the hook's back tab presses the back, C339's
+3 mm puts it down to the hook's contact. It is a sharp inner edge: the largest stress within 1 mm of the edge is 3 to
+10 times the largest 1 to 2.5 mm off it, and on the board's mirror-image places, and between the mesh levels, it jumps
+2 to 3 times while the stress off it hardly moves (the table below). Such a value is the mesh's as much
+as the part's, and what a print holds there depends on the corner's real radius.
+
+| Board | Version | Level | Bottom standoffs, the walls at x 15.75, 24.25, 55.75 and 64.25 mm: at the edge / 1 to 2.5 mm off it (MPa) | Top standoffs, the same: at the edge / off it (MPa) |
+|---|---|---|---|---|
+| Lightened, T151's | Before (`eedd90b`) | 1 | 1.76 / 0.41, 1.34 / 0.41, 1.38 / 0.66, 2.09 / 0.42 | 3.52 / 0.77, 3.12 / 0.81, 3.71 / 0.96, 2.73 / 0.80 |
+| Lightened, T151's | Before (`eedd90b`) | 2 | 1.80 / 0.42, 1.20 / 0.39, 1.48 / 0.39, 2.01 / 0.43 | 3.67 / 0.86, 3.79 / 0.84, 3.78 / 0.91, 3.59 / 0.86 |
+| Lightened, T151's | After (D411) | 1 | 3.90 / 0.40, 1.50 / 0.38, 1.08 / 0.41, 1.31 / 0.45 | 3.88 / 0.76, 3.31 / 0.77, 3.25 / 1.33, 3.19 / 0.85 |
+| Lightened, T151's | After (D411) | 2 | 3.83 / 0.39, 1.46 / 0.38, 1.20 / 0.41, 1.81 / 0.42 | 3.99 / 0.81, 3.37 / 0.85, 3.93 / 0.75, 3.44 / 0.81 |
+| Lightened, T151's | The tab's walls too (not built) | 1 | 0.64 / 0.53, 0.53 / 0.50, 0.56 / 0.50, 0.52 / 0.48 | 1.30 / 1.01, 1.40 / 1.19, 1.22 / 0.97, 1.28 / 1.18 |
+| Lightened, T151's | The tab's walls too (not built) | 2 | 0.53 / 0.50, 0.54 / 0.50, 0.58 / 0.52, 0.52 / 0.50 | 1.18 / 1.04, 1.32 / 1.11, 1.34 / 1.14, 1.27 / 1.17 |
+| Solid | Before (`eedd90b`) | 1 | 0.52 / 0.21, 0.44 / 0.30, 0.61 / 0.21, 1.63 / 0.20 | 0.74 / 0.36, 0.67 / 0.36, 1.29 / 0.31, 1.34 / 0.44 |
+| Solid | Before (`eedd90b`) | 2 | 0.42 / 0.20, 1.17 / 0.19, 0.67 / 0.22, 0.74 / 0.21 | 0.76 / 0.37, 0.55 / 0.41, 0.81 / 0.31, 0.76 / 0.35 |
+| Solid | After (D411) | 1 | 0.46 / 0.21, 0.72 / 0.21, 0.40 / 0.20, 0.51 / 0.21 | 0.81 / 0.36, 1.01 / 0.51, 0.67 / 0.31, 1.30 / 0.45 |
+| Solid | After (D411) | 2 | 0.47 / 0.20, 0.82 / 0.22, 0.41 / 0.22, 0.61 / 0.21 | 0.81 / 0.34, 1.08 / 0.46, 0.66 / 0.30, 1.30 / 0.32 |
+
+Each wall's edge read from the room's exit at its standoff's bottom face to where the tab meets the slot's arc, by
+`run.py`'s saved stresses; the walls at 15.75 and 64.25 mm on the bottom standoffs lie in a ball of finer elements
+(the bottom corner screws' places), the rest do not.
+
+**What D411 rounded, and what it did not.** C454 rounds the room's walls round the slot, 1.5 mm past its chamfer, where
+a hook takes nothing. The walls beside the back tab have none: the room there is the tab's own 4.5 mm and C99's 2 mm
+each side, which every root keeps out of (C429) and the tests that a hook keeps its room behind the board check, and
+the brief asked that the room take the hook exactly as now. So the after leaves the weak spot as it was: 1 to 2.5 mm
+off the edge the stress on the lightened board is the before's to within 0.05 MPa at seven of the eight places at level
+2, and 0.16 lower at the eighth, and the change at the edge itself is the mesh's.
+
+**The tab's walls rounded too, as a measure, not built** (`d411-tab-a`: the same build with the tab's room for a root
+taken as the hook's own 4.5 mm and 0.25 mm each side, so the root, 1.5 mm out with its margin, leaves the hook's tab
+0.5 mm at the back face and C99's full 2 mm from 3 mm behind it). On the lightened board the sharp edges go: at each
+of the eight places the stress at the edge is within 0.21 MPa, at most 1.19 times, of the stress off it, and the
+board's peaks move: in the part, across the layers on a tab's wall 2.4 mm behind the back, where its root ends, 0.79
+MPa, 13 % from level 1, where it was at the mirror-image wall (24.2 against 15.8 mm across) and did not rise at its
+own place, so not a new sharp edge; at the hook's contact 1.34 MPa, against 3.79 before. It holds 215 / 227 / 139 N in PLA / PETG
+/ ASA, the lesser of the part and the contact, against 135 / 124 / 111 N before and 128 / 118 / 105 N as built, and
+deflects 10 % less (0.0115 against 0.0128 mm); 21.7 mm3 more plastic than as built. On the solid board the same build's
+part did not mesh in any try, and it exports with 32 facets of no area and 32 edges not on two facets, so built, its
+construction would need its own work first. A question for the owner ([below](#questions-for-the-owner)).
+
+**As built, the lightened board's table reads worse, 133 against 254 N in the part, and that is the edge's value, not
+the board's.** The part's peak there is at the bottom left standoff's left wall, 3.83 MPa at level 2 where the before
+read 1.80; at its mirror image, the bottom right standoff's right wall, the after reads 1.81 where the before read
+2.01, the load and the board being the same both sides, and these two are the only walls of the eight inside a ball of
+finer elements (the bottom corner screws' places, C340's refinement), so they are meshed alike; the two walls between
+them, meshed alike too but coarser, read 1.20 and 1.48 before, 1.46 and 1.20 after; and 1 to 2.5 mm off those edges
+the stress is the before's to within 0.03 MPa. The tool judges a case converged when its peak holds between the levels at its place (C338), as this
+one's did, but a sharp edge has no value to converge to, so the table's row for it is an upper bound read off
+the mesh, as for every sharp edge in this report.
+
+**Plastic and printing.** D411 as built adds 87.5 mm3 to a board on keyholes or lock screws, 21.9 mm3 a room, the same
+on all three types (Manifold: 40 631.95 against 40 544.41 mm3 for the solid 80 mm board), 0.11 g of PETG; sliced in
+PETG the boards read 28.89 against 28.98 g, 19.75 against 19.74 and 19.62 against 19.53 g, within the slicer's own
+spread. As a board prints, face down, `overhang-report.py` finds the same as before on all three: 64.8 mm of overhang
+perimeter and about 600 mm of bridge over air, at z 13.2, the rooms' ceilings, nothing new.
 
 ## Not done, and why
 
@@ -474,6 +586,11 @@ set them against.
   windows are the local stress alone (C334), and the whole board's row stands.
 - **The hook's contact as a contact**: the hook's real shape is not measured, so its loads are even pressures on
   patches (C332), a question for the owner below.
+- **D411's boards hung from their lips alone, and level 3 for the solid board on keyholes** (C456): the design's case
+  alone was run, and the solid board's change from level 1 to 2 is at a sharp edge, where a finer ball would only
+  show the edge sharper.
+- **The tab's walls rounded, on the solid board**: the scratch build's part did not mesh (gmsh's 3D mesher failed in
+  every try), and it exports with 32 facets of no area, so the measure stands on the lightened board alone.
 
 ## Questions for the owner
 
@@ -496,6 +613,16 @@ Unnumbered here; the session that relays them gives them their IDs.
   (a), built 24 Oct 2026, its before and after [below](#d375-the-rounded-roots-before-and-after-24-oct-2026).
 - **The filament of the test prints** (a fact only the owner has): the hook-load prints are read against the column of
   the filament they are printed in, PLA, PETG or ASA.
+- **A root on the walls of a hook's room beside the back tab** (a decision, D411's finding; [above](#d411-the-hook-rooms-walls-before-and-after-24-oct-2026)):
+the keyhole boards' weak spot, by the model, is the root of a hook room's walls beside the back tab, on the board's back,
+  a sharp inner edge that D411 as built leaves, as C99's 2 mm round the tab leaves it no room by C429's rule. (a) Let the
+  root take C99's 2 mm there near the back, leaving the hook's 4.5 mm tab 0.5 mm each side at the back face and the
+  full 2 mm from 3 mm behind it: the sharp edge goes and the lightened board holds 215 N in PLA, the lesser of the part and
+  the hook's contact, against 135 N before (level 2), for 21.7 mm3 more plastic (25.5 on the solid board); the tab's width is the replica's, not measured (T373), and the solid board's build of it leaves 32 facets of no
+  area, so its construction needs work before it is built. (b) A relief into the plate's back under each such wall
+  instead, which keeps C99's room whole but takes plate, and on a lattice board rim, where the stress is. (c) As built
+  until a hook is measured (D414). Recommended (a), after a hook's tab is measured: it removes the board's modelled
+  weak spot at the cost of clearance only where the tab meets the board's back.
 
 ## Reproducing
 
@@ -525,3 +652,18 @@ cd scripts/physics
 uv run python run.py --versions d375 --only 80-standoffs --cases spread-standoffs --levels 1,2 --budget 1600
 uv run python run.py --versions d375 --only slot-clip-2 --cases shear --levels 1,2 --budget 1600
 ```
+
+D409's and D411's, in their own `.check/physics`, D409's before D375's after (its runs and saved stresses copied in):
+
+```bash
+node scripts/physics/write-parts.mjs --version d409 --types solid    # the clip, with today's library
+node scripts/physics/write-parts.mjs --lib <eedd90b worktree>/packages/core/dist/index.js --version before --boards-only --types solid,lightened
+node scripts/physics/write-parts.mjs --version d411 --boards-only --types solid,lightened
+cd scripts/physics
+uv run python run.py --versions d409 --only slot-clip-2 --cases shear --levels 1,2 --budget 1600
+uv run python run.py --versions before,d411 --only 80-keyholes --cases spread-keyholes-standing --levels 1 --budget 1600
+uv run python run.py --versions before,d411 --only 80-keyholes --cases spread-keyholes-standing --levels 2 --budget 1600
+```
+
+`d411-tab-a` is a copy of the build with `roomWithRoots`'s tab room at `HOOK_WIDTH_MM / 2 + 0.25`, written with `--lib`
+and run the same way.
