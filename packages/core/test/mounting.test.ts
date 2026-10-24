@@ -714,7 +714,7 @@ describe('between the slots (D289, D371)', () => {
           ).toEqual(expected([4.5, 10]));
         }
       }
-    });
+    }, 120_000); // 32 boards each, the skeleton's 23 s on a busy machine and past 20 s in CI
   }
 
   it('keeps a lattice board solid round each place, its pad there with it (D144)', () => {
@@ -762,7 +762,7 @@ describe('between the slots (D289, D371)', () => {
         }
       }
     }
-  });
+  }, 60_000); // 36 boards, 19 s on a busy machine
 
   it('stands each keyhole and bottom standoff behind the nearest slot that keeps it on the board, every side choice', () => {
     for (const sides of everySides) {
