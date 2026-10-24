@@ -6,6 +6,12 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- The Sides control fits a phone narrower than 375 px: it ran 7 px into its fieldset's padding at 360 px and 30 px
+  past the fieldset, 14 px past the screen, at 320 px. It now takes no more than its fieldset, the board's drawing
+  between its buttons giving way and the buttons keeping their size. At 375 px and wider it is as it was.
+
 ## [0.8.0] - 2026-10-24
 
 ### Changed

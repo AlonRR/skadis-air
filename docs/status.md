@@ -374,7 +374,7 @@ clip (b4).
   300 px wide, it fits a 375 px phone's fieldset (308 px inside). At 360 px it runs 7 px into the fieldset's padding,
   still inside its border; at 320 px it ends at 334 px, 30 px past the fieldset and 14 px past the screen's edge,
   where the page clips it. The same before and after `v0.8.1`; many Android phones are 360 px wide (inferred). (a) Let it shrink to fit below 375 px, with a browser test at 320, 360 and 375 px; (b) as it
-  is. Recommended (a).
+  is. Recommended (a). Built 24 Oct 2026 (C458 to C462).
 
 - **D414** T320 and T151 hang IKEA hooks, and the owner has none (24 Oct 2026). (a) Buy a pack of SKÅDIS hooks (the
   owner's step), which also lets T373 measure one; (b) print SKÅDIS hooks, weaker than steel, so a broken hook tests
