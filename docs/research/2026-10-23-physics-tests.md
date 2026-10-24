@@ -19,6 +19,7 @@ kg, and the stress shown on pictures of the parts). The choices made on the way 
 | 6. Capacities (Q329) | done for every run: the headline table, in N and kg per material |
 | 7. Figures | done: eleven, in `docs/figures/physics/` ([below](#the-figures-c343)), by `scripts/physics/figures.py`, `figure.html` and `figures.mjs` |
 | 8. The report | this file; its tables are `scripts/physics/tables.py`'s output, as of the last run |
+| 9. D375's rounded roots | done, 24 Oct 2026: the boards on standoffs and the clip again, to level 2, level 3 for the lightened board and the clip ([below](#d375-the-rounded-roots-before-and-after-24-oct-2026)) |
 
 ### Resume point
 
@@ -68,7 +69,7 @@ to the yield alone, from its peak, which converged in 31 of the 44.
   47 N today (level 1 only: its level 2 would not mesh in any try) against 40 N; the skeleton 18 N today, 24 N in
   v0.4.2, 17 N in v0.2.1. On every board the spot is across the layers at a bottom standoff's root on the board's back,
   and on three of them (v0.2.1's lightened, v0.4.2's and today's skeleton) its stress rose at its place with each mesh: a
-  **sharp inner edge**, singular, so these are upper bounds and what the print holds there depends on the root's real radius (to the yield alone: 294, 127, 58 N today).
+  **sharp inner edge**, singular, so these are upper bounds and what the print holds there depends on the root's real radius (to the yield alone: 294, 127, 58 N today). D375 rounds these roots, and the clip's: [its before and after](#d375-the-rounded-roots-before-and-after-24-oct-2026).
 - **On keyholes, hung from their lips alone** (the brief's case, which no board has): 10 to 25 N on every board, a
   cantilever on 1.5 mm lips.
 - **On keyholes, standing on their bottom standoffs** (the design's, D190, D245): the solid board 437 N, the lightened
@@ -417,6 +418,42 @@ prints what the part holds in PLA, PETG and ASA (Q329). `scripts/physics/figures
 
 <!-- figures:end -->
 
+## D375: the rounded roots, before and after (24 Oct 2026)
+
+The owner's D375 (a): every standoff's root on a board's back and each slot clip post's root on its bar now runs out
+onto the face on a parabola, up to 1.5 mm out and 3 mm up the post, as far as the face leaves it room (C427 to C434 in
+[`choices.md`](../choices.md)). The same cases as above, the same loads, run again on the parts as built
+(`--version d375`). The before is the report's own runs, on parts the same to 0.01 mm3 (verified: each part's Manifold
+volume against the runs' `volumeManifold`): today's solid and lightened boards on standoffs and the clip; the skeleton
+on standoffs is v0.4.2's, as the board main builds is v0.4.2's until T320 (D353 b). Per 10 N; *holds* as above, in the
+part, the lesser of the yield and the layers' adhesion; the root's own stress is the largest across the layers within
+2.5 mm of where the before's peak was (4 mm on the clip), read from the runs' saved stresses.
+
+| Part, case | Before: holds, PLA / PETG / ASA (N) | Before: where, mesh change | After: holds, PLA / PETG / ASA (N) | After: where, mesh change | Across the layers at the root, before / after (MPa) |
+|---|---|---|---|---|---|
+| Solid board on standoffs, spread | 83 / 88 / 54 (l), level 2 | a top standoff's root on the back, its lower side; converged, 1 % / 7 % | 176 / 186 / 114 (l), level 2 | 1 mm off a standoff's held wall face, the band C345 flags (2 mm off it 0.78 against 0.97 MPa); the peak moved there, 12 % / 48 % | 2.04 / 0.67, the root's own converged (0.68 at level 1) |
+| Lightened board on standoffs, spread | 47 / 50 / 31 (l), level 1 only | a top standoff's root on the back | 78 / 83 / 50 (l), level 3 (84 at level 1) | the root's foot where it narrows beside a slot's 2 mm room (C83); across the layers 2.02, 2.59, 2.18 MPa at levels 1 to 3, the yield's peak there rising 11 % from level 2 to 3 | 3.59 / 1.69 at level 1, 1.78 at level 2 |
+| Skeleton board on standoffs, spread | 24 / 25 / 15 (l), level 2 | a top standoff's root on the back; rising with the mesh at its place, 14 % / 16 %, a sharp inner edge: an upper bound | 73 / 77 / 47 (l), level 2 | the other top standoff's root, just off the back; converged, 1 % / 2 % | 7.22 / 1.99 |
+| Slot clip for 2 boards, shear | 53 / 56 / 34 (l), level 2 | the bar's root by the loaded peg's post; rising at its place, 8 % / 20 %: an upper bound | 78 / 83 / 51 (l) at level 2; 54 / 57 / 35 (l) at level 3 | where the root runs out short of the bar's chamfered side, beside the loaded peg's post: 1.70, 2.17, 3.15 MPa at levels 1 to 3, rising, a sharp inner edge left there | 3.19 / 1.39 at level 2, 1.47 at level 3, in the root's middle |
+
+To the yield alone, PLA: the solid board 294 to 530 N, the lightened 127 to 153, the skeleton 88 to 130, the clip 111
+to 142 at level 2 (115 at level 3).
+
+**What it says.** On every board on standoffs the root is no longer the sharp inner edge it was: across the layers
+there, 0.67 against 2.04 MPa on the solid board, 1.99 against 7.22 on the skeleton, and the skeleton's capacity, an
+upper bound before, is now converged and three times v0.4.2's. The solid board's weak spot has moved off the root to
+the held wall face's band, an idealisation's value as much as the part's. On the lightened board the root's room is
+the screw's pad, 1.25 mm, and less beside a slot's 2 mm room, where the curve narrows to nothing: the peak is there now,
+the stress across the layers not rising past level 2. On the clip the root rounds the bar's root across its middle
+(1.39 MPa there, converging) but stops 1.25 mm short of the bar's chamfered sides, inside the bar's face and its
+margin, where the post still meets the bar on a sharp edge; in-plane bending peaks at the bar's sides, so that edge
+now sets the clip's capacity, and it rises with the mesh: 78 N at level 2 is an upper bound, and 54 N at level 3 the
+same, so on the clip D375 moves the weak spot rather than removing it. Running the root on over the bar's side chamfer,
+or ending that chamfer short of the posts, would be the next step there; either changes how the clip looks.
+
+The boards on keyholes were not run: their parts changed after the report (D358, D369), so there is no before here to
+set them against.
+
 ## Not done, and why
 
 - **Today's lightened board on standoffs at level 2**: no mesh try finished within a window (one sat 13 minutes in a
@@ -455,7 +492,8 @@ Unnumbered here; the session that relays them gives them their IDs.
 - **A radius at the standoffs' roots and the slot clip's bar root** (a decision; recommended: yes, if the design allows
   it): in the model each is a sharp inner edge whose stress rose with each mesh, and a standoff's root on the board's
   back is the weakest place on every board on standoffs (18 to 92 N per board in PLA, upper bounds). What a print holds
-  there depends on the root's real radius; a drawn radius would make it the design's, not the nozzle's.
+  there depends on the root's real radius; a drawn radius would make it the design's, not the nozzle's. Decided: D375
+  (a), built 24 Oct 2026, its before and after [below](#d375-the-rounded-roots-before-and-after-24-oct-2026).
 - **The filament of the test prints** (a fact only the owner has): the hook-load prints are read against the column of
   the filament they are printed in, PLA, PETG or ASA.
 
@@ -478,3 +516,12 @@ bash tests/test-physics.sh                          # the controls
 
 A figure whose run was reported before runs saved their surface (commit 0339c8c) is named by `figures.py` with the
 `run.py --resave` command that saves it, refused unless the run's peaks are the reported ones.
+
+D375's after, in its own `.check/physics`, its before the runs above (the parts the same to 0.01 mm3):
+
+```bash
+node scripts/physics/write-parts.mjs --version d375 # the rounded roots' parts, into .check/physics/parts/d375/
+cd scripts/physics
+uv run python run.py --versions d375 --only 80-standoffs --cases spread-standoffs --levels 1,2 --budget 1600
+uv run python run.py --versions d375 --only slot-clip-2 --cases shear --levels 1,2 --budget 1600
+```
