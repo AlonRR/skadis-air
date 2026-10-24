@@ -199,12 +199,17 @@ describe('makeLightenedBoard (D141 to D144)', () => {
 
   it('leaves the plate round the slots the keyhole standoffs stand behind as round any other slot (D250 f)', () => {
     // round each corner slot of the 160 mm board, inside the plate: the keyhole board's plate is the bare board's
+    // but the groove a lock screw at the screw size, 4 mm, has through its slot's sides for its 8 mm head (A248, D479)
     const windows = shape([20, 140].flatMap((x) => [20, 140].map((y) => stadium(x, y, 17, 26))));
-    const inPlate = (b: Manifold, z: number) => keep(keep(b.slice(z)).intersect(windows)).area();
+    const grooves = shape([20, 140].map((x) => circle(x, 20, 8.5 + 0.02)));
+    const inPlate = (b: Manifold, z: number, w = windows) => keep(keep(b.slice(z)).intersect(w)).area();
     const bare = lightened({}, {}, { screwHead: 'none' });
     for (const lockScrews of [false, true]) {
       const board = lightened({}, {}, { screwHead: 'keyhole', standoffHeightMm: 20, lockScrews });
-      for (const z of [0.5, 2, 4.5]) expect(inPlate(board, z)).toBeCloseTo(inPlate(bare, z), 1);
+      const w = lockScrews ? keep(windows.subtract(grooves)) : windows;
+      for (const z of [0.5, 2, 4.5]) expect(inPlate(board, z, w)).toBeCloseTo(inPlate(bare, z, w), 1);
+      // the control: the grooves are cut, and left out above
+      if (lockScrews) expect(inPlate(bare, 2) - inPlate(board, 2)).toBeGreaterThan(5);
     }
     // control: a board on round standoffs keeps a pad round each, in the corners (D190)
     const m = { screwHead: 'none', standoffHeightMm: 20 } as const;

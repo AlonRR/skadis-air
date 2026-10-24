@@ -11,6 +11,7 @@ export * from './printer.js';
 export * from './print-pose.js';
 export * from './fit-coupon.js';
 export * from './mounting.js';
+export * from './screw-places.js';
 export * from './standoff.js';
 export * from './slot-clip.js';
 export * from './seam-test.js';

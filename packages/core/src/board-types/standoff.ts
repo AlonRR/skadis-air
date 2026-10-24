@@ -1,7 +1,8 @@
 // The standoff connector as a type on the page (D91 to D94, D97, D281): listed under "Connectors", for 1 board, 2
-// side by side or one above the other, or 4, as the slot clip; its height on the main form and the screw size, shared
-// with the board, under Advanced. It prints as built, wall face down, the posts of a shared one on top (C101).
-import { MOUNTING_DEFAULTS, SCREW_SIZE_SETTING } from '../mounting.js';
+// side by side or one above the other, or 4, as the slot clip; its height and the screw size, shared with the board,
+// on the main form (D479): its holes take the boards' corner screws, the screw size itself, so it has no size of its
+// own. It prints as built, wall face down, the posts of a shared one on top (C101).
+import { SCREW_MM, SCREW_SIZE_SETTING } from '../screw-places.js';
 import { defineSettings } from '../settings.js';
 import { makeStandoff, standoffParams, standoffScrews, STANDOFF_DEFAULTS, type StandoffParams } from '../standoff.js';
 import { defineBoardType } from './define.js';
@@ -50,8 +51,6 @@ export const STANDOFF = defineBoardType({
     SCREW_SIZE_SETTING,
   ]),
   build: (engine, v) => makeStandoff(engine, paramsOf(v)),
-  label: (v) =>
-    `${BOARDS_IN_NAME[v.boards]}-${v.heightMm}mm` +
-    (v.screwMm === MOUNTING_DEFAULTS.screwMm ? '' : `-screw-${v.screwMm}mm`),
+  label: (v) => `${BOARDS_IN_NAME[v.boards]}-${v.heightMm}mm` + (v.screwMm === SCREW_MM ? '' : `-screw-${v.screwMm}mm`),
   screws: (v) => standoffScrews(paramsOf(v)),
 });

@@ -1,10 +1,9 @@
 // The slot clip as a type on the page (D187 to D189, D194, D195, C191, C199): listed under "Connectors" after
 // the standoff, for 2 boards side by side, 2 one above the other, or 4, at seams through the slots or between them
-// (D290); its fixing and its depth on the main
-// form, the peg clearance and the screw size, shared with the boards, under Advanced; its pegs ribbed, the lip
-// taken out (D261). It prints as
-// built, wall face down, the pegs on top.
-import { MOUNTING_DEFAULTS, SCREW_SIZE_SETTING } from '../mounting.js';
+// (D290); its fixing, its depth and the screw size, shared with the boards, on the main form (D479); the peg
+// clearance, the screw's head and the clip's own screw size, the screw size's unless set, under Advanced; its pegs
+// ribbed, the lip taken out (D261). It prints as built, wall face down, the pegs on top.
+import { CLIP_SCREW, SCREW_MM, SCREW_SIZE_SETTING, screwAt, screwPlaceSettings } from '../screw-places.js';
 import { defineSettings } from '../settings.js';
 import { makeSlotClip, SLOT_CLIP_DEFAULTS, slotClipParams, slotClipScrews, type SlotClipParams } from '../slot-clip.js';
 import { defineBoardType } from './define.js';
@@ -12,8 +11,15 @@ import { defineBoardType } from './define.js';
 /** How the file name says which boards it joins. */
 const BOARDS_IN_NAME = { '2': '2-boards', '2-stacked': '2-boards-stacked', '4': '4-boards' } as const;
 
-/** The clip's settings as the library takes them, for its build and its screws alike. */
-function paramsOf(v: SlotClipParams): SlotClipParams {
+type ClipValues = Omit<SlotClipParams, 'screwMm'> & {
+  screwMm: number;
+  clipScrewSize: string;
+  clipScrewMm: number;
+};
+
+/** The clip's settings as the library takes them, for its build and its screws alike: its screw the screw size unless
+ * it has its own (D479). */
+function paramsOf(v: ClipValues): SlotClipParams {
   return slotClipParams({
     boards: v.boards,
     seams: v.seams,
@@ -21,7 +27,7 @@ function paramsOf(v: SlotClipParams): SlotClipParams {
     pegClearanceMm: v.pegClearanceMm,
     fixing: v.fixing,
     screwHead: v.screwHead,
-    screwMm: v.screwMm,
+    screwMm: screwAt(v, CLIP_SCREW),
   });
 }
 
@@ -85,6 +91,7 @@ export const SLOT_CLIP = defineBoardType({
       step: 0.5,
       help: "The gap behind the boards, as the standoffs' height: 15 mm unless set. At least 12 mm, so hooks have room.",
     },
+    SCREW_SIZE_SETTING,
     {
       kind: 'number',
       key: 'pegClearanceMm',
@@ -97,7 +104,6 @@ export const SLOT_CLIP = defineBoardType({
       advanced: true,
       help: 'How much smaller each peg is than the slot the board cuts (5.2 × 15.2 mm at its starting clearance).',
     },
-    SCREW_SIZE_SETTING,
     {
       kind: 'choice',
       key: 'screwHead',
@@ -112,18 +118,23 @@ export const SLOT_CLIP = defineBoardType({
         'hooks along the seam keep their room. A round head on a 4 mm screw needs the clip at least 13.4 mm deep.',
       advanced: true,
     },
+    ...screwPlaceSettings(CLIP_SCREW),
   ]),
   build: (engine, v) => makeSlotClip(engine, paramsOf(v)),
-  label: (v) =>
-    `${BOARDS_IN_NAME[v.boards]}${v.seams === 'between' ? '-between-slots' : ''}-${v.depthMm}mm` +
-    (v.fixing === 'none' ? '' : `-${v.fixing}`) +
-    (v.fixing === 'screw' && v.screwHead === 'round' ? '-round-head' : '') +
-    // a screw size other than the start: `-screw-3.5mm` after a screw, `-keyhole-screw-3.5mm` after a keyhole
-    (v.fixing === 'none' || v.screwMm === MOUNTING_DEFAULTS.screwMm
-      ? ''
-      : v.fixing === 'screw'
-        ? `-${v.screwMm}mm`
-        : `-screw-${v.screwMm}mm`) +
-    (v.pegClearanceMm === SLOT_CLIP_DEFAULTS.pegClearanceMm ? '' : `-clearance-${v.pegClearanceMm}mm`),
+  label: (v) => {
+    const screwMm = screwAt(v, CLIP_SCREW);
+    return (
+      `${BOARDS_IN_NAME[v.boards]}${v.seams === 'between' ? '-between-slots' : ''}-${v.depthMm}mm` +
+      (v.fixing === 'none' ? '' : `-${v.fixing}`) +
+      (v.fixing === 'screw' && v.screwHead === 'round' ? '-round-head' : '') +
+      // the clip's screw, where not the start: `-screw-3.5mm` after a screw, `-keyhole-screw-3.5mm` after a keyhole
+      (v.fixing === 'none' || screwMm === SCREW_MM
+        ? ''
+        : v.fixing === 'screw'
+          ? `-${screwMm}mm`
+          : `-screw-${screwMm}mm`) +
+      (v.pegClearanceMm === SLOT_CLIP_DEFAULTS.pegClearanceMm ? '' : `-clearance-${v.pegClearanceMm}mm`)
+    );
+  },
   screws: (v) => slotClipScrews(paramsOf(v)),
 });

@@ -562,7 +562,9 @@ describe("the walls of a hook's room in each standoff behind a slot, their roots
       ] as const) {
         for (const mounting of [
           ...MOUNTINGS,
-          { screwHead: 'keyhole', lockScrews: 'bottom', lockScrewMm: 3 }, // a head too wide for the slot: a groove
+          // the lock screws above at the screw size, 4 mm, their heads through a groove (D479); one of its own, 2.5 mm,
+          // whose 5 mm head passes the slot, as the start was before
+          { screwHead: 'keyhole', lockScrews: 'bottom', lockScrewSize: 'own', lockScrewMm: 2.5 },
           { screwHead: 'keyhole', lockScrews: 'none', screwMm: 3 },
           { screwHead: 'keyhole', lockScrews: 'none', screwMm: 5 },
         ]) {

@@ -30,12 +30,13 @@ test('shows size, thickness and sides on the form, and folds the fine settings u
   page,
 }) => {
   await ready(page);
-  for (const name of ['widthMm', 'heightMm', 'thicknessMm'])
+  // the screw size on the main form too, the screw for every hole (D479)
+  for (const name of ['widthMm', 'heightMm', 'thicknessMm', 'screwMm'])
     await expect(page.locator(`input[name="${name}"]`)).toBeVisible();
   const advanced = page.getByTestId('advanced');
   await expect(advanced).not.toHaveAttribute('open', /.*/);
   for (const name of ['screwHead', 'standoffs']) await expect(chosen(page, name)).toBeVisible();
-  for (const name of ['slotClearanceMm', 'slotChamferMm', 'cornerRadiusMm', 'screwMm', 'standoffHeightMm']) {
+  for (const name of ['slotClearanceMm', 'slotChamferMm', 'cornerRadiusMm', 'standoffHeightMm', 'lockScrewMm']) {
     await expect(advanced.locator(`input[name="${name}"]`)).toBeHidden();
   }
   await advanced.locator('summary').click();
@@ -246,10 +247,11 @@ test('offers keyholes, which bring their standoffs, with lock screws under Advan
     'data-file-name',
     'skadis-solid-160x160-keyholes-lock-screws-standoffs-15mm.stl',
   );
-  // taking the standoffs off again would hang the board flat: a problem, saying why
+  // taking the standoffs off again would hang the board flat: a problem, saying why; at least 13.5 mm, for the lock
+  // screws' 4 mm heads, the screw size's (D479)
   await choose(page, 'standoffs', 'none');
   await expect(status).toHaveAttribute('data-state', 'problem');
-  await expect(status).toContainText('standoffs at least 13.23 mm');
+  await expect(status).toContainText('standoffs at least 13.5 mm');
 });
 
 test('offers lock screws alone, which bring their standoffs as keyholes do (D289)', async ({ page }) => {
@@ -275,6 +277,7 @@ test('says nothing under the screws while the standoffs are too short for the lo
     },
   ]) {
     await pick();
+    await choose(page, 'lockScrewSize', 'own'); // their own size (D479)
     await page.locator('input[name="lockScrewMm"]').fill('5');
     await page.locator('input[name="standoffHeightMm"]').fill('3');
     await expect(status).toHaveAttribute('data-state', 'problem');

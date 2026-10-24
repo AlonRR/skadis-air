@@ -4,8 +4,9 @@
 // Writes the parts the keyhole printability pass measures as built (D358, D369; docs/research/
 // 2026-10-23-keyhole-printability.md) into .check/keyhole-parts/, each as one STL laid as the page downloads it, with
 // its .parts beside it for stl-check.sh: T151's board, the 80 x 80 mm lightened board on keyholes and 15 mm standoffs;
-// the same board with lock screws at the bottom, 2.5 mm, whose heads pass the slots, and 5 mm, whose heads get a groove
-// (A248); and the slot clip for 2 boards with a keyhole, 15 mm deep. Prints each file's plastic, mm3, as JSON on the
+// the same board with lock screws at the bottom, at the screw size, 4 mm, and of their own size, 2.5 mm, whose heads
+// pass the slots, and 5 mm; a head wider than the slot gets a groove (A248, D479); and the slot clip for 2 boards with
+// a keyhole, 15 mm deep. Prints each file's plastic, mm3, as JSON on the
 // last line. Reads the library's build, so run `npm run build -w skadis-air` first; slice them one at a time:
 //
 //   node scripts/checks/write-keyhole-parts.mjs
@@ -49,8 +50,12 @@ const PARTS = [
   { name: 't151-board', make: () => pagePart('lightened', T151) },
   { name: 't151-board-lock-screws', make: () => pagePart('lightened', { ...T151, lockScrews: 'bottom' }) },
   {
+    name: 't151-board-lock-screws-2.5mm',
+    make: () => pagePart('lightened', { ...T151, lockScrews: 'bottom', lockScrewSize: 'own', lockScrewMm: 2.5 }),
+  },
+  {
     name: 't151-board-lock-screws-5mm',
-    make: () => pagePart('lightened', { ...T151, lockScrews: 'bottom', lockScrewMm: 5 }),
+    make: () => pagePart('lightened', { ...T151, lockScrews: 'bottom', lockScrewSize: 'own', lockScrewMm: 5 }),
   },
   { name: 'slot-clip-2-keyhole', make: () => pagePart('slot-clip', { boards: '2', fixing: 'keyhole', depthMm: 15 }) },
 ];

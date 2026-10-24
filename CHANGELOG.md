@@ -21,6 +21,17 @@ All notable changes to this project are recorded here. The format follows
 - The trial standoffs plate's dots are in the face that is up as the standoffs print, not the bed face, so they cost no
   contact and nothing prints over air (C464, T274).
 
+- One "Screw size" on the main form, the screw for every hole: 4 mm unless set, a countersunk screw with an 8 mm
+  head. Under Advanced, the keyholes, the lock screws and the slot clip's screw each offer "Same as the screw size" or
+  "Own", their own size greyed out until "Own" is chosen. The standoff connector's holes, which the boards' corner
+  screws go through, take the screw size itself.
+- Lock screws start at the screw size, 4 mm, where they started at 2.5 mm. An 8 mm head does not pass a slot 5.2 mm
+  wide, so each lock screw's slot has a groove in its sides for the head, 8.5 mm across round the slot's middle; the
+  slot keeps its 5.2 mm for 4.2 mm up from its bottom end, where a hook rests. A 2.5 mm lock screw, whose head passes
+  the slot, is still made by choosing "Own". A file named `-lock-screws` now has 4 mm lock screws.
+- A board kept in the browser by an older page still builds, its lock screws at the screw size; the size it held for
+  them stays in their own size, greyed out, until "Own" is chosen.
+
 ## [0.8.0] - 2026-10-24
 
 ### Changed

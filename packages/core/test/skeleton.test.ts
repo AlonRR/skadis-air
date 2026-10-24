@@ -166,20 +166,31 @@ describe('makeSkeletonBoard (D146, D147, D161)', () => {
         'NonZero',
       ),
     );
-    const inPlate = (b: Manifold, z: number) => keep(keep(b.slice(z)).intersect(windows)).area();
+    // but the groove a lock screw at the screw size, 4 mm, has through its slot's sides for its 8 mm head (A248, D479)
+    const grooves = keep(
+      new engine.CrossSection(
+        [20, 140].map((x) => circle(x, 20, 8.5 + 0.02)),
+        'NonZero',
+      ),
+    );
+    const inPlate = (b: Manifold, z: number, w = windows) => keep(keep(b.slice(z)).intersect(w)).area();
     const bare = skeleton({}, {}, { screwHead: 'none' });
     for (const lockScrews of [false, true]) {
       const board = skeleton({}, {}, { screwHead: 'keyhole', standoffHeightMm: 20, lockScrews });
-      for (const z of [0.5, 2, 4.5]) expect(inPlate(board, z)).toBeCloseTo(inPlate(bare, z), 1);
+      const w = lockScrews ? keep(windows.subtract(grooves)) : windows;
+      for (const z of [0.5, 2, 4.5]) expect(inPlate(board, z, w)).toBeCloseTo(inPlate(bare, z, w), 1);
+      // the control: the grooves are cut, and left out above
+      if (lockScrews) expect(inPlate(bare, 2) - inPlate(board, 2)).toBeGreaterThan(5);
     }
   });
 
   it('stands each standoff behind a slot inside the frame round that slot, flush with it (D306)', () => {
     // behind the board, at the hook's room, the keyhole's roof and the lips: no standoff with no member in front of it,
-    // the members full width at the back face for FLANGE_MM, but for the slot it closes the back of (D244)
+    // the members full width at the back face for FLANGE_MM, but for the slot it closes the back of (D244), and a 4 mm
+    // lock screw's groove through the slot's sides, the screw size's (A248, D479)
     const slots = keep(
       new engine.CrossSection(
-        [20, 140].flatMap((x) => [20, 140].map((y) => stadium(x, y, 5.2, 15.2, 1.5))),
+        [20, 140].flatMap((x) => [20, 140].flatMap((y) => [stadium(x, y, 5.2, 15.2, 1.5), circle(x, y, 8.6)])),
         'NonZero',
       ),
     );

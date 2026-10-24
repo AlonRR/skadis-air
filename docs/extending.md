@@ -36,8 +36,9 @@ A board type is one file and one line in a list (D11, the extension-registry pra
 
 **A connector is a board type with `group: 'connector'`** (D91, C95), added the same way, after the
 boards in the list: the page lists it under "Connectors". The standoff (`standoff.ts`) was the first, the slot clip (`slot-clip.ts`) the second.
-A part a screw goes through takes the shared `SCREW_SIZE_SETTING` from `mounting.ts` rather than its
-own, so the hole and the screw cannot drift apart from the board's. A type is turned over to print,
+A part a screw goes through takes the shared `SCREW_SIZE_SETTING` from `screw-places.ts` rather than its
+own, so the hole and the screw cannot drift apart from the board's; it is on the main form, the screw for every hole
+(D479). A kind of place a screw goes that may take a screw of another size is a screw place (below). A type is turned over to print,
 face down (D66), unless it says `prints: 'as-built'` (C101), as the standoff does; the contract test
 checks that every type's printed part sits on the bed. A type whose file holds more than one
 separate part, as the seam-test pair's two tiles do, says `parts: 2` (C107); the contract test
@@ -86,6 +87,8 @@ What fails if a step is missed:
 | A test print (`testPrint: true`) among the connectors, or one marked that the test beside the contract does not name | the same contract, and that test (D357) |
 | A choice whose starting value is not one of its options, or an option listed twice | the same contract |
 | An `appliesWhen` that does not answer true or false at the type's starting values | the same contract (D372) |
+| A screw place not listed by any type, its settings apart or on the main form, or a type with one and no screw size | `packages/core/test/screw-places.test.ts` (D479) |
+| A screw place whose part does not take the screw size unless "Own" is chosen | the same |
 | The line in `BOARD_TYPES` | the type is simply not on the page; `web/e2e/form.spec.ts` lists what is |
 | A build or label written against settings it does not declare | the type check |
 
@@ -102,6 +105,29 @@ same calls, which shows the generic code names no board.
 2. Use it in the type's `build`, and in `label` if two values must give different file names.
 3. A test in `packages/core/test` for what it changes in the shape, measured on the solid; a
    browser test in `web/e2e` if the page does more than show it.
+
+## A new kind of screw place
+
+One screw size, `SCREW_SIZE_SETTING`, serves every hole a part has; a kind of place a screw goes may also have a size
+of its own, under Advanced, the screw size's unless set (D479): the keyholes, the lock screws and the slot clip's screw
+so far. The corner holes, and the standoff connector's holes, which the corner screws go through, are the screw size
+itself. A new kind of place is one entry and two edits, all in `packages/core/src/screw-places.ts` and its type:
+
+1. **The entry**: a `ScrewPlace` in `SCREW_PLACES`, with its `key`, its `label` (its settings are labelled
+   "`<label>` size" and "`<label>`'s own size"), `when` it applies, which its settings' help begins with (D372), the
+   `help` for its own size, its own size's `min` and `max`, its `appliesWhen(values)`, true where a part has such a
+   place, and `inPlay`, values that give a part one.
+2. **Its settings**: `...screwPlaceSettings(PLACE)` in its type's `defineSettings([...])`, which lists
+   `SCREW_SIZE_SETTING` too. They are two existing kinds of setting, so the page needs nothing new: a choice,
+   `<key>Size`, of "Same as the screw size" or "Own", and a number, `<key>Mm`, which applies only with "Own" and is
+   greyed out until then.
+3. **Its size**: the type's `build`, `label` and `screws` read it with `screwAt(values, PLACE)`, the screw size unless
+   "Own" is chosen.
+
+`packages/core/test/screw-places.test.ts` holds every entry to the contract: listed by some type, its two settings
+together under Advanced with the screw size, the choice and its labels, its own size starting at the screw size's
+start, greyed out as said, and the part built with the screw size the same as the part given that size as its own,
+with a control at another size. A choice of the screw size or its own that is not a listed entry fails it.
 
 ## A new kind of setting
 
