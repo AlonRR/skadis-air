@@ -9,10 +9,11 @@
 // library's, with settings the page does not offer until a print says they work. Laid in rows 10 mm apart. Reads
 // the library's build, so run `npm run build -w skadis-air` first; `npm run trial-plate` does both and checks it.
 //
-//   node scripts/test-print/write-trial-plate.mjs [grips | keyhole]
+//   node scripts/test-print/write-trial-plate.mjs [grips | keyhole | standoffs]
 //
 // `grips` writes the T268 and D267 parts alone, as skadis-trial-grips.stl; `keyhole` T151's board alone, as
-// skadis-trial-keyhole.stl. One file, as write-test-plate.mjs says why: PrusaSlicer's command line slices each input
+// skadis-trial-keyhole.stl; `standoffs` D267's three standoffs alone, as skadis-trial-standoffs.stl (24 Oct 2026,
+// while the slot clip and the keyhole board were being changed). One file, as write-test-plate.mjs says why: PrusaSlicer's command line slices each input
 // file on its own.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -38,7 +39,7 @@ const out = join(root, '.check', 'test-print');
 const BED = { xMm: 250, yMm: 210 }; // an MK3S's
 const GAP_MM = 10;
 const only = process.argv[2];
-const stem = only === 'grips' || only === 'keyhole' ? `skadis-trial-${only}` : 'skadis-trial-grips-keyhole';
+const stem = ['grips', 'keyhole', 'standoffs'].includes(only) ? `skadis-trial-${only}` : 'skadis-trial-grips-keyhole';
 
 const engine = await loadEngine();
 const { CrossSection, Manifold } = engine;
@@ -78,7 +79,9 @@ const NUBS = [0.35, 0.45, 0.55]; // proud of the peg: 0.15, 0.25 and 0.35 mm pas
 const PILOTS = [0.8, 0.85, 0.9].map((k) => k * 4);
 const LIP = slotClipParams({ boards: '2', fixing: 'none', grip: 'lip' });
 
-const grips = [
+// built in this order, clips, then standoffs, then the keyhole board: Manifold numbers its meshes as they are made, so
+// another order writes the same plate with its triangles in another order
+const clips = [
   ...NUBS.map((nubMm, k) => ({
     name: `slot clip, nubs ${nubMm} mm (T268)`,
     solid: dotted(
@@ -101,23 +104,24 @@ const grips = [
     for (const m of [fill, flat]) m.delete();
     return { name: 'fill for the split pegs (T268)', solid: laid };
   }),
-  ...PILOTS.map((pilotMm, k) => ({
-    name: `standoff, pilot ${pilotMm.toFixed(2)} mm (D267)`,
-    solid: dotted(
-      makeStandoff(engine, standoffParams({ boards: '1', pilotMm })),
-      [90, 130, 170].map((a) => [3.6 * Math.cos((a * Math.PI) / 180), 3.6 * Math.sin((a * Math.PI) / 180)]),
-      k + 1,
-      1,
-    ),
-  })),
 ];
+const standoffs = PILOTS.map((pilotMm, k) => ({
+  name: `standoff, pilot ${pilotMm.toFixed(2)} mm (D267)`,
+  solid: dotted(
+    makeStandoff(engine, standoffParams({ boards: '1', pilotMm })),
+    [90, 130, 170].map((a) => [3.6 * Math.cos((a * Math.PI) / 180), 3.6 * Math.sin((a * Math.PI) / 180)]),
+    k + 1,
+    1,
+  ),
+}));
+const grips = [...clips, ...standoffs];
 const keyhole = [
   {
     name: 'lightened board on keyholes, 80 x 80 mm (T151)',
     solid: pagePart('lightened', { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'back' }),
   },
 ];
-const PARTS = only === 'grips' ? grips : only === 'keyhole' ? keyhole : [...keyhole, ...grips];
+const PARTS = { grips, keyhole, standoffs }[only] ?? [...keyhole, ...grips];
 
 // In rows across the bed, left to right, a new row 10 mm behind the deepest part of the last.
 let [x, y, rowDepth] = [0, 0, 0];

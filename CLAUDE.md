@@ -210,7 +210,7 @@ build its scenes from deeper modules of the library's build than `kit.lib` gives
 and checks it; `node scripts/test-print/write-test-plate.mjs slotClearanceMm=0.3` reprints the pair at another
 clearance. `npm run trial-plate` writes the keyhole board's trial and the trial grips (T151, T268, D267) the same way,
 `.check/test-print/skadis-trial-grips-keyhole.stl` (C234, C273); `node scripts/test-print/write-trial-plate.mjs grips`
-writes the slot clip's and the standoff's trial grips alone, and `keyhole` the keyhole board alone; `npm run plates`
+writes the slot clip's and the standoff's trial grips alone, `keyhole` the keyhole board alone, and `standoffs` the standoff's three alone; `npm run plates`
 writes all three sets, test plate, trial plate and Printables files, unsliced, as CI does (C299). `FILAMENT="<preset>" bash scripts/checks/stl-check.sh <stl>` slices a
 plate with another filament, the G-code beside it. Slice it with the filament that is **loaded**, which only the
 owner knows: ask, never assume the STL check's ASA. One STL, because PrusaSlicer's command line slices each input

@@ -270,6 +270,12 @@ made in the owner's browser, once it is connected again (T219, done 17 Oct 2026)
   Say for each whether it went in, held, and how it came out, and whether the fills stayed in. For the standoff
   (D267): the three 1-board standoffs, 1, 2 or 3 dots on their wall face (pilots 3.2, 3.4 and 3.6 mm): push a 4 mm
   screw through a board's corner hole into each, and say which one the screw carries without stripping.
+  While the slot clip (D409) and the keyhole board (D411) are being changed, the owner asked for a plate of what is
+  not changing (24 Oct 2026: "build a test plate with items that arent changing that need testing"): the three
+  standoffs alone, `.check/test-print/skadis-trial-standoffs.stl` (`node scripts/test-print/write-trial-plate.mjs
+  standoffs`; 3 parts, 50 x 10 x 15 mm). It passes the STL check: three closed bodies, sliced in PETG Basic in
+  23 min 37 s and 2.80 g, nothing over air in any layer. Each stands on a 10 x 10 mm face, and one came off the bed
+  in the last print: slice it with a brim. The clips and the keyhole board follow once D409 and D411 are released.
 
 The boards' design pass (21 Oct 2026), against the same practices as the connectors':
 [`research/2026-10-21-boards-design-pass.md`](research/2026-10-21-boards-design-pass.md), a figure for each finding.
