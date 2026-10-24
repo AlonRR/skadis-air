@@ -231,9 +231,11 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | A415 | **`v0.8.0` is released once D409 and D411 are built, with A413** ("415 y"): D371, D372, D375, D409, D411 and the design system's `v0.8.1`, the skeleton still held for T320 (D353); then A407's Printables refresh, once. Released 24 Oct 2026 | 24 Oct 2026 |
 | T457 | **The Printables page carries `v0.8.0`'s set** ("457 done"): published by the owner at 10:57:40 UTC on 24 Oct 2026, read back from Printables' API: the nine pictures in order, six of them new; the three slot clips' files new, the other ten as before; five of the text's six GIFs new, each with its line (A407) | 24 Oct 2026 |
 | A438 | **Nine superseded branches deleted on Gitea** ("438 y"), each checked unchanged first; none was on GitHub | 24 Oct 2026 |
-| D419 | **Sides shrinks to fit below 375 px** ("419 a"), with a browser test at 320, 360 and 375 px | 24 Oct 2026 |
+| D419 | **Sides shrinks to fit below 375 px** ("419 a"), with a browser test at 320, 360 and 375 px. Built 24 Oct 2026 (C458 to C462): the board's drawing narrows, the buttons keep their size | 24 Oct 2026 |
 | Q359 | **The keyholes' countersunk seat stays drawn for the owner's screws, 4 mm with 8 mm heads** ("the current heads (8mm) are the ones i use, we can make it a choice to change the screw size"): the size becomes a choice, D479 | 24 Oct 2026 |
 | D370 | **Lock screws use the same screw as the rest** ("they will use the same screw as the rest. i mean when a screw choice is made its made across all the screw locations, with advanced letting a user change per type of location e.g., keyhole, lock, connector/clip or other types we have"): how, D479 | 24 Oct 2026 |
+| D437 | **The reworked skeleton's radii are drawn with fewer facets** ("437 b"), the shape kept within 0.05 mm and measured so, for its build time: 24.9 s for a 400 x 400 mm board against 12.3 s before, 786,030 facets against 534,984 | 24 Oct 2026 |
+| D479 | **One screw size for every screw place** ("479 a"): `Screw size` in the main form, 4 mm with its 8 mm countersunk head to start; under Advanced, a size for each kind of place (keyholes, lock screws, the slot clip), each the same as the screw size unless set; lock screws start at 4 mm too, their slots grooved for the head | 24 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
 | A224 | **The code review's other findings are fixed**, each with its test first, and released as `v0.2.1` before the Printables files are made again | 16 Oct 2026 |
@@ -347,12 +349,6 @@ clip (b4).
 - **Q418** Which phone can the share button be tested on: an iPhone, an Android phone, or both? Needed only if D417
   is (b) or (c).
 
-- **D437** The reworked skeleton (D408) builds about twice as slowly: a 400 x 400 mm board in 24.9 s against 12.3 s,
-  a 200 x 200 mm one in 5.4 s against 2.5 s, with 786,030 facets against 534,984 (measured in Node on the branch),
-  the radii's arcs adding most of them (inferred). (a) As it is; (b) before it is released, fewer facets round the
-  radii, the shape kept within 0.05 mm and measured so; (c) no radii, D314's sharp step. Recommended (b): T320 tests
-  the profile, which (b) keeps, and a board that builds in half the time keeps the page answering.
-
 - **D439** The keyhole boards' weak spot, by D411's physics ([report](research/2026-10-23-physics-tests.md), D411):
   where the hook room's walls beside the hook's back tab meet the board's back, a sharp edge D411 left, as the tab's
   room there (C99's 2 mm) is the hook's (C429). (a) Let the root take that 2 mm near the back: the lightened keyhole
@@ -360,21 +356,6 @@ clip (b4).
   the hook's tab measured first, its 4.5 mm width unmeasured (T373, D414), and the solid board's build worked out;
   (b) a relief cut into the plate under each wall instead, the hook's room whole, at the cost of plate, and of rim on
   the lattice boards; (c) as it is until a hook is measured. Recommended (a), once a hook's tab is measured.
-
-- **D479** The screw settings (Q359, D370). Today one size, `Screw size` under Advanced (3 to 5 mm, starting at 4 mm),
-  serves the corner holes, the keyholes, the standoffs and the slot clip's screw, and lock screws have their own,
-  `Lock screw size` (starting at 2.5 mm, its 5 mm pan head passing a slot). (a) One `Screw size` in the main form, 4 mm
-  with its 8 mm countersunk head to start, at every screw place; under Advanced, a size for each kind of place
-  (keyholes, lock screws, the slot clip), each the same as the screw size unless set. Lock screws then start at 4 mm,
-  and an 8 mm head does not pass a 5 mm slot, so each lock screw's slot gets a groove in its sides for the head
-  (pictures in `docs/figures/explain-2026-10-24/`, being made); (b) as (a), but lock screws keep their own start,
-  2.5 mm, so their slots stay plain. Recommended (a), as the owner put it, once the pictures show the groove.
-
-- **D419** The Sides control on narrow phones (A413's measurement, C490, made again on both builds, 24 Oct 2026):
-  300 px wide, it fits a 375 px phone's fieldset (308 px inside). At 360 px it runs 7 px into the fieldset's padding,
-  still inside its border; at 320 px it ends at 334 px, 30 px past the fieldset and 14 px past the screen's edge,
-  where the page clips it. The same before and after `v0.8.1`; many Android phones are 360 px wide (inferred). (a) Let it shrink to fit below 375 px, with a browser test at 320, 360 and 375 px; (b) as it
-  is. Recommended (a). Built 24 Oct 2026 (C458 to C462).
 
 - **D414** T320 and T151 hang IKEA hooks, and the owner has none (24 Oct 2026). (a) Buy a pack of SKÅDIS hooks (the
   owner's step), which also lets T373 measure one; (b) print SKÅDIS hooks, weaker than steel, so a broken hook tests
