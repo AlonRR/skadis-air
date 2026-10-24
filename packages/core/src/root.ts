@@ -31,6 +31,9 @@ const ROOM_STEP_MM = 0.05;
 /** The least rise a root is drawn with: below it, none, as its levels would lie too near each other. */
 const LEAST_RISE_MM = 0.5;
 
+/** How far behind its foot a root takes the slope of a face that falls away under it (D409), mm. */
+const FOOT_SLOPE_MM = 0.5;
+
 /** The unit normal to the right of the edge from a to b: out of the solid, which lies on a ring's left. */
 function right(a: Vec2, b: Vec2): Vec2 {
   const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
@@ -39,7 +42,7 @@ function right(a: Vec2, b: Vec2): Vec2 {
 }
 
 /** Each point's outward normal on a ring drawn anticlockwise, the solid on its left: the mean of its two edges'. */
-function outwardNormals(ring: readonly Vec2[]): Vec2[] {
+export function outwardNormals(ring: readonly Vec2[]): Vec2[] {
   const n = ring.length;
   const at = (i: number): Vec2 => ring[((i % n) + n) % n] ?? [0, 0];
   return ring.map((p, i) => {
@@ -95,11 +98,39 @@ export function rootReach(ring: readonly Vec2[], free: (p: Vec2) => boolean, mos
  * it crosses the face at a slant, about 15 degrees for a 3 mm rise.
  */
 export function rootProfile(riseMm: number): [number, number][] {
+  return rootSteps(riseMm).map((t): [number, number] => [(1 - t) ** 2 * (riseMm + ROOT_SINK_MM) - ROOT_SINK_MM, t * t]);
+}
+
+/** The steps the curve is drawn at, each how far along it from where it leaves the post (0) to its foot (1), less any
+ * level that would lie within OFF_FACE_MM of a flat face. */
+function rootSteps(riseMm: number): number[] {
   if (riseMm <= 0) return [];
-  return Array.from({ length: ROOT_STEPS + 1 }, (_, i): [number, number] => {
-    const t = i / ROOT_STEPS;
-    return [(1 - t) ** 2 * (riseMm + ROOT_SINK_MM) - ROOT_SINK_MM, t * t];
-  }).filter(([up]) => Math.abs(up) >= OFF_FACE_MM);
+  return Array.from({ length: ROOT_STEPS + 1 }, (_, i) => i / ROOT_STEPS).filter(
+    (t) => Math.abs((1 - t) ** 2 * (riseMm + ROOT_SINK_MM) - ROOT_SINK_MM) >= OFF_FACE_MM,
+  );
+}
+
+/**
+ * The root's curve at one point of a post's outline where the face may fall away from the post (D409), as the slot
+ * clip's bar does over its side chamfer: `heightAt(s)` is the face's height s mm out along the point's normal, 0 where
+ * it is flat and below 0 where it falls away, never rising. For each step of rootProfile, from the top down, how far out
+ * the curve is and how far up from the flat face. Its foot is ROOT_SINK_MM under the face, `reachMm` out, and the curve
+ * a quadratic Bezier tangent to the post's side `riseMm` up and, at its foot, to the face's slope over the last
+ * FOOT_SLOPE_MM behind it, so it crosses the face at a slant wherever it ends, as it does a flat face, and is
+ * rootProfile's own curve where the face is flat. The face's slope taken over a length rather than at the foot keeps the
+ * curve smooth round the post where the foot passes from a flat onto a chamfer; under a face that never rises toward
+ * the post, that slope runs at least ROOT_SINK_MM under the face all the way back to the post, so the curve runs
+ * inside the part from its foot to where it crosses the face. With no reach it is the post's side, as rootProfile's.
+ */
+export function rootCurve(riseMm: number, reachMm: number, heightAt: (s: number) => number): [number, number][] {
+  const foot = reachMm > 0 ? heightAt(reachMm) - ROOT_SINK_MM : -ROOT_SINK_MM;
+  const back = Math.max(0, reachMm - FOOT_SLOPE_MM);
+  const slope = reachMm > 0 ? (heightAt(back) - heightAt(reachMm)) / (reachMm - back) : 0;
+  const control = foot + slope * reachMm; // where the tangent at the foot meets the post's side
+  return rootSteps(riseMm).map((t): [number, number] => [
+    t * t * reachMm,
+    (1 - t) ** 2 * riseMm + 2 * t * (1 - t) * control + t * t * foot,
+  ]);
 }
 
 /** How far up a post its root may start, given how much of the post is clear of what else it has, and how far out it

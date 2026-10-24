@@ -27,6 +27,8 @@ All notable changes to this project are recorded here. The format follows
   hook, inside the edge's chamfer, and on a lightened or skeleton board only over the frame, the webs and the pads,
   never over a pocket. The physics tests found each of these a sharp inner edge, and a standoff's root the weakest
   place on every board on standoffs. Nothing of a root prints over air.
+- On the slot clip, each post's rounded root runs on over the bar's chamfered sides, where it stopped short of them,
+  so the post meets the bar on a curve all the way across and the bar keeps its chamfered edges.
 
 ### Fixed
 
