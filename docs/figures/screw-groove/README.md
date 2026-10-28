@@ -25,3 +25,17 @@ room and seats on a 45 degree countersink, nothing over air.
 ![A 2.5 mm lock screw of its own size, cut through](g5-section-2.5mm.png)
 
 **What they show:** a lock screw of its own size, 2.5 mm, whose pan head passes the slot: no groove, its flat recess kept.
+
+## The screw settings on the page
+
+Shot on 28 Oct 2026 from the page with the design system's v0.9.0, each on a 1280 px screen (`desktop-1280-*`) and a
+375 px phone (`phone-375-*`), in [`form/`](form/):
+
+1. `1-main-form-screw-size`: the screw size on the main form, 4 mm, the screw for every hole.
+2. `2-advanced-countersunk-all-greyed`: Advanced on a board with countersunk corners: no keyholes or lock screws, so
+   their sizes are greyed out.
+3. `3-advanced-keyholes-same`: keyholes chosen: their size is "Same as the screw size", their own size greyed out.
+4. `4-advanced-lock-screws-own-3mm`: lock screws at the bottom, "Own", 3 mm.
+5. `5-slot-clip-main-screw-size`: the slot clip, its own screw size on its main form, set apart from the boards' today
+   (Q511).
+6. `6-slot-clip-advanced-own`: the slot clip's screw under Advanced, "Own", 3 mm.
