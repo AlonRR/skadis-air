@@ -257,10 +257,37 @@ export function skeletonMembers(
     );
   }
   const slab = Manifold.cube([e.x1 - e.x0 + 2.4, e.y1 - e.y0 + 2.4, t + 2.4]).translate([e.x0 - 1.2, e.y0 - 1.2, -1.2]);
-  const cut = Manifold.union(lofts);
+  const all = Manifold.union(lofts);
+  const cores = members.corners === 'sharp' ? halfSlotCores(engine, board, p) : undefined;
+  const cut = cores === undefined ? all : all.subtract(cores);
   const kept = slab.subtract(cut);
   for (const m of [slab, cut, ...lofts]) m.delete();
+  if (cores !== undefined) {
+    cores.delete();
+    all.delete();
+  }
   return kept;
+}
+
+/**
+ * The plastic a sharp-cornered skeleton keeps through its whole depth beside each half slot of an open top or bottom
+ * edge (D519 a): the slot's rim core, its core wide beside the slot's straight sides, from face to face. There a
+ * pocket's corner, between the edge band and a web at 45 degrees, runs along the web's line into the half slot as the
+ * band widens through the board, and at a thin core the band and the web met only near the faces (C538). Undefined
+ * where there is no such slot; the pockets reach it nowhere else, so nothing else is cut from them.
+ */
+function halfSlotCores(engine: Engine, board: SolidBoardParams, p: SkeletonParams): Manifold | undefined {
+  const e = extentOf(board);
+  const [w, h] = [SLOT_WIDTH_MM + board.slotClearanceMm, SLOT_HEIGHT_MM + board.slotClearanceMm];
+  const [across, along] = [w / 2 + p.coreMm, (h - w) / 2];
+  const t = board.thicknessMm;
+  const cores = slotPlaces(board.columns, board.rows, board.sides, board.seams)
+    .filter((s) => s.part === 'half' && (s.yMm === e.y0 || s.yMm === e.y1))
+    .map((s) => engine.Manifold.cube([2 * across, 2 * along, t + 4]).translate([s.xMm - across, s.yMm - along, -2]));
+  if (cores.length === 0) return undefined;
+  const one = engine.Manifold.union(cores);
+  for (const m of cores) m.delete();
+  return one;
 }
 
 /** What the skeleton keeps of the solid board: the plate only where its members are (BoardCuts.within). */
