@@ -13,7 +13,7 @@ import {
   type AnyBoardType,
 } from 'skadis-air';
 import { allPanelsText, panelText, type PanelLine, type Reply, type Request } from './build-messages.js';
-import { loadChoices, saveChoices, startingValues } from './choices.js';
+import { carriedAcrossGroups, loadChoices, saveChoices, startingValues } from './choices.js';
 import { choiceGroup, chosenIn, labelledChoice, renderForm, type Form } from './form.js';
 import { saveFile } from './download.js';
 import { mountPreview } from './preview.js';
@@ -266,8 +266,9 @@ function show(type: AnyBoardType): void {
     clearTimeout(typing);
     typing = setTimeout(() => rebuild(type, form), 150);
   };
-  // a type starts from the one shown before only within its group: boards from boards, connectors from connectors
-  const before = groupOf(type) === shownGroup ? shownValues : {};
+  // a type starts from the one shown before within its group, boards from boards and connectors from connectors,
+  // and from the other group's screw size alone (Q511)
+  const before = groupOf(type) === shownGroup ? shownValues : carriedAcrossGroups(shownValues);
   shownGroup = groupOf(type);
   // a test print's own form opens its Advanced fold, to show it chosen there (D357)
   const tests = testPrintsOf(groupOf(type));

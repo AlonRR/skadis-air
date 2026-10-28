@@ -14,6 +14,9 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- The screw size carries across the boards and the connectors, one choice everywhere: set on a board it is the
+  slot clip's and the standoff's, and back (Q511, C550). The sizes under Advanced for each kind of place, and every
+  other setting, still carry only within their group.
 - The design system is v0.9.0: the 3D view and the form go side by side from 640 px wide, so a phone held sideways
   (740 x 360, 750 x 342) shows both, and the Sides control fits a 320 px sidebar. The page's own rule for the control's
   width is gone; the drawing's shape rule stays (C516).

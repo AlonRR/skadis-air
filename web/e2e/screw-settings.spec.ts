@@ -189,3 +189,56 @@ test('builds a board from the choices a page before D479 kept in the browser, th
     'skadis-solid-160x160-lock-screws-2.5mm-standoffs-15mm.stl',
   );
 });
+
+test('carries the screw size across the boards and the connectors, and back (Q511)', async ({ page }) => {
+  await ready(page);
+  const size = main(page).locator('input[name="screwMm"]');
+  await size.fill('3.5');
+  await expect(status(page)).toHaveAttribute('data-state', 'ready');
+  // to the slot clip, then the standoff: the same screw size, not their 4 mm start
+  await choose(page, 'typeGroup', 'connector');
+  await choose(page, 'boardType', 'slot-clip');
+  await expect(main(page).locator('input[name="screwMm"]')).toHaveValue('3.5');
+  await expect(status(page)).toHaveAttribute('data-file-name', 'skadis-slot-clip-2-boards-15mm-screw-3.5mm.stl');
+  await choose(page, 'boardType', 'standoff');
+  await expect(main(page).locator('input[name="screwMm"]')).toHaveValue('3.5');
+  // set on a connector, it goes back to the boards
+  await main(page).locator('input[name="screwMm"]').fill('5');
+  await choose(page, 'typeGroup', 'board');
+  await expect(main(page).locator('input[name="screwMm"]')).toHaveValue('5');
+  // and what else a board held is its own: only the screw size crossed
+  await expect(main(page).locator('input[name="widthMm"]')).toHaveValue('160');
+});
+
+test("keeps each kind of place's own size within its group, as built (Q511)", async ({ page }) => {
+  await ready(page);
+  await choose(page, 'typeGroup', 'connector');
+  await choose(page, 'boardType', 'slot-clip');
+  await advanced(page).locator('summary').click();
+  await choose(page, 'clipScrewSize', 'own');
+  await page.locator('input[name="clipScrewMm"]').fill('3');
+  await choose(page, 'typeGroup', 'board');
+  await choose(page, 'typeGroup', 'connector');
+  await expect(chosen(page, 'clipScrewSize')).toHaveValue('own');
+  await expect(page.locator('input[name="clipScrewMm"]')).toHaveValue('3');
+});
+
+test('a screw size kept in the browser by an older page still loads on each type (Q511)', async ({ page }) => {
+  // an older page kept the boards' screw size 5 and the slot clip's 3 apart; the shown type's is the one kept
+  const kept = {
+    group: 'connector',
+    types: { board: 'solid', connector: 'slot-clip' },
+    values: { solid: { screwMm: '5' }, 'slot-clip': { screwMm: '3' } },
+  };
+  await page.addInitScript((k) => {
+    if (sessionStorage.getItem('seeded') === null) {
+      localStorage.setItem('skadis-air-choices', JSON.stringify(k));
+      sessionStorage.setItem('seeded', 'yes');
+    }
+  }, kept);
+  await ready(page);
+  await expect(main(page).locator('input[name="screwMm"]')).toHaveValue('3');
+  await choose(page, 'typeGroup', 'board');
+  await expect(main(page).locator('input[name="screwMm"]')).toHaveValue('3');
+  await expect(status(page)).toHaveAttribute('data-state', 'ready');
+});

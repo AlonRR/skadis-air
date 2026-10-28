@@ -2,7 +2,7 @@
 // before for the settings both have, where they are values this type takes.
 import { boardType } from 'skadis-air';
 import { describe, expect, it } from 'vitest';
-import { startingValues } from '../src/choices.js';
+import { carriedAcrossGroups, startingValues } from '../src/choices.js';
 
 describe('startingValues', () => {
   it("carries a board's size on to the next board, over that board's own", () => {
@@ -31,5 +31,12 @@ describe('startingValues', () => {
     const closed = { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' };
     expect(startingValues(solid, {}, { sides: closed })['sides']).toEqual(closed);
     expect(startingValues(solid, {}, { sides: { ...closed, top: 'half' } })['sides']).toBeUndefined();
+  });
+});
+
+describe('carriedAcrossGroups', () => {
+  it('carries the screw size alone, none of the rest', () => {
+    expect(carriedAcrossGroups({ screwMm: '3.5', widthMm: '240', clipScrewSize: 'own' })).toEqual({ screwMm: '3.5' });
+    expect(carriedAcrossGroups({ widthMm: '240' })).toEqual({});
   });
 });
