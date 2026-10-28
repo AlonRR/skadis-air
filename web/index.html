@@ -64,14 +64,10 @@
       .help {
         margin-bottom: var(--space-2);
       }
-      /* The Sides control is as wide as its parts in a row, about 300 px, which a phone narrower than 375 px does not
-        have inside its fieldset (253 px at 320 px, D419). It takes no more than the fieldset, and the board drawing
-        between the buttons gives way for it, keeping its 4 to 3 shape (6 rem by 4.5 rem, the design system's
-        --sides-w and --sides-h) down to nothing; the buttons keep their size. At 375 px and wider nothing moves. */
-      .ws-sides {
-        max-width: 100%;
-        grid-template-columns: auto minmax(0, var(--sides-w)) auto;
-      }
+      /* The Sides control's board drawing keeps its 4 to 3 shape (6 rem by 4.5 rem, the design system's --sides-w and
+        --sides-h) when the control narrows on a phone under 375 px (D419). The design system (v0.9.0) lets the
+        drawing's column give way but holds its row at --sides-h, so without this it turns into a tall strip
+        (49 by 72 px at 320 px). */
       .ws-sides__board {
         height: auto;
         aspect-ratio: 4 / 3;

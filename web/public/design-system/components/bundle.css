@@ -237,7 +237,7 @@
   only from H tall, the least height at which the header, the plan bar and the status bar, one row each,
   leave the 3D view 40 % of the screen: build-tokens.py derives H from the bars' tokens, and fails if this
   query says another (D75); scripts/sweep-side-by-side.py measures every short screen */
-@media (min-width:56rem) and (min-height:16.5rem),(min-aspect-ratio:4/3) and (min-width:48rem) and (min-height:16.5rem){
+@media (min-width:56rem) and (min-height:16.5rem),(min-aspect-ratio:4/3) and (min-width:40rem) and (min-height:16.5rem){
   .ws-workbench{grid-template-columns:minmax(0,1fr) min(var(--panel-width),50%);grid-template-rows:var(--header-h) calc(100svh - var(--header-h))}
   .ws-stage{display:flex;flex-direction:column;min-width:0;background:var(--surface)}
   .ws-stage__view{position:relative;flex:1}
@@ -274,7 +274,9 @@ code,kbd,samp,pre{font-family:var(--font-ui)}
   whole pixel for top and half a pixel for translate, which leaves it 1.25px low (measured) */
 .ws-ic{display:inline-block;margin-right:var(--icon-gap);font-style:normal;line-height:1;position:relative;top:calc(-1 * var(--icon-rise))}
 
-.ws-sides{display:grid;grid-template-columns:auto var(--sides-w) auto;grid-template-rows:auto var(--sides-h) auto;gap:var(--space-2);align-items:center;justify-items:center;width:max-content;margin-top:var(--space-2)}
+/* Sides fits the least sidebar (D98): where its buttons and the board drawing do not fit, the drawing gives way, its
+  column down to nothing; the buttons keep their size, the top and bottom ones centred over it */
+.ws-sides{display:grid;grid-template-columns:auto minmax(0,var(--sides-w)) auto;grid-template-rows:auto var(--sides-h) auto;gap:var(--space-2);align-items:center;justify-items:center;width:fit-content;margin-top:var(--space-2)}
 .ws-sides__board{grid-area:2/2;width:100%;height:100%;background:var(--surface-sunken);border:var(--line) dashed var(--border-strong);border-radius:var(--radius-sm)}
 .ws-sides__top{grid-area:1/2}.ws-sides__left{grid-area:2/1}.ws-sides__right{grid-area:2/3}.ws-sides__bottom{grid-area:3/2}
 .ws-sides__btn{display:inline-grid;grid-template-columns:auto auto;column-gap:calc(var(--icon-gap) + var(--ring));align-items:center;justify-content:start;min-height:var(--control-h);padding:0 var(--space-3);font:inherit;color:var(--ink);background:var(--surface-raised);border:var(--line) solid var(--border-strong);border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap}

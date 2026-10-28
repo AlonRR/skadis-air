@@ -39,6 +39,7 @@ const states = [
   { name: 'phone-sideways', device: 'iPhone 13 landscape' }, // side by side from v0.7.0 (D287)
   { name: 'short-wide', viewport: { width: 1280, height: 360 } }, // the plan bar beside the sidebar, short
   { name: 'sideways-844', viewport: { width: 844, height: 390 } }, // a large phone's size, held sideways
+  { name: 'sideways-740', viewport: { width: 740, height: 360 } }, // a phone held sideways, side by side from v0.9.0 (breakpoint 640 px)
   { name: 'narrow-320', viewport: { width: 320, height: 700 } },
   { name: 'no-webgl', viewport: wide, args: ['--disable-webgl', '--disable-webgl2', '--disable-3d-apis'] },
   { name: 'wide-building', viewport: wide, building: true }, // the old part while the next is made (C316)
