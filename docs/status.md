@@ -241,6 +241,10 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | Q515 | **The straight look is a choice on the lightened and skeleton boards, not two more board types** ("515 y but wht you choose skeleton or lightned its an option that shows up under with straight/square/grid or smoothed/curved not sure about the names"): a Look setting on the main form, Curved (today's, the starting value) or Straight (Q510); its names, Q518 | 28 Oct 2026 |
 | Q511 | **The screw size carries across the boards and the connectors** ("511 a one choice with advance allowing separate sizes"): one screw size everywhere, the sizes for each kind of place under Advanced as built (D479). Built 28 Oct 2026 (C550, C551, C552) | 28 Oct 2026 |
 | D439 | **The keyhole boards' weak spot gets (a)** ("439 a"): the root takes the hook's 2 mm of tab room near the board's back, 135 to 215 N modelled in PLA; built once a hook's tab is measured (T373, D414), as the option said | 28 Oct 2026 |
+| Q518 | **The Look setting keeps its suggested names** ("518 use your suggestion"): "Look", with "Curved" (today's boards, the start) and "Straight"; the file name gains `-straight` | 28 Oct 2026 |
+| D512 | **The skeleton's tests stay as they are** ("512 b"): the edge band at least 0.95 mm and the lightened board within 0.1 mm3 of its outline; D437's 24 % faster build is kept and the last facets are not taken | 28 Oct 2026 |
+| Q312 | **The Printables page's "No — fully human-made" was the owner's decision** ("312 yes due to how my use of llm is different than the intention that prusa have"); it replaces D236's "Yes — AI-assisted creation", and the page stays in the Designer Challenge | 28 Oct 2026 |
+| D313 | **A board's plastic is given in printed grams, sliced so** ("313 grams"), on the page, in the README, the Printables text and its picture, since the slicer prints the lightened board's members hollow and the skeleton's solid, so the volumes mislead (22 Oct 2026: solid 115.8 g, lightened 67.7 g, skeleton 69.6 g at 200 x 200 mm in PETG Basic) | 28 Oct 2026 |
 | D479 | **One screw size for every screw place** ("479 a"): `Screw size` in the main form, 4 mm with its 8 mm countersunk head to start; under Advanced, a size for each kind of place (keyholes, lock screws, the slot clip), each the same as the screw size unless set; lock screws start at 4 mm too, their slots grooved for the head. Built 24 Oct 2026 (C495 to C509): each kind of place is "Same as the screw size" or "Own" under Advanced; lock screws from 3 mm are countersunk, passing the slot through an 8.5 mm groove and seating on a 45 degree countersink (D370's (a)), and up to 2.5 mm keep the pan head; the slot keeps its 5.2 mm for 4.2 mm up from where a hook rests (a real hook unmeasured, D414); a board kept by an older page builds with 4 mm lock screws; pictures drawn by `node scripts/figures/shoot.mjs screw-groove` | 24 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
@@ -305,16 +309,6 @@ day (C293 to C295), is drawn from the library in [`figures/between-built/`](figu
 `node scripts/figures/shoot.mjs between-built`: the seams (b1), the standoffs (b2), lock screws alone (b3) and the
 clip (b4).
 
-- **D313** How the board types' plastic is given. The page, the README, the Printables text and its picture give each
-  board's model volume against the solid board's (lightened 40 %, skeleton 32 %), but a slicer prints the lightened
-  board's 3 mm members as hollow boxes, two perimeters a side and 15 % infill inside, while the skeleton's thin
-  I-beams print solid. Sliced 22 Oct 2026, 200 x 200 mm, PETG Basic, PrusaSlicer's 0.2 mm QUALITY @MK3 profile:
-  solid 115.8 g, lightened 67.7 g, skeleton 69.6 g at the profile's 15 % infill (model volumes at 1.27 g/cm3: 227,
-  93 and 74 g); at 100 % infill 227.9, 94.3 and 75.6 g. The owner noticed it first ("the sliced lightened used less
-  fillamet than the skeleton version"). (a) printed grams, sliced so; (b) volumes, called so, and grams beside them;
-  (c) no skeleton. Recommended (a). D314 is answered (c), 23 Oct 2026: the skeleton built so prints 55.80 g at
-  200 x 200 mm, sliced as above (C315).
-
 - **T215** Photos of printed parts for the Printables page. The page is public since 18:46:30 UTC on 22 Oct 2026
   (Printables' API, `datePublished`), published from the owner's browser after Q309, not by an agent (inferred: no
   agent click there), and in the Designer Challenge, its AI answer then "No — fully human-made" (seen 20:01 UTC).
@@ -359,11 +353,6 @@ clip (b4).
 - **Q418** Which phone can the share button be tested on: an iPhone, an Android phone, or both? Needed only if D417
   is (b) or (c).
 
-- **Q518** The Look setting's names (Q515): the label and its two options, on the lightened and skeleton boards' main
-  form. Suggested: "Look", with "Curved" (today's boards) and "Straight" (L1 and S1's lines); the file name gains
-  `-straight`. The owner's own words offered "straight/square/grid" and "smoothed/curved"; "Grid" is avoided as the page
-  already lays boards out on a wall grid.
-
 - **D519** The Straight skeleton at its thinnest settings (C538): with rims and webs at 1.2 mm and a 0.8 mm core, along
   an open side the edge band meets the webs beside the half slots only at the two 0.6 mm flanges, parted from them
   through the board's middle; one closed body still, and at the starting values, or with seams between the slots,
@@ -371,12 +360,6 @@ clip (b4).
   there, by easing just those corners or keeping the band's core whole round a half slot; (b) leave it, as those
   members are already under the 2 mm the page warns at. Recommended (a): a board the page makes without refusing should
   hold together through its depth.
-
-- **D512** The skeleton's last facets (D437, C483, C484): about 5 to 7 % more of a 400 x 400 mm board's facets go with a
-  coarser simplify (0.01 mm) or the step's arc in 3 runs, the shape moving up to 0.025 mm, but each fails one of two
-  existing tests: the edge band between the slots at least 0.95 mm wide, and the lightened board within 0.1 mm3 of its
-  outline (D282). (a) Loosen those two tests and take the facets; (b) keep the tests, and the 24 % faster build already
-  gained. Recommended (b): the tests guard real minimums, and a few percent is little.
 
 - **D414** T320 and T151 hang IKEA hooks, and the owner has none (24 Oct 2026). (a) Buy a pack of SKÅDIS hooks (the
   owner's step), which also lets T373 measure one; (b) print SKÅDIS hooks, weaker than steel, so a broken hook tests
@@ -393,11 +376,6 @@ clip (b4).
 
 - **A321** After T320, release the skeleton D408 chooses, with its files and pictures on Printables and D313's grams in
   the text and the board-types picture. First asked for `v0.5.0`, which D353 released without it.
-
-- **Q312** The Printables page's answer to "was AI used" read "No — fully human-made" once the owner had published it
-  (22 Oct 2026), and the page was in the Designer Challenge. Was that the owner's decision? If so it replaces D236
-  ("Yes — AI-assisted creation"); if not, setting it back takes the page out of the contest, whose rules refuse a
-  model so labelled (Q309). No agent sets that answer.
 
 ## Inputs from outside this repository
 

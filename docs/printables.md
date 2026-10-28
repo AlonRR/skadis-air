@@ -13,7 +13,8 @@ it out of every contest**: on 22 Oct 2026 the model page's Contests button liste
 Challenge: Pegboard Wall Organizers among them, with "This model cannot be added to the contest. According to the
 rules, only non-AI-generated models can be entered." (Q309). When the owner published the page, its answer had
 become "No — fully human-made" and it was in the Designer Challenge (seen in the editor and on the model page at 20:01
-UTC on 22 Oct 2026; not an agent's change). Its files
+UTC on 22 Oct 2026; not an agent's change), the owner's decision (Q312, 28 Oct 2026: "due to how my use of llm is
+different than the intention that prusa have"), which replaces D236's answer. Its files
 come from `npm run printables`, which writes them into `.check/printables/` from the release and checks each one;
 the picture of the page from `scripts/printables/write-images.mjs`, run against the built page while it is served, and
 the others from `scripts/printables/write-gallery.mjs` (the owner, 22 Oct 2026: "add images of features and board types
