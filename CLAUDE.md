@@ -32,7 +32,14 @@ built in TypeScript on Manifold and run in the browser.
   never as a Markdown ordered-list marker. `A` approval, `D` decision with a recommendation,
   `Q` a fact or preference, `T` a manual step for the owner. One number pool across all letters,
   shared with the `C` choices. End every reply with the open items, each item's pictures and files inline in its
-  own line as paths (`docs/figures/...`, `.check/test-print/...`), not in a separate list (the owner, 28 Oct 2026).
+  own line, not in a separate list (the owner, 28 Oct 2026). Every file is its own full repo-relative path in
+  backticks, so it is a link, even when several share a folder: no plain-text paths and no bare file names. For
+  example:
+
+  ```markdown
+  - **D439:** the keyhole boards' weak spot (`docs/figures/explain-2026-10-24/d439-a-room-cutaway.png`, `docs/figures/explain-2026-10-24/d439-b-stress.png`): (a) round it once a hook is measured (recommended), (b) a relief cut, (c) as it is.
+  ```
+
 - **A picture sent for an open item lives in `docs/figures/`, committed, until the item closes** (the owner,
   28 Oct 2026), never only in a worktree's `.check/`, which cleanup removes. Its folder's README names the item.
 - **Every SKÅDIS number comes from a cited source** and stays `<<CONFIRM>>` until the owner has
