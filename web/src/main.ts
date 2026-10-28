@@ -16,6 +16,7 @@ import { allPanelsText, panelText, type PanelLine, type Reply, type Request } fr
 import { carriedAcrossGroups, loadChoices, saveChoices, startingValues } from './choices.js';
 import { choiceGroup, chosenIn, labelledChoice, renderForm, type Form } from './form.js';
 import { saveFile } from './download.js';
+import { gramsLine } from './grams.js';
 import { mountPreview } from './preview.js';
 import { mountPrinter } from './printer.js';
 import { mountTheme } from './theme.js';
@@ -46,6 +47,7 @@ const sizeLine = document.querySelector<HTMLElement>('[data-testid="board-size"]
 const downloadButton = document.querySelector<HTMLButtonElement>('[data-testid="download-stl"]');
 const printerBox = document.querySelector<HTMLElement>('[data-testid="printer"]');
 const machineBox = document.querySelector<HTMLElement>('[data-testid="printer-machine"]'); // its printers (D257)
+const gramsNote = document.querySelector<HTMLElement>('[data-testid="board-grams"]'); // the sample's grams (D313)
 const bedWarning = document.querySelector<HTMLElement>('[data-testid="bed-warning"]');
 const printList = document.querySelector<HTMLElement>('[data-testid="print-list"]'); // a wall's panels (D178)
 const formatChoice = document.querySelector<HTMLElement>('[data-testid="file-format"]'); // STL or 3MF (D181)
@@ -98,10 +100,19 @@ function screwsOf(type: AnyBoardType, values: Parameters<AnyBoardType['build']>[
   }
 }
 
+/** The sample board's printed grams under the form (D313), for a board the file has a figure for; nothing otherwise. */
+function showGrams(type: AnyBoardType, values: { look?: unknown }): void {
+  if (gramsNote === null) return;
+  const line = gramsLine(type.id, values);
+  gramsNote.textContent = line;
+  gramsNote.hidden = line === '';
+}
+
 function rebuild(type: AnyBoardType, form: Form): void {
   const read = readValues(type.settings, form.read());
   form.show(read.ok ? [] : read.errors, read.warnings);
   if (read.ok) form.screws(screwsOf(type, read.values));
+  showGrams(type, read.ok ? read.values : {});
   const what = groupOf(type) === 'connector' ? 'connector' : 'board';
   // the bed is a field of the form like any other: one it cannot use refuses the build, its message on its field (Q4),
   // where the part had been made, and a wall cut, for the default bed

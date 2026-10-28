@@ -1,0 +1,12 @@
+{
+  "sample": "a 200 x 200 mm board at its starting values, face down, sliced for a Prusa MK3S, 0.2 mm QUALITY profile",
+  "filament": "PETG Basic NPETG087-ZX",
+  "sizeMm": 200,
+  "gramsByBoard": {
+    "solid": 115.75,
+    "lightened-curved": 67.65,
+    "lightened-straight": 66.83,
+    "skeleton-curved": 69.56,
+    "skeleton-straight": 67.39
+  }
+}
