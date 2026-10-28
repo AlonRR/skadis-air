@@ -210,6 +210,8 @@ area in orange, into `.check/figures/<pass>/` (`boards-pass`, 21 Oct 2026; `boar
 `standoff-foot`, 24 Oct 2026, the 1-board standoff's foot, C467; `screw-groove`, 24 Oct 2026, the lock screws' groove and seat, D479; `keyhole-pass`, 23 Oct 2026, every face past 45 degrees down in orange, as the part prints, retired when its options'
 switches went, C385); a review copies them into `docs/figures/`. A scene seen from the back sets `camera.up`. A pass may
 build its scenes from deeper modules of the library's build than `kit.lib` gives, as `keyhole-pass` did.
+`node scripts/figures/screw-form.mjs <page address> <folder>` shoots the screw settings on the built page, six states
+on a wide screen and a phone (D479); serve the page with `--strictPort` and check it is the build's before shooting.
 
 ## The test print
 
