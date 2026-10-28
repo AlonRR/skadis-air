@@ -78,7 +78,6 @@ export function build(kit) {
   }
   const figures = join(process.cwd(), '.check', 'figures', 'straight-boards');
   mkdirSync(figures, { recursive: true });
-  writeFileSync(join(figures, 'numbers.json'), `${JSON.stringify(numbers, null, 2)}
-`);
+  writeFileSync(join(figures, 'numbers.json'), `${JSON.stringify(numbers, null, 2)}\n`);
   return scenes;
 }
