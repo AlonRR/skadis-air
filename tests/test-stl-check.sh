@@ -47,6 +47,9 @@ apart = [tuple((p[0] + 20, p[1], p[2]) for p in t) for t in [tuple(v[i] for i in
 for name in ("two.stl", "two-declared.stl", "two-miscounted.stl"):
     write(name, [tuple(v[i] for i in f) for f in faces] + apart)
 (out / "two-declared.parts").write_text("2")
+far = [tuple((p[0] + 190, p[1], p[2]) for p in t) for t in [tuple(v[i] for i in f) for f in faces]]
+write("two-far.stl", [tuple(v[i] for i in f) for f in faces] + far)  # 200 mm across, a 250 mm bed's edges
+(out / "two-far.parts").write_text("2")
 (out / "two-miscounted.parts").write_text("3")
 PY
 
@@ -71,6 +74,23 @@ expect 1 degenerate.stl "a cube with a facet whose corners are two of one point 
 expect 1 two.stl "two cubes apart, with nothing to say so, fail as two parts"
 expect 0 two-declared.stl "two cubes apart pass when two-declared.parts says 2"
 expect 1 two-miscounted.stl "two cubes apart fail when two-miscounted.parts says 3"
+# The parts of a plate are arranged together round the bed's middle, as the slicer's arrange does, not left where the
+# STL put them: a plate's parts near the bed's edges print worse (the owner, 28 Oct 2026). Measured on what is printed,
+# the first layer change on, so the purge line in front of the bed does not count.
+bash "$root/scripts/checks/stl-check.sh" "$tmp/two-far.stl" > "$tmp/out.txt" 2>&1
+span=$(awk '/^;LAYER_CHANGE/ {on = 1} on && /^G1/ && / E[0-9.]/ {
+    for (i = 1; i <= NF; i++) if ($i ~ /^X/) { x = substr($i, 2) + 0; if (n == 0 || x < lo) lo = x; if (n == 0 || x > hi) hi = x; n++ }
+  } END { printf "%.0f", hi - lo }' "$tmp/two-far.gcode" 2> /dev/null)
+if [ -n "$span" ] && [ "$span" -lt 60 ]; then
+  pass=$((pass + 1))
+  printf '  ok    two cubes 200 mm apart are printed together, %s mm across
+' "$span"
+else
+  fail=$((fail + 1))
+  printf '  FAIL  two cubes 200 mm apart are printed %s mm across, not arranged together
+' "${span:-?}"
+  sed 's/^/        /' "$tmp/out.txt"
+fi
 echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

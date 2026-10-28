@@ -23,6 +23,7 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- The STL check slices each plate with its parts split, so the slicer arranges them together round the bed's middle rather than where the plate put them, as parts near the bed's edges print worse.
 - The screw size carries across the boards and the connectors, one choice everywhere: set on a board it is the
   slot clip's and the standoff's, and back (Q511, C550). The sizes under Advanced for each kind of place, and every
   other setting, still carry only within their group.

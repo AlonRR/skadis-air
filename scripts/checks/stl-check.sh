@@ -78,8 +78,10 @@ for stl in "$@"; do
 
   gcode="${stl%.stl}.gcode"
   rm -f "$gcode"
-  if "$PSLICER" --export-gcode --datadir "$DATADIR" --printer-profile "$PRINTER" \
-    --print-profile "$PRINT_PROFILE" --material-profile "$FILAMENT" -o "$gcode" "$stl" > /dev/null 2>&1 && [ -s "$gcode" ]; then
+  # --split: each part its own object, so the slicer arranges them together round the bed's middle, as its Arrange
+  # does, rather than where the STL put them; parts near the bed's edges print worse (the owner, 28 Oct 2026)
+  if "$PSLICER" --export-gcode --datadir "$DATADIR" --printer-profile "$PRINTER" --print-profile "$PRINT_PROFILE" \
+    --material-profile "$FILAMENT" --split -o "$gcode" "$stl" > /dev/null 2>&1 && [ -s "$gcode" ]; then
     g() { grep -E "^; $1 = " "$gcode" | head -1 | sed 's/.*= //'; }
     echo "  slice: $(grep -E '^; estimated printing time \(normal' "$gcode" | sed 's/^; //'); $(grep -E '^; total filament used \[g' "$gcode" | sed 's/^; //')"
     [ "$(g skirts)" = "0" ] || {

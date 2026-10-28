@@ -230,7 +230,9 @@ writes the slot clip's and the standoff's trial grips alone, `keyhole` the keyho
 writes all three sets, test plate, trial plate and Printables files, unsliced, as CI does (C299). `FILAMENT="<preset>" bash scripts/checks/stl-check.sh <stl>` slices a
 plate with another filament, the G-code beside it. Slice it with the filament that is **loaded**, which only the
 owner knows: ask, never assume the STL check's ASA. One STL, because PrusaSlicer's command line slices each input
-file on its own (two files and one `-o` left only the second, and `--merge` wrote nothing, 14 Oct 2026). The owner's printer is driven by the 3d-printing
+file on its own (two files and one `-o` left only the second, and `--merge` wrote nothing, 14 Oct 2026). The STL check slices with `--split`, so the slicer arranges a plate's parts
+together round the bed's middle, as its Arrange does: parts near the bed's edges print worse (the owner, 28 Oct 2026),
+and one STL's parts otherwise keep the plate writer's layout, the grips-and-keyhole plate X 9 to 241 mm of 250. The owner's printer is driven by the 3d-printing
 repository's `scripts/mk3s-resume/upload_resume.py` (uploads, never starts, never overwrites) and then
 `start_print.py` (starts only the same-size file on an idle printer, and reads the job back); both read the address
 and key from PrusaSlicer's physical-printer profile and print neither. Starting a print is the owner's request each
