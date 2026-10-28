@@ -364,6 +364,14 @@ clip (b4).
   `-straight`. The owner's own words offered "straight/square/grid" and "smoothed/curved"; "Grid" is avoided as the page
   already lays boards out on a wall grid.
 
+- **D519** The Straight skeleton at its thinnest settings (C538): with rims and webs at 1.2 mm and a 0.8 mm core, along
+  an open side the edge band meets the webs beside the half slots only at the two 0.6 mm flanges, parted from them
+  through the board's middle; one closed body still, and at the starting values, or with seams between the slots,
+  nothing parts. The Curved skeleton's blends keep them joined at every setting. (a) Join them through the whole depth
+  there, by easing just those corners or keeping the band's core whole round a half slot; (b) leave it, as those
+  members are already under the 2 mm the page warns at. Recommended (a): a board the page makes without refusing should
+  hold together through its depth.
+
 - **D512** The skeleton's last facets (D437, C483, C484): about 5 to 7 % more of a 400 x 400 mm board's facets go with a
   coarser simplify (0.01 mm) or the step's arc in 3 runs, the shape moving up to 0.025 mm, but each fails one of two
   existing tests: the edge band between the slots at least 0.95 mm wide, and the lightened board within 0.1 mm3 of its
