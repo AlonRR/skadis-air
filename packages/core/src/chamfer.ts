@@ -99,6 +99,43 @@ export function grownRing(ring: readonly Vec2[], amounts: readonly number[]): Ve
   return to;
 }
 
+/** How far a ring must turn at a point, radians, for cornerRing to take it for a corner: 30 degrees. */
+const CORNER_TURN_RAD = Math.PI / 6;
+
+/**
+ * A ring's points moved by its edges' amounts, `amounts[i]` the edge from point i to the next, into the region on the
+ * ring's left where positive: where the ring turns by 30 degrees or more, a corner, the point goes where its two edges,
+ * each moved by its own amount, meet, as movedRing puts it, so each edge moves by its own amount right into the corner;
+ * where it turns less, along a curve or where an arc runs on nearly straight into a line, by the mean of its two
+ * edges' amounts along their mitre, as grownRing moves it, since two near-straight-on edges moved by different
+ * amounts meet far off. Refuses a move that turns an edge round.
+ */
+export function cornerRing(ring: readonly Vec2[], amounts: readonly number[]): Vec2[] {
+  const n = ring.length;
+  const at = (i: number): Vec2 => ring[((i % n) + n) % n] ?? [0, 0];
+  const by = (i: number) => amounts[((i % n) + n) % n] ?? 0;
+  const corner = Math.cos(CORNER_TURN_RAD);
+  const to = ring.map((p, i): Vec2 => {
+    const [n1, n2] = [left(at(i - 1), p), left(p, at(i + 1))];
+    const [d1, d2] = [by(i - 1), by(i)];
+    const dot = n1[0] * n2[0] + n1[1] * n2[1];
+    if (dot > corner) {
+      const k = (d1 + d2) / 2 / (1 + dot);
+      return [p[0] + k * (n1[0] + n2[0]), p[1] + k * (n1[1] + n2[1])];
+    }
+    const det = n1[0] * n2[1] - n1[1] * n2[0];
+    return [p[0] + (d1 * n2[1] - d2 * n1[1]) / det, p[1] + (n1[0] * d2 - n2[0] * d1) / det];
+  });
+  for (let i = 0; i < n; i++) {
+    const [a, b] = [at(i), at(i + 1)];
+    const [a2, b2] = [to[i] ?? a, to[(i + 1) % n] ?? b];
+    if ((b[0] - a[0]) * (b2[0] - a2[0]) + (b[1] - a[1]) * (b2[1] - a2[1]) <= 0) {
+      throw new RangeError(`A ${Math.abs(by(i))} mm move is larger than the outline takes`);
+    }
+  }
+  return to;
+}
+
 /**
  * Each point of the outline moved into the solid: to where its two edges, each moved in parallel by its own amount,
  * meet. The solid lies left of every ring as an outline gives them, its outer rings anticlockwise and its holes

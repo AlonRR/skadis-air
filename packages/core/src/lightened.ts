@@ -15,9 +15,17 @@ import { stadium } from './rings.js';
 import { GRID_PITCH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import { slotPlaces } from './slots.js';
 
+/**
+ * How a pocket's corners are drawn: on the long eased curves of today's boards (D278), or as the first boards had them
+ * (Q510), 1 mm round, as the lightened board's L1, or sharp, as the skeleton's S1, each pocket's straight sides and
+ * the arcs round its rims meeting where they meet.
+ */
+export type PocketCorners = 'eased' | 'round' | 'sharp';
+
 export interface LatticeParams {
   rimMm: number; // round each slot, from its edge at the face, outside its chamfer (D143)
   webMm: number; // the diagonal webs' width (D143)
+  corners?: PocketCorners; // eased unless said (D278); the straight-line boards' round or sharp (Q510)
 }
 
 export const LATTICE_DEFAULTS: LatticeParams = { rimMm: 3, webMm: 3 }; // D143
@@ -30,8 +38,12 @@ export const WARN_MEMBER_MM = 2;
 /** Each pocket's sharp corners run on a parabola this far along both sides (D278), so a web runs on into a rim on
  * a long eased curve, as the practice asks, not on a short round; held short of halfway to the next corner. */
 export const BLEND_LEG_MM = 3;
-/** What is left of a pocket narrower than twice this is dropped: too narrow to print. */
+/** What is left of a pocket narrower than twice this is dropped: too narrow to print. The straight lightened board's
+ * pocket corners are rounded to it, as L1's were (Q510). */
 export const POCKET_CORNER_MM = 1;
+/** How far a sharp corner's mitre may reach, over the offset, before it is cut square: a pocket's corner of 11.5
+ * degrees or more stays sharp through the sharp corners' opening (Q510); the lattice's are 45 degrees or more. */
+const SHARP_MITRE_LIMIT = 10;
 
 /** The lattice asked for, with the starting values filled in, refused when a member is under the minimum. */
 export function latticeParams(given: Partial<LatticeParams>): LatticeParams {
@@ -50,11 +62,17 @@ export interface Members {
   rimGrowMm: number; // how far the rim reaches out from the slot's drawn edge
   webMm: number;
   bandMm: number; // the band along every edge
+  corners: PocketCorners; // how the pockets' corners are drawn
 }
 
 /** The lightened board's members, the same all through it (D143, D144). */
 export function latticeMembers(board: SolidBoardParams, lattice: LatticeParams): Members {
-  return { rimGrowMm: board.slotChamferMm + lattice.rimMm, webMm: lattice.webMm, bandMm: EDGE_BAND_MM };
+  return {
+    rimGrowMm: board.slotChamferMm + lattice.rimMm,
+    webMm: lattice.webMm,
+    bandMm: EDGE_BAND_MM,
+    corners: lattice.corners ?? 'eased',
+  };
 }
 
 /** A bar `width` wide from one point to another, its ends square: one web. */
@@ -112,6 +130,16 @@ export function pocketShape(
   const face = keep(new CrossSection([boardFace(board)], 'Positive'));
   const inner = keep(face.offset(-members.bandMm, 'Round'));
   const pockets = keep(inner.subtract(kept));
+  if (members.corners !== 'eased') {
+    // As the first boards drew them (Q510): shrink and grow back by the same amount, which drops any sliver of pocket
+    // too narrow to print, rounding each corner 1 mm as L1 did, or, mitred, leaving it sharp, as S1's were
+    const join = members.corners === 'round' ? 'Round' : 'Miter';
+    const shrunk = keep(pockets.offset(-POCKET_CORNER_MM, join, SHARP_MITRE_LIMIT));
+    const opened = keep(shrunk.offset(POCKET_CORNER_MM, join, SHARP_MITRE_LIMIT));
+    const simple = opened.simplify(0.005);
+    for (const c of made) c.delete();
+    return simple;
+  }
   // Each sharp corner on a parabola (D278); then shrink and grow back by the same amount, which drops any sliver of
   // pocket too narrow to print and leaves the blends, wider than that, as they are. Growing back adds an arc's points
   // at each of a blend's, which doubled the build's time: the points within 5 microns of the line through their

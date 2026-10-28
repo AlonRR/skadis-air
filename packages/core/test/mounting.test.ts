@@ -5,6 +5,7 @@ import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { afterAll, describe, expect, it } from 'vitest';
 import { makeSolidBoard, solidBoardParams, type SolidBoardParams } from '../src/board-solid.js';
 import { LIGHTENED, SKELETON, SOLID } from '../src/board-types/index.js';
+import { LATTICE_LOOKS } from './looks.js';
 import { loadEngine } from '../src/engine.js';
 import {
   bottomSlotPlaces,
@@ -746,7 +747,7 @@ describe('between the slots (D289, D371)', () => {
   }
 
   it('keeps a lattice board solid round each place, its pad there with it (D144)', () => {
-    for (const type of [LIGHTENED, SKELETON]) {
+    for (const type of LATTICE_LOOKS) {
       for (const sides of [ALL_OPEN, CLOSED, { ...CLOSED, left: 'open', bottom: 'open' }] as const) {
         const values = {
           ...defaultValues(type.settings),

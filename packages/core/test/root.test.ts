@@ -9,6 +9,7 @@ import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { afterAll, describe, expect, it } from 'vitest';
 import { makeSolidBoard, solidBoardParams, type SolidBoardParams } from '../src/board-solid.js';
 import { LIGHTENED, SKELETON, SOLID } from '../src/board-types/index.js';
+import { LATTICE_LOOKS } from './looks.js';
 import { EDGE_CHAMFER_MM } from '../src/chamfer.js';
 import { loadEngine } from '../src/engine.js';
 import {
@@ -212,7 +213,7 @@ describe('on a lattice board (D375, D306)', () => {
   });
 
   it('runs out from each round standoff over its pad, which nothing is cut from (D144)', () => {
-    for (const type of [LIGHTENED, SKELETON]) {
+    for (const type of LATTICE_LOOKS) {
       const board = keep(type.build(engine, { ...defaultValues(type.settings), ...common('through') }));
       for (const place of screwPlaces({ columns: 3, rows: 3, sides: CLOSED })) {
         const where = `${type.id} at ${place.join(', ')}`;
@@ -226,7 +227,7 @@ describe('on a lattice board (D375, D306)', () => {
 
   it('runs out from each standoff behind a slot where a web meets the frame round its slot, which it fills (D306)', () => {
     const grid = { columns: 3, rows: 3, sides: CLOSED };
-    for (const type of [LIGHTENED, SKELETON]) {
+    for (const type of LATTICE_LOOKS) {
       for (const given of [{ screwHead: 'keyhole' }, { screwHead: 'lock' }] as const) {
         const board = keep(type.build(engine, { ...defaultValues(type.settings), ...common('through'), ...given }));
         for (const place of [...keyholePlaces(grid), ...bottomSlotPlaces(grid)]) {
@@ -238,10 +239,10 @@ describe('on a lattice board (D375, D306)', () => {
         }
       }
     }
-  });
+  }, 120_000); // 8 boards, the two lattice types in both looks with 2 heads: past 20 s beside the rest
 
   it('never runs out over a pocket: behind the back and in its first 0.3 mm, nothing the members do not have', () => {
-    for (const type of [LIGHTENED, SKELETON]) {
+    for (const type of LATTICE_LOOKS) {
       for (const seams of ['through', 'between'] as const) {
         for (const given of [
           { screwHead: 'countersunk' },
@@ -262,7 +263,7 @@ describe('on a lattice board (D375, D306)', () => {
         }
       }
     }
-  });
+  }, 120_000); // 24 boards, the two lattice types in both looks, each with 2 seams and 3 heads: 16 s alone, 62 s beside the rest
 });
 
 describe("the slot clip's posts, their roots on its bar (D375)", () => {

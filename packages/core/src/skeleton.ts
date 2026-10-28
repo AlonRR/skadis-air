@@ -13,7 +13,7 @@
 // 160 x 160 mm board, slabs whose faces lie on each other being Manifold's slow case.
 import type { Manifold, Vec2 } from 'manifold-3d';
 import { boardFace, type BoardCuts, extentOf, makeSolidBoard, type SolidBoardParams } from './board-solid.js';
-import { grownRing } from './chamfer.js';
+import { cornerRing, grownRing } from './chamfer.js';
 import type { Engine } from './engine.js';
 import {
   bothCuts,
@@ -52,8 +52,13 @@ export const MAX_CORE_MM = EDGE_BAND_MM;
 /** The skeleton asked for, with the starting values filled in, refused when it cannot be made. */
 export function skeletonParams(given: Partial<SkeletonParams>): SkeletonParams {
   const { coreMm, ...lattice } = given;
-  const { rimMm, webMm } = latticeParams(lattice);
-  const p: SkeletonParams = { rimMm, webMm, coreMm: coreMm ?? SKELETON_DEFAULTS.coreMm };
+  const { rimMm, webMm, corners } = latticeParams(lattice);
+  const p: SkeletonParams = {
+    rimMm,
+    webMm,
+    coreMm: coreMm ?? SKELETON_DEFAULTS.coreMm,
+    ...(corners === undefined ? {} : { corners }),
+  };
   if (!(p.coreMm >= MIN_CORE_MM)) throw new RangeError(`The core must be at least ${MIN_CORE_MM} mm wide`);
   if (p.coreMm > p.rimMm || p.coreMm > p.webMm || p.coreMm > MAX_CORE_MM) {
     throw new SettingsProblem(`The core cannot be wider than the rim, the webs or the ${MAX_CORE_MM} mm edge band`, [
@@ -216,8 +221,15 @@ export function skeletonMembers(
         return [
           z,
           rings.map((ring, r) => {
-            // each point by the mean of its two edges' widening, so it changes smoothly along a blend
             const edges = most[r] ?? [];
+            // sharp corners, as S1's (Q510): each edge moved by its own member's widening and the points where the
+            // edges meet, so a web's side, one edge from corner to corner, narrows to the web's core and no more
+            if (members.corners === 'sharp')
+              return cornerRing(
+                ring,
+                edges.map((m) => -Math.min(m, into)),
+              );
+            // each point by the mean of its two edges' widening, so it changes smoothly along a blend
             const points = edges.map((m, i) => (m + (edges[(i - 1 + edges.length) % edges.length] ?? m)) / 2);
             return grownRing(
               ring,

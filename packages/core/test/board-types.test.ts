@@ -532,12 +532,13 @@ describe('the lightened board type (D141 to D145)', () => {
     expect(groupOf(lightened)).toBe('board');
   });
 
-  it("takes every one of the solid board's settings, at the same starting values, and its own rim and web", () => {
+  it("takes every one of the solid board's settings, at the same starting values, and its own look, rim and web", () => {
     const own = lightened.settings.map((s) => s.key);
-    const shared = own.filter((k) => k !== 'rimMm' && k !== 'webMm');
+    const shared = own.filter((k) => k !== 'look' && k !== 'rimMm' && k !== 'webMm');
     expect(shared).toEqual(solid.settings.map((s) => s.key));
-    const { rimMm, webMm, ...rest } = defaultValues(lightened.settings);
+    const { look, rimMm, webMm, ...rest } = defaultValues(lightened.settings);
     expect([rimMm, webMm]).toEqual([3, 3]); // D143
+    expect(look).toBe('curved'); // Q510: today's board unless Straight is chosen
     expect(rest).toEqual(defaultValues(solid.settings));
   });
 

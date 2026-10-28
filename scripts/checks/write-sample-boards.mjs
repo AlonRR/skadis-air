@@ -119,6 +119,38 @@ const samples = [
     type: skeleton,
     values: { ...skeletonAt(240, 200, open), rimMm: 1.2, webMm: 1.2, coreMm: 0.8 },
   },
+  // the straight look (Q510): at the start, closed with keyholes and lock screws, and at its thinnest on the largest board
+  {
+    name: 'lightened-straight-default',
+    type: lightened,
+    values: { ...defaultValues(lightened.settings), look: 'straight' },
+  },
+  {
+    name: 'skeleton-straight-default',
+    type: skeleton,
+    values: { ...defaultValues(skeleton.settings), look: 'straight' },
+  },
+  {
+    name: 'skeleton-straight-3x2-closed-keyholes',
+    type: skeleton,
+    values: {
+      ...skeletonAt(120, 80, closed),
+      look: 'straight',
+      screwHead: 'keyhole',
+      lockScrews: 'bottom',
+      standoffs: 'back',
+    },
+  },
+  {
+    name: 'lightened-straight-6x5-open-thinnest',
+    type: lightened,
+    values: { ...lightenedAt(240, 200, open), look: 'straight', rimMm: 1.2, webMm: 1.2 },
+  },
+  {
+    name: 'skeleton-straight-6x5-open-thinnest',
+    type: skeleton,
+    values: { ...skeletonAt(240, 200, open), look: 'straight', rimMm: 1.2, webMm: 1.2, coreMm: 0.8 },
+  },
   // open sides between the slots (D282, D288 a), each corner's fixing where its sides leave room (D289 a)
   { name: 'solid-3x2-between-open', type: solid, values: { ...solidAt(120, 80, open), seams: 'between' } },
   {

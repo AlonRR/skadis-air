@@ -2,7 +2,7 @@
 // extruded with a 45 degree chamfer round its bottom and its top edges. Each claim is measured on the solid.
 import type { CrossSection, Manifold, Vec2 } from 'manifold-3d';
 import { afterAll, describe, expect, it } from 'vitest';
-import { chamferedExtrusion, longBlend } from '../src/chamfer.js';
+import { chamferedExtrusion, cornerRing, longBlend, movedRing } from '../src/chamfer.js';
 import { loadEngine } from '../src/engine.js';
 import { meshOf } from '../src/stl.js';
 import { degenerateFacets } from './facets.js';
@@ -106,5 +106,62 @@ describe('longBlend', () => {
     expect(meet).toBeDefined();
     // every point of the curve is outside the round or on it
     for (const [s, t] of ring) expect(s * s + t * t).toBeGreaterThan(100 - 1e-6);
+  });
+});
+
+describe('cornerRing (Q510): a ring moved edge by edge, each corner where its two moved edges meet', () => {
+  /** How far apart two rings' points are, at most. */
+  const apart = (got: Vec2[], want: Vec2[]) =>
+    got.length === want.length
+      ? Math.max(...got.map((p, i) => Math.hypot(p[0] - (want[i]?.[0] ?? NaN), p[1] - (want[i]?.[1] ?? NaN))))
+      : Infinity;
+
+  it('moves each edge of a square by its own amount, right into the corners', () => {
+    const square: Vec2[] = [
+      [0, 0],
+      [10, 0],
+      [10, 10],
+      [0, 10],
+    ];
+    // edges bottom, right, top, left: 1, 2, 1, 2 mm into the square
+    const want: Vec2[] = [
+      [2, 1],
+      [8, 1],
+      [8, 9],
+      [2, 9],
+    ];
+    expect(apart(cornerRing(square, [1, 2, 1, 2]), want)).toBeLessThan(1e-9);
+    // the control: alike, 1.5 mm each, the corners are elsewhere
+    expect(apart(cornerRing(square, [1.5, 1.5, 1.5, 1.5]), want)).toBeGreaterThan(0.5);
+  });
+
+  it('moves a point where the ring turns less than 30 degrees by the mean of its edges, where movedRing goes far off', () => {
+    // a bottom edge bent up by 10 degrees at x = 5, its two halves moved 1 and 2 mm
+    const rise = 5 * Math.tan((10 * Math.PI) / 180);
+    const bent: Vec2[] = [
+      [0, 0],
+      [5, 0],
+      [10, rise],
+      [10, 10],
+      [0, 10],
+    ];
+    const amounts = [1, 2, 1, 1, 1];
+    const p = cornerRing(bent, amounts)[1] ?? [NaN, NaN];
+    const off = (q: Vec2) => Math.hypot(q[0] - 5, q[1]);
+    // about 1.5 mm, the mean, along the mitre
+    expect(off(p)).toBeGreaterThan(1.45);
+    expect(off(p)).toBeLessThan(1.55);
+    // the control: where the two moved edges meet is so far off that an edge beside it turns round
+    expect(() => movedRing(bent, amounts)).toThrow(RangeError);
+  });
+
+  it('refuses a move larger than the ring takes', () => {
+    const square: Vec2[] = [
+      [0, 0],
+      [10, 0],
+      [10, 10],
+      [0, 10],
+    ];
+    expect(() => cornerRing(square, [6, 6, 6, 6])).toThrow(RangeError);
   });
 });
