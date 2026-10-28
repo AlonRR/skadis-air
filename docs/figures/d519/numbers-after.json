@@ -1,0 +1,30 @@
+{
+  "board": "skeleton, Straight, 240 x 200 mm, rims and webs 1.2 mm, core 0.8 mm",
+  "outlinesAtFaces": 126,
+  "outlinesAtMiddle": 126,
+  "genus": 125,
+  "places": 0,
+  "placesRecordedBefore": 20,
+  "placesJoined": 20,
+  "closeUp": {
+    "at": [
+      43.57,
+      2.93
+    ],
+    "jointAtMiddleMm": 0.8,
+    "cutAcrossAtX": 43,
+    "holesInCutAcross": 0
+  },
+  "curvedThin": {
+    "outlinesAtFaces": 126,
+    "outlinesAtMiddle": 126,
+    "genus": 125,
+    "places": 0
+  },
+  "straightStart": {
+    "outlinesAtFaces": 126,
+    "outlinesAtMiddle": 126,
+    "genus": 125,
+    "places": 0
+  }
+}

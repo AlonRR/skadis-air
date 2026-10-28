@@ -10,9 +10,17 @@
 // largest; the depths it parts between are where the section's outline count leaves the faces' count. Also writes what
 // it found into .check/figures/d519/numbers.json.
 //
+// Once the board is joined (D519 a, C580), it finds no places, says what it found instead, and draws the same pictures
+// "after", `d519-<n>-<name>-after`, at the places the committed docs/figures/d519/numbers.json recorded before, with
+// what it measures there now in .check/figures/d519/numbers-after.json. Run on a library that still parts, it draws
+// the "before" pictures, as committed.
+//
 //   node scripts/figures/shoot.mjs d519
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const thisDir = dirname(fileURLToPath(import.meta.url));
 
 const T = 5; // the board's thickness at its starting value
 const MID = T / 2;
@@ -115,7 +123,7 @@ export function build(kit) {
   const others = { curved: partings(kit, curved), start: partings(kit, start) };
   const { places, islands, zLow, zHigh } = found;
   if (places.length === 0 || islands.length === 0 || zLow === undefined || zHigh === undefined)
-    throw new Error('d519: the thin Straight skeleton does not part; C538 no longer holds');
+    return drawJoined(kit, { thin, curved, start, found, others });
 
   // the place the close-ups are drawn at: the left end of the bottom edge's first parted band
   const band = islands
@@ -319,6 +327,199 @@ export function build(kit) {
         { text: 'the hole, from the half slot into the pocket', at: [x, yMid, MID], dx: 170, dy: -190 },
       ],
       meshes: [mesh(slab, COLOURS.grey), mesh(face, COLOURS.pale), mesh(fill, COLOURS.orange)],
+    });
+  }
+  return scenes;
+}
+
+/** The same pictures after D519 a (C580): the board joined, drawn at the places the committed numbers.json recorded
+ * before it was, and what it measures there now. */
+function drawJoined(kit, { thin, curved, start, found, others }) {
+  const { box, mesh, COLOURS, Manifold, CrossSection } = kit;
+  console.log(
+    `d519: the thin Straight skeleton does not part: ${found.faceCount} outlines at both faces and ${found.midCount} ` +
+      `at mid-depth, genus ${found.genus}, ${found.places.length} places; drawing it after, at the places recorded before`,
+  );
+  const was = JSON.parse(readFileSync(join(thisDir, '..', '..', 'docs', 'figures', 'd519', 'numbers.json'), 'utf8'));
+  const { placesAt: places, partedBands, partedFromMm, partedToMm } = was;
+  const { at, gapFrom, gapTo, cutAcross: cut } = was.closeUp;
+  const square = (p, r) => box(p[0] - r, p[0] + r, p[1] - r, p[1] + r, -1, T + 1);
+  const around = (p, r) => CrossSection.square([2 * r, 2 * r]).translate([p[0] - r, p[1] - r]);
+  // at each place, the mid-depth section within 3 mm of it in one piece: band, half slot's rim and web all one
+  const joinedPlaces = places.filter((p) => found.mid.intersect(around(p, 3)).decompose().length === 1).length;
+  // across the joint at mid-depth, where the gap was: from the half slot's wall to the pocket
+  const y = (gapFrom[1] + gapTo[1]) / 2;
+  const strip = found.mid.intersect(CrossSection.square([6, 0.02]).translate([gapFrom[0] - 0.01, y - 0.01]));
+  const joint = Math.min(...strip.decompose().map((piece) => piece.bounds().max[0] - gapFrom[0]));
+  // the cut across the board through the core kept beside the half slot, midway across it, where the passage from the
+  // half slot into the pocket ran: no hole in it now. The cut at the place itself, past the core, crosses the pocket's
+  // own tip, closed off from the half slot now but a void in that plane as it was before
+  const xCore = gapFrom[0] + joint / 2;
+  const across = thin.rotate([0, -90, 0]).slice(xCore);
+  const holes = across.toPolygons().filter((r) => {
+    const ys = r.map((q) => q[1]);
+    const zs = r.map((q) => -q[0]);
+    return Math.min(...ys) > 0.2 && Math.max(...ys) < 6 && Math.min(...zs) > 0.2 && Math.max(...zs) < T - 0.2;
+  }).length;
+  const numbers = {
+    board: `skeleton, Straight, ${SIZE.widthMm} x ${SIZE.heightMm} mm, rims and webs 1.2 mm, core 0.8 mm`,
+    ...sideOf(found),
+    placesRecordedBefore: places.length,
+    placesJoined: joinedPlaces,
+    closeUp: { at, jointAtMiddleMm: round(joint), cutAcrossAtX: round(xCore), holesInCutAcross: holes },
+    curvedThin: sideOf(others.curved),
+    straightStart: sideOf(others.start),
+  };
+  console.log(JSON.stringify(numbers));
+  const figures = join(process.cwd(), '.check', 'figures', 'd519');
+  mkdirSync(figures, { recursive: true });
+  writeFileSync(join(figures, 'numbers-after.json'), `${JSON.stringify(numbers, null, 2)}\n`);
+  const scenes = [];
+  const wasParted = `parted from ${f2(partedFromMm)} to ${f2(partedToMm)} mm deep before`;
+  const bandsWere = CrossSection.union(
+    partedBands.map(([a, b]) => CrossSection.square([b[0] - a[0], b[1] - a[1]]).translate(a)),
+  );
+  const band = partedBands
+    .map(([a, b]) => ({ min: a, max: b }))
+    .filter((b) => b.max[1] < SIZE.heightMm / 2)
+    .sort((p, q) => p.min[0] - q.min[0])[0];
+
+  // 1: the whole board, the places marked
+  {
+    const marks = Manifold.union(places.map((p) => square(p, 3)));
+    const bands = Manifold.extrude(bandsWere.offset(1.2, 'Square'), T + 2)
+      .translate([0, 0, -1])
+      .subtract(marks);
+    const grey = thin.subtract(marks).subtract(bands);
+    const first = places[0];
+    scenes.push({
+      id: 'd519-1-where-after',
+      title: `D519 · after: the thin Straight skeleton joined at all ${places.length} places`,
+      caption: [
+        `The same board, ${SIZE.widthMm} x ${SIZE.heightMm} mm, rims and webs 1.2 mm, core 0.8 mm, as built now. At the ${places.length} places either side of each half slot (blue)`,
+        `band and web now meet through the whole depth: ${found.midCount} outlines at mid-depth, as at the faces, genus ${found.genus}, as the Curved one's. The ${partedBands.length} lengths`,
+        'of edge band held only near the faces before (pale) are held through the depth now. Found from the geometry: no place parts.',
+      ],
+      legend: [
+        ['a place that parted before, joined now', COLOURS.blue],
+        ['an edge band held only near the faces before', COLOURS.pale],
+        ['the rest of the board', COLOURS.grey],
+      ],
+      camera: { position: [120, -120, 215], target: [120, 92, 0], fov: 40 },
+      labels: [
+        { text: 'a joined place', at: [first[0], first[1], T], dx: -40, dy: 90 },
+        { text: 'an edge band, joined at both ends', at: [(band.min[0] + band.max[0]) / 2, 0.5, T], dx: 200, dy: 80 },
+      ],
+      meshes: [
+        mesh(grey, COLOURS.grey),
+        mesh(thin.intersect(bands), COLOURS.pale),
+        mesh(thin.intersect(marks), COLOURS.blue),
+      ],
+    });
+  }
+
+  // 2: the same close-up, the front half taken away down to mid-depth
+  {
+    const win = box(at[0] - 9, at[0] + 13, -1, 14, -1, MID);
+    const back = thin.intersect(win);
+    const plug = Manifold.extrude(CrossSection.circle(1.2, 48).translate(at), MID - partedFromMm).translate([
+      0,
+      0,
+      partedFromMm,
+    ]);
+    scenes.push({
+      id: 'd519-2-cutaway-after',
+      title: 'D519 · after: the same place, close, cut open at mid-depth',
+      caption: [
+        `The board's front half taken away, down to ${MID} mm, at the left end of the same band. Band, half slot's rim and web now meet at mid-depth too:`,
+        `the half slot's rim keeps its ${f1(joint)} mm core beside the slot through the whole depth (blue: the plastic there through the depths that ${wasParted}).`,
+      ],
+      legend: [
+        ['where band and web meet now', COLOURS.blue],
+        ["the board's back half, its back face down", COLOURS.grey],
+      ],
+      camera: { position: [at[0] + 11, at[1] - 17, 20], target: [at[0] + 1, at[1] + 1, 1.5], fov: 30 },
+      labels: [
+        { text: 'the edge band', at: [at[0] + 8, 0.5, MID], dx: 80, dy: 40 },
+        { text: 'the half slot', at: [at[0] - 4, 3, MID], dx: -80, dy: 40 },
+        { text: `joined: the ${f1(joint)} mm core`, at: [at[0] - 0.5, at[1] - 0.6, MID], dx: -90, dy: -150 },
+        { text: 'the pocket', at: [at[0] + 6, 4.5, 1], dx: 90, dy: -90 },
+      ],
+      meshes: [mesh(back.subtract(plug), COLOURS.grey), mesh(back.intersect(plug), COLOURS.blue)],
+    });
+  }
+
+  // 3: the mid-depth sections of the three boards at the same place, the front face's outline beneath
+  {
+    const [x0, x1] = [at[0] - 8, at[0] + 36];
+    const win = CrossSection.square([x1 - x0, 14]).translate([x0, -1]);
+    const rows = [
+      ['the thin Straight skeleton, as built now', thin, found],
+      ['the Curved skeleton, the same thin settings', curved, others.curved],
+      ['the Straight skeleton at its starting values', start, others.start],
+    ];
+    const meshes = [];
+    const labels = [];
+    rows.forEach(([name, solid, f], i) => {
+      const dy = -20 * i;
+      const face = Manifold.extrude(solid.slice(FACE[1]).intersect(win), 0.1).translate([0, dy, 0]);
+      const midSlab = Manifold.extrude(solid.slice(MID).intersect(win), 0.2).translate([0, dy, 0.1]);
+      meshes.push(mesh(face, COLOURS.wall, 1, false), mesh(midSlab, COLOURS.grey));
+      if (i === 0) {
+        const near = places.filter((p) => p[0] > x0 && p[0] < x1 && p[1] < 14);
+        const plan = f.mid.intersect(CrossSection.union(near.map((p) => CrossSection.circle(1.2, 48).translate(p))));
+        meshes.push(mesh(Manifold.extrude(plan, 0.25).translate([0, dy, 0.1]), COLOURS.blue));
+      }
+      const tag =
+        f.places.length === 0
+          ? `joined: ${f.midCount} outlines at mid-depth, as at the faces`
+          : `parted: ${f.midCount} outlines at mid-depth against ${f.faceCount} at the faces`;
+      labels.push({ text: `${name} · ${tag}`, at: [x0, dy + 13, 0.3], dx: 0, dy: -18 });
+    });
+    scenes.push({
+      id: 'd519-3-sections-after',
+      title: `D519 · after: cut at mid-depth, ${MID} mm, all three joined`,
+      caption: [
+        `Each board's section ${MID} mm deep (grey) over its outline at the front face (pale), seen from the front, at the same half slot and band.`,
+        "The thin Straight one's band now runs into the half slot's rim and the web at each end (blue), as the other two do; the faces are as they were.",
+      ],
+      legend: [
+        ['where band and web meet at mid-depth now', COLOURS.blue],
+        ['the section at mid-depth', COLOURS.grey],
+        ['the outline at the front face', COLOURS.wall],
+      ],
+      camera: { position: [(x0 + x1) / 2, -16, 120], target: [(x0 + x1) / 2, -16, 0], fov: 31, up: [0, 1, 0] },
+      labels,
+      meshes,
+    });
+  }
+
+  // 4: a cut across the joint, through the depth, through the core kept beside the half slot
+  {
+    const x = xCore;
+    const slab = thin.intersect(box(x, x + 0.6, -1, 9, -1, T + 1));
+    const face = thin.intersect(box(x, x + 0.02, -1, 9, -1, T + 1));
+    const where = thin.intersect(box(x - 0.03, x + 0.01, cut.yFrom, cut.yTo, partedFromMm, partedToMm));
+    const yMid = (cut.yFrom + cut.yTo) / 2;
+    scenes.push({
+      id: 'd519-4-through-after',
+      title: 'D519 · after: cut through the depth beside the half slot, joined all through',
+      caption: [
+        `Cut across the board at x = ${f2(x)} mm, through the ${f1(joint)} mm core now kept beside the half slot, ${f2(at[0] - x)} mm nearer the slot than the cut before (whose plane, past`,
+        `the core, crosses the pocket's own tip). The band (right) and the half slot's rim and web (left) are one from face to face: ${holes} holes; blue, the depths that ${wasParted}.`,
+      ],
+      legend: [
+        ['plastic now through the depths that parted', COLOURS.blue],
+        ['the cut face', COLOURS.pale],
+        ['the board beyond the cut', COLOURS.grey],
+      ],
+      camera: { position: [x - 60, yMid + 1, MID], target: [x, yMid + 1, MID], fov: 9 },
+      labels: [
+        { text: 'the edge band', at: [x, 0.5, MID], dx: 120, dy: 140 },
+        { text: "the half slot's rim and web", at: [x, 4.5, MID], dx: -100, dy: 140 },
+        { text: 'joined through the whole depth', at: [x, yMid, MID], dx: 170, dy: -190 },
+      ],
+      meshes: [mesh(slab, COLOURS.grey), mesh(face, COLOURS.pale), mesh(where, COLOURS.blue)],
     });
   }
   return scenes;

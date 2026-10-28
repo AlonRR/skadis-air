@@ -27,6 +27,12 @@ All notable changes to this project are recorded here. The format follows
   past the fieldset, 14 px past the screen, at 320 px. It now takes no more than its fieldset, the board's drawing
   between its buttons giving way and the buttons keeping their size. At 375 px and wider it is as it was.
 
+- The Straight skeleton at its thinnest, rims and webs 1.2 mm and a 0.8 mm core, is joined through its whole depth
+  (D519): beside each half slot of an open top or bottom edge its edge band met the web only near the faces, a 0.93 mm
+  gap between them from 1.57 to 3.43 mm deep. The half slot's rim keeps its core beside the slot from face to face now,
+  in straight lines; the faces are as they were, and the Curved boards and the Straight ones at their starting values
+  are unchanged.
+
 ### Changed
 
 - The STL check slices each plate with its parts split, so the slicer arranges them together round the bed's middle rather than where the plate put them, as parts near the bed's edges print worse.

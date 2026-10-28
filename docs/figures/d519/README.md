@@ -3,11 +3,14 @@ SPDX-FileCopyrightText: 2026 Alon A. Rabinowitz
 SPDX-License-Identifier: CERN-OHL-S-2.0
 -->
 
-# The thin Straight skeleton, parted through its depth (D519, 28 Oct 2026)
+# The thin Straight skeleton, parted through its depth and joined (D519, 28 Oct 2026)
 
 Pictures for D519 (C538): the skeleton board with Look = Straight at its thinnest settings, rims and webs 1.2 mm and
-a 0.8 mm core, on a 240 x 200 mm board with all sides open. Each part is the library's own; orange is where the edge
-band and the webs fail to meet. Made by `node scripts/figures/shoot.mjs d519`, which also writes `numbers.json`.
+a 0.8 mm core, on a 240 x 200 mm board with all sides open. Each part is the library's own. **Before**, the pictures
+below with `numbers.json`: orange is where the edge band and the webs fail to meet. **[After](#after)** the fix
+(D519 a, C580), the same pictures at the same places, `-after`, with `numbers-after.json`: blue is where they meet now.
+Made by `node scripts/figures/shoot.mjs d519`: on a library that parts it draws the before set, on one that is joined
+it says so and draws the after set (C583).
 
 ## How the places were found
 
@@ -44,3 +47,34 @@ What it found (`numbers.json`):
   the first parts; orange where its band stops short.
 - `d519-4-through.png`: a cut across the board at the place (x = 43.57 mm), the front at the top. Band and web are one
   at each face, and a hole runs through between, from the half slot into the pocket.
+
+## After
+
+Built 28 Oct 2026 (D519 a, C580 to C583). The cause, measured: beside a half slot the pocket's corner at the faces
+is 45 degrees, the band against a web, at (43.85, 3) beside the slot at x = 40. Through the board the band's edge
+widens 1.9 mm and the web's 0.2 mm, so their meeting point runs down the web's line to (41.67, 1.1), 0.93 mm past the
+slot's wall at x = 42.6. Now the sharp-cornered skeleton keeps each such half slot's rim core, 0.8 mm beside the
+slot's straight sides, from face to face, so that corner meets a flat wall parallel to the slot. Every edge stays
+straight, and the faces are unchanged down to the 0.6 mm flanges.
+
+What the pass finds now (`numbers-after.json`):
+
+- 126 outlines at both faces and at mid-depth, genus 125: the Curved skeleton's. No place parts, so the pictures are
+  drawn at the 20 places `numbers.json` recorded.
+- All 20 places are joined: the mid-depth section within 3 mm of each is one piece (0 of 20 on the code before).
+- At mid-depth the joint is 0.8 mm across, the core, where the gap was 0.93 mm.
+- 29.3 mm3 is added to the board. The Curved boards and the Straight skeleton at its starting values are the same
+  bytes as before (C580), so their grams are unchanged.
+
+The pictures:
+
+- `d519-1-where-after.png`: the whole board from the same camera. The 20 places in blue, and the 8 lengths of band
+  that were held only near the faces in pale.
+- `d519-2-cutaway-after.png`: the same place, cut open at mid-depth the same way. The band, the half slot's rim and
+  the web meet. Blue is the plastic there through the depths that parted before.
+- `d519-3-sections-after.png`: the same three mid-depth sections. The thin Straight one's band runs into the 0.8 mm wall
+  beside the half slot at each end (blue), and all three are joined.
+- `d519-4-through-after.png`: a cut through the depth at x = 43.00 mm, through the kept core. It is not at the place
+  itself, x = 43.57 mm, because that plane lies past the core: it crosses the pocket's own tip, which shows as a void
+  there as before but is closed off from the half slot now. The band and the half slot's rim and web are one piece
+  from face to face, with no hole. Blue is where the cut spans the depths that parted before.
