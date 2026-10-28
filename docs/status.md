@@ -235,6 +235,8 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | Q359 | **The keyholes' countersunk seat stays drawn for the owner's screws, 4 mm with 8 mm heads** ("the current heads (8mm) are the ones i use, we can make it a choice to change the screw size"): the size becomes a choice, D479 | 24 Oct 2026 |
 | D370 | **Lock screws use the same screw as the rest** ("they will use the same screw as the rest. i mean when a screw choice is made its made across all the screw locations, with advanced letting a user change per type of location e.g., keyhole, lock, connector/clip or other types we have"): how, D479 | 24 Oct 2026 |
 | D437 | **The reworked skeleton's radii are drawn with fewer facets** ("437 b"), the shape kept within 0.05 mm and measured so, for its build time: 24.9 s for a 400 x 400 mm board against 12.3 s before, 786,030 facets against 534,984. Built 24 Oct 2026 on `feat/skeleton-rework-r4`, held from `main` until T320 (C481 to C484, C493, C494): the edge band's rounding keeps its fine points only within 2 mm of a web and the board is simplified within 0.001 mm, so a 400 x 400 mm board builds in 18.5 s against 24.4 s, its shape within 0.0073 mm of D408's, the same 56.11 g; most of the time is inside the geometry engine | 24 Oct 2026 |
+| A513 | **The design system's v0.9.0 is adopted** ("513 y"): its `tokens.css` and `components/bundle.css` copied from the tag, side by side from 640 px wide, and the page's own narrow-Sides rules (D419) retired if v0.9.0 covers them | 28 Oct 2026 |
+| Q510 | **The first lightened and skeleton boards come back as two more board types, beside today's** ("510 L1 and S1 add a V-groove and edge chamfer, the difference between L1/S1 and L/S-latest is the smooth curves. so that we have 2 main design looks: straighter lines (L1/S1) and rounded look (latest). we do want to introduce some of the engineering/design changes that we have in latest while keeping the straighter look"): L1 and S1 of [the board history](figures/board-history/README.md), with the front's V groove and the edge chamfer (D276) and without the eased curves (D278); which other changes they take, D514; their names, Q515 | 28 Oct 2026 |
 | D479 | **One screw size for every screw place** ("479 a"): `Screw size` in the main form, 4 mm with its 8 mm countersunk head to start; under Advanced, a size for each kind of place (keyholes, lock screws, the slot clip), each the same as the screw size unless set; lock screws start at 4 mm too, their slots grooved for the head. Built 24 Oct 2026 (C495 to C509): each kind of place is "Same as the screw size" or "Own" under Advanced; lock screws from 3 mm are countersunk, passing the slot through an 8.5 mm groove and seating on a 45 degree countersink (D370's (a)), and up to 2.5 mm keep the pan head; the slot keeps its 5.2 mm for 4.2 mm up from where a hook rests (a real hook unmeasured, D414); a board kept by an older page builds with 4 mm lock screws; pictures drawn by `node scripts/figures/shoot.mjs screw-groove` | 24 Oct 2026 |
 | D238 | **Standoffs start at 15 mm**: the boards' standoffs, the standoff connector and the slot clip's depth, so the parts of one wall still match; IKEA's spacer stays 20 mm (`WALL_DISTANCE_MM`), the owner's choice | 17 Oct 2026 |
 | D239 | **The Printables draft's standoff and slot clip files are made again at 15 mm** and replace the 20 mm ones, as its files are the page's starting values | 17 Oct 2026 |
@@ -360,6 +362,16 @@ clip (b4).
   the hook's tab measured first, its 4.5 mm width unmeasured (T373, D414), and the solid board's build worked out;
   (b) a relief cut into the plate under each wall instead, the hook's room whole, at the cost of plate, and of rim on
   the lattice boards; (c) as it is until a hook is measured. Recommended (a), once a hook's tab is measured.
+
+- **D514** Which of today's changes the straight-line boards (Q510) take besides the V groove and the edge chamfer.
+  Everything in the mounting comes with them as it does for every board: keyholes, standoffs behind the slots (D306),
+  lock screws (D479), the outline (D282). The choice is the skeleton's profile through the board: (a) today's I-beam,
+  1.2 mm core, as S1 and today's skeleton have; (b) the slimmer stepped profile (D314, S4), straight steps to a 0.9 mm
+  core, 56.9 g against S1's 68.4 g at 200 x 200 mm (the board history), which D408 reworked; (c) D408's reworked profile, the
+  one T320 tests, its radii drawn straight. Recommended (a) now, and the slim profile once T320 has tested one.
+
+- **Q515** The two new board types' names on the page and in their files (`skadis-<id>-...`). Suggested: "Lightened,
+  straight" (`lightened-straight`) and "Skeleton, straight" (`skeleton-straight`), today's keeping their names.
 
 - **D512** The skeleton's last facets (D437, C483, C484): about 5 to 7 % more of a 400 x 400 mm board's facets go with a
   coarser simplify (0.01 mm) or the step's arc in 3 runs, the shape moving up to 0.025 mm, but each fails one of two
