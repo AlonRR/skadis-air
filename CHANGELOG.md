@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-28
+
 ### Added
 
 - A "Look" for the lightened and skeleton boards, first on their form: Curved, today's board and the start, or
