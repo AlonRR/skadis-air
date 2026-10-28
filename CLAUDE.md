@@ -214,7 +214,7 @@ node scripts/checks/write-keyhole-parts.mjs  # the keyhole parts as built, into 
 
 `node scripts/figures/shoot.mjs <pass>` draws a design pass's figures, each part the library's own with a finding's
 area in orange, into `.check/figures/<pass>/` (`boards-pass`, 21 Oct 2026; `boards-built` and `between-built`, the answers as built;
-`standoff-foot`, 24 Oct 2026, the 1-board standoff's foot, C467; `screw-groove`, 24 Oct 2026, the lock screws' groove and seat, D479; `keyhole-pass`, 23 Oct 2026, every face past 45 degrees down in orange, as the part prints, retired when its options'
+`standoff-foot`, 24 Oct 2026, the 1-board standoff's foot, C467; `screw-groove`, 24 Oct 2026, the lock screws' groove and seat, D479; `d519`, 28 Oct 2026, where the thin Straight skeleton parts through its depth, found from its sections, C570; `keyhole-pass`, 23 Oct 2026, every face past 45 degrees down in orange, as the part prints, retired when its options'
 switches went, C385); a review copies them into `docs/figures/`. A scene seen from the back sets `camera.up`. A pass may
 build its scenes from deeper modules of the library's build than `kit.lib` gives, as `keyhole-pass` did.
 `node scripts/figures/screw-form.mjs <page address> <folder>` shoots the screw settings on the built page, six states
