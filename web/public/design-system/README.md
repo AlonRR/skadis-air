@@ -2,8 +2,8 @@
 
 Copied unchanged from the owner's shared design system,
 [`AlonRR/printable-parts-design-system`](https://github.com/AlonRR/printable-parts-design-system),
-at its tag `v0.8.1`, commit `fbf285e` (24 Oct 2026, A413; first copied at `v0.1.0`, D111, then `v0.2.0`,
-`v0.3.0`, `v0.5.0` with v0.4.0's steps, D202, `v0.5.1`, D250 e, `v0.6.0`, D259, `v0.7.0`, D287, and `v0.8.0`, D301). The design system's history was rewritten
+at its tag `v0.9.0`, commit `1c16d06` (28 Oct 2026, A513; first copied at `v0.1.0`, D111, then `v0.2.0`,
+`v0.3.0`, `v0.5.0` with v0.4.0's steps, D202, `v0.5.1`, D250 e, `v0.6.0`, D259, `v0.7.0`, D287, `v0.8.0`, D301, and `v0.8.1`, A413). The design system's history was rewritten
 on 19 Oct 2026 to remove a hostname: the tags before `v0.6.0` that this page copied, `v0.5.0` and `v0.5.1`, are
 no longer on GitHub, only on the owner's own forge.
 
@@ -58,6 +58,16 @@ handler, as the system's script as well would flip every press twice). Of 18 sho
 and the ring showing, wide in both themes and at 375 px, each with the first toggle alone), the same page shot
 twice came out identical in 17, the ring on a phone differing in its 3D view alone; after the copy and the
 markup 17 of 18 were identical to the first shots and 18 of 18 to the second. Nothing moved.
+
+For `v0.9.0`, which sets `breakpoint-side-min` to 40rem (side by side from 640 px wide, not 768 px, for a wide
+enough landscape) and lets the Sides control fit a 320 px sidebar, a state was added (a phone held sideways,
+740 x 360, C517), the same page shot twice came out identical (17 of 17), and after the copy 2 of 17 changed, where
+its release says: the two sideways phones that were stacked, 740 x 360 and the iPhone 13's 750 x 342, went side by side
+(the 740 px page 2189 px tall before, 360 px after). The other 15, among them 844 x 390, the short wide screen, the
+phone upright and 320 px, did not change. No markup or script changed. Of the page's own narrow-Sides rules (D419), the
+grid and width rule went, as the system's `.ws-sides` now holds it (the page's browser test, `sides-narrow.spec.ts`,
+passes unchanged without it); the drawing's `aspect-ratio` rule stays, as without it the drawing is a 49 by 72 px strip
+at 320 px (C516).
 
 Licensing is
 in `REUSE.toml`: the stylesheets are MPL-2.0 like the rest of the page, the fonts

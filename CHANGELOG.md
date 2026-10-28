@@ -14,6 +14,9 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- The design system is v0.9.0: the 3D view and the form go side by side from 640 px wide, so a phone held sideways
+  (740 x 360, 750 x 342) shows both, and the Sides control fits a 320 px sidebar. The page's own rule for the control's
+  width is gone; the drawing's shape rule stays (C516).
 - The standoff connector's wall-side edge takes a 0.4 mm chamfer, not 1 mm, so it holds the bed with more: a 1-board
   standoff's first layer (the section 0.1 mm up) goes from 30.7 to 47.2 mm2, a 2-board one's from 172.6 to 213.2 and a
   4-board one's from 553.4 to 644.8. The board side keeps its 1 mm chamfer. A print that needs a brim is redesigned
