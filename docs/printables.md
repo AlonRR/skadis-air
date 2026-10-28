@@ -28,7 +28,7 @@ the four GIFs in the text (the text then gave each board as a share of the solid
 
 The set the owner approved on 23 Oct 2026 (A356): each picture about a section of the page, more or less ("each gif
 should represent a section of the page more or less, instead of a gif being of one type"), the connectors together with
-close-ups, and the text's GIFs smaller. Made from `v0.6.0`, and again from `v0.8.0` on 24 Oct 2026: the library's renders from the release's code (`node
+close-ups, and the text's GIFs smaller. Made from `v0.6.0`, again from `v0.8.0` on 24 Oct 2026, and from `v0.9.0` on 28 Oct 2026: the library's renders from the release's code (`node
 scripts/printables/write-gallery.mjs <folder>`, after `npm run build -w skadis-air`), each part the library's own, the
 feature a picture is about in orange, under a title in the page's font; the page's GIFs recorded from the published
 page (`node scripts/printables/write-page-gifs.mjs https://alonrr.github.io/skadis-air/ <folder>`); ffmpeg makes the
@@ -126,6 +126,8 @@ clip, and back to the solid board._
 - **Any size**: a wall of any size is split into panels as even as your printer's bed allows, closed round the
   outside and open at the seams, so the slots run on across them. A print list says how many of each panel to print,
   and "Download all" gives them in one zip or one 3MF.
+- **A straighter look**: the lightened and skeleton boards come Curved, as here, or Straight, their pockets in
+  straighter lines, with the same edge chamfer, V groove at the seams and mounting.
 - **Mounting**: countersunk or round-head screw holes in the corners, or keyholes at the top, on standoffs, so the
   board lifts off its screws.
 - **The slot clip's options**: a screw or a keyhole to fix it to the wall, or neither.
@@ -150,7 +152,8 @@ countersunk and without standoffs._
 - Print each file as it comes: the boards face down, so the front is the smooth side on the bed; the connectors
   wall side down. No supports.
 - Any filament, and no special settings; the files were checked with a 0.4 mm nozzle and 0.2 mm layers (Q221).
-- Screws: 4 mm. A board's corner screw passes its 5 mm and the standoff behind it, 20 mm in all with the standoffs
+- Screws: 4 mm countersunk, with an 8 mm head, for every hole, the lock screws too; the page takes one screw size
+  for them all, or a size of its own for each kind of hole under Advanced. A board's corner screw passes its 5 mm and the standoff behind it, 20 mm in all with the standoffs
   here, plus your wall plug; a slot clip's screw passes its 7 mm bar, plus your wall plug (D264).
 - The SKÅDIS slots are 5 x 15 mm on a 40 mm grid with a second grid set 20 mm across and up, and the board is 5 mm
   thick; every number and its source is in [the repository's notes on the standard](https://github.com/AlonRR/skadis-air/blob/main/docs/skadis-standard.md).
