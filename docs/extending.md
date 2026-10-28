@@ -67,7 +67,8 @@ root keeps off (D375); a lattice whose back face is not the lightened board's po
 and `packages/core/test/root.test.ts` holds both lattice types to it.
 
 **A board that takes all of the solid board's settings** lists `BOARD_SETTINGS` from
-`board-types/solid.ts`, then its own, then `MOUNTING_SETTINGS`, and builds from `boardParamsOf(values)`
+`board-types/solid.ts`, then its own, then `MOUNTING_SETTINGS`, the lattice boards their `LOOK_SETTING` before them all
+(Q510), a look being a choice a builder reads (the lattice's `corners`), not a type of its own, and builds from `boardParamsOf(values)`
 and names its file from `boardLabel(values)`, as the lightened board (`board-types/lightened.ts`) does;
 so a setting added to the solid board reaches it too, and its test checks it has every one of them.
 

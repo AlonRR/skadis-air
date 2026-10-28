@@ -6,6 +6,15 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- A "Look" for the lightened and skeleton boards, first on their form: Curved, today's board and the start, or
+  Straight, in the straighter lines of the first boards, the long eased pocket corners left out: the lightened board's
+  pockets meet its rims and webs in 1 mm round corners, the skeleton's in sharp ones, on today's I-beam. Both keep the
+  front's edge chamfer, the V groove where boards meet, and all of the mounting. A Straight board's file is named
+  `skadis-<board>-straight-...`; a Curved board is unchanged, its file name too. At 200 x 200 mm Straight is 66.8 g
+  against 67.6 g for the lightened board and 67.3 g against 69.5 g for the skeleton, sliced in PETG (Q510).
+
 ### Fixed
 
 - The Sides control fits a phone narrower than 375 px: it ran 7 px into its fieldset's padding at 360 px and 30 px
