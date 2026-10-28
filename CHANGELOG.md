@@ -15,6 +15,12 @@ All notable changes to this project are recorded here. The format follows
   `skadis-<board>-straight-...`; a Curved board is unchanged, its file name too. At 200 x 200 mm Straight is 66.8 g
   against 67.6 g for the lightened board and 67.3 g against 69.5 g for the skeleton, sliced in PETG (Q510).
 
+- A board's plastic is given in printed grams, not as a share of the solid board's volume (D313): the page says under the
+  form, for a solid, lightened or skeleton board and its Look, "About 68 g for a 200 × 200 mm board at the starting
+  values, printed in PETG", and the README and the Printables text and its board picture give the same figures. They are
+  in `docs/board-grams.json`, which `npm run grams` makes by slicing a 200 x 200 mm board of each kind (PETG, Prusa
+  MK3S, 0.2 mm), so none is typed.
+
 ### Fixed
 
 - The Sides control fits a phone narrower than 375 px: it ran 7 px into its fieldset's padding at 360 px and 30 px

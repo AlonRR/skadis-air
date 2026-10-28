@@ -8,6 +8,12 @@
 // scene with `frames` is an animation, one with `insets` has close-ups drawn over it, and one with a `width` is for
 // the page's text, drawn smaller and scaled to that width.
 
+import { readFileSync } from 'node:fs';
+
+/** The printed grams of a 200 x 200 mm board of each kind (D313), from scripts/checks/write-board-grams.mjs. */
+const GRAMS = JSON.parse(readFileSync(new URL('../../docs/board-grams.json', import.meta.url), 'utf8'));
+const grams = (key) => `about ${Math.round(GRAMS.gramsByBoard[key])} g`;
+
 const T = 5; // the board's thickness
 const COLOUR = { part: '#c3c9cf', feature: '#f76707', context: '#7b858f' };
 const sides = (left, right, bottom, top) => ({ left, right, bottom, top });
@@ -27,8 +33,6 @@ const cycle = (hold, move, rest, frame) =>
   ].map(frame);
 /** A turn in this many frames: 80, three quarters of the speed of 60 at 15 frames a second (the owner's 75 %). */
 const TURN_FRAMES = 80;
-/** One part's plastic as a share of another's, in whole percent. */
-const pct = (a, b) => Math.round((100 * a.volume()) / b.volume());
 /** The board types' pictures side by side: the i-th moved right by `pitch`. */
 const nth = (b, i, pitch) => b.translate([i * pitch, 0, 0]);
 /** A close-up for the page's text (A356): drawn at 1120 x 840, its text at full size, and scaled to 560 wide, as the
@@ -85,23 +89,23 @@ export function build(kit) {
     });
   }
 
-  // the Board section: the board types face on, each one's plastic against the solid board's, measured at the
-  // Printables files' size (model volume, as D313 is open)
+  // the Board section: the board types face on, each one's printed grams (D313), the 200 x 200 mm sample the file
+  // board-grams.json holds
   {
-    const size = { widthMm: 240, heightMm: 200 };
+    const size = { widthMm: GRAMS.sizeMm, heightMm: GRAMS.sizeMm };
     const [solid, lightened, skeleton] = ['solid', 'lightened', 'skeleton'].map((k) => built(k, size));
     scenes.push({
       id: 'board-types',
       title: 'Three kinds of board',
       caption: [
         'The same slots on the same 40 mm grid, in less plastic: open pockets',
-        'between the slots, or every rim and web an I-beam (240 x 200 mm here).',
+        'between the slots, or every rim and web an I-beam (200 x 200 mm, PETG).',
       ],
       camera: { position: [390, 30, 1040], target: [390, 88, 0], fov: 38, drop: 0.1 },
       labels: [
-        { text: 'Solid · 100 %', at: [120, -28, T], tag: true },
-        { text: `Lightened · ${pct(lightened, solid)} %`, at: [390, -28, T], tag: true },
-        { text: `Skeleton · ${pct(skeleton, solid)} %`, at: [660, -28, T], tag: true },
+        { text: `Solid · ${grams('solid')}`, at: [120, -28, T], tag: true },
+        { text: `Lightened · ${grams('lightened-curved')}`, at: [390, -28, T], tag: true },
+        { text: `Skeleton · ${grams('skeleton-curved')}`, at: [660, -28, T], tag: true },
       ],
       meshes: [part(nth(solid, 0, 270)), feature(nth(lightened, 1, 270)), feature(nth(skeleton, 2, 270))],
     });
@@ -145,7 +149,7 @@ export function build(kit) {
       title: 'Skeleton: every member an I-beam',
       caption: [
         'Full width at both faces, thin through the middle, as the',
-        "ultralight boards are: about a third of the solid's plastic.",
+        `ultralight boards are: ${grams('skeleton-curved')} for 200 x 200 mm.`,
       ],
       camera: { position: [92, 190, 70], target: [62, 40, 0], fov: 30, up: [0, 0, 1], drop: 0.18 },
       labels: [{ text: 'a web, cut: an I-beam', at: [50, 50, T / 2], dx: -60, dy: -110 }],

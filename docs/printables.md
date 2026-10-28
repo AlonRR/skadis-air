@@ -22,7 +22,7 @@ to the printables page, use a better img for the main image", then "use a gifs a
 printed parts. Published at 18:46:30 UTC on 22 Oct 2026, from the owner's browser; since then a save in
 the editor is "Publish now", which changes the public page. The pictures and the text's GIFs below went up with one
 such save at 20:01:09 UTC that day (A310, A311), read back from Printables' API: the cover first, the eleven in order,
-the four GIFs in the text, "about 40 %"; the GIFs are served as the GIFs made, so they move. Another at 20:38:10 UTC put the turning cover first and the page tour second, the other ten after them as before (the owner's request that evening), read back the same way. At 21:01:37 UTC the page tour that opens on a wall took second place, read back the same way. On 23 Oct 2026 the owner approved a new set, a picture for each section of the page and the text's GIFs smaller, each with a line under it (A356; the Pictures below), made from `v0.6.0`, put in the editor by the agent and published by the owner at 15:35:53 UTC on 23 Oct 2026 (A352, A356; read back from Printables' API: the nine pictures in order, the six images in the text each with its line, and the Feedback and requests section). On 24 Oct 2026 the set was made again from `v0.8.0` (A407): six of the nine pictures, the three slot clips' files and five of the text's six GIFs changed, the rest came out the same; put in the editor by the agent, the order kept, and published by the owner at 10:57:40 UTC (T457; read back from Printables' API: the nine pictures in order, the thirteen files, the six images in the text each with its line).
+the four GIFs in the text (the text then gave each board as a share of the solid board, replaced by grams under D313); the GIFs are served as the GIFs made, so they move. Another at 20:38:10 UTC put the turning cover first and the page tour second, the other ten after them as before (the owner's request that evening), read back the same way. At 21:01:37 UTC the page tour that opens on a wall took second place, read back the same way. On 23 Oct 2026 the owner approved a new set, a picture for each section of the page and the text's GIFs smaller, each with a line under it (A356; the Pictures below), made from `v0.6.0`, put in the editor by the agent and published by the owner at 15:35:53 UTC on 23 Oct 2026 (A352, A356; read back from Printables' API: the nine pictures in order, the six images in the text each with its line, and the Feedback and requests section). On 24 Oct 2026 the set was made again from `v0.8.0` (A407): six of the nine pictures, the three slot clips' files and five of the text's six GIFs changed, the rest came out the same; put in the editor by the agent, the order kept, and published by the owner at 10:57:40 UTC (T457; read back from Printables' API: the nine pictures in order, the thirteen files, the six images in the text each with its line).
 
 ## Pictures
 
@@ -42,7 +42,7 @@ In this order, the first the cover:
 | `cover-turn.gif` | Skådis Air: the solid, lightened and skeleton boards, each turning on its own axis, countersunk, on keyholes and on lock screws (the owner, 22 Oct 2026: "have the main image have each of the boards rotating and give each a different type of Screw holes") |
 | `page-tour.gif` | The page: a wall in panels first, so its first frame shows one ("the second webpage view should also show the wall option, so that users know its an option right away"), then the board types and their mountings, the 3D view turned by hand ("have the second image be a gif of the webpage switching between different options and rotating"), from `write-page-gifs.mjs`, 800 wide |
 | `page-phone.gif` | The page on a phone (the owner, 23 Oct 2026: "add a gif of the mobile version to printables"): the board turned by a finger, the 3D view staying at the top as the form scrolls under it, the board types, a setting's help opened and shut, a wall in panels and back, from `write-page-gifs.mjs page-phone`, 480 wide |
-| `board-types.png` | The Board section: the three kinds at 240 x 200 mm, each one's plastic against the solid board's, as model volume (D313 is open: `v0.6.0`'s skeleton prints heavier than the lightened board) |
+| `board-types.png` | The Board section: the three kinds at 200 x 200 mm, each one's printed grams for a 200 x 200 mm board in PETG, as sliced (D313, from `docs/board-grams.json`) |
 | `wall-together.gif` | The Size and panels section: six panels of a wall coming together and opening again, half a slot each side of a seam |
 | `sides.png` | The Sides section: a board closed all round, four boards meeting at seams through the slots, half a slot each side, and four meeting between the slots, every slot whole; the closed edge and the seams in orange |
 | `mounting.png` | The Mounting section: from the back, keyholes on standoffs and lock screws; at the front, close-ups of a countersunk and a round-head hole, each cut through, its screw seated flush |
@@ -93,10 +93,9 @@ The files here are ready to print at the page's starting values. For any other s
 ### What is here
 
 - **Boards, 200 x 200 mm** (fits most printers) **and 240 x 200 mm** (fits a 250 x 210 mm bed), in three kinds:
-  - **Solid**: a plain plate with the SKÅDIS slots.
-  - **Lightened**: open pockets between the slots, a rim kept round each slot, in about 40 % of the solid board's
-    plastic.
-  - **Skeleton**: every rim and web an I-beam, thin through the middle, in about 32 %.
+  - **Solid**: a plain plate with the SKÅDIS slots, 116 g of PETG for a 200 x 200 mm board.
+  - **Lightened**: open pockets between the slots, a rim kept round each slot, in about 68 g of PETG for a 200 x 200 mm board.
+  - **Skeleton**: every rim and web an I-beam, thin through the middle, in about 70 g for the same board.
 
 [GIF `turntable.gif`]
 
