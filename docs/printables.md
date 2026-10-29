@@ -92,9 +92,10 @@ The files here are ready to print at the page's starting values. For any other s
 
 ### What is here
 
-- **Boards, 200 x 200 mm** (fits most printers), in three kinds, a folder for each mounting: screw holes, round-head
-  screw holes, keyholes, keyholes with lock screws, lock screws, and none (for slot clips alone), and the Straight
-  look's lightened and skeleton boards with screw holes:
+- **Boards, 200 x 200 mm** (fits most printers), in three kinds, a folder for each mounting: countersunk screw
+  holes, round-head screw holes, keyholes, keyholes with lock screws, lock screws (these three on 15 mm standoffs),
+  and none (for slot clips alone), and the Straight look's lightened and skeleton boards with countersunk screw holes;
+  each file's name says what it is:
   - **Solid**: a plain plate with the SKÅDIS slots, 116 g of PETG for a 200 x 200 mm board.
   - **Lightened**: open pockets between the slots, a rim kept round each slot, in about 68 g of PETG for a 200 x 200 mm board.
   - **Skeleton**: every rim and web an I-beam, thin through the middle, in about 70 g for the same board.
@@ -111,12 +112,14 @@ and thin through the middle._
 
 - **Fit coupon**, on the page under Advanced: four slots at four clearances, told apart by dots. Print it first and
   try a hook in each, to find the clearance your printer needs; the page takes it as "Slot clearance" there.
-- **Standoff** for 1, 2 and 4 boards: a 15 mm spacer between the boards and the wall (IKEA's are 20 mm), so hooks have
-  room behind the board. The shared ones are a post at each screw hole, joined only on the wall side, as the slot clip
-  is, so a hook fits next to the boards there too; the one for 2 boards serves boards one above the other turned.
-- **Slot clip** for 2 boards side by side, 2 one above the other, and 4 where their corners meet: it joins boards
-  behind a seam by pegs in their slots, so it needs no screw holes. It is as deep as the gap behind the boards, so
-  the wall holds it on; ribs on the pegs press into the slots.
+- **Standoff** for 1 board at a corner, 2 side by side, 2 one above the other, and 4 where their corners meet: a 15 mm
+  spacer between the boards and the wall (IKEA's are 20 mm), so hooks have room behind the board. The shared ones are
+  a post at each screw hole, joined only on the wall side, as the slot clip is, so a hook fits next to the boards
+  there too.
+- **Slot clip**, 15 mm deep, for 2 boards side by side, 2 one above the other, and 4 where their corners meet, and
+  one for boards whose seam runs between the slots, each with a countersunk or round-head screw, a keyhole, or no
+  fixing: it joins boards behind a seam by pegs in their slots, so it needs no screw holes. It is as deep as the gap
+  behind the boards, so the wall holds it on; ribs on the pegs press into the slots.
 
 [GIF `page-types.gif`]
 
