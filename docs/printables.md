@@ -92,7 +92,9 @@ The files here are ready to print at the page's starting values. For any other s
 
 ### What is here
 
-- **Boards, 200 x 200 mm** (fits most printers) **and 240 x 200 mm** (fits a 250 x 210 mm bed), in three kinds:
+- **Boards, 200 x 200 mm** (fits most printers), in three kinds, a folder for each mounting: screw holes, round-head
+  screw holes, keyholes, keyholes with lock screws, lock screws, and none (for slot clips alone), and the Straight
+  look's lightened and skeleton boards with screw holes:
   - **Solid**: a plain plate with the SKÅDIS slots, 116 g of PETG for a 200 x 200 mm board.
   - **Lightened**: open pockets between the slots, a rim kept round each slot, in about 68 g of PETG for a 200 x 200 mm board.
   - **Skeleton**: every rim and web an I-beam, thin through the middle, in about 70 g for the same board.
@@ -107,8 +109,8 @@ standoffs behind it._
 _ℹ️ In the picture: a skeleton board cut open across a row of its members, each cut face an I-beam, wide at both faces
 and thin through the middle._
 
-- **Fit coupon**: four slots at four clearances, told apart by dots. Print it first and try a hook in each, to find
-  the clearance your printer needs; the page takes it as "Slot clearance" under Advanced.
+- **Fit coupon**, on the page under Advanced: four slots at four clearances, told apart by dots. Print it first and
+  try a hook in each, to find the clearance your printer needs; the page takes it as "Slot clearance" there.
 - **Standoff** for 1, 2 and 4 boards: a 15 mm spacer between the boards and the wall (IKEA's are 20 mm), so hooks have
   room behind the board. The shared ones are a post at each screw hole, joined only on the wall side, as the slot clip
   is, so a hook fits next to the boards there too; the one for 2 boards serves boards one above the other turned.
