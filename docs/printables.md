@@ -92,10 +92,10 @@ The files here are ready to print at the page's starting values. For any other s
 
 ### What is here
 
-- **Boards, 200 x 200 mm** (fits most printers), in three kinds, a folder for each mounting: countersunk screw
-  holes, round-head screw holes, keyholes, keyholes with lock screws, lock screws (these three on 15 mm standoffs),
-  and none (for slot clips alone), and the Straight look's lightened and skeleton boards with countersunk screw holes;
-  each file's name says what it is:
+- **Boards, 200 x 200 mm** (fits most printers), in three kinds, the lightened and skeleton boards both Curved and
+  Straight, in a folder for each mounting: countersunk screw holes, round-head screw holes, keyholes, keyholes with
+  lock screws, lock screws (these three on 15 mm standoffs), and none (for slot clips alone); each file's name says
+  what it is:
   - **Solid**: a plain plate with the SKÅDIS slots, 116 g of PETG for a 200 x 200 mm board.
   - **Lightened**: open pockets between the slots, a rim kept round each slot, in about 68 g of PETG for a 200 x 200 mm board.
   - **Skeleton**: every rim and web an I-beam, thin through the middle, in about 70 g for the same board.

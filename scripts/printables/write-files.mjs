@@ -5,7 +5,7 @@
 // them, each in a folder of its own named as the model page's folder (D525) and named for exactly what it is, every
 // choice spelt out, where the page's own names leave out its starting values (C85; the owner, 29 Oct 2026: "name
 // and rename files and folders according to exactly what they are"): the solid, lightened and skeleton boards at
-// 200 x 200 mm with each of the page's mountings, the lattice boards in both looks, the standoff for each way boards
+// 200 x 200 mm with each of the page's mountings, the lattice boards in both looks in each (D527), the standoff for each way boards
 // meet, and the slot clip for each seam, way boards meet and fixing. Reads the library's build; `npm run printables`
 // at the repo root builds it, writes the files and checks each with stl-check.sh.
 //
@@ -32,33 +32,44 @@ const at = (folder, name, id, given = {}) => {
   return { folder, name: `${name}.stl`, type, values: { ...defaultValues(type.settings), ...given } };
 };
 
+// objects rather than tuples, so each field keeps its own type (a tuple's entries read back as one union)
 const MOUNTINGS = [
-  ['countersunk screw holes', 'countersunk-screw-holes', {}],
-  ['round-head screw holes', 'round-head-screw-holes', { screwHead: 'round' }],
-  ['keyholes, on standoffs', 'keyholes-15mm-standoffs', { screwHead: 'keyhole', standoffs: 'back' }],
-  [
-    'keyholes+lock screws, on standoffs',
-    'keyholes-lock-screws-15mm-standoffs',
-    { screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'back' },
-  ],
-  ['lock screws, on standoffs', 'lock-screws-15mm-standoffs', { screwHead: 'lock', standoffs: 'back' }],
-  ['no screw holes', 'no-screw-holes', { screwHead: 'none' }],
+  { folder: 'countersunk screw holes', name: 'countersunk-screw-holes', mounting: {} },
+  { folder: 'round-head screw holes', name: 'round-head-screw-holes', mounting: { screwHead: 'round' } },
+  {
+    folder: 'keyholes, on standoffs',
+    name: 'keyholes-15mm-standoffs',
+    mounting: { screwHead: 'keyhole', standoffs: 'back' },
+  },
+  {
+    folder: 'keyholes+lock screws, on standoffs',
+    name: 'keyholes-lock-screws-15mm-standoffs',
+    mounting: { screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'back' },
+  },
+  {
+    folder: 'lock screws, on standoffs',
+    name: 'lock-screws-15mm-standoffs',
+    mounting: { screwHead: 'lock', standoffs: 'back' },
+  },
+  { folder: 'no screw holes', name: 'no-screw-holes', mounting: { screwHead: 'none' } },
 ];
-// the solid board has no look; the lattice boards come Curved, as the page starts, and Straight with screw holes
-const board = (folder, id, look, mountingName, mounting) =>
-  at(folder, `skadis-${id}${look ? `-${look}` : ''}-200x200mm-${mountingName}`, id, {
-    widthMm: 200,
-    heightMm: 200,
-    ...(look ? { look } : {}),
-    ...mounting,
-  });
-const boards = MOUNTINGS.flatMap(([folder, mountingName, mounting]) => [
-  board(`Skadis boards 200x200mm, ${folder}`, 'solid', '', mountingName, mounting),
-  board(`Skadis boards 200x200mm, ${folder}`, 'lightened', 'curved', mountingName, mounting),
-  board(`Skadis boards 200x200mm, ${folder}`, 'skeleton', 'curved', mountingName, mounting),
-]);
-const straight = ['lightened', 'skeleton'].map((id) =>
-  board('Skadis boards 200x200mm, Straight, countersunk screw holes', id, 'straight', 'countersunk-screw-holes', {}),
+// the solid board has no look; the lattice boards come Curved, as the page starts, and Straight, in every folder (D527)
+const LOOKS = [
+  { id: 'solid', look: '' },
+  { id: 'lightened', look: 'curved' },
+  { id: 'skeleton', look: 'curved' },
+  { id: 'lightened', look: 'straight' },
+  { id: 'skeleton', look: 'straight' },
+];
+const boards = MOUNTINGS.flatMap(({ folder, name, mounting }) =>
+  LOOKS.map(({ id, look }) =>
+    at(`Skadis boards 200x200mm, ${folder}`, `skadis-${id}${look ? `-${look}` : ''}-200x200mm-${name}`, id, {
+      widthMm: 200,
+      heightMm: 200,
+      ...(look ? { look } : {}),
+      ...mounting,
+    }),
+  ),
 );
 
 const MEET = {
@@ -72,34 +83,31 @@ const standoffs = ['1', '2', '2-stacked', '4'].map((n) =>
 );
 
 const FIXINGS = [
-  ['countersunk-screw', { fixing: 'screw' }],
-  ['round-head-screw', { fixing: 'screw', screwHead: 'round' }],
-  ['keyhole', { fixing: 'keyhole' }],
-  ['no-fixing', { fixing: 'none' }],
+  { name: 'countersunk-screw', fixing: { fixing: 'screw' } },
+  { name: 'round-head-screw', fixing: { fixing: 'screw', screwHead: 'round' } },
+  { name: 'keyhole', fixing: { fixing: 'keyhole' } },
+  { name: 'no-fixing', fixing: { fixing: 'none' } },
 ];
 // a clip for a seam between the slots joins 2 boards side by side or one above the other, the same clip (D290 a)
-const clips = [
-  ...['2', '2-stacked', '4'].map((n) => ['through the slots', 'through-the-slots', MEET[n], { boards: n }]),
-  [
-    'between the slots',
-    'between-the-slots',
-    '2-boards-side-by-side-or-one-above-the-other',
-    { boards: '2', seams: 'between' },
-  ],
-].flatMap(([seam, seamName, meet, given]) =>
-  FIXINGS.map(([fixingName, fixing]) =>
+const SEAMS = [
+  ...['2', '2-stacked', '4'].map((n) => ({ seam: 'through the slots', meet: MEET[n], given: { boards: n } })),
+  {
+    seam: 'between the slots',
+    meet: '2-boards-side-by-side-or-one-above-the-other',
+    given: { boards: '2', seams: 'between' },
+  },
+];
+const clips = SEAMS.flatMap(({ seam, meet, given }) =>
+  FIXINGS.map(({ name, fixing }) =>
     at(
       `Skadis slot clips 15mm deep, seams ${seam}`,
-      `skadis-slot-clip-${meet}-seam-${seamName}-15mm-${fixingName}`,
+      `skadis-slot-clip-${meet}-seam-${seam.replaceAll(' ', '-')}-15mm-${name}`,
       'slot-clip',
-      {
-        ...given,
-        ...fixing,
-      },
+      { ...given, ...fixing },
     ),
   ),
 );
-const files = [...boards, ...straight, ...clips, ...standoffs]; // the model page's order
+const files = [...boards, ...clips, ...standoffs]; // the model page's order
 // Printables takes a folder's name to 60 characters and a file's to 146
 for (const { folder, name } of files)
   if (folder.length > 60 || name.length - 4 > 146) throw new Error(`${folder}/${name}: too long`);
