@@ -278,6 +278,21 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
   (D531, D591) and its GIFs of the page again from it, and stage them in the editor, with the Updates
   section at the very bottom of the text (`docs/printables.md`, the owner, 30 Oct 2026: "At the very bottom of the
   printables page add an updates section, look at other projects for a reference"), for the owner's "Publish now".
+- **D607** The nut standoff's pocket (the tape and nut pass, 30 Oct 2026,
+  [`docs/research/2026-10-30-tape-and-nut-pass.md`](research/2026-10-30-tape-and-nut-pass.md)): as built, each nut sits
+  in a post the screw plus 6 mm across, which leaves 0.1 mm of wall at the pocket's end at M3 and breaks through at M4
+  and M5, 0.9 mm beside the nut's corners; and the stacked one's lower nut goes in from below. Each way moves the nut
+  behind the hooks' room into a post grown there: (a) a pull nut from the wall face, a seat the nut + 0.2 mm (the
+  printer-enclosure coupon's "just right"), pulled home with the screw before the standoff goes up, a hole in the tape
+  pad; (b) the owner's mix, a side slot the screw pulls up into a seat; (c) the side slot ended in the nut's hexagon.
+  With each: a nut-fit setting under Advanced and a coupon to set it from, "snug" on the screw's note, and the help
+  naming the boards it holds. Recommended (a).
+- **Q608** Which double-sided tape goes on the pads (a foam mounting tape such as 3M's VHB, or removable strips pulled
+  out by a tab), and about what should a taped board carry?
+- **D609** What a taped board holds: by 3M's VHB rule four 19 x 19 mm pieces hold about 250 g, the board included,
+  in shear, less where hooks lever the top pads off. (a) Say it on the page beside the tape's settings, for the tape
+  Q608 names; (b) more pads, on posts between the slots, 8 pieces in place of 4; (c) as it is. Recommended (a), and (b)
+  if Q608's load needs it.
 - **T274** Print the trial grips and try them: on one plate with T151's board, sliced for PETG Basic (the owner,
   21 Oct 2026: "274 151 create a plate for petg basic"), started at 16:40 UTC that day (A300). That print failed
   on 22 Oct 2026 near Z 3.2 mm: one of the three 1-board standoffs came off the bed, and the owner took it and
