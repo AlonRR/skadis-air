@@ -11,7 +11,7 @@
 // library's, with settings the page does not offer until a print says they work. Laid in rows 10 mm apart. Reads
 // the library's build, so run `npm run build -w skadis-air` first; `npm run trial-plate` does both and checks it.
 //
-//   node scripts/test-print/write-trial-plate.mjs [grips | keyhole | standoffs]
+//   node scripts/test-print/write-trial-plate.mjs [grips | keyhole | standoffs | nuts]
 //
 // `grips` writes the T268 and D267 parts alone, as skadis-trial-grips.stl; `keyhole` T151's board alone, as
 // skadis-trial-keyhole.stl; `standoffs` D267's three standoffs alone, as skadis-trial-standoffs.stl (24 Oct 2026,
@@ -33,14 +33,16 @@ import {
   slotClipParams,
   toStl,
 } from '../../packages/core/dist/index.js';
-import { dotted, trialStandoffs } from './trial-standoffs.mjs';
+import { dotted, trialNuts, trialStandoffs } from './trial-standoffs.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const out = join(root, '.check', 'test-print');
 const BED = { xMm: 250, yMm: 210 }; // an MK3S's
 const GAP_MM = 10;
 const only = process.argv[2];
-const stem = ['grips', 'keyhole', 'standoffs'].includes(only) ? `skadis-trial-${only}` : 'skadis-trial-grips-keyhole';
+const stem = ['grips', 'keyhole', 'standoffs', 'nuts'].includes(only)
+  ? `skadis-trial-${only}`
+  : 'skadis-trial-grips-keyhole';
 
 const engine = await loadEngine();
 const { Manifold } = engine;
@@ -94,7 +96,9 @@ const keyhole = [
     solid: pagePart('lightened', { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'back' }),
   },
 ];
-const PARTS = { grips, keyhole, standoffs }[only] ?? [...keyhole, ...grips];
+// the nut test print (D607 a), a plate of its own: nine taped nut standoffs, M3 to M5, each at three seats
+const nuts = only === 'nuts' ? trialNuts(engine) : [];
+const PARTS = { grips, keyhole, standoffs, nuts }[only] ?? [...keyhole, ...grips];
 
 // In rows across the bed, left to right, a new row 10 mm behind the deepest part of the last.
 let [x, y, rowDepth] = [0, 0, 0];

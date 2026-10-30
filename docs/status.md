@@ -282,6 +282,12 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 - **T614** Press "Publish now" on the Printables editor tab the agent left open (31 Oct 2026): the `v0.10.0` set is
   staged there, the eight pictures with the new cover (D591), four of the text's GIFs made again, the lines on tape
   and on standoffs held by nuts or wood screws, and the Updates section at the very bottom. Nothing is saved until then.
+- **T615** Print the nut test print and say which seat holds (D607 a, 31 Oct 2026): nine taped 1-board nut standoffs,
+  M3, M4 and M5, each with a seat the nut + 0.1, 0.2 and 0.3 mm across its flats, told apart by 1, 2 or 3 dots on
+  the board face: `.check/test-print/skadis-trial-nuts.stl` (`node scripts/test-print/write-trial-plate.mjs nuts`;
+  9 parts, 1 h 32 min and 11.6 g as the STL check slices it, in its ASA; slice it with the filament loaded). For each
+  size, pull a nut into each seat with a screw from the top and take the screw out: the seat that pulled in and kept
+  its nut is the "Nut fit" to start at.
 - **T274** Print the trial grips and try them: on one plate with T151's board, sliced for PETG Basic (the owner,
   21 Oct 2026: "274 151 create a plate for petg basic"), started at 16:40 UTC that day (A300). That print failed
   on 22 Oct 2026 near Z 3.2 mm: one of the three 1-board standoffs came off the bed, and the owner took it and

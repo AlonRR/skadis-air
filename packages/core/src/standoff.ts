@@ -293,6 +293,12 @@ export function standoffScrews(p: StandoffParams): string {
 
 const nice = (n: number) => String(Math.round(n * 100) / 100);
 
+/** The area a nut's way in opens through a taped standoff's pad, mm²: a hexagon the seat + 0.1 mm across (D607 a). */
+export function nutWayInMm2(screwMm: number, fitMm = NUT_FIT_MM): number {
+  const { wayMm } = nutSeat(screwMm, fitMm);
+  return (Math.sqrt(3) / 2) * wayMm * wayMm;
+}
+
 /** A hexagon `across` its flats and grown by `grow` at (x, y), its corners along x; counter-clockwise. */
 function hexagon(x: number, y: number, across: number, grow: number): [number, number][] {
   const r = (across / 2 + grow) / Math.cos(Math.PI / 6);

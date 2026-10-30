@@ -8,6 +8,7 @@ import { defineSettings } from '../settings.js';
 import {
   makeStandoff,
   NUT_FIT_MM,
+  nutWayInMm2,
   onTape,
   pilotHoleFor,
   standoffParams,
@@ -155,5 +156,13 @@ export const STANDOFF = defineBoardType({
     (v.screwMm === SCREW_MM ? '' : `-screw-${v.screwMm}mm`),
   screws: (v) => standoffScrews(paramsOf(v)),
   tape: (v) =>
-    onTape(v.standoffFixing) ? tapeHolds(POSTS[v.boards], v.tapeWidthMm, v.tapeLengthMm, 'standoff') : undefined, // D609 a
+    onTape(v.standoffFixing)
+      ? tapeHolds(
+          POSTS[v.boards],
+          v.tapeWidthMm,
+          v.tapeLengthMm,
+          'standoff',
+          v.standoffFixing === 'nut' ? nutWayInMm2(v.screwMm, v.nutFitMm) : 0,
+        )
+      : undefined, // D609 a
 });

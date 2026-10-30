@@ -55,3 +55,36 @@ export function trialStandoffs(engine) {
     };
   });
 }
+
+/** The nut test print (D607 a, 30 Oct 2026: "607 a"): a taped 1-board nut standoff for M3, M4 and M5 at each of three
+ * seats, the nut + 0.1, 0.2 and 0.3 mm, told apart by 1, 2 or 3 dots in the board face; the one whose nut pulls in and
+ * stays once the screw is out is the "Nut fit" to set. All 16.5 mm tall, as an M5 seat needs 16.4. */
+export const NUT_FITS = [0.1, 0.2, 0.3];
+export const NUT_SIZES = [3, 4, 5];
+export const NUT_TRIAL_MM = 16.5;
+/** On the post's top, clear of the hole's 0.5 mm mouth and of the 1 mm chamfer at its edge, by 0.1 mm or more. */
+export const nutDotPoints = (screwMm) =>
+  [90, 130, 170].map((a) => [
+    (screwMm / 2 + 1.35) * Math.cos((a * Math.PI) / 180),
+    (screwMm / 2 + 1.35) * Math.sin((a * Math.PI) / 180),
+  ]);
+export const nutTrialParams = (screwMm, nutFitMm) =>
+  standoffParams({ boards: '1', fixing: 'nut', screwMm, nutFitMm, heightMm: NUT_TRIAL_MM });
+
+export function trialNuts(engine) {
+  return NUT_SIZES.flatMap((screwMm) =>
+    NUT_FITS.map((nutFitMm, k) => ({
+      name: `nut standoff, M${screwMm}, seat the nut + ${nutFitMm} mm (D607)`,
+      screwMm,
+      nutFitMm,
+      solid: dotted(
+        engine,
+        makeStandoff(engine, nutTrialParams(screwMm, nutFitMm)),
+        nutDotPoints(screwMm),
+        k + 1,
+        DOT_ACROSS_MM,
+        NUT_TRIAL_MM,
+      ),
+    })),
+  );
+}

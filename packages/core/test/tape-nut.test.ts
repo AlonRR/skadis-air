@@ -513,9 +513,12 @@ describe('what the tape holds, said beside its settings (D609 a, 30 Oct 2026: "6
   });
 
   it('on a taped standoff: a piece at each post; none when it is not taped', () => {
+    // the nut's way in opens through the pad: 19 x 19 mm less a hexagon 7.3 mm across, 3.15 cm2 (D607 a)
     expect(tapeOf('standoff', { standoffFixing: 'nut' })).toMatch(
-      /One piece of 19 x 19 mm tape, 3\.61 cm², .*about 60 g/,
+      /One piece of 19 x 19 mm tape, 3\.15 cm² less the nut's way in, .*about 60 g/,
     );
+    expect(tapeOf('standoff', { standoffFixing: 'self-tap' })).toMatch(/One piece of 19 x 19 mm tape, 3\.61 cm², /);
+    expect(tapeOf('solid', { standoffs: 'tape' })).toMatch(/a commenter on one Printables mount/);
     expect(tapeOf('standoff', { standoffFixing: 'self-tap', boards: '4' })).toMatch(/4 pieces of 19 x 19 mm tape/);
     expect(tapeOf('standoff', { standoffFixing: 'nut-screwed' })).toBeUndefined();
     expect(tapeOf('standoff', {})).toBeUndefined();

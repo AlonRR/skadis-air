@@ -10,8 +10,12 @@ import {
   DOT_ACROSS_MM,
   DOT_DEEP_MM,
   dotted,
+  NUT_TRIAL_MM,
+  nutDotPoints,
+  nutTrialParams,
   PILOTS,
   standoffDotPoints,
+  trialNuts,
   trialStandoffs,
 } from '../scripts/test-print/trial-standoffs.mjs';
 
@@ -25,7 +29,11 @@ const rings = (m, z) => m.slice(z).toPolygons().length;
 
 /** What is wrong with a trial standoff `solid` of pilot `pilotMm` carrying `count` dots; nothing if it is right. */
 function problems(solid, pilotMm, count) {
-  const plain = makeStandoff(engine, standoffParams({ boards: '1', pilotMm }));
+  return against(solid, makeStandoff(engine, standoffParams({ boards: '1', pilotMm })), count, H);
+}
+
+/** The same, against the plain part it was cut from, `h` tall. */
+function against(solid, plain, count, h) {
   const out = [];
   // the bed face and the layers above it are the plain standoff's, so the dots took none of its contact
   for (const z of [0.01, 0.1, 0.3, 0.5, 1.5]) {
@@ -34,11 +42,11 @@ function problems(solid, pilotMm, count) {
   }
   if (area(solid, 0.1) < MIN_CONTACT_MM2) out.push(`its bed contact is ${area(solid, 0.1).toFixed(1)} mm2`);
   // under the pockets' floors the standoff is the plain one's too: nothing is printed over a hole
-  if (Math.abs(area(solid, H - DOT_DEEP_MM - 0.05) - area(plain, H - DOT_DEEP_MM - 0.05)) > 1e-6) {
+  if (Math.abs(area(solid, h - DOT_DEEP_MM - 0.05) - area(plain, h - DOT_DEEP_MM - 0.05)) > 1e-6) {
     out.push('the dots are deeper than their depth');
   }
   // at the board face each dot is its own closed pocket, in the flat of the ring: whole, clear of the pilot and edge
-  const top = H - 0.01;
+  const top = h - 0.01;
   if (rings(solid, top) !== rings(plain, top) + count)
     out.push(`${rings(solid, top) - rings(plain, top)} dots, not ${count}`);
   const taken = area(plain, top) - area(solid, top);
@@ -71,6 +79,17 @@ PILOTS.forEach((pilotMm, k) => {
   const plain = makeStandoff(engine, standoffParams({ boards: '1', pilotMm: PILOTS[1] }));
   const short = dotted(engine, plain, standoffDotPoints(), 1, DOT_ACROSS_MM, H);
   report('control: 1 dot where 2 are expected', problems(short, PILOTS[1], 2), true);
+}
+// the nut test print (D607 a): each at its seat, its dots in the board face only
+const nutPlain = (p) => makeStandoff(engine, nutTrialParams(p.screwMm, p.nutFitMm));
+trialNuts(engine).forEach((p) =>
+  report(p.name, against(p.solid, nutPlain(p), Math.round(p.nutFitMm * 10), NUT_TRIAL_MM), false),
+);
+// its control: an M4 one with one dot where its 0.2 mm seat has two
+{
+  const p = { screwMm: 4, nutFitMm: 0.2 };
+  const short = dotted(engine, nutPlain(p), nutDotPoints(4), 1, DOT_ACROSS_MM, NUT_TRIAL_MM);
+  report('control: a nut standoff with 1 dot where 2 are expected', against(short, nutPlain(p), 2, NUT_TRIAL_MM), true);
 }
 console.log(`${checked} checks run, ${checked - failed} passed`);
 process.exit(failed === 0 ? 0 : 1);
