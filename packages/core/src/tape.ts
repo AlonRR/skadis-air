@@ -42,3 +42,27 @@ export const TAPE_LENGTH_SETTING = {
   step: 1,
   help: 'The length of each piece of tape you cut from the roll: the pad is that long, and the tape width wide.',
 } as const satisfies NumberSetting;
+
+/** 3M's rule for a static load on its VHB tapes: about four square inches of tape for each pound held still (relayed,
+ * its datasheets: https://multimedia.3m.com/mws/media/2523038O/3m-vhb-tape-specialty-tape-4655.pdf), about 17.6 g a
+ * square centimetre. */
+const GRAMS_PER_CM2 = 453.6 / (4 * 6.4516);
+
+const nice = (n: number) => String(Math.round(n * 100) / 100);
+
+/** What the pieces of tape under a part hold (D609 a, 30 Oct 2026: "609 a"; Q608: "not carry a lot"), as the page says
+ * beside the tape's settings: their area and about what they hold still by that rule, the part's own weight among it;
+ * less where a hook levers the board off the wall; and the pads cleaned first, as tape came off bare PLA on one
+ * Printables mount (model 536629, its comments, read 30 Oct 2026). */
+export function tapeHolds(pieces: number, widthMm: number, lengthMm: number, part: 'board' | 'standoff'): string {
+  const cm2 = (pieces * widthMm * lengthMm) / 100;
+  const grams = Math.round((cm2 * GRAMS_PER_CM2) / 10) * 10;
+  const count = pieces === 1 ? 'One piece' : `${pieces} pieces`;
+  const own = part === 'board' ? "the board's own weight among it" : "the boards' share and the standoff's among it";
+  return (
+    `${count} of ${nice(widthMm)} x ${nice(lengthMm)} mm tape, ${nice(cm2)} cm², ${pieces === 1 ? 'holds' : 'hold'} ` +
+    `about ${grams} g by 3M's rule for its VHB foam tapes, four square inches for each pound held still, ${own}; ` +
+    'less where a hook levers the board off the wall, so hang light things. Wipe the pads and the wall with alcohol ' +
+    'first: one maker reports tape coming off bare PLA twice.'
+  );
+}

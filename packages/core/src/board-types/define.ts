@@ -29,6 +29,9 @@ export interface BoardType<S extends readonly Setting[]> {
   /** What each screw passes, as a sentence the page shows beside the screw size (D264); none for a part with no
    * screw. */
   screws?(values: Values<S>): string | undefined;
+  /** What the tape under the part holds, as a sentence the page shows beside the tape's settings (D609 a); none for a
+   * part not on tape. */
+  tape?(values: Values<S>): string | undefined;
 }
 
 export type AnyBoardType = BoardType<readonly Setting[]>;

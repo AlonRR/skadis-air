@@ -21,6 +21,8 @@ All notable changes to this project are recorded here. The format follows
 - The standoff connector can take wood or PT screws instead: each post is a pilot hole the board's corner screw cuts
   its own thread in, 0.85 times the screw unless set ("Pilot hole", under Advanced), taped to the wall on a whole pad
   or on the screwed foot: "Wood or PT screw, taped to the wall" and "... screwed to the wall" (D611).
+- Under the tape's settings, what its pieces hold: their area, and about what they hold still by 3M's rule for its VHB
+  tapes, with a word on cleaning the pads first (D609).
 
 ### Changed
 

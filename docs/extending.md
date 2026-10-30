@@ -32,7 +32,9 @@ A board type is one file and one line in a list (D11, the extension-registry pra
      `SettingsProblem`, a `RangeError` with the keys of the settings it belongs to, also marks those fields;
    - `label(values)`: the rest of the file name;
    - `screws(values)`, for a part that takes screws: what each passes, as a sentence the page shows under the
-     screw size (D264), or nothing when it has none.
+     screw size (D264), or nothing when it has none;
+   - `tape(values)`, for a part that can stand on tape: what its pieces hold, as a sentence the page shows under the
+     tape's settings (D609, `tapeHolds` in `tape.ts`), or nothing when it is not on tape.
 2. **The line**: add it to `BOARD_TYPES` in `packages/core/src/board-types/index.ts`, in the order
    the page should list it. The page opens on the first.
 

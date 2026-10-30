@@ -491,3 +491,33 @@ function footTop(part: Manifold, x: number, y: number): number {
   const probe = keep(keep(keep(engine.CrossSection.square([0.4, 0.4], true)).extrude(20)).translate([x + 5.6, y, -1]));
   return keep(part.intersect(probe)).boundingBox().max[2];
 }
+
+describe('what the tape holds, said beside its settings (D609 a, 30 Oct 2026: "609 a")', () => {
+  const tapeOf = (id: string, given: Record<string, unknown>) => {
+    const type = boardType(id);
+    const read = readValues(type.settings, given);
+    if (!read.ok) throw new Error(read.errors.map((e) => e.message).join('; '));
+    return type.tape?.(read.values);
+  };
+
+  it('on a board: its four pieces, their area and what they hold by 3M’s static rule, and to clean the pads', () => {
+    for (const id of ['solid', 'lightened', 'skeleton']) {
+      const note = tapeOf(id, { standoffs: 'tape' }) ?? '';
+      // 4 x 19 x 19 mm = 14.44 cm2; at 4 square inches a pound, about 254 g
+      expect(note, id).toMatch(/4 pieces of 19 x 19 mm tape, 14\.44 cm²/);
+      expect(note, id).toMatch(/about 250 g/);
+      expect(note, id).toMatch(/alcohol/);
+      expect(tapeOf(id, { standoffs: 'back' }), id).toBeUndefined();
+    }
+    expect(tapeOf('solid', { standoffs: 'tape', tapeWidthMm: '12', tapeLengthMm: '18' })).toMatch(/8\.64 cm²/);
+  });
+
+  it('on a taped standoff: a piece at each post; none when it is not taped', () => {
+    expect(tapeOf('standoff', { standoffFixing: 'nut' })).toMatch(
+      /One piece of 19 x 19 mm tape, 3\.61 cm², .*about 60 g/,
+    );
+    expect(tapeOf('standoff', { standoffFixing: 'self-tap', boards: '4' })).toMatch(/4 pieces of 19 x 19 mm tape/);
+    expect(tapeOf('standoff', { standoffFixing: 'nut-screwed' })).toBeUndefined();
+    expect(tapeOf('standoff', {})).toBeUndefined();
+  });
+});

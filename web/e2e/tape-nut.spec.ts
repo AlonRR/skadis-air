@@ -142,3 +142,16 @@ test('makes a standoff for wood or PT screws, taped, its pilot hole following th
     },
   );
 });
+
+test('says beside the tape what it holds, and nothing off tape (D609 a)', async ({ page }) => {
+  await ready(page);
+  const note = page.getByTestId('tape-note');
+  await expect(note).toHaveText('');
+  await choose(page, 'standoffs', 'tape');
+  await expect(note).toContainText('4 pieces of 19 x 19 mm tape, 14.44 cm²');
+  await expect(note).toContainText('about 250 g');
+  await page.locator('input[name="tapeLengthMm"]').fill('12');
+  await expect(note).toContainText('9.12 cm²');
+  await choose(page, 'standoffs', 'back');
+  await expect(note).toHaveText('');
+});

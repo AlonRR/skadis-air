@@ -102,6 +102,15 @@ function screwsOf(type: AnyBoardType, values: Parameters<AnyBoardType['build']>[
   }
 }
 
+/** What the part's tape holds (D609 a), or nothing for values the part cannot be made from. */
+function tapeOf(type: AnyBoardType, values: Parameters<AnyBoardType['build']>[1]): string | undefined {
+  try {
+    return type.tape?.(values);
+  } catch {
+    return undefined;
+  }
+}
+
 /** The sample board's printed grams under the form (D313), for a board the file has a figure for; nothing otherwise. */
 function showGrams(type: AnyBoardType, values: { look?: unknown }): void {
   if (gramsNote === null) return;
@@ -114,6 +123,7 @@ function rebuild(type: AnyBoardType, form: Form): void {
   const read = readValues(type.settings, form.read());
   form.show(read.ok ? [] : read.errors, read.warnings);
   if (read.ok) form.screws(screwsOf(type, read.values));
+  form.tape(read.ok ? tapeOf(type, read.values) : undefined);
   showGrams(type, read.ok ? read.values : {});
   const what = groupOf(type) === 'connector' ? 'connector' : 'board';
   // the bed is a field of the form like any other: one it cannot use refuses the build, its message on its field (Q4),

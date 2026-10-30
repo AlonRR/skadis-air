@@ -32,7 +32,7 @@ import {
   screwPlaceSettings,
 } from './screw-places.js';
 import { defineSettings, SettingsProblem, type Values } from './settings.js';
-import { TAPE_LENGTH_MM, TAPE_LENGTH_SETTING, TAPE_STANDOFF_MM, TAPE_WIDTH_SETTING } from './tape.js';
+import { TAPE_LENGTH_MM, TAPE_LENGTH_SETTING, TAPE_STANDOFF_MM, TAPE_WIDTH_SETTING, tapeHolds } from './tape.js';
 import { HOOK_DEPTH_MM, HOOK_DROP_MM, HOOK_WIDTH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import { ALL_OPEN, boardExtent, type Extent, slotPlaces } from './slots.js';
 
@@ -267,6 +267,11 @@ function checkStandoffs(m: MountingParams): void {
  * stands in the wall instead, and a lock screw passes what the standoff leaves under its head. Every corner has its
  * screw, between the slots too (D371 a). Refuses, as the build does, standoffs too short for keyholes or lock screws,
  * where a lock screw would pass less than nothing (Q9). */
+/** What a board's tape holds (D609 a): a piece on each of its four corner posts; nothing off tape. */
+export function mountingTape(m: MountingParams): string | undefined {
+  return m.tapeMm === undefined ? undefined : tapeHolds(4, m.tapeMm, m.tapeLengthMm ?? TAPE_LENGTH_MM, 'board');
+}
+
 export function mountingScrews(m: MountingParams, thicknessMm: number): string | undefined {
   if (m.screwHead === 'none') return undefined;
   checkStandoffs(m);

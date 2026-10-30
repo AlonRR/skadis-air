@@ -11,7 +11,7 @@ import {
   type PocketCorners,
   WARN_MEMBER_MM,
 } from '../lightened.js';
-import { mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
+import { mountingLabel, mountingOf, mountingScrews, mountingTape } from '../mounting.js';
 import { type ChoiceSetting, defineSettings, type NumberSetting, type Values } from '../settings.js';
 import { defineBoardType } from './define.js';
 import { boardLabel, boardParamsOf, boardSettings } from './solid.js';
@@ -101,4 +101,5 @@ export const LIGHTENED = defineBoardType({
     ),
   label: (v) => `${lookLabel(v)}${boardLabel(v)}${latticeLabel(v)}${mountingLabel(v)}`,
   screws: (v) => mountingScrews(mountingOf(v), v.thicknessMm),
+  tape: (v) => mountingTape(mountingOf(v)), // D609 a
 });

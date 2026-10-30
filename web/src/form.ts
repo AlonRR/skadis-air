@@ -21,6 +21,8 @@ export interface Form {
   show(errors: readonly Problem[], warnings: readonly Problem[]): void;
   /** Says under the screw size what each screw passes (D264); nothing when there is no screw. */
   screws(text: string | undefined): void;
+  /** What the tape holds, under the tape's settings (D609 a). */
+  tape(text: string | undefined): void;
 }
 
 function element<K extends keyof HTMLElementTagNameMap>(
@@ -450,6 +452,10 @@ export function renderForm(
   const screwNote = element('p', { class: 'ws-note', 'data-testid': 'screw-note', 'aria-live': 'polite' });
   const screwField = container.querySelector('input[name="screwMm"]')?.closest('.field');
   screwField?.querySelector('.ws-error')?.before(screwNote);
+  // what the tape holds, under the second of the tape's two fields (D609 a)
+  const tapeNote = element('p', { class: 'ws-note', 'data-testid': 'tape-note', 'aria-live': 'polite' });
+  const tapeField = container.querySelector('input[name="tapeLengthMm"]')?.closest('.field');
+  tapeField?.querySelector('.ws-error')?.before(tapeNote);
 
   return {
     read,
@@ -458,6 +464,9 @@ export function renderForm(
       for (const i of container.querySelectorAll('[aria-invalid]')) i.removeAttribute('aria-invalid');
       for (const e of errors) put(container, 'error', e);
       for (const w of warnings) put(container, 'warning', w);
+    },
+    tape: (text) => {
+      tapeNote.textContent = text ?? '';
     },
     screws: (text) => {
       screwNote.textContent = text ?? '';

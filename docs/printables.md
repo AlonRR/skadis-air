@@ -141,6 +141,11 @@ clip, and back to the solid board._
 - **Lock screws**: in place of keyholes, a screw through a slot at each corner into the standoff behind it holds the
   board; every slot still takes a hook.
 - **A slot clip for seams between the slots**: a peg in the nearest slot each side, its bar on the diagonal.
+- **Tape**: standoffs that end in pads for double-sided tape, for a wall you would rather not drill; the board has no
+  screw holes, and the page says about what the tape holds. For light things.
+- **Standoffs held by nuts or wood screws**: the standoff can hold the boards by an M3 to M5 nut in each post, pulled
+  into its seat from the wall side, or by a wood or PT screw cutting its own thread, and stand on tape or a foot
+  screwed to the wall.
 - **Printers**: 30 printers' beds by maker, or your own.
 
 [GIF `page-edges.gif`]
@@ -186,14 +191,14 @@ Not affiliated with IKEA. SKÅDIS is IKEA's name for its pegboard system.
 
 ### Updates
 
-#### 2026-10-30 · v0.10.0
-
-Dated on release (A587); this line is not part of the text.
+#### 2026-10-31 · v0.10.0
 
 - "What to make" is Board, Wall or Connector: Wall makes a wall of panels your bed takes.
 - The Sides control draws the board as you set it, and the form runs Look, Open sides, Sides, the screw holes and
   standoffs, then the size right above the screw size.
 - With keyholes or lock screws, the standoffs stay on: "None" is greyed out, with a note saying why.
+- Standoffs for double-sided tape, 19 x 19 mm pieces on 18 mm standoffs unless set, and a line on what they hold.
+- The standoff connector can hold the boards by nuts, or by wood or PT screws, taped or screwed to the wall.
 
 #### 2026-10-29 · files
 

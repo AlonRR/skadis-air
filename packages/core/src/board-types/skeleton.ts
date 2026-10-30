@@ -1,7 +1,7 @@
 // The skeleton board as a board type (D146, D147, D161): the lightened board's settings, its look first (Q510), with
 // the core every member narrows to under Advanced after the web, so the two boards cannot drift apart.
 import type { PocketCorners } from '../lightened.js';
-import { mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
+import { mountingLabel, mountingOf, mountingScrews, mountingTape } from '../mounting.js';
 import {
   makeSkeletonBoard,
   MAX_CORE_MM,
@@ -64,4 +64,5 @@ export const SKELETON = defineBoardType({
     return `${lookLabel(v)}${boardLabel(v)}${latticeLabel(v)}${core}${mountingLabel(v)}`;
   },
   screws: (v) => mountingScrews(mountingOf(v), v.thicknessMm),
+  tape: (v) => mountingTape(mountingOf(v)), // D609 a
 });

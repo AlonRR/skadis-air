@@ -3,7 +3,7 @@
 // on the main form (D479): its holes take the boards' corner screws, the screw size itself, so it has no size of its
 // own. It prints as built, wall face down, the posts of a shared one on top (C101).
 import { SCREW_MM, SCREW_SIZE_SETTING } from '../screw-places.js';
-import { TAPE_LENGTH_SETTING, TAPE_STANDOFF_MM, TAPE_WIDTH_SETTING } from '../tape.js';
+import { TAPE_LENGTH_SETTING, TAPE_STANDOFF_MM, TAPE_WIDTH_SETTING, tapeHolds } from '../tape.js';
 import { defineSettings } from '../settings.js';
 import {
   makeStandoff,
@@ -16,6 +16,9 @@ import {
   type StandoffParams,
 } from '../standoff.js';
 import { defineBoardType } from './define.js';
+
+/** How many posts, so pieces of tape, it has for each choice of boards. */
+const POSTS = { '1': 1, '2': 2, '2-stacked': 2, '4': 4 } as const;
 
 /** How the file name says which boards it serves. */
 const BOARDS_IN_NAME = { '1': '1-board', '2': '2-boards', '2-stacked': '2-boards-stacked', '4': '4-boards' } as const;
@@ -151,4 +154,6 @@ export const STANDOFF = defineBoardType({
       : '') +
     (v.screwMm === SCREW_MM ? '' : `-screw-${v.screwMm}mm`),
   screws: (v) => standoffScrews(paramsOf(v)),
+  tape: (v) =>
+    onTape(v.standoffFixing) ? tapeHolds(POSTS[v.boards], v.tapeWidthMm, v.tapeLengthMm, 'standoff') : undefined, // D609 a
 });
