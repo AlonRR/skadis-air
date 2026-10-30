@@ -314,9 +314,11 @@ describe('the solid board type', () => {
       ['between', 'Between the slots'],
     ]);
     expect(seams.default).toBe('through');
-    // right after the sides it moves
+    // first, then the sides it moves, then the size (D529 a, 30 Oct 2026: right under the Look, where a board has one)
     const keys = solid.settings.map((x) => x.key);
-    expect(keys.indexOf('seams')).toBe(keys.indexOf('sides') + 1);
+    expect(keys.slice(0, 5)).toEqual(['seams', 'sides', 'widthMm', 'heightMm', 'thicknessMm']);
+    for (const t of [boardType('lightened'), boardType('skeleton')])
+      expect(t.settings.map((x) => x.key).slice(0, 4)).toEqual(['look', 'seams', 'sides', 'widthMm']);
   });
 
   it('builds a board between the slots with its open sides moved, and names it so when a side is open (D288)', () => {

@@ -21,29 +21,9 @@ const SIZE = {
 } as const;
 const PANEL = { ...SIZE, max: MAX_PANEL_TILES * TILE_MM, default: MAX_PANEL_TILES * TILE_MM, advanced: true } as const;
 
-/** The solid board's own settings, before the mounting's: its size, thickness, sides and slots. */
+/** The solid board's own settings, before the mounting's: its open sides and sides, size, thickness and slots. */
 export const BOARD_SETTINGS = defineSettings([
-  { kind: 'number', key: 'widthMm', label: 'Width', default: 4 * TILE_MM, ...SIZE },
-  { kind: 'number', key: 'heightMm', label: 'Height', default: 4 * TILE_MM, ...SIZE },
-  {
-    kind: 'number',
-    key: 'thicknessMm',
-    label: 'Thickness',
-    unit: 'mm',
-    default: SOLID_BOARD_DEFAULTS.thicknessMm,
-    min: 2.5,
-    max: 10,
-    step: 0.1,
-    warnOutside: [4, 5.5], // the range IKEA hooks accept (C43)
-    help: 'IKEA hooks fit boards about 4 to 5.5 mm thick.',
-  },
-  {
-    kind: 'sides',
-    key: 'sides',
-    label: 'Sides',
-    default: ALL_OPEN,
-    help: 'An open side has half slots, to join a neighbour or add one later; a closed side is a solid edge.',
-  },
+  // Open sides, then the sides it moves, first (D529 a, 30 Oct 2026: right under the Look, where a board has one)
   {
     kind: 'choice',
     key: 'seams',
@@ -59,6 +39,27 @@ export const BOARD_SETTINGS = defineSettings([
       "slots' ends, 10 mm right of or above where it would otherwise run, so every slot is whole; a board with one " +
       'side of a pair open and the other closed is 10 mm larger or smaller that way. A corner screw that would land ' +
       'on a slot there moves in to the nearest place with as much room round it as a corner through the slots has.',
+  },
+  {
+    kind: 'sides',
+    key: 'sides',
+    label: 'Sides',
+    default: ALL_OPEN,
+    help: 'An open side has half slots, to join a neighbour or add one later; a closed side is a solid edge.',
+  },
+  { kind: 'number', key: 'widthMm', label: 'Width', default: 4 * TILE_MM, ...SIZE },
+  { kind: 'number', key: 'heightMm', label: 'Height', default: 4 * TILE_MM, ...SIZE },
+  {
+    kind: 'number',
+    key: 'thicknessMm',
+    label: 'Thickness',
+    unit: 'mm',
+    default: SOLID_BOARD_DEFAULTS.thicknessMm,
+    min: 2.5,
+    max: 10,
+    step: 0.1,
+    warnOutside: [4, 5.5], // the range IKEA hooks accept (C43)
+    help: 'IKEA hooks fit boards about 4 to 5.5 mm thick.',
   },
   {
     kind: 'choice',

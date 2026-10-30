@@ -64,13 +64,63 @@
       .help {
         margin-bottom: var(--space-2);
       }
-      /* The Sides control's board drawing keeps its 4 to 3 shape (6 rem by 4.5 rem, the design system's --sides-w and
-        --sides-h) when the control narrows on a phone under 375 px (D419). The design system (v0.9.0) lets the
-        drawing's column give way but holds its row at --sides-h, so without this it turns into a tall strip
-        (49 by 72 px at 320 px). */
-      .ws-sides__board {
-        height: auto;
+      /* The Sides control draws the board as set (D528 a, 30 Oct 2026): its buttons inside the board's drawing, which
+        fills the control in a 4 to 3 shape, as wide as the fieldset allows up to 18 rem, so it fits a 320 px phone
+        (D419). The top and bottom buttons span the drawing, so the middle column can give way to the side buttons. A
+        closed side is a solid edge in the action blue, an open one dashed; a corner is round only where both its sides
+        are closed, as the board is built. */
+      .ws-sides {
+        position: relative;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        width: min(100%, 18rem);
         aspect-ratio: 4 / 3;
+        padding: var(--space-3);
+        box-sizing: border-box;
+      }
+      .ws-sides__board {
+        grid-area: 1 / 1 / 4 / 4;
+        align-self: stretch;
+        justify-self: stretch;
+        width: auto;
+        height: auto;
+        border: var(--ring) dashed var(--border-strong);
+        border-radius: 0;
+        margin: calc(-1 * var(--space-3));
+        z-index: 0;
+      }
+      .ws-sides__btn {
+        z-index: 1;
+      }
+      .ws-sides__top {
+        grid-area: 1 / 1 / 2 / 4;
+      }
+      .ws-sides__bottom {
+        grid-area: 3 / 1 / 4 / 4;
+      }
+      .ws-sides__board[data-top='closed'] {
+        border-top: calc(2 * var(--ring)) solid var(--action);
+      }
+      .ws-sides__board[data-right='closed'] {
+        border-right: calc(2 * var(--ring)) solid var(--action);
+      }
+      .ws-sides__board[data-bottom='closed'] {
+        border-bottom: calc(2 * var(--ring)) solid var(--action);
+      }
+      .ws-sides__board[data-left='closed'] {
+        border-left: calc(2 * var(--ring)) solid var(--action);
+      }
+      .ws-sides__board[data-top='closed'][data-left='closed'] {
+        border-top-left-radius: var(--radius-md);
+      }
+      .ws-sides__board[data-top='closed'][data-right='closed'] {
+        border-top-right-radius: var(--radius-md);
+      }
+      .ws-sides__board[data-bottom='closed'][data-right='closed'] {
+        border-bottom-right-radius: var(--radius-md);
+      }
+      .ws-sides__board[data-bottom='closed'][data-left='closed'] {
+        border-bottom-left-radius: var(--radius-md);
       }
       /* A setting that does not apply to what is chosen (D372): its label greyed as the design system greys its
         disabled controls; its "i" button and help stay as they are, to say when it applies. */

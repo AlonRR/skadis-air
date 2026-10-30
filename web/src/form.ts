@@ -262,7 +262,10 @@ function sidesField(s: SidesSetting, changed: () => void, start?: unknown): Fiel
   field.append(legend);
   if (folded !== undefined) field.append(folded.help);
   const grid = element('div', { class: 'ws-sides', role: 'group', 'aria-label': `Closed ${s.label.toLowerCase()}` });
-  grid.append(element('div', { class: 'ws-sides__board', 'aria-hidden': 'true' }));
+  // The drawing shows the board as set (D528 a, 30 Oct 2026): each side's state on it, for the page's style to draw a
+  // closed side solid and blue and a corner round where both its sides are closed, as the board is built
+  const board = element('div', { class: 'ws-sides__board', 'aria-hidden': 'true' });
+  grid.append(board);
   for (const side of SIDES) {
     const name = `${side[0]?.toUpperCase() ?? ''}${side.slice(1)}`;
     const button = element(
@@ -270,7 +273,10 @@ function sidesField(s: SidesSetting, changed: () => void, start?: unknown): Fiel
       { type: 'button', 'data-side': side, class: `ws-sides__btn ws-sides__${side}` },
       name,
     );
-    const show = () => button.setAttribute('aria-pressed', String(state[side] === 'closed'));
+    const show = () => {
+      button.setAttribute('aria-pressed', String(state[side] === 'closed'));
+      board.setAttribute(`data-${side}`, state[side]);
+    };
     show();
     button.addEventListener('click', () => {
       state[side] = state[side] === 'open' ? 'closed' : 'open';

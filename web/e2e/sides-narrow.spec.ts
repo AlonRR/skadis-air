@@ -4,7 +4,9 @@
 // The Sides control on a narrow phone (D419 a, 24 Oct 2026). The design system's `.ws-sides` is as wide as its parts
 // laid in a row (about 300 px), so in a fieldset 253 px wide at 320 px it ended 30 px past the fieldset and 14 px past
 // the screen, where the page clipped it; at 360 px it ran 7 px into the fieldset's padding (C490, C458). It now
-// shrinks to its fieldset's content box, and at 375 px and wider stays as it was.
+// shrinks to its fieldset's content box. Since D528 a (30 Oct 2026) its buttons sit inside the board's drawing, as wide
+// as the fieldset allows up to 18 rem; `sides-drawing.spec.ts` holds that, so the design system's own width is no
+// longer checked here.
 import { expect, test, type Page } from '@playwright/test';
 import { sidewaysScroll } from './design-system.js';
 
@@ -83,20 +85,6 @@ for (const width of [320, 360, 375]) {
       for (const box of await page.locator('form input[type="checkbox"]:visible').all())
         await box.click({ trial: true });
     });
-
-    // Below 375 px it shrinks; from 375 px it is as the design system makes it (the guard against a change there)
-    if (width >= 375)
-      test('at 375 px the control is as wide as the design system makes it', async ({ page }) => {
-        await page.goto('./');
-        await expect(page.locator('.ws-sides')).toBeVisible();
-        const m = await measure(page);
-        // the board drawing at its token size, 6 rem by 4.5 rem, and the buttons at their own widths (300 px, measured)
-        expect(m.sidesWidth).toBeGreaterThan(296);
-        expect(m.sidesWidth).toBeLessThan(304);
-        const board = await page.locator('.ws-sides__board').boundingBox();
-        expect(board?.width).toBeCloseTo(98, 0); // 96 and its 1 px border each side
-        expect(board?.height).toBeCloseTo(74, 0); // 72 and its border
-      });
   });
 }
 

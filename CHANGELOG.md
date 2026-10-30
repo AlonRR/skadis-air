@@ -6,6 +6,12 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The Sides control draws the board as set: its buttons sit inside the board's drawing, a closed side is a solid blue
+  edge and an open one dashed, and a corner is round where both its sides are closed, as the board is built (D528).
+- "Open sides" comes first on a board's form, right under the Look, then "Sides", then the size (D529).
+
 ## [0.9.0] - 2026-10-28
 
 ### Added
