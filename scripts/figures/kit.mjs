@@ -44,7 +44,7 @@ export async function makeKit(repo, dist = 'packages/core/dist') {
   /** A page type's part (its id, or the type itself) at its starting values and the given ones, as it is built (not as it prints). */
   const built = (id, given = {}) => {
     const type = typeof id === 'string' ? lib.boardType(id) : id;
-    const read = lib.readValues(type.settings, { ...lib.defaultValues(type.settings), ...given });
+    const read = lib.readValues(type.settings, given); // what is not given starts where the rest start it (D603 b)
     if (!read.ok) throw new Error(`${id}: ${read.errors.map((e) => e.message).join('; ')}`);
     const made = lib.buildBoard(engine, type, read.values);
     if (!made.ok) throw new Error(`${id}: ${made.problem}`);

@@ -7,7 +7,7 @@
 // first under Advanced, as it puts the test prints there (D357). A setting that applies only with another choice is
 // greyed out, its controls disabled, while it does not (D372): the reader leaves it unchecked then, so nothing marks it.
 // An option the other values rule out is greyed out the same way, why said under its choice (D589). A setting the page
-// sets itself is kept off the form (D590).
+// sets itself is kept off the form (D590). A number whose starting value hangs on the others follows it until set (D603).
 import { optionsOff, readTypedNumber, settingsNotApplying } from 'skadis-air';
 import type { AnyBoardType, ChoiceSetting, NumberSetting, Problem, Setting, SidesSetting } from 'skadis-air';
 
@@ -126,6 +126,8 @@ interface Field<V> {
   enable: (on: boolean) => void;
   /** Greys out the options the other values rule out, saying why under them, and moves off one so chosen (D589). */
   rule?: (out: Readonly<Record<string, string>>) => void;
+  /** Moves a number to where the other values start it (D603 b), while it holds where they last started it. */
+  follow?: (values: Readonly<Record<string, unknown>>) => void;
 }
 
 /** Marks a field as applying or not, so the page greys its label and notes as the design system greys a control. */
@@ -244,7 +246,28 @@ function numberField(s: NumberSetting, changed: () => void, start?: unknown): Fi
     down.disabled = !on;
     up.disabled = !on;
   };
-  return { field, read: () => (input.validity.badInput ? 'not a number' : input.value), enable };
+  // a starting value that hangs on the others (D603 b): followed while the field holds the one last started at, so a
+  // value set by hand stays; the first call only notes where it starts
+  const startsAt = s.startsAt;
+  let started: number | undefined;
+  const follow =
+    startsAt === undefined
+      ? undefined
+      : (values: Readonly<Record<string, unknown>>) => {
+          const now = startsAt(values);
+          const typed = readTypedNumber(input.value);
+          if (started !== undefined && now !== started && typed.ok && typed.value === started) {
+            input.value = String(now);
+            say();
+          }
+          started = now;
+        };
+  return {
+    field,
+    read: () => (input.validity.badInput ? 'not a number' : input.value),
+    enable,
+    ...(follow === undefined ? {} : { follow }),
+  };
 }
 
 function sidesField(s: SidesSetting, changed: () => void, start?: unknown): Field<Record<Side, string>> {
@@ -389,6 +412,7 @@ export function renderForm(
   const readers = new Map<string, () => unknown>();
   const enablers = new Map<string, (on: boolean) => void>();
   const rulers = new Map<string, NonNullable<Field<unknown>['rule']>>();
+  const followers = new Map<string, NonNullable<Field<unknown>['follow']>>();
   const read = () => Object.fromEntries([...readers].map(([key, r]) => [key, r()]));
   // greys out what does not apply to the values held now, and turns the rest on, before the page reads them (D372)
   const applies = () => {
@@ -397,6 +421,8 @@ export function renderForm(
     // and the options the values rule out, each choice moved off one so chosen (D589)
     const out = optionsOff(type.settings, read());
     for (const [key, rule] of rulers) rule(out[key] ?? {});
+    // and each number whose starting value hangs on them moved with it, unless set by hand (D603 b)
+    for (const follow of followers.values()) follow(read());
   };
   const edited = () => {
     applies();
@@ -413,6 +439,7 @@ export function renderForm(
     readers.set(s.key, made.read);
     enablers.set(s.key, made.enable);
     if (made.rule !== undefined) rulers.set(s.key, made.rule);
+    if (made.follow !== undefined) followers.set(s.key, made.follow);
   }
   applies();
   container.append(main);

@@ -127,6 +127,13 @@ same pass.
 on a 4 mm foot screwed to the wall by two countersunk 4 mm screws (orange), driven before the boards go on, which then
 cover them; no tape. The same pass.
 
+## D603: the tape as chosen
+
+![A solid board from behind on 18 mm standoffs, each corner post flaring out to a 19 x 19 mm pad in orange](d603-tape-board-back.png)
+
+**What it shows:** "603 b" as built: the board on tape standoffs, now 18 mm tall, each post flaring out at 45 degrees
+behind the hooks' 8 mm room to a 19 x 19 mm pad (orange), a piece cut from a 19 mm roll. The `tape-nut` pass.
+
 ## D591: as chosen
 
 ![The cover with each lattice board's halves 10 mm apart, a grey bar beside each half naming Curved and Straight](d591-chosen.png)

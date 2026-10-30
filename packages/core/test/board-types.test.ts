@@ -539,7 +539,7 @@ describe("the mounting's settings that apply only with another choice (D372)", (
       /^With lock screws, at the bottom with keyholes or as the screw holes, and "Own" chosen above: /,
     );
     expect(help('standoffHeightMm')).toMatch(
-      /^With standoffs on the back, or keyholes or lock screws, which stand on them: /,
+      /^With standoffs on the back or for tape, or keyholes or lock screws, which stand on them: /,
     );
   });
 });
@@ -699,8 +699,8 @@ describe('the standoff connector type (D91 to D94)', () => {
       boards: '1',
       standoffFixing: 'screw', // a nut, taped, as an option (D592 a)
       heightMm: 15,
-      tapeWidthMm: 12,
-      tapeLengthMm: 18,
+      tapeWidthMm: 19,
+      tapeLengthMm: 19,
       screwMm: 4,
     });
   });

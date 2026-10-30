@@ -3,7 +3,7 @@
 // on the main form (D479): its holes take the boards' corner screws, the screw size itself, so it has no size of its
 // own. It prints as built, wall face down, the posts of a shared one on top (C101).
 import { SCREW_MM, SCREW_SIZE_SETTING } from '../screw-places.js';
-import { TAPE_LENGTH_SETTING, TAPE_WIDTH_SETTING } from '../tape.js';
+import { TAPE_LENGTH_SETTING, TAPE_STANDOFF_MM, TAPE_WIDTH_SETTING } from '../tape.js';
 import { defineSettings } from '../settings.js';
 import { makeStandoff, standoffParams, standoffScrews, STANDOFF_DEFAULTS, type StandoffParams } from '../standoff.js';
 import { defineBoardType } from './define.js';
@@ -72,10 +72,11 @@ export const STANDOFF = defineBoardType({
       label: 'Height',
       unit: 'mm',
       default: STANDOFF_DEFAULTS.heightMm,
+      startsAt: (v) => (v['standoffFixing'] === 'nut' ? TAPE_STANDOFF_MM : STANDOFF_DEFAULTS.heightMm), // C604
       min: 3,
       max: 40,
       step: 0.5,
-      help: "How far it holds the boards off the wall: 15 mm unless set; IKEA's spacers hold them about 20 mm off. For 2 or 4 boards, at least 12 mm.",
+      help: "How far it holds the boards off the wall: 15 mm unless set, and 18 mm taped, as tape boards stand; IKEA's spacers hold them about 20 mm off. For 2 or 4 boards, at least 12 mm.",
     },
     { ...TAPE_WIDTH_SETTING, appliesWhen: (v) => v['standoffFixing'] === 'nut' }, // D593, Q594
     { ...TAPE_LENGTH_SETTING, appliesWhen: (v) => v['standoffFixing'] === 'nut' }, // C601

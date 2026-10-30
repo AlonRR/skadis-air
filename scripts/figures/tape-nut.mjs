@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Alon A. Rabinowitz
 // SPDX-License-Identifier: MPL-2.0
 //
-// Tape standoffs and the nut standoff, as built (D592 a, D593, Q594, D600, C601; 30 Oct 2026): a solid board's back on
+// Tape standoffs and the nut standoff, as built (D592 a, D593, Q594, D600, C601, D603; 30 Oct 2026): a solid board's back on
 // tape standoffs, each rectangular pad in orange; the standoff held by a nut, cut through its nut's pocket, the nut in
 // orange where it sits, beside a 2-board one whole; and the nut standoff screwed to the wall, its foot's screws in
 // orange. Each part the library's own.
@@ -12,13 +12,13 @@ export function build(kit) {
   const { lib, engine, box, cylinder, mesh, split, built, COLOURS, CrossSection } = kit;
   const board = built('solid', { screwHead: 'none', standoffs: 'tape' });
   // the pads: all of the standoffs past the hooks' 8 mm room behind the board
-  const padRegion = box(-5, 165, -5, 165, -16, -8);
+  const padRegion = box(-5, 165, -5, 165, -19, -8);
   const tapeScene = {
     id: 'tape-board-back',
     title: 'Board · tape standoffs, from behind',
     caption: [
-      'A 160 x 160 mm solid board on 15 mm standoffs "For tape": each corner post flares out at 45 degrees behind the',
-      "hooks' 8 mm room to a 12 x 18 mm pad at the wall, a piece cut from a 12 mm roll. No screw holes; it prints face down.",
+      'A 160 x 160 mm solid board on 18 mm standoffs "For tape": each corner post flares out at 45 degrees behind the',
+      "hooks' 8 mm room to a 19 x 19 mm pad at the wall, a piece cut from a 19 mm roll. No screw holes; it prints face down.",
     ],
     legend: [
       ['the pads and their flare, past the hooks’ room', COLOURS.orange],
@@ -50,7 +50,7 @@ export function build(kit) {
     ],
     legend: [
       ['the nut, ISO 4032 M4, 7 mm across the flats', COLOURS.orange],
-      ['the standoff, on a 12 x 18 mm tape pad', COLOURS.grey],
+      ['the standoff, on a 19 x 19 mm tape pad', COLOURS.grey],
     ],
     camera: { position: [62, -70, 48], target: [4, 14, 6], fov: 30 },
     labels: [],

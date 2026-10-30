@@ -290,3 +290,43 @@ describe('an option that another choice rules out (D589)', () => {
     expect(optionsOff(RULED, { head: 'countersunk' })).toEqual({});
   });
 });
+
+describe('a starting value that hangs on another choice (D603 b)', () => {
+  const STARTS = defineSettings([
+    {
+      kind: 'choice',
+      key: 'feet',
+      label: 'Feet',
+      options: [
+        { value: 'back', label: 'On the back' },
+        { value: 'tape', label: 'For tape' },
+      ],
+      default: 'back',
+    },
+    {
+      kind: 'number',
+      key: 'tallMm',
+      label: 'Feet height',
+      unit: 'mm',
+      default: 15,
+      startsAt: (v) => (v['feet'] === 'tape' ? 18 : 15),
+      min: 3,
+      step: 0.5,
+    },
+  ]);
+
+  it('reads a value not given as what the others start it at', () => {
+    const tall = (given: Record<string, unknown>) => {
+      const read = readValues(STARTS, given);
+      return read.ok && read.values.tallMm;
+    };
+    expect(tall({ feet: 'tape' })).toBe(18);
+    expect(tall({ feet: 'back' })).toBe(15);
+    expect(tall({})).toBe(15);
+  });
+
+  it('keeps a value given, whatever the others start it at', () => {
+    const read = readValues(STARTS, { feet: 'tape', tallMm: '16' });
+    expect(read.ok && read.values.tallMm).toBe(16);
+  });
+});

@@ -18,6 +18,9 @@ export interface NumberSetting {
   label: string;
   unit: 'mm';
   default: number;
+  /** A starting value that hangs on the others (D603 b), as the standoffs start taller with tape: read when the setting
+   * is not given; the page's field follows it while it holds the value it last started at. */
+  startsAt?: (values: Readonly<Record<string, unknown>>) => number;
   min: number;
   max?: number; // none: as large as given (a wall's size, D196)
   step: number; // the control's step
@@ -196,6 +199,10 @@ function readEach(
     else if (s.kind === 'choice') values[s.key] = readChoice(s, given[s.key], errors);
     else values[s.key] = readSides(s, given[s.key], errors);
   }
+  // a number not given starts where the others start it (D603 b), once they are all read
+  for (const s of settings)
+    if (s.kind === 'number' && s.startsAt !== undefined && given[s.key] === undefined)
+      values[s.key] = s.startsAt(values);
   return { values, errors, warnings };
 }
 

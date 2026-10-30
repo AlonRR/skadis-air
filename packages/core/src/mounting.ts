@@ -32,7 +32,7 @@ import {
   screwPlaceSettings,
 } from './screw-places.js';
 import { defineSettings, SettingsProblem, type Values } from './settings.js';
-import { TAPE_LENGTH_MM, TAPE_LENGTH_SETTING, TAPE_WIDTH_SETTING } from './tape.js';
+import { TAPE_LENGTH_MM, TAPE_LENGTH_SETTING, TAPE_STANDOFF_MM, TAPE_WIDTH_SETTING } from './tape.js';
 import { HOOK_DEPTH_MM, HOOK_DROP_MM, HOOK_WIDTH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import { ALL_OPEN, boardExtent, type Extent, slotPlaces } from './slots.js';
 
@@ -1103,8 +1103,8 @@ export const MOUNTING_HOLES = defineSettings([
     default: 'none',
     help:
       'Posts on the back at the corners, round the screws, that hold the board off the wall so hooks have room. ' +
-      'Keyholes and lock screws need them. For tape, each ends at the wall in a round pad for a square of ' +
-      'double-sided tape, and the board has no screw holes.',
+      'Keyholes and lock screws need them. For tape, each ends at the wall in a rectangular pad for a piece of ' +
+      'double-sided tape, the standoffs start at 18 mm, and the board has no screw holes.',
   },
   { ...TAPE_WIDTH_SETTING, appliesWhen: (v) => v['standoffs'] === 'tape' }, // D593, Q594
   { ...TAPE_LENGTH_SETTING, appliesWhen: (v) => v['standoffs'] === 'tape' }, // C601
@@ -1136,12 +1136,14 @@ export const MOUNTING_FINE = defineSettings([
     label: 'Standoff height',
     unit: 'mm',
     default: STANDOFF_DEFAULT_MM,
+    startsAt: (v) => (v['standoffs'] === 'tape' ? TAPE_STANDOFF_MM : STANDOFF_DEFAULT_MM), // D603 b
     min: 3,
     max: 40,
     step: 0.5,
     help:
-      'With standoffs on the back, or keyholes or lock screws, which stand on them: how far the standoffs hold the ' +
-      "board off the wall, 15 mm unless set; IKEA's spacers hold it about 20 mm off.",
+      'With standoffs on the back or for tape, or keyholes or lock screws, which stand on them: how far the ' +
+      "standoffs hold the board off the wall, 15 mm unless set, and 18 mm for tape, which a 19 mm piece's pad needs; " +
+      "IKEA's spacers hold it about 20 mm off.",
     advanced: true,
     appliesWhen: (v) =>
       v['standoffs'] === 'back' ||

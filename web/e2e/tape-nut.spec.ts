@@ -26,16 +26,17 @@ test('makes a board on tape standoffs, its screw holes greyed out with why, its 
     await expect(page.locator(`input[name="screwHead"][value="${head}"]`)).toBeDisabled();
   await expect(page.getByTestId('ruled-screwHead')).toContainText('no screw holes');
   await expect(tape).toBeEnabled();
-  await expect(tape).toHaveValue('12');
+  await expect(tape).toHaveValue('19'); // D603 b
   // a piece of a roll: its length too (the owner, 30 Oct 2026: "tape comes on a roll and is cut to rectangular pieces")
-  await expect(page.locator('input[name="tapeLengthMm"]')).toHaveValue('18');
-  await expect(status(page)).toHaveAttribute('data-file-name', 'skadis-solid-160x160-tape-12x18mm-standoffs-15mm.stl', {
+  await expect(page.locator('input[name="tapeLengthMm"]')).toHaveValue('19');
+  await expect(status(page)).toHaveAttribute('data-file-name', 'skadis-solid-160x160-tape-19x19mm-standoffs-18mm.stl', {
     timeout: 30_000,
   });
-  // a wider piece on standoffs too short for its flare: refused, saying how tall, the fields marked
+  // a larger piece on standoffs too short for its flare: refused, saying how tall, the fields marked
   await tape.fill('20');
+  await page.locator('input[name="tapeLengthMm"]').fill('20');
   await expect(status(page)).toHaveAttribute('data-state', 'problem', { timeout: 30_000 });
-  await expect(status(page)).toContainText('at least 17.45 mm');
+  await expect(status(page)).toContainText('at least 18.14 mm');
   // and back: screw holes free again
   await choose(page, 'standoffs', 'back');
   await expect(page.locator('input[name="screwHead"][value="countersunk"]')).toBeEnabled();
@@ -47,7 +48,7 @@ test('makes a standoff held by a nut and taped, named for both, and says which s
   await choose(page, 'boardType', 'standoff');
   await expect(page.locator('input[name="tapeWidthMm"]')).toBeDisabled();
   await choose(page, 'standoffFixing', 'nut');
-  await expect(status(page)).toHaveAttribute('data-file-name', 'skadis-standoff-1-board-15mm-nut-tape-12x18mm.stl', {
+  await expect(status(page)).toHaveAttribute('data-file-name', 'skadis-standoff-1-board-18mm-nut-tape-19x19mm.stl', {
     timeout: 30_000,
   });
   await expect(page.getByTestId('screw-note')).toContainText('countersunk M4 machine screw');
@@ -73,4 +74,34 @@ test('makes a nut standoff screwed to the wall, no tape, and says both screws (D
   await page.locator('input[name="heightMm"]').fill('11');
   await expect(status(page)).toHaveAttribute('data-state', 'problem', { timeout: 30_000 });
   await expect(status(page)).toContainText('at least 12 mm');
+});
+
+test('starts the standoffs at 18 mm with tape, and back at 15 without, unless set (D603 b)', async ({ page }) => {
+  await ready(page);
+  const height = page.locator('input[name="standoffHeightMm"]');
+  await expect(height).toHaveValue('15');
+  await choose(page, 'standoffs', 'tape');
+  await expect(height).toHaveValue('18');
+  await choose(page, 'standoffs', 'back');
+  await expect(height).toHaveValue('15');
+  // a height set by hand stays where it was set
+  await page.getByTestId('advanced').locator('summary').click();
+  await height.fill('20');
+  await choose(page, 'standoffs', 'tape');
+  await expect(height).toHaveValue('20');
+  await expect(status(page)).toHaveAttribute('data-file-name', 'skadis-solid-160x160-tape-19x19mm-standoffs-20mm.stl', {
+    timeout: 30_000,
+  });
+});
+
+test('starts a taped standoff at 18 mm, as tape boards stand (C604)', async ({ page }) => {
+  await ready(page);
+  await choose(page, 'typeGroup', 'connector');
+  await choose(page, 'boardType', 'standoff');
+  const height = page.locator('input[name="heightMm"]');
+  await expect(height).toHaveValue('15');
+  await choose(page, 'standoffFixing', 'nut');
+  await expect(height).toHaveValue('18');
+  await choose(page, 'standoffFixing', 'nut-screwed');
+  await expect(height).toHaveValue('15');
 });

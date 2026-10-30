@@ -58,10 +58,10 @@ function facingDown(solid: Manifold, z0: number, z1: number): number {
 }
 
 describe('the tape (Q594; the owner, 30 Oct 2026: "rectangular as tape comes on a roll")', () => {
-  it('is a piece of a roll: its width, 12 mm unless set, and the length cut, 18 mm unless set', () => {
+  it('is a piece of a roll: 19 mm tape cut 19 mm long unless set (D603 b)', () => {
     const of = (t: typeof TAPE_WIDTH_SETTING | typeof TAPE_LENGTH_SETTING) => [t.key, t.default, t.min, t.max];
-    expect(of(TAPE_WIDTH_SETTING)).toEqual(['tapeWidthMm', 12, 10, 40]);
-    expect(of(TAPE_LENGTH_SETTING)).toEqual(['tapeLengthMm', 18, 10, 60]);
+    expect(of(TAPE_WIDTH_SETTING)).toEqual(['tapeWidthMm', 19, 10, 40]);
+    expect(of(TAPE_LENGTH_SETTING)).toEqual(['tapeLengthMm', 19, 10, 60]);
     for (const type of [boardType('solid'), boardType('lightened'), boardType('skeleton'), boardType('standoff')]) {
       for (const key of ['tapeWidthMm', 'tapeLengthMm'])
         expect(
@@ -125,7 +125,9 @@ describe('tape standoffs on a board (D593)', () => {
     expect(degenerateFacets(meshOf(taped()))).toBe(0);
     for (const id of ['lightened', 'skeleton']) {
       const type = boardType(id);
-      const built = buildBoard(engine, type, { ...defaultValues(type.settings), standoffs: 'tape', screwHead: 'none' });
+      const read = readValues(type.settings, { standoffs: 'tape' });
+      if (!read.ok) throw new Error(`${id}: ${read.errors.map((e) => e.message).join('; ')}`);
+      const built = buildBoard(engine, type, read.values);
       expect(built.ok, id).toBe(true);
       if (!built.ok) continue;
       made.push(built.solid);
@@ -146,8 +148,29 @@ describe('the board form with tape standoffs (D593, the D589 mechanism)', () => 
   });
 
   it('names the file by its tape and standoffs, not its holes', () => {
-    const v = { ...defaultValues(solid.settings), screwHead: 'none', standoffs: 'tape' };
-    expect(boardFileName(solid, v, 'stl')).toBe('skadis-solid-160x160-tape-12x18mm-standoffs-15mm.stl');
+    const read = readValues(solid.settings, { standoffs: 'tape' });
+    expect(read.ok && boardFileName(solid, read.values, 'stl')).toBe(
+      'skadis-solid-160x160-tape-19x19mm-standoffs-18mm.stl',
+    );
+  });
+
+  it('starts the standoffs at 18 mm with tape, which a 19 x 19 mm piece needs, unless set (D603 b)', () => {
+    for (const id of ['solid', 'lightened', 'skeleton']) {
+      const type = boardType(id);
+      const height = (given: Record<string, unknown>) => {
+        const read = readValues(type.settings, given);
+        return read.ok ? read.values['standoffHeightMm'] : read.errors;
+      };
+      expect(height({ standoffs: 'tape' }), id).toBe(18);
+      expect(height({ standoffs: 'back' }), id).toBe(15);
+      expect(height({ standoffs: 'tape', standoffHeightMm: '20' }), id).toBe(20);
+      // every screw size leaves the default piece room on 18 mm: the least is 17.94 mm, for M3; the skeleton's own
+      // pockets refuse M3.5 with or without tape (D605), so it is left out there
+      for (const screwMm of id === 'skeleton' ? [3, 4, 4.5, 5] : [3, 3.5, 4, 4.5, 5]) {
+        const read = readValues(type.settings, { standoffs: 'tape', screwMm });
+        expect(read.ok && buildBoard(engine, type, read.values).ok, `${id} M${screwMm}`).toBe(true);
+      }
+    }
   });
 });
 
@@ -163,18 +186,18 @@ describe('the nut standoff connector (D592 a)', () => {
     });
     expect(() => standoffParams({ fixing: 'nut', screwMm: 3.5 })).toThrow(/3, 4 or 5 mm/);
     expect([standoffParams({ fixing: 'nut' }).tapeMm, standoffParams({ fixing: 'nut' }).tapeLengthMm]).toEqual([
-      12, 18,
+      19, 19,
     ]);
   });
 
   it('stands on a flat rectangular pad the piece of tape, with no hole to the wall', () => {
     const part = nutted();
     const box = part.boundingBox();
-    expect(box.min.map((v) => Math.round(v * 1000) / 1000)).toEqual([-9, -6, 0]);
+    expect(box.min.map((v) => Math.round(v * 1000) / 1000)).toEqual([-9.5, -9.5, 0]);
     expect(box.max[2]).toBeCloseTo(15, 9);
     const foot = keep(part.slice(1));
     expect(foot.toPolygons()).toHaveLength(1); // no hole through the pad
-    expect(Math.abs(foot.area() - 18 * 12) / (18 * 12)).toBeLessThan(0.01);
+    expect(Math.abs(foot.area() - 19 * 19) / (19 * 19)).toBeLessThan(0.01);
   });
 
   it('holds a nut of the screw size under a roof, slid in from the side, and not one 0.5 mm larger', () => {
@@ -230,8 +253,11 @@ describe('the nut standoff connector (D592 a)', () => {
 
   it('is named by its nut and tape, and says what screw it takes', () => {
     const type = boardType('standoff');
-    const v = { ...defaultValues(type.settings), standoffFixing: 'nut' };
-    expect(boardFileName(type, v, 'stl')).toBe('skadis-standoff-1-board-15mm-nut-tape-12x18mm.stl');
+    const read = readValues(type.settings, { standoffFixing: 'nut' });
+    if (!read.ok) throw new Error(read.errors.map((e) => e.message).join('; '));
+    const v = read.values;
+    // taped, it starts at the tape boards' 18 mm, so the parts of a taped wall match (C604)
+    expect(boardFileName(type, v, 'stl')).toBe('skadis-standoff-1-board-18mm-nut-tape-19x19mm.stl');
     expect(type.screws?.(v)).toMatch(/countersunk M4 machine screw/);
   });
 });

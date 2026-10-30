@@ -18,7 +18,9 @@ A board type is one file and one line in a list (D11, the extension-registry pra
      number has its unit, starting value, range and step; `onStep` when the value must be on the steps
      (a board's size), `count` to show it as a count beside the box, the step's name in both forms
      (`{ one: 'tile', other: 'tiles' }`, for `= 1 tile` and `= 6 tiles`), `warnOutside` for
-     a range it allows but warns about, `advanced` to fold it under "Advanced" (D48), and `help`, which the
+     a range it allows but warns about, `startsAt(values)` for a starting value that hangs on the other values (the
+     standoffs' 18 mm with tape, D603; the page's field follows it until set by hand), `advanced` to fold it under
+     "Advanced" (D48), and `help`, which the
      page folds behind an "i" button beside the label (C317). A
      choice has its `options`, each a value and a label, and its starting value, one of them (C82). Any setting
      that applies only with another choice says so in `appliesWhen(values)`, given the values read, true where it

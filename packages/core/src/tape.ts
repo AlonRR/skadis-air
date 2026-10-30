@@ -3,12 +3,16 @@
 // wall take one tape. Each type that lists it says when it applies.
 import type { NumberSetting } from './settings.js';
 
-/** The tape a pad is drawn for unless set, mm: a 12 mm roll, a common width of foam mounting tape, cut into 18 mm
- * pieces (C601; the owner, 30 Oct 2026: "The tape designs should be rectangular as tape comes on a roll and is cut to
- * rectangular pieces"): the largest common piece whose corners a board's corner pad reaches on the 15 mm standoffs it
- * starts with, its flare kept behind the hooks' room. */
-export const TAPE_MM = 12;
-export const TAPE_LENGTH_MM = 18;
+/** The tape a pad is drawn for unless set, mm: a 19 mm roll, a common width of foam mounting tape, cut into 19 mm
+ * pieces (D603 b, 30 Oct 2026; pieces of a roll, C601: "The tape designs should be rectangular as tape comes on a roll
+ * and is cut to rectangular pieces"). */
+export const TAPE_MM = 19;
+export const TAPE_LENGTH_MM = 19;
+
+/** How far tape standoffs and a taped standoff stand off the wall unless set, mm (D603 b): a board's corner pad flares
+ * out to a 19 x 19 mm piece's corners behind the hooks' room, which takes 17.94 mm for an M3 screw's post, the thinnest;
+ * the taped standoff connector starts there too, so the parts of a taped wall match (C604). */
+export const TAPE_STANDOFF_MM = 18;
 
 /** The tape's width: each pad is a rectangle the piece of tape, this across, its length along the board's width. */
 export const TAPE_WIDTH_SETTING = {
