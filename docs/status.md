@@ -268,6 +268,15 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
   the page, a small drawing in the Open sides choice, or (c) in the page's GIFs?
 - **A587** Release the page with D528 and D529 (`v0.10.0`), then make the Printables page's cover (D531) and its GIFs
   of the page again from it, and stage them in the editor for the owner's "Publish now".
+- **Q588** (30 Oct 2026) The owner: "move width, hight, and thickness above screw size". On `main` and in `v0.9.0`
+  they already come before Screw size on every screen width, with Panels, Screw holes and Standoffs between
+  (`docs/figures/explain-2026-10-30/q588-order-now.png`). Asked: which place was meant?
+- **D589** (30 Oct 2026) The owner: for a board that must have standoffs (keyholes, lock screws), grey out Standoffs'
+  "None" with an error if clicked, or should Standoffs disappear? Today None can still be chosen, and only the line
+  above Download says the board cannot be made. Options: (a) None greyed out, On the back chosen, a note saying
+  why (recommended); (b) the Standoffs choice hidden; (c) None clickable, an error beside it.
+- **D590** (30 Oct 2026) The owner: "merge "panels" into "what to make" call it Wall or board wall or multi-panel or
+  something". Options for the name: (a) Wall (recommended), (b) Board wall, (c) Multi-panel.
 
 `board-lightened` and `mounting-ikea` were planned and built on 15 Oct 2026 (D141 to D147, D155 to D158; C148 to
 C150, C159, C160; the backlog rows have the results). Waiting on the owner:
