@@ -263,6 +263,11 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D600 | **The nut standoff can be screwed to the wall** ("600 y", 30 Oct 2026): "Fixing: Nut, screwed to the wall", the nut in each post as the taped one, on a foot with two countersunk screws of the screw size, driven before the boards go on (C602) | 30 Oct 2026 |
 | D603 | **Tape starts at a 19 x 19 mm piece, and tape standoffs at 18 mm** ("603 b", 30 Oct 2026): a common 19 mm roll that holds more than 12 x 18, its pad's flare needing 17.44 mm for an M4 post and 17.94 mm for M3; choosing "For tape" moves the standoffs to 18 mm, and back to 15 mm without it, unless set by hand, and the taped standoff connector starts at 18 mm too (C604) | 30 Oct 2026 |
 | D605 | **The skeleton board is made with every screw size** ("605 a", 30 Oct 2026): at 3.5 mm in the Curved look it was refused, "The pockets these rims and webs leave are too small to narrow", where a screw pad's circle met a pocket's blended corner in a notch 0.02 mm long that the taper turned round; the pockets' rings now drop points nearer than 0.05 mm (C606) | 30 Oct 2026 |
+| D607 | **The nut standoff holds each nut pulled into a seat from the wall side** ("607 a", 30 Oct 2026; the tape and nut pass, [`2026-10-30-tape-and-nut-pass.md`](research/2026-10-30-tape-and-nut-pass.md)): a hex seat on the screw's axis, open at the wall face, the nut + 0.2 mm across its flats unless set ("Nut fit", under Advanced), a way in 0.1 mm looser below it, in a boss 2.5 mm wider than the way in's corners behind the hooks' room; the screw pulls the nut home before the standoff goes up, and the tape or the wall closes it behind. It replaces the side slot, whose post was 0.1 mm thick at M3 and broken through at M4 and M5 (C611) | 30 Oct 2026 |
+| Q608 | **A taped board carries little** ("608 not carry a lot", 30 Oct 2026). On Printables, SKÅDIS tape mounts mostly use 3M Command strips on pads about 20 x 50 mm; the one failure reported is Tesa Powerstrips falling off bare PLA, twice, its commenters' fix a coat of primer (relayed: Printables models 536629, 442713, 742361, 740831, 1530449 and 488974, read 30 Oct 2026) | 30 Oct 2026 |
+| D609 | **The page says what a taped part holds** ("609 a", 30 Oct 2026): beside the tape's settings, the pieces' area and about what it holds by 3M's static rule for its VHB tapes, the part's own weight from it, and that the pads want cleaning (C613) | 30 Oct 2026 |
+| D611 | **A standoff connector for wood or PT screws** (the owner, 30 Oct 2026: "create a version of the connectors that is similar to the nut version but instead of M screws with nuts have PT or Wood type screws into the connectors"): "Wood or PT screw, taped to the wall" and "Wood or PT screw, screwed to the wall", each post a pilot hole the board's corner screw cuts its thread in (C612) | 30 Oct 2026 |
+| A587 | **Release `v0.10.0`** ("587 y", 30 Oct 2026), with D607, D609 and D611 in it, then the Printables page's cover and GIFs again, the Updates section's entry, staged for the owner's "Publish now" | 30 Oct 2026 |
 | D593 | **Amended: the tape pads are rectangles, the piece of tape cut from the roll** (the owner, 30 Oct 2026: "The tape designs should be rectangular as tape comes on a roll and is cut to rectangular pieces"): "Tape length" beside the width, 12 x 18 mm unless set, the largest common piece a board's pad takes on its starting 15 mm standoffs | 30 Oct 2026 |
 | A522 | **The Printables files, pictures and text are made again from `v0.9.0`** ("522 y"): the three standoffs' files new (their 0.4 mm bed chamfer), the other ten byte for byte as before; the nine gallery pictures and the text's four page GIFs and skeleton close-up made again; the text gives the boards in grams (D313), the Straight look and the one screw size. Staged in the editor 28 Oct 2026 and published by the owner at 07:02:01 UTC on 29 Oct 2026 (T524), who then sorted the files into folders and took out the 240 x 200 mm boards and the fit coupon (read back from Printables' API) | 28 Oct 2026 |
 | A521 | **`v0.9.0` is released** (the owner: "push a new version with the fixes and updates"): everything on `main` since `v0.8.0`, the Look (Q510), one screw size (D479, Q511), grams (D313), D519's fix, the standoff's bed chamfer and the design system's v0.9.0 (A513); `feat/skeleton-rework-r4` stays held for T320. The Printables files are not refreshed with it. Released 28 Oct 2026 | 28 Oct 2026 |
@@ -274,25 +279,6 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 ## Open questions
 
-- **A587** Release the page with D528, D529, Q588, D589 and D590 (`v0.10.0`), then make the Printables page's cover
-  (D531, D591) and its GIFs of the page again from it, and stage them in the editor, with the Updates
-  section at the very bottom of the text (`docs/printables.md`, the owner, 30 Oct 2026: "At the very bottom of the
-  printables page add an updates section, look at other projects for a reference"), for the owner's "Publish now".
-- **D607** The nut standoff's pocket (the tape and nut pass, 30 Oct 2026,
-  [`docs/research/2026-10-30-tape-and-nut-pass.md`](research/2026-10-30-tape-and-nut-pass.md)): as built, each nut sits
-  in a post the screw plus 6 mm across, which leaves 0.1 mm of wall at the pocket's end at M3 and breaks through at M4
-  and M5, 0.9 mm beside the nut's corners; and the stacked one's lower nut goes in from below. Each way moves the nut
-  behind the hooks' room into a post grown there: (a) a pull nut from the wall face, a seat the nut + 0.2 mm (the
-  printer-enclosure coupon's "just right"), pulled home with the screw before the standoff goes up, a hole in the tape
-  pad; (b) the owner's mix, a side slot the screw pulls up into a seat; (c) the side slot ended in the nut's hexagon.
-  With each: a nut-fit setting under Advanced and a coupon to set it from, "snug" on the screw's note, and the help
-  naming the boards it holds. Recommended (a).
-- **Q608** Which double-sided tape goes on the pads (a foam mounting tape such as 3M's VHB, or removable strips pulled
-  out by a tab), and about what should a taped board carry?
-- **D609** What a taped board holds: by 3M's VHB rule four 19 x 19 mm pieces hold about 250 g, the board included,
-  in shear, less where hooks lever the top pads off. (a) Say it on the page beside the tape's settings, for the tape
-  Q608 names; (b) more pads, on posts between the slots, 8 pieces in place of 4; (c) as it is. Recommended (a), and (b)
-  if Q608's load needs it.
 - **T274** Print the trial grips and try them: on one plate with T151's board, sliced for PETG Basic (the owner,
   21 Oct 2026: "274 151 create a plate for petg basic"), started at 16:40 UTC that day (A300). That print failed
   on 22 Oct 2026 near Z 3.2 mm: one of the three 1-board standoffs came off the bed, and the owner took it and

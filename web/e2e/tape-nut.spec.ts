@@ -47,7 +47,10 @@ test('makes a standoff held by a nut and taped, named for both, and says which s
   await choose(page, 'typeGroup', 'connector');
   await choose(page, 'boardType', 'standoff');
   await expect(page.locator('input[name="tapeWidthMm"]')).toBeDisabled();
+  await expect(page.locator('input[name="nutFitMm"]')).toBeDisabled(); // only with a nut (D607 a)
   await choose(page, 'standoffFixing', 'nut');
+  await expect(page.locator('input[name="nutFitMm"]')).toBeEnabled();
+  await expect(page.locator('input[name="nutFitMm"]')).toHaveValue('0.2');
   await expect(status(page)).toHaveAttribute('data-file-name', 'skadis-standoff-1-board-18mm-nut-tape-19x19mm.stl', {
     timeout: 30_000,
   });
@@ -68,12 +71,13 @@ test('makes a nut standoff screwed to the wall, no tape, and says both screws (D
     timeout: 30_000,
   });
   const note = page.getByTestId('screw-note');
-  await expect(note).toContainText('First screw the foot to the wall');
+  await expect(note).toContainText('pull each nut into its seat'); // D607 a
+  await expect(note).toContainText('Then screw the foot to the wall');
   await expect(note).toContainText('countersunk M4 machine screw');
-  // too short for its foot behind the hooks' room: refused on the height, saying how tall
-  await page.locator('input[name="heightMm"]').fill('11');
+  // too short for its nut's seat behind the hooks' room: refused on the height, saying how tall
+  await page.locator('input[name="heightMm"]').fill('14');
   await expect(status(page)).toHaveAttribute('data-state', 'problem', { timeout: 30_000 });
-  await expect(status(page)).toContainText('at least 12 mm');
+  await expect(status(page)).toContainText('at least 14.9 mm');
 });
 
 test('starts the standoffs at 18 mm with tape, and back at 15 without, unless set (D603 b)', async ({ page }) => {

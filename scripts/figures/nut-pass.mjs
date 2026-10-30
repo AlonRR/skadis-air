@@ -7,6 +7,9 @@
 // hangs, its lower nut's way in facing down. Each part the library's own.
 //
 //   node scripts/figures/shoot.mjs nut-pass      -> .check/figures/nut-pass/
+//
+// Retired by D607 a (30 Oct 2026): it draws the side slot's pocket, which the pull nut's seat replaced; its figures
+// are those of `0b82803`, and run against a later build its labels no longer hold.
 
 /** Where a nut sits in its pocket, as standoff.ts cuts it (C597): its floor under the gable and the 1.5 mm roof. */
 const nutFloor = (lib, screwMm, heightMm) => {

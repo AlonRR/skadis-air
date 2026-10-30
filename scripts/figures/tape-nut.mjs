@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 //
 // Tape standoffs and the nut standoff, as built (D592 a, D593, Q594, D600, C601, D603; 30 Oct 2026): a solid board's back on
-// tape standoffs, each rectangular pad in orange; the standoff held by a nut, cut through its nut's pocket, the nut in
-// orange where it sits, beside a 2-board one whole; and the nut standoff screwed to the wall, its foot's screws in
+// tape standoffs, each rectangular pad in orange; the standoff held by a nut, cut through its nut's seat, the nut in
+// orange pulled home (D607 a), beside a 2-board one whole; and the nut standoff screwed to the wall, its foot's screws in
 // orange. Each part the library's own.
 //
 //   node scripts/figures/shoot.mjs tape-nut      -> .check/figures/tape-nut/
@@ -29,15 +29,15 @@ export function build(kit) {
     meshes: split(board, padRegion),
   };
 
-  // the 1-board nut standoff, cut through the middle of its nut's way in, and the nut where it sits
+  // the 1-board nut standoff, cut through its axis, and the nut pulled home in its seat (D607 a)
   const one = lib.makeStandoff(engine, lib.standoffParams({ fixing: 'nut' }));
   const half = one.subtract(box(-12, 12, -12, 0, -1, 17)); // the near half away, so the cut faces the camera
   const nut = lib.ISO_4032_NUTS[4];
-  const floor = 15 - 1.5 - (nut.acrossMm + 0.3 - 1) / 2 - (nut.tallMm + 0.3);
+  const floor = 3 + 0.1; // the seat 3 mm up and 0.1 mm over the nut, the nut against its ceiling (C611)
   const hex = CrossSection.circle(nut.acrossMm / Math.sqrt(3), 6);
   const nutSolid = hex
     .extrude(nut.tallMm)
-    .translate([0, 0, floor + 0.15])
+    .translate([0, 0, floor])
     .subtract(cylinder(0, 0, 2, floor - 1, floor + 5))
     .subtract(box(-6, 6, -6, 0, floor - 1, floor + 5));
   const two = lib.makeStandoff(engine, lib.standoffParams({ fixing: 'nut', boards: '2' })).translate([0, 34, 0]);
@@ -45,8 +45,8 @@ export function build(kit) {
     id: 'nut-standoff-cut',
     title: 'Standoff · held by a nut, taped to the wall',
     caption: [
-      'Front: the 1-board standoff cut through its M4 nut (orange), slid in from the side under a 1.5 mm roof; a',
-      'countersunk M4 machine screw through the board and the roof threads into it. Back: the 2-board one, on one pad.',
+      'Front: the 1-board standoff cut through its M4 nut (orange), pulled up into its seat from the wall side; a',
+      'countersunk M4 machine screw through the board threads into it. Back: the 2-board one, on one pad.',
     ],
     legend: [
       ['the nut, ISO 4032 M4, 7 mm across the flats', COLOURS.orange],

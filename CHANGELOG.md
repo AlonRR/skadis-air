@@ -13,8 +13,11 @@ All notable changes to this project are recorded here. The format follows
 - "Tape width" and "Tape length", 19 x 19 mm unless set, the piece of tape cut from the roll that each pad takes; the
   boards and the standoff connector share them (Q594, C601, D603). With tape the standoffs start at 18 mm, which a
   19 mm piece needs, and go back to 15 mm without it, unless set by hand (D603, C604).
-- The standoff connector can be fixed by a nut and tape: a nut of the screw size (M3, M4 or M5) slides into each post under a roof, a countersunk machine screw through the board holds the board to it, and it stands on a pad for double-sided tape, with no hole into the wall (D592). Or it stands on a foot screwed to the
-  wall by two countersunk screws, driven before the boards go on: "Nut, screwed to the wall" (D600).
+- The standoff connector can be fixed by a nut and tape: a nut of the screw size (M3, M4 or M5) is pulled into a seat
+  on each post's axis from the wall side before it goes up, in a post grown round it behind the hooks' room; a
+  countersunk machine screw through the board holds the board to it, and it stands on a pad for double-sided tape
+  (D592, D607). Or it stands on a foot screwed to the wall by two countersunk screws, driven before the boards go on:
+  "Nut, screwed to the wall" (D600). "Nut fit", under Advanced, sets the seat, the nut + 0.2 mm unless set (D607).
 
 ### Changed
 

@@ -9,7 +9,7 @@ import { boardFileName, boardType, buildBoard } from '../src/board-types/index.j
 import { loadEngine } from '../src/engine.js';
 import { mountingCuts, mountingParams, type MountingParams } from '../src/mounting.js';
 import { printPose } from '../src/print-pose.js';
-import { defaultValues, optionsOff, readValues } from '../src/settings.js';
+import { defaultValues, optionsOff, readValues, settingsNotApplying } from '../src/settings.js';
 import { ALL_OPEN } from '../src/slots.js';
 import { ISO_4032_NUTS, makeStandoff, standoffParams, type StandoffParams } from '../src/standoff.js';
 import { meshOf } from '../src/stl.js';
@@ -170,10 +170,23 @@ describe('the board form with tape standoffs (D593, the D589 mechanism)', () => 
         expect(read.ok && buildBoard(engine, type, read.values).ok, `${id} M${screwMm}`).toBe(true);
       }
     }
-  });
+  }, 120_000); // 15 boards, the skeletons slow: about 8 s, past vitest's 5 s
 });
 
-describe('the nut standoff connector (D592 a)', () => {
+/** The pull nut's seat (D607 a, 30 Oct 2026: "607 a"): on the screw's axis, open at the wall face, from 3 mm up, the nut
+ * plus 0.2 mm across its flats and 0.1 mm over its height, a way in 0.1 mm looser below it. */
+const LIFT = 3;
+const seatOf = (screwMm: number, fitMm = 0.2) => {
+  const nut = ISO_4032_NUTS[screwMm] ?? { acrossMm: 0, tallMm: 0 };
+  return { nut, across: nut.acrossMm + fitMm, bottom: LIFT, top: LIFT + nut.tallMm + 0.1 };
+};
+/** A hexagonal prism `across` its flats, its corners along x, from z0 to z1 at (x, y). */
+const hexPrism = (across: number, z0: number, z1: number, x = 0, y = 0) =>
+  keep(keep(keep(engine.CrossSection.circle(across / Math.sqrt(3), 6)).extrude(z1 - z0)).translate([x, y, z0]));
+const hexArea = (across: number) => (Math.sqrt(3) / 2) * across * across;
+const POSTS = { '1': 1, '2': 2, '2-stacked': 2, '4': 4 } as const;
+
+describe('the nut standoff connector (D592 a), its nut pulled into a seat from the wall (D607 a)', () => {
   const nutted = (given: Partial<StandoffParams> = {}) =>
     keep(makeStandoff(engine, standoffParams({ fixing: 'nut', ...given })));
 
@@ -189,75 +202,121 @@ describe('the nut standoff connector (D592 a)', () => {
     ]);
   });
 
-  it('stands on a flat rectangular pad the piece of tape, with no hole to the wall', () => {
+  it("stands on a flat rectangular pad the piece of tape, the nut's way in its only hole", () => {
     const part = nutted();
     const box = part.boundingBox();
     expect(box.min.map((v) => Math.round(v * 1000) / 1000)).toEqual([-9.5, -9.5, 0]);
     expect(box.max[2]).toBeCloseTo(15, 9);
     const foot = keep(part.slice(1));
-    expect(foot.toPolygons()).toHaveLength(1); // no hole through the pad
-    expect(Math.abs(foot.area() - 19 * 19) / (19 * 19)).toBeLessThan(0.01);
+    expect(foot.toPolygons()).toHaveLength(2); // the pad's outline and the way in
+    const left = 19 * 19 - hexArea(7.3);
+    expect(Math.abs(foot.area() - left) / left).toBeLessThan(0.01);
   });
 
-  it('holds a nut of the screw size under a roof, slid in from the side, and not one 0.5 mm larger', () => {
-    for (const screwMm of [3, 4, 5] as const) {
-      const part = nutted({ screwMm });
-      const nut = ISO_4032_NUTS[screwMm] ?? { acrossMm: 0, tallMm: 0 };
-      const floor = part.boundingBox().max[2] - 1.5 - (nut.acrossMm + 0.3) / 2 + 0.5 - (nut.tallMm + 0.3);
-      const hex = (across: number, tall: number) =>
-        keep(
-          keep(keep(engine.CrossSection.circle(across / Math.sqrt(3), 6)).extrude(tall)).translate([
-            0,
-            0,
-            floor + 0.05,
-          ]),
+  for (const fixing of ['nut', 'nut-screwed'] as const) {
+    it(`${fixing}: holds the nut in a seat on the screw's axis, the nut + 0.2 mm, the way in 0.1 mm looser`, () => {
+      for (const screwMm of [3, 4, 5] as const) {
+        const part = keep(makeStandoff(engine, standoffParams({ fixing, screwMm, heightMm: 18 })));
+        const { nut, bottom, top } = seatOf(screwMm);
+        const at = `${fixing} M${screwMm}`;
+        const solidIn = (m: Manifold) => keep(part.intersect(m)).volume();
+        // the seat: the nut + 0.15 fits, the nut + 0.25 does not; the way in below it passes the nut + 0.25
+        expect(solidIn(hexPrism(nut.acrossMm + 0.15, bottom + 0.02, top - 0.02)), at).toBeLessThan(1e-6);
+        expect(solidIn(hexPrism(nut.acrossMm + 0.25, bottom + 0.02, top - 0.02)), at).toBeGreaterThan(0);
+        expect(solidIn(hexPrism(nut.acrossMm + 0.25, -1, bottom - 0.12)), at).toBeLessThan(1e-6);
+        // a ceiling over the seat: just above it, the post is whole but for the screw's hole and the bridges' steps
+        expect(solidIn(hexPrism(nut.acrossMm + 0.15, top + 0.05, top + 0.25)), at).toBeGreaterThan(0);
+        // no way in from the side any more: a box the nut's size from the post's side outward is solid in part
+        const way = keep(
+          engine.Manifold.cube([20, nut.acrossMm, nut.tallMm]).translate([4, -nut.acrossMm / 2, bottom]),
         );
-      expect(keep(part.intersect(hex(nut.acrossMm, nut.tallMm))).volume(), `M${screwMm}`).toBeLessThan(1e-6);
-      expect(keep(part.intersect(hex(nut.acrossMm + 0.5, nut.tallMm))).volume(), `M${screwMm}`).toBeGreaterThan(0);
-      // the way in: a box the nut's size from the hole out past the post's side is empty
-      const way = keep(
-        engine.Manifold.cube([20, nut.acrossMm, nut.tallMm]).translate([0, -nut.acrossMm / 2, floor + 0.05]),
-      );
-      expect(keep(part.intersect(way)).volume(), `M${screwMm}`).toBeLessThan(1e-6);
-      // a roof over it: at 0.75 mm under the board face, the post is whole round the screw's hole
-      const roof = keep(part.slice(part.boundingBox().max[2] - 0.75));
-      expect(roof.toPolygons().length, `M${screwMm}`).toBe(2); // the post's ring: its outside and the hole
-    }
-  });
+        expect(solidIn(way), at).toBeGreaterThan(1);
+      }
+    });
 
-  it('builds for every board count, prints with nothing facing down past 45 degrees, no degenerate facet', () => {
-    for (const boards of ['1', '2', '2-stacked', '4'] as const) {
-      const part = nutted({ boards });
-      expect(part.volume(), boards).toBeGreaterThan(0);
-      expect(degenerateFacets(meshOf(part)), boards).toBe(0);
-      // printed as built, wall face down: nothing over air past 45 degrees but each gable's 1 mm flat, about 6 mm long
-      const posts = boards === '1' ? 1 : boards === '4' ? 4 : 2;
-      const flats = facingDown(part, 0.05, 15.1);
-      expect(flats, boards).toBeGreaterThan(0); // the control: the flat is seen
-      expect(flats, boards).toBeLessThan(7 * posts);
-    }
-  });
+    it(`${fixing}: keeps at least 2.4 mm of post round the nut's seat, for 1 board and 4`, () => {
+      for (const screwMm of [3, 4, 5] as const) {
+        for (const boards of ['1', '4'] as const) {
+          const part = keep(makeStandoff(engine, standoffParams({ fixing, screwMm, boards, heightMm: 18 })));
+          const { across, bottom, top } = seatOf(screwMm);
+          const [x, y] = boards === '1' ? [0, 0] : [10, 10];
+          const corner = across / Math.sqrt(3);
+          const band = keep(
+            keep(engine.CrossSection.circle(corner + 2.4, 64)).subtract(keep(engine.CrossSection.circle(corner, 6))),
+          );
+          const ring = keep(keep(band.extrude(0.5)).translate([x, y, (bottom + top) / 2 - 0.25]));
+          const share = keep(part.intersect(ring)).volume() / ring.volume();
+          expect(share, `${fixing} M${screwMm} ${boards}`).toBeGreaterThan(0.999);
+        }
+      }
+    });
 
-  it('leaves the hooks their room at a seam, its pad behind it', () => {
+    it(`${fixing}: builds for every board count, nothing over air but the seats' bridged ceilings`, () => {
+      for (const boards of ['1', '2', '2-stacked', '4'] as const) {
+        const part = keep(makeStandoff(engine, standoffParams({ fixing, boards, heightMm: 18 })));
+        expect(part.volume(), boards).toBeGreaterThan(0);
+        expect(degenerateFacets(meshOf(part)), boards).toBe(0);
+        const down = facingDown(part, 0.05, 18.1);
+        expect(down, boards).toBeGreaterThan(0); // the control: the ceilings are seen
+        expect(down, boards).toBeLessThan(POSTS[boards] * hexArea(7.3));
+      }
+    });
+  }
+
+  it('leaves the hooks their room at a seam, its pad and the nuts behind it', () => {
     const board = { columns: 4, rows: 2, sides: ALL_OPEN };
-    const part = nutted({ boards: '2' });
-    const placed = keep(part.translate([80, 10, -15 - 0.005]));
-    expect(keep(placed.intersect(hookRoomZone(engine, board, 2, HOOK_ROOM - 0.05, keep))).volume()).toBeLessThan(1e-6);
-    expect(keep(placed.intersect(slotClearZone(engine, board, 2, HOOK_ROOM - 0.05, keep))).volume()).toBeLessThan(1e-6);
+    for (const fixing of ['nut', 'nut-screwed'] as const) {
+      const part = keep(makeStandoff(engine, standoffParams({ fixing, boards: '2', heightMm: 18 })));
+      const placed = keep(part.translate([80, 10, -18 - 0.005]));
+      const hooks = hookRoomZone(engine, board, 2, HOOK_ROOM - 0.05, keep);
+      const slots = slotClearZone(engine, board, 2, HOOK_ROOM - 0.05, keep);
+      expect(keep(placed.intersect(hooks)).volume(), fixing).toBeLessThan(1e-6);
+      expect(keep(placed.intersect(slots)).volume(), fixing).toBeLessThan(1e-6);
+    }
   });
 
-  it('refuses one too short for its pad, its nut and its roof, saying how tall', () => {
-    expect(() => standoffParams({ fixing: 'nut', heightMm: 9 })).toThrow(/at least/);
+  it("refuses one too short for the nut's seat behind the hooks' room, saying how tall", () => {
+    // the seat from 3 mm up, the nut and 0.1 mm, two 0.3 mm bridging steps, then the hooks' 8 mm
+    expect(() => standoffParams({ fixing: 'nut', heightMm: 14.5 })).toThrow(/at least 14\.9 mm/);
+    expect(() => standoffParams({ fixing: 'nut', heightMm: 14.9 })).not.toThrow();
+    expect(() => standoffParams({ fixing: 'nut-screwed', heightMm: 14.5 })).toThrow(/at least 14\.9 mm/);
+    expect(() => standoffParams({ fixing: 'nut-screwed', heightMm: 15 })).not.toThrow();
+    expect(() => standoffParams({ fixing: 'nut', screwMm: 5, heightMm: 16 })).toThrow(/at least 16\.4 mm/);
   });
 
-  it('is named by its nut and tape, and says what screw it takes', () => {
+  it('takes a nut fit, the nut + 0.2 mm unless set, under Advanced, only with a nut, and names the file by it', () => {
+    const loose = keep(makeStandoff(engine, standoffParams({ fixing: 'nut', nutFitMm: 0.4 })));
+    const { nut, bottom, top } = seatOf(4, 0.4);
+    const seat = hexPrism(nut.acrossMm + 0.35, bottom + 0.02, top - 0.02);
+    expect(keep(loose.intersect(seat)).volume()).toBeLessThan(1e-6);
+    const type = boardType('standoff');
+    const fit = type.settings.find((s) => s.key === 'nutFitMm');
+    expect(fit?.kind).toBe('number');
+    expect(fit?.kind === 'number' && fit.default).toBe(0.2);
+    expect(fit?.kind === 'number' && fit.advanced).toBe(true);
+    expect(settingsNotApplying(type.settings, defaultValues(type.settings))).toContain('nutFitMm');
+    const read = readValues(type.settings, { standoffFixing: 'nut', nutFitMm: '0.3' });
+    if (!read.ok) throw new Error(read.errors.map((e) => e.message).join('; '));
+    expect(boardFileName(type, read.values, 'stl')).toBe(
+      'skadis-standoff-1-board-18mm-nut-tape-19x19mm-nut-fit-0.3mm.stl',
+    );
+  });
+
+  it('is named by its nut and tape, says what screw it takes, to pull each nut in first and to tighten snug', () => {
     const type = boardType('standoff');
     const read = readValues(type.settings, { standoffFixing: 'nut' });
     if (!read.ok) throw new Error(read.errors.map((e) => e.message).join('; '));
     const v = read.values;
     // taped, it starts at the tape boards' 18 mm, so the parts of a taped wall match (C604)
     expect(boardFileName(type, v, 'stl')).toBe('skadis-standoff-1-board-18mm-nut-tape-19x19mm.stl');
-    expect(type.screws?.(v)).toMatch(/countersunk M4 machine screw/);
+    const note = type.screws?.(v) ?? '';
+    // from the board face through the nut, to 0.5 mm short of the wall: 5 + 18 - 3.1 and 5 + 18 - 0.5
+    expect(note).toMatch(/countersunk M4 machine screw, 19\.9 to 22\.5 mm long/);
+    expect(note).toMatch(/pull each nut/i);
+    expect(note).toMatch(/snug/);
+    // the help names the boards it holds: a board on tape standoffs has no screw holes for it
+    expect(type.settings.find((s) => s.key === 'standoffFixing')?.help ?? '').toMatch(/no standoffs of their own/);
+    expect(type.settings.find((s) => s.key === 'heightMm')?.help ?? '').not.toMatch(/as tape boards stand/);
   });
 });
 
@@ -292,44 +351,6 @@ describe('the nut standoff screwed to the wall (D600 y, 30 Oct 2026)', () => {
       // nothing of the foot reaches into the hooks' room next to the boards: the foot's top is behind it
       expect(Math.max(...holes.map(([x, y]) => footTop(part, x, y))), boards).toBeLessThanOrEqual(15 - 8 + 1e-6);
     }
-  });
-
-  it('holds the same nut under its roof as the taped one', () => {
-    for (const screwMm of [3, 4, 5] as const) {
-      const part = screwed({ screwMm });
-      const nut = ISO_4032_NUTS[screwMm] ?? { acrossMm: 0, tallMm: 0 };
-      const floor = part.boundingBox().max[2] - 1.5 - (nut.acrossMm + 0.3) / 2 + 0.5 - (nut.tallMm + 0.3);
-      const hex = keep(
-        keep(keep(engine.CrossSection.circle(nut.acrossMm / Math.sqrt(3), 6)).extrude(nut.tallMm)).translate([
-          0,
-          0,
-          floor + 0.05,
-        ]),
-      );
-      expect(keep(part.intersect(hex)).volume(), `M${screwMm}`).toBeLessThan(1e-6);
-    }
-  });
-
-  it("prints with nothing facing down past 45 degrees but the gables' flats", () => {
-    for (const boards of BOARDS) {
-      const part = screwed({ boards });
-      const posts = boards === '1' ? 1 : boards === '4' ? 4 : 2;
-      const flats = facingDown(part, 0.05, 15.1);
-      expect(flats, boards).toBeGreaterThan(0);
-      expect(flats, boards).toBeLessThan(7 * posts);
-    }
-  });
-
-  it('leaves the hooks their room at a seam', () => {
-    const board = { columns: 4, rows: 2, sides: ALL_OPEN };
-    const placed = keep(screwed({ boards: '2' }).translate([80, 10, -15 - 0.005]));
-    expect(keep(placed.intersect(hookRoomZone(engine, board, 2, HOOK_ROOM - 0.05, keep))).volume()).toBeLessThan(1e-6);
-    expect(keep(placed.intersect(slotClearZone(engine, board, 2, HOOK_ROOM - 0.05, keep))).volume()).toBeLessThan(1e-6);
-  });
-
-  it("refuses one too short for its foot below the hooks' room, saying how tall", () => {
-    expect(() => standoffParams({ fixing: 'nut-screwed', heightMm: 11 })).toThrow(/at least 12/);
-    expect(() => standoffParams({ fixing: 'nut-screwed', heightMm: 12 })).not.toThrow();
   });
 
   it('is named by its nut and screws, with no tape, and says both screws', () => {

@@ -701,6 +701,7 @@ describe('the standoff connector type (D91 to D94)', () => {
       heightMm: 15,
       tapeWidthMm: 19,
       tapeLengthMm: 19,
+      nutFitMm: 0.2, // a nut's seat, the nut + 0.2 mm (D607 a)
       screwMm: 4,
     });
   });

@@ -5,7 +5,14 @@
 import { SCREW_MM, SCREW_SIZE_SETTING } from '../screw-places.js';
 import { TAPE_LENGTH_SETTING, TAPE_STANDOFF_MM, TAPE_WIDTH_SETTING } from '../tape.js';
 import { defineSettings } from '../settings.js';
-import { makeStandoff, standoffParams, standoffScrews, STANDOFF_DEFAULTS, type StandoffParams } from '../standoff.js';
+import {
+  makeStandoff,
+  NUT_FIT_MM,
+  standoffParams,
+  standoffScrews,
+  STANDOFF_DEFAULTS,
+  type StandoffParams,
+} from '../standoff.js';
 import { defineBoardType } from './define.js';
 
 /** How the file name says which boards it serves. */
@@ -17,13 +24,14 @@ function paramsOf(
     standoffFixing: string;
     tapeWidthMm: number;
     tapeLengthMm: number;
+    nutFitMm: number;
   },
 ) {
   const nut =
     v.standoffFixing === 'nut'
-      ? ({ fixing: 'nut', tapeMm: v.tapeWidthMm, tapeLengthMm: v.tapeLengthMm } as const)
+      ? ({ fixing: 'nut', tapeMm: v.tapeWidthMm, tapeLengthMm: v.tapeLengthMm, nutFitMm: v.nutFitMm } as const)
       : v.standoffFixing === 'nut-screwed'
-        ? ({ fixing: 'nut-screwed' } as const)
+        ? ({ fixing: 'nut-screwed', nutFitMm: v.nutFitMm } as const)
         : {};
   return standoffParams({ boards: v.boards, heightMm: v.heightMm, screwMm: v.screwMm, ...nut });
 }
@@ -62,9 +70,11 @@ export const STANDOFF = defineBoardType({
       default: 'screw',
       help:
         "Screw through: each board's corner screw goes on through the standoff into the wall. Nut: each post holds a " +
-        'nut of the screw size, slid in from the side, and a countersunk machine screw through the board holds it; ' +
-        'the standoff stands on a rectangular pad for a piece of double-sided tape, with no hole into the wall (D592), or on a foot ' +
-        'screwed to the wall by two screws of the screw size, driven before the boards go on (D600).',
+        'nut of the screw size, pulled up into a seat from the wall side before the standoff goes up, and a countersunk ' +
+        'machine screw through the board holds it (D607); the standoff stands on a rectangular pad for a piece of ' +
+        'double-sided tape (D592), or on a foot screwed to the wall by two screws of the screw size, driven before the ' +
+        'boards go on (D600). A nut standoff holds boards with corner screw holes and no standoffs of their own: a board ' +
+        'on tape standoffs has no holes for it.',
     },
     {
       kind: 'number',
@@ -76,10 +86,25 @@ export const STANDOFF = defineBoardType({
       min: 3,
       max: 40,
       step: 0.5,
-      help: "How far it holds the boards off the wall: 15 mm unless set, and 18 mm taped, as tape boards stand; IKEA's spacers hold them about 20 mm off. For 2 or 4 boards, at least 12 mm.",
+      help: "How far it holds the boards off the wall: 15 mm unless set, and 18 mm taped, the height the boards' own tape standoffs start at; IKEA's spacers hold them about 20 mm off. For 2 or 4 boards, at least 12 mm.",
     },
     { ...TAPE_WIDTH_SETTING, appliesWhen: (v) => v['standoffFixing'] === 'nut' }, // D593, Q594
     { ...TAPE_LENGTH_SETTING, appliesWhen: (v) => v['standoffFixing'] === 'nut' }, // C601
+    {
+      kind: 'number',
+      key: 'nutFitMm',
+      label: 'Nut fit',
+      unit: 'mm',
+      default: NUT_FIT_MM,
+      min: 0,
+      max: 0.6,
+      step: 0.05,
+      advanced: true,
+      appliesWhen: (v) => v['standoffFixing'] === 'nut' || v['standoffFixing'] === 'nut-screwed', // D607 a
+      help:
+        'With a nut: how much wider than the nut its seat is across the flats, 0.2 mm unless set. A nut that will ' +
+        'not pull in wants more; one that falls out of its seat once the screw is out wants less.',
+    },
     SCREW_SIZE_SETTING,
   ]),
   build: (engine, v) => makeStandoff(engine, paramsOf(v)),
@@ -87,6 +112,7 @@ export const STANDOFF = defineBoardType({
     `${BOARDS_IN_NAME[v.boards]}-${v.heightMm}mm` +
     (v.standoffFixing === 'nut' ? `-nut-tape-${v.tapeWidthMm}x${v.tapeLengthMm}mm` : '') +
     (v.standoffFixing === 'nut-screwed' ? '-nut-screwed' : '') +
+    (v.standoffFixing.startsWith('nut') && v.nutFitMm !== NUT_FIT_MM ? `-nut-fit-${v.nutFitMm}mm` : '') +
     (v.screwMm === SCREW_MM ? '' : `-screw-${v.screwMm}mm`),
   screws: (v) => standoffScrews(paramsOf(v)),
 });
