@@ -60,3 +60,29 @@ above the download button says the board cannot be made, and the error sits on S
 ![What to make: Boards, Wall and Connectors, Wall chosen, no Panels field below](d590-wall.png)
 
 **What it shows:** a mockup on the page: Wall as a third choice in What to make, and the Panels field gone from the form.
+
+## D591: the cover's line between the looks
+
+![Option (a): a quiet dashed grey line across each lattice board alone, nothing in the gaps](d591-a-line.png)
+
+**What it shows:** option (a), frame 30 of the cover: a dashed grey line across each lattice board alone, never across
+the gap between them.
+
+![Option (b): one dashed grey line across both lattice boards](d591-b-line.png)
+
+**What it shows:** option (b): today's one line across both boards, dashed and in the text's grey, ending at the boards'
+outer edges rather than the picture's.
+
+![Option (c): short orange marks in the gaps beside the lattice boards, no line over them](d591-c-line.png)
+
+**What it shows:** option (c): no line over the boards, a short orange mark in each gap at the cut, in the title bar's
+orange.
+
+## D592 and D593: the nut standoff and the tape standoffs
+
+![Three sections: a board bolted onto a taped standoff with a nut under the board; a bolt through board, standoff and
+a panel with the nut behind; a board whose corner standoffs end in pads taped to the wall](d592-d593-sections.png)
+
+**What it shows:** sketches, not the parts: D592 (a) a nut in a pocket under the board, a countersunk M4 machine screw
+through the board's corner hole into it; D592 (b) a bolt through the board, the standoff and a panel, the nut behind;
+D593 a board's corner standoffs ending in pads for double-sided tape.

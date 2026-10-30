@@ -35,21 +35,21 @@ page (`node scripts/printables/write-page-gifs.mjs https://alonrr.github.io/skad
 GIFs. They are made again once a newer version is published (the owner: "once the newest version is published update
 the gifs"). The owner uploads and arranges them on Printables.
 
-In this order, the first the cover:
+In this order, the first the cover, as the owner arranged them on 30 Oct 2026 ("I removed and rearranged the photos
+section on printables"; read back from the page that day: `board-types.png` gone, `wall-together.gif` second):
 
 | Picture | What it shows |
 | --- | --- |
 | `cover-turn.gif` | Skådis Air: the solid, lightened and skeleton boards, each turning on its own axis, countersunk, on keyholes and on lock screws (the owner, 22 Oct 2026: "have the main image have each of the boards rotating and give each a different type of Screw holes"); the lightened and skeleton boards Curved above their middle and Straight below, a still line between, "Curved ↑ Straight ↓" under their names (D531, 30 Oct 2026) |
+| `wall-together.gif` | The Size and panels section: six panels of a wall coming together and opening again, half a slot each side of a seam |
 | `page-tour.gif` | The page: a wall in panels first, so its first frame shows one ("the second webpage view should also show the wall option, so that users know its an option right away"), then the board types and their mountings, the 3D view turned by hand ("have the second image be a gif of the webpage switching between different options and rotating"), from `write-page-gifs.mjs`, 800 wide |
 | `page-phone.gif` | The page on a phone (the owner, 23 Oct 2026: "add a gif of the mobile version to printables"): the board turned by a finger, the 3D view staying at the top as the form scrolls under it, the board types, a setting's help opened and shut, a wall in panels and back, from `write-page-gifs.mjs page-phone`, 480 wide |
-| `board-types.png` | The Board section: the three kinds at 200 x 200 mm, each one's printed grams for a 200 x 200 mm board in PETG, as sliced (D313, from `docs/board-grams.json`) |
-| `wall-together.gif` | The Size and panels section: six panels of a wall coming together and opening again, half a slot each side of a seam |
-| `sides.png` | The Sides section: a board closed all round, four boards meeting at seams through the slots, half a slot each side, and four meeting between the slots, every slot whole; the closed edge and the seams in orange |
 | `mounting.png` | The Mounting section: from the back, keyholes on standoffs and lock screws; at the front, close-ups of a countersunk and a round-head hole, each cut through, its screw seated flush |
 | `connectors.png` | The Connectors section: the standoffs for 1, 2 and 4 boards and the slot clip, with close-ups of a hook's room between a shared standoff's posts, under four boards' corners, and of the ribs on a clip's peg |
 | `slot-clip-in.gif` | A slot clip going into the slots behind a seam, and out again, on boards with no screw holes (the owner: "the board connector clip gif should be on a board without screw holes") |
+| `sides.png` | The Sides section: a board closed all round, four boards meeting at seams through the slots, half a slot each side, and four meeting between the slots, every slot whole; the closed edge and the seams in orange |
 
-Out of the gallery since A356: `turntable.gif` and `skeleton-ibeam.png`, now close-ups in the text at the boards;
+Out of the gallery since 30 Oct 2026: `board-types.png`, removed by the owner. Out of the gallery since A356: `turntable.gif` and `skeleton-ibeam.png`, now close-ups in the text at the boards;
 `standoffs.png`, folded into `connectors.png`; `between-slots.png`, into `sides.png`; `fit-coupon.png`, as the test
 prints are under Advanced (D357); and `page.png`, as the page tour shows the page.
 
@@ -183,3 +183,40 @@ These files are public domain (CC0). The files you make with the page, and anyth
 to use, change, share or sell, with no conditions from this project.
 
 Not affiliated with IKEA. SKÅDIS is IKEA's name for its pegboard system.
+
+### Updates
+
+#### 2026-10-30 · v0.10.0
+
+Dated on release (A587); this line is not part of the text.
+
+- "What to make" is Board, Wall or Connector: Wall makes a wall of panels your bed takes.
+- The Sides control draws the board as you set it, and the form runs Look, Open sides, Sides, the screw holes and
+  standoffs, then the size right above the screw size.
+- With keyholes or lock screws, the standoffs stay on: "None" is greyed out, with a note saying why.
+
+#### 2026-10-29 · files
+
+- Every board at 200 x 200 mm for every mounting the page offers, in folders, and the Straight look too.
+
+#### 2026-10-28 · v0.9.0
+
+- A Look for the lightened and skeleton boards: Curved, or Straight, in the straighter lines of the first boards.
+- Each board's plastic is given in printed grams, sliced in PETG.
+- One screw size for the boards and the connectors.
+
+#### 2026-10-24 · v0.8.0
+
+- Between the slots, every corner keeps its screw, moved in where it would land on a slot.
+- A setting that does not apply is greyed out.
+
+#### 2026-10-23 · v0.5.0 to v0.7.0
+
+- Keyholes take a countersunk screw, and print without lips sagging over air.
+- The test prints are under Advanced, and each setting's help is folded behind an "i".
+
+#### 2026-10-22 · v0.4.2
+
+- First published.
+
+Every change, with its reasons: [the changelog on GitHub](https://github.com/AlonRR/skadis-air/blob/main/CHANGELOG.md).

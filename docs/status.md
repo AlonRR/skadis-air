@@ -265,8 +265,22 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 ## Open questions
 
-- **A587** Release the page with D528 and D529 (`v0.10.0`), then make the Printables page's cover (D531) and its GIFs
-  of the page again from it, and stage them in the editor for the owner's "Publish now".
+- **A587** Release the page with D528, D529, Q588, D589 and D590 (`v0.10.0`), then make the Printables page's cover
+  (D531, its line as D591 says) and its GIFs of the page again from it, and stage them in the editor, with the Updates
+  section at the very bottom of the text (`docs/printables.md`, the owner, 30 Oct 2026: "At the very bottom of the
+  printables page add an updates section, look at other projects for a reference"), for the owner's "Publish now".
+- **D591** (30 Oct 2026) The owner: "The line that is between the types should be designed better maybe a correct
+  color maybe a different layout". Options (`docs/figures/explain-2026-10-30/d591-a-line.png` to `d591-c-line.png`):
+  (a) a dashed grey line across each lattice board alone (recommended), (b) one dashed grey line across both,
+  (c) orange marks in the gaps alone.
+- **D592** (30 Oct 2026) The owner: "Make a standoffs connector version that uses M nuts". What the nut is for
+  (`docs/figures/explain-2026-10-30/d592-d593-sections.png`): (a) the board bolts onto the standoff, a nut in a pocket
+  under it and a countersunk M4 machine screw through the board's corner hole, the standoff taped or screwed to the
+  wall (recommended); (b) a bolt through the board, the standoff and a panel, the nut behind.
+- **D593** (30 Oct 2026) The owner: "Add a standoffs on boards and connectors that is ment for double sided sticky
+  tape". Proposed: Standoffs gets "For tape", corner standoffs ending in pads, keyholes and lock screws greyed out; the
+  standoff connector gets a tape pad, with D592 (a)'s nut to hold the boards.
+- **Q594** (30 Oct 2026) Which double-sided tape, and how wide: the pads are sized for it.
 
 `board-lightened` and `mounting-ikea` were planned and built on 15 Oct 2026 (D141 to D147, D155 to D158; C148 to
 C150, C159, C160; the backlog rows have the results). Waiting on the owner:
