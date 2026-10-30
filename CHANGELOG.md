@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-31
+
 ### Added
 
 - Standoffs "For tape" on the boards: each corner post ends at the wall in a rectangular pad for a piece of
