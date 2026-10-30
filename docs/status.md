@@ -279,6 +279,9 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 ## Open questions
 
+- **T614** Press "Publish now" on the Printables editor tab the agent left open (31 Oct 2026): the `v0.10.0` set is
+  staged there, the eight pictures with the new cover (D591), four of the text's GIFs made again, the lines on tape
+  and on standoffs held by nuts or wood screws, and the Updates section at the very bottom. Nothing is saved until then.
 - **T274** Print the trial grips and try them: on one plate with T151's board, sliced for PETG Basic (the owner,
   21 Oct 2026: "274 151 create a plate for petg basic"), started at 16:40 UTC that day (A300). That print failed
   on 22 Oct 2026 near Z 3.2 mm: one of the three 1-board standoffs came off the bed, and the owner took it and
