@@ -116,3 +116,10 @@ at 45 degrees behind the hooks' 8 mm room to a round pad 19 mm across, in orange
 
 **What it shows:** the 1-board standoff "Nut, taped to the wall", cut through its M4 nut (orange), which slides in from
 the side under a 1.5 mm roof; behind it the 2-board one whole, on one tape pad. The same pass.
+
+## D591: as chosen
+
+![The cover with each lattice board's halves 10 mm apart, a grey bar beside each half naming Curved and Straight](d591-chosen.png)
+
+**What it shows:** frame 30 of the cover as built for "591 e with the line on the side from f": the gap at the cut, and
+a bar beside each half with its look written along it.

@@ -34,6 +34,7 @@
         stroke-width: 7px; stroke-linejoin: round; }
       #labels text.tag { font-size: 30px; }
       #labels text.inset { font-size: 24px; stroke-width: 6px; }
+      #labels text.muted { fill: #5a6773; }
     </style>
     <script type="importmap">{ "imports": { "three": "/three/build/three.module.js" } }</script>
   </head>
@@ -146,7 +147,10 @@
       const label = (l, cam, box) => {
         const [x, y] = onScreen(cam, l.at, box);
         if (l.tag) {
-          add('text', { x, y, 'text-anchor': 'middle', class: l.small ? 'tag inset' : 'tag' }).textContent = l.text;
+          // muted, in the caption's grey; turned, along a mark beside a part (D591)
+          const cls = ['tag', ...(l.small ? ['inset'] : []), ...(l.muted ? ['muted'] : [])].join(' ');
+          const turned = l.rotate ? { transform: `rotate(${l.rotate} ${x} ${y})` } : {};
+          add('text', { x, y, 'text-anchor': 'middle', class: cls, ...turned }).textContent = l.text;
           return;
         }
         const [tx, ty] = [x + l.dx, y + l.dy];
@@ -222,7 +226,8 @@
         for (const r of s.rules ?? []) {
           const [x1, y1] = onScreen(camera, r.from, whole);
           const [x2, y2] = onScreen(camera, r.to, whole);
-          add('line', { x1, y1, x2, y2, stroke: '#16222c', 'stroke-width': 3, 'stroke-linecap': 'round' });
+          const [stroke, width] = [r.stroke ?? '#16222c', r.width ?? 3];
+          add('line', { x1, y1, x2, y2, stroke, 'stroke-width': width, 'stroke-linecap': 'round' });
         }
       };
       window.frames = s.frames?.length ?? 0;

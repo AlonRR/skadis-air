@@ -43,6 +43,9 @@ const TEXT_SIZED = { size: [1120, 840], compact: true, width: 560 };
 const holeCloseUp = (x) => ({ position: [x + 20, -42, 19], target: [x + 11, 10, 1.5], fov: 26, up: [0, 0, 1] });
 
 /** A 160 x 160 mm board centred on its own axis, so it turns in place. */
+/** The gap between a lattice board's Curved and Straight halves on the cover, mm (D591 e). */
+const GAP_MM = 10;
+
 const turning = (board) => {
   const b = board.boundingBox();
   return board.translate([-80, -80, -(b.min[2] + b.max[2]) / 2]);
@@ -77,8 +80,16 @@ export function build(kit) {
       const inLook = (look) =>
         turning(built(kind, { widthMm: 160, heightMm: 160, ...mounting, ...(look ? { look } : {}) }));
       if (kind === 'solid') return feature(inLook(), `b${i}`);
+      // Curved above the middle, Straight below, each half moved 5 mm off the cut, so the cut is a gap in the part,
+      // level in every frame (D591 e, 30 Oct 2026)
       const top = box(-100, 100, 0, 100, -100, 100);
-      return feature(inLook('curved').intersect(top).add(inLook('straight').subtract(top)), `b${i}`);
+      const upper = inLook('curved')
+        .intersect(top)
+        .translate([0, GAP_MM / 2, 0]);
+      const lower = inLook('straight')
+        .subtract(top)
+        .translate([0, -GAP_MM / 2, 0]);
+      return feature(upper.add(lower), `b${i}`);
     });
     const at = (i) => [(i - 1) * SPACING, 0, 0];
     const frames = [...Array(TURN_FRAMES).keys()].map((k) => ({
@@ -92,16 +103,30 @@ export function build(kit) {
         'Pegboards for IKEA SKÅDIS hooks, in any size: solid, lightened',
         'or skeleton, tiled into walls, made in your browser.',
       ],
-      // the camera level with the boards' middles, so each one's cut between its looks draws as one still line in
-      // every frame of the turn, and a line drawn there over the boards stays on it (the owner, 30 Oct 2026: "the line
-      // should be unmoving on the gif")
+      // the camera level with the boards' middles, so each one's gap between its looks stays level and still in every
+      // frame of the turn, and so do the marks beside it (the owner, 30 Oct 2026: "the line should be unmoving on the
+      // gif")
       camera: { position: [0, 0, 680], target: [0, 0, 0], fov: 38, drop: 0.14 },
-      // each lattice board's looks named under its label (D531 a), and the line across both at the cut
+      // beside each lattice board, a bar for each half, its look written along it, broken at the gap (D591 e with f's
+      // line on the side, 30 Oct 2026)
       labels: [
         ...kinds.map(([, , text], i) => ({ text, at: [at(i)[0], -112, 0], tag: true })),
-        ...[1, 2].map((i) => ({ text: 'Curved ↑  Straight ↓', at: [at(i)[0], -132, 0], tag: true, small: true })),
+        ...[1, 2].flatMap((i) => [
+          { text: 'Curved', at: [at(i)[0] - 96, 42, 0], tag: true, small: true, muted: true, rotate: -90 },
+          { text: 'Straight', at: [at(i)[0] - 96, -42, 0], tag: true, small: true, muted: true, rotate: -90 },
+        ]),
       ],
-      rules: [{ from: [at(1)[0] - 100, 0, 0], to: [at(2)[0] + 100, 0, 0] }],
+      rules: [1, 2].flatMap((i) =>
+        [
+          [80 + GAP_MM / 2, GAP_MM],
+          [-GAP_MM, -80 - GAP_MM / 2],
+        ].map(([from, to]) => ({
+          from: [at(i)[0] - 88, from, 0],
+          to: [at(i)[0] - 88, to, 0],
+          stroke: '#5a6773',
+          width: 2.5,
+        })),
+      ),
       frames,
       meshes,
     });

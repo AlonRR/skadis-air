@@ -255,6 +255,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D589 | **A board with keyholes or lock screws has its standoffs' "None" greyed out, "On the back" chosen and a note under it saying why** ("589 a", 30 Oct 2026; the owner: "grey out the button for "none" and give an error if clicked or should standoffs disappear"): an option the other values rule out is read as the first one left, by the library as by the page (C586) | 30 Oct 2026 |
 | D590 | **What to make is Board, Wall or Connector, each in the singular, and the Panels field goes** ("590 a and change the to singular e.g., board, connector", 30 Oct 2026; the owner: "merge "panels" into "what to make" call it Wall"): Wall makes a wall of the boards' panels, its boards the boards' own list (C587) | 30 Oct 2026 |
 | Q530 | **The open sides' two kinds are shown enough by `sides.png`**, sixth on the Printables page ("530 it's good", 30 Oct 2026) | 30 Oct 2026 |
+| D591 | **The cover marks the lattice boards' two looks by a gap, with a bar beside each half** ("591 e with the line on the side from f", 30 Oct 2026; the owner, of the line between them: "should be designed better maybe a correct color maybe a different layout", and of (a) to (c): "still not good"): each half moved 5 mm off the cut, so the cut is a 10 mm gap in the part, level in every frame; beside each board a grey bar for each half, "Curved" and "Straight" written along them; the line over the boards and the "Curved ↑ Straight ↓" under their names are gone (C610) | 30 Oct 2026 |
 | D592 | **The standoff connector can hold the boards by a nut and stand on tape**: "Fixing: Nut, taped to the wall", a nut of the screw size (ISO 4032, M3 to M5) slid into each post from the side under a 1.5 mm roof, a countersunk machine screw through the board's corner hole into it, and a square pad the tape's width a side at the wall, with no hole through it ("592 a", 30 Oct 2026; the owner: "Make a standoffs connector version that uses M nuts"; C597, C598) | 30 Oct 2026 |
 | D593 | **Standoffs "For tape" on the boards**: each corner post ends at the wall in a round pad the tape's width across, flaring out at 45 degrees behind the hooks' room, and the board has no screw holes, the others greyed out by the D589 mechanism ("593 y", 30 Oct 2026; the owner: "Add a standoffs on boards and connectors that is ment for double sided sticky tape"; C595, C596) | 30 Oct 2026 |
 | Q594 | **The tape's width is a setting, 19 mm unless set, 10 to 40 mm**, one for the boards and the connector, carried between them as the screw size is ("594 set a standard with a size option", 30 Oct 2026; C595) | 30 Oct 2026 |
@@ -269,36 +270,9 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 ## Open questions
 
 - **A587** Release the page with D528, D529, Q588, D589 and D590 (`v0.10.0`), then make the Printables page's cover
-  (D531, its line as D591 says) and its GIFs of the page again from it, and stage them in the editor, with the Updates
+  (D531, D591) and its GIFs of the page again from it, and stage them in the editor, with the Updates
   section at the very bottom of the text (`docs/printables.md`, the owner, 30 Oct 2026: "At the very bottom of the
   printables page add an updates section, look at other projects for a reference"), for the owner's "Publish now".
-- **D591** (30 Oct 2026) The owner: "The line that is between the types should be designed better maybe a correct
-  color maybe a different layout"; (a) to (c), a line in other colours and lengths, answered "591 still not good".
-  Asked again, with no line over the boards (`docs/figures/explain-2026-10-30/d591-d-line.png` to `d591-f-line.png`):
-  (d) a two-tone backdrop behind them, (e) the cut opened into a 10 mm gap, (f) a bracket beside each half, its look
-  written along it (recommended).
-
-`board-lightened` and `mounting-ikea` were planned and built on 15 Oct 2026 (D141 to D147, D155 to D158; C148 to
-C150, C159, C160; the backlog rows have the results). Waiting on the owner:
-
-`conn-slot-clip` was built on 16 Oct 2026 (D187 to D189; C191, C192; the backlog row has the result;
-[figure](figures/slot-clip.png)).
-
-`keyhole-pads` was built on 16 Oct 2026 (D190, D191; C198; the backlog row has the result). The owner then asked
-for a lip or friction ribs on the slot clip's pegs, a screw or a keyhole on the clip, and walls larger than 1.6 m,
-drawn without slowing or crashing the page (16 Oct 2026), and answered D194 to D197. Measured that day, the page builds each kind of panel once,
-2 kinds for a 1.6 m wall, in 0.1 s (solid) to 2.6 s (skeleton), but draws every panel in full: 56 panels and 2.6,
-3.9 and 4.9 million triangles for the solid, lightened and skeleton boards on a 250 x 210 mm bed. A wall of
-4 x 2.5 m would draw about 10 to 20 million.
-
-`clip-grip-fixing` was built on 16 Oct 2026 (D194, D195; C199), then `wall-grid` (C200) and `wall-detail` (D196,
-D197; C203 to C205) and `design-system-v050` (D202, D206, D207; C208, C209); the backlog rows have the results.
-Building next: the release and the Printables page (`printables-entry`, D211 to D214).
-
-`v0.2.0` was released and the Printables files and pictures made (16 Oct 2026); a code review then found 15
-faults, fixed in `review-findings` (D222, D223, A224; C225 to C231) for `v0.2.1`. The draft on Printables is
-made in the owner's browser, once it is connected again (T219, done 17 Oct 2026): saved as model 1880460, unpublished.
-
 - **T274** Print the trial grips and try them: on one plate with T151's board, sliced for PETG Basic (the owner,
   21 Oct 2026: "274 151 create a plate for petg basic"), started at 16:40 UTC that day (A300). That print failed
   on 22 Oct 2026 near Z 3.2 mm: one of the three 1-board standoffs came off the bed, and the owner took it and
