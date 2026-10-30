@@ -27,6 +27,11 @@ All notable changes to this project are recorded here. The format follows
 - With keyholes or lock screws, the standoffs' "None" is greyed out, a note under it saying they need standoffs, where
   choosing it had left a board that could not be made (D589).
 
+### Fixed
+
+- The skeleton board in the Curved look is made with a 3.5 mm screw size, which it had refused as pockets too small
+  to narrow (D605).
+
 ## [0.9.0] - 2026-10-28
 
 ### Added

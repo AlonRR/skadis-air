@@ -233,6 +233,20 @@ describe('makeSkeletonBoard (D146, D147, D161)', () => {
     expect(degenerateFacets(meshOf(skeleton({}, {}, { screwHead: 'keyhole', standoffHeightMm: 20 })))).toBe(0);
   });
 
+  it('is made with every screw size, 3 to 5 mm, in each look (D605)', () => {
+    // at 3.5 mm in the Curved look, a screw pad's circle met a pocket's blended corner in a notch 0.02 mm long, which
+    // the taper's 0.9 mm move turned round, and the board was refused (30 Oct 2026)
+    for (const corners of ['eased', 'sharp'] as const) {
+      for (const screwMm of [3, 3.5, 4, 4.5, 5]) {
+        const board = skeleton({}, { corners }, { screwMm });
+        const parts = board.decompose();
+        made.push(...parts);
+        expect(parts, `${corners} M${screwMm}`).toHaveLength(1);
+        expect(degenerateFacets(meshOf(board)), `${corners} M${screwMm}`).toBe(0);
+      }
+    }
+  }, 120_000);
+
   it('is one body at every size from one tile to ten', () => {
     for (const [columns, rows] of [
       [1, 1],

@@ -164,9 +164,8 @@ describe('the board form with tape standoffs (D593, the D589 mechanism)', () => 
       expect(height({ standoffs: 'tape' }), id).toBe(18);
       expect(height({ standoffs: 'back' }), id).toBe(15);
       expect(height({ standoffs: 'tape', standoffHeightMm: '20' }), id).toBe(20);
-      // every screw size leaves the default piece room on 18 mm: the least is 17.94 mm, for M3; the skeleton's own
-      // pockets refuse M3.5 with or without tape (D605), so it is left out there
-      for (const screwMm of id === 'skeleton' ? [3, 4, 4.5, 5] : [3, 3.5, 4, 4.5, 5]) {
+      // every screw size leaves the default piece room on 18 mm: the least is 17.94 mm, for M3
+      for (const screwMm of [3, 3.5, 4, 4.5, 5]) {
         const read = readValues(type.settings, { standoffs: 'tape', screwMm });
         expect(read.ok && buildBoard(engine, type, read.values).ok, `${id} M${screwMm}`).toBe(true);
       }

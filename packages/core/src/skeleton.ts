@@ -174,6 +174,24 @@ function widening(
   });
 }
 
+/** How near two points of a pocket's ring may lie before one is dropped, mm: far under what prints. Where a screw
+ * pad's circle met a pocket's blended corner at 3.5 mm, a notch of edges 0.02 and 0.007 mm long, the taper's 0.9 mm
+ * move turned one round, and the board was refused (D605, 30 Oct 2026). */
+const LEAST_EDGE_MM = 0.05;
+
+const apart = (a: Vec2, b: Vec2) => Math.hypot(b[0] - a[0], b[1] - a[1]) >= LEAST_EDGE_MM;
+
+/** A ring without the points nearer than LEAST_EDGE_MM to the last one kept, the ring's end to its start too. */
+function withoutShortEdges(ring: readonly Vec2[]): Vec2[] {
+  const kept: Vec2[] = [];
+  for (const point of ring) {
+    const last = kept[kept.length - 1];
+    if (last === undefined || apart(last, point)) kept.push(point);
+  }
+  while (kept.length > 3 && !apart(kept[kept.length - 1] ?? [0, 0], kept[0] ?? [0, 0])) kept.pop();
+  return kept;
+}
+
 /**
  * The skeleton's members as one solid, reaching past both faces and past the outline: a slab less its pockets. Each
  * pocket is the lightened board's at both faces, its sharp corners blended (D278), and widens through the board into
@@ -197,7 +215,7 @@ export function skeletonMembers(
   const f = Math.min(FLANGE_MM, t / 2);
   const middle = t / 2 - f; // how far a taper reaches by the middle
   const pocketRings = pockets.map((pocket) => {
-    const rings = pocket.toPolygons();
+    const rings = pocket.toPolygons().map(withoutShortEdges);
     pocket.delete();
     return rings;
   });
