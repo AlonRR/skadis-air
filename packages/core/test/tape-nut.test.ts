@@ -363,6 +363,106 @@ describe('the nut standoff screwed to the wall (D600 y, 30 Oct 2026)', () => {
   });
 });
 
+describe('the standoff for wood or PT screws (D611, 30 Oct 2026)', () => {
+  const tapped = (given: Partial<StandoffParams> = {}) =>
+    keep(makeStandoff(engine, standoffParams({ fixing: 'self-tap', ...given })));
+  const pilotOf = (screwMm: number) => Math.round((0.85 * screwMm) / 0.05) * 0.05;
+
+  it('starts its pilot hole at 0.85 times the screw, as the standoff trial does (D267)', () => {
+    expect(standoffParams({ fixing: 'self-tap' }).pilotHoleMm).toBeCloseTo(3.4, 9);
+    expect(standoffParams({ fixing: 'self-tap', screwMm: 3 }).pilotHoleMm).toBeCloseTo(2.55, 9);
+    expect(() => standoffParams({ fixing: 'self-tap', pilotHoleMm: 4.5 })).toThrow(/pilot/);
+  });
+
+  for (const fixing of ['self-tap', 'self-tap-screwed'] as const) {
+    it(`${fixing}: builds for every screw size and board count, nothing over air, no degenerate facet`, () => {
+      for (const screwMm of [3, 3.5, 4, 5]) {
+        for (const boards of ['1', '2', '2-stacked', '4'] as const) {
+          const part = keep(makeStandoff(engine, standoffParams({ fixing, screwMm, boards, heightMm: 18 })));
+          const at = `${fixing} M${screwMm} ${boards}`;
+          expect(part.decompose().length, at).toBe(1);
+          expect(degenerateFacets(meshOf(part)), at).toBe(0);
+          expect(facingDown(part, 0.05, 18.1), at).toBeLessThan(0.01);
+        }
+      }
+    });
+
+    it(`${fixing}: each post a pilot hole the screw cuts its thread in, from the board face down`, () => {
+      for (const screwMm of [3, 4, 5]) {
+        const pilot = pilotOf(screwMm);
+        const part = keep(makeStandoff(engine, standoffParams({ fixing, screwMm, heightMm: 18 })));
+        const bottom = fixing === 'self-tap' ? 3 : 0;
+        const rod = (d: number, z0: number, z1: number) =>
+          keep(keep(keep(engine.CrossSection.circle(d / 2, 48)).extrude(z1 - z0)).translate([0, 0, z0]));
+        const at = `${fixing} M${screwMm}`;
+        expect(keep(part.intersect(rod(pilot - 0.05, bottom + 0.05, 17.4))).volume(), at).toBeLessThan(1e-6);
+        expect(keep(part.intersect(rod(pilot + 0.2, bottom + 0.5, 17))).volume(), at).toBeGreaterThan(0);
+      }
+    });
+  }
+
+  it('taped: stands on a whole pad the piece of tape, the pilot ending 3 mm above the wall', () => {
+    const part = tapped();
+    const foot = keep(part.slice(1));
+    expect(foot.toPolygons()).toHaveLength(1);
+    expect(Math.abs(foot.area() - 19 * 19) / (19 * 19)).toBeLessThan(0.01);
+    expect(keep(part.slice(2.9)).toPolygons()).toHaveLength(1);
+  });
+
+  it('screwed: its foot screws as the nut one has them, its pilots through to the wall', () => {
+    for (const boards of ['1', '2', '2-stacked', '4'] as const) {
+      const part = keep(makeStandoff(engine, standoffParams({ fixing: 'self-tap-screwed', boards })));
+      // the foot's outline, two foot screws' holes and each post's pilot
+      expect(keep(part.slice(0.5)).toPolygons().length, boards).toBe(1 + 2 + POSTS[boards]);
+    }
+  });
+
+  it('leaves the hooks their room at a seam', () => {
+    const board = { columns: 4, rows: 2, sides: ALL_OPEN };
+    for (const fixing of ['self-tap', 'self-tap-screwed'] as const) {
+      const part = keep(makeStandoff(engine, standoffParams({ fixing, boards: '2', heightMm: 18 })));
+      const placed = keep(part.translate([80, 10, -18 - 0.005]));
+      const hooks = hookRoomZone(engine, board, 2, HOOK_ROOM - 0.05, keep);
+      const slots = slotClearZone(engine, board, 2, HOOK_ROOM - 0.05, keep);
+      expect(keep(placed.intersect(hooks)).volume(), fixing).toBeLessThan(1e-6);
+      expect(keep(placed.intersect(slots)).volume(), fixing).toBeLessThan(1e-6);
+    }
+  });
+
+  it("refuses one too short for 2.5 screw diameters of thread, or for its pad or foot behind the hooks' room", () => {
+    expect(() => standoffParams({ fixing: 'self-tap', heightMm: 12.5 })).toThrow(/at least 13 mm/);
+    expect(() => standoffParams({ fixing: 'self-tap', heightMm: 13 })).not.toThrow();
+    expect(() => standoffParams({ fixing: 'self-tap-screwed', heightMm: 11.5 })).toThrow(/at least 12 mm/);
+  });
+
+  it('is a choice of its own, with tape, a pilot hole under Advanced, named by both, and says what screw it takes', () => {
+    const type = boardType('standoff');
+    const fixing = type.settings.find((s) => s.key === 'standoffFixing');
+    const options = fixing?.kind === 'choice' ? fixing.options.map((o) => o.value) : [];
+    expect(options).toEqual(['screw', 'nut', 'nut-screwed', 'self-tap', 'self-tap-screwed']);
+    const pilot = type.settings.find((s) => s.key === 'pilotHoleMm');
+    expect(pilot?.kind === 'number' && pilot.advanced).toBe(true);
+    expect(settingsNotApplying(type.settings, defaultValues(type.settings))).toContain('pilotHoleMm');
+    const read = readValues(type.settings, { standoffFixing: 'self-tap' });
+    if (!read.ok) throw new Error(read.errors.map((e) => e.message).join('; '));
+    const v = read.values;
+    expect([v['heightMm'], v['pilotHoleMm']]).toEqual([18, 3.4]);
+    expect(settingsNotApplying(type.settings, v)).not.toContain('tapeWidthMm');
+    expect(boardFileName(type, v, 'stl')).toBe('skadis-standoff-1-board-18mm-self-tap-tape-19x19mm.stl');
+    const note = type.screws?.(v) ?? '';
+    // 5 mm of board and 2.5 x 4 mm of thread; to 3 mm above the wall: 5 + 18 - 3
+    expect(note).toMatch(/countersunk 4 mm wood or PT screw, 15 to 20 mm long/);
+    expect(note).toMatch(/3\.4 mm pilot/);
+    expect(note).toMatch(/snug/);
+    const given = readValues(type.settings, { standoffFixing: 'self-tap-screwed', pilotHoleMm: '3.2' });
+    if (!given.ok) throw new Error(given.errors.map((e) => e.message).join('; '));
+    expect(boardFileName(type, given.values, 'stl')).toBe(
+      'skadis-standoff-1-board-15mm-self-tap-screwed-pilot-3.2mm.stl',
+    );
+    expect(type.screws?.(given.values)).toMatch(/foot/);
+  });
+});
+
 /** Where the screwed standoff's foot screws are, round where the boards' corners meet (D600). */
 function footScrews(boards: '1' | '2' | '2-stacked' | '4'): [number, number][] {
   if (boards === '1')

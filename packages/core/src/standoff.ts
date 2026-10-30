@@ -36,15 +36,31 @@ export interface StandoffParams {
    * it and carries the standoff; none unless given. */
   pilotMm?: number;
   /** A screw through to the wall, as it starts; or a nut in each post and a tape pad at the wall (D592 a), or a foot
-   * screwed to the wall (D600). */
-  fixing?: 'screw' | 'nut' | 'nut-screwed';
+   * screwed to the wall (D600); or the same two with a pilot hole in each post for a wood or PT screw (D611). */
+  fixing?: StandoffFixing;
   /** With the nut: the tape's width, the pad's side across; TAPE_MM unless given (Q594). */
   tapeMm?: number;
   /** With the nut: the piece's length, the pad's side along x; TAPE_LENGTH_MM unless given (C601). */
   tapeLengthMm?: number;
   /** With the nut: how much wider than the nut its seat is across the flats; NUT_FIT_MM unless given (D607 a). */
   nutFitMm?: number;
+  /** With a wood or PT screw: the pilot hole it cuts its thread in, across; pilotHoleFor(screwMm) unless given (D611). */
+  pilotHoleMm?: number;
 }
+
+export type StandoffFixing = 'screw' | 'nut' | 'nut-screwed' | 'self-tap' | 'self-tap-screwed';
+const FIXINGS: ReadonlySet<StandoffFixing> = new Set(['screw', 'nut', 'nut-screwed', 'self-tap', 'self-tap-screwed']);
+/** Whether a fixing stands on tape, or on a foot screwed to the wall, rather than a screw through it. */
+export const onTape = (fixing: unknown) => fixing === 'nut' || fixing === 'self-tap';
+const onFoot = (fixing: unknown) => fixing === 'nut-screwed' || fixing === 'self-tap-screwed';
+const byNut = (fixing: unknown) => fixing === 'nut' || fixing === 'nut-screwed';
+
+/** A wood or PT screw's pilot hole unless set (D611): 0.85 times the screw, as the standoff trial's tight section (D267),
+ * which T274 tries at 3.2, 3.4 and 3.6 mm for a 4 mm screw; on 0.05 mm steps. */
+export const pilotHoleFor = (screwMm: number) => Math.round(0.85 * screwMm * 20) / 20;
+/** How much of a wood or PT screw's length cuts thread in the post, at least: 2.5 times the screw, a little over the 2 to
+ * 2.3 that moulded bosses take (`printed-part-engineering` §5), as a printed pilot comes out undersize. */
+const THREAD_DIAMETERS = 2.5;
 
 /** ISO 4032 hex nuts (regular, style 1), the largest each may be, mm: across the flats (s) and tall (m), for the screw
  * sizes the page offers that have one. M3: 5.5 x 2.4, M4: 7 x 3.2, M5: 8 x 4.7, as the standard's table gives them
@@ -76,8 +92,9 @@ const BRIDGE_STEP_MM = 0.3;
 const NUT_WALL_MM = 2.5;
 /** The chamfer on that boss's top edge, round onto the post. */
 const BOSS_CHAMFER_MM = 0.5;
-/** The tape pad's thickness at the wall (D592 a). */
+/** The tape pad's thickness at the wall (D592 a), and a pilot hole's floor above it, which leaves the pad whole (D611). */
 const TAPE_PAD_MM = 2;
+const HOLE_FLOOR_MM = TAPE_PAD_MM + 1;
 
 /** A nut's seat and the boss round it, from the wall face, mm: across the seat's flats and the way in's, the seat's
  * bottom and top, the boss's top and its width across. */
@@ -167,21 +184,44 @@ export function standoffParams(given: Partial<StandoffParams>): StandoffParams {
   if (p.pilotMm !== undefined && !(p.pilotMm > 0 && p.pilotMm < screwHole(p.screwMm).holeMm)) {
     throw new RangeError("A standoff's tight section must be narrower than its hole");
   }
-  if (p.fixing !== undefined && !['screw', 'nut', 'nut-screwed'].includes(p.fixing)) {
-    throw new RangeError('A standoff is fixed by a screw through it, or by a nut and tape or screws');
+  if (p.fixing !== undefined && !FIXINGS.has(p.fixing)) {
+    throw new RangeError('A standoff is fixed by a screw through it, or by a nut or a wood screw and tape or screws');
   }
-  if (p.fixing === 'nut') {
+  if (onTape(p.fixing)) {
     p.tapeMm ??= TAPE_MM;
     p.tapeLengthMm ??= TAPE_LENGTH_MM;
     if (!(p.tapeMm > 0)) throw new RangeError('The tape must be more than 0 mm wide');
     if (!(p.tapeLengthMm > 0)) throw new RangeError('A piece of tape must be more than 0 mm long');
   }
-  if (p.fixing === 'nut' || p.fixing === 'nut-screwed') {
+  if (p.fixing === 'self-tap' || p.fixing === 'self-tap-screwed') {
+    p.pilotHoleMm ??= pilotHoleFor(p.screwMm);
+    if (!(p.pilotHoleMm >= p.screwMm / 2 && p.pilotHoleMm < p.screwMm)) {
+      throw new SettingsProblem(
+        `A pilot hole is narrower than its screw and at least half as wide: ${nice(p.screwMm / 2)} to under ` +
+          `${nice(p.screwMm)} mm for a ${nice(p.screwMm)} mm screw`,
+        ['pilotHoleMm'],
+      );
+    }
+    // the screw's thread in the post above the pad, and the pad or the foot behind the hooks' room
+    const thread = THREAD_DIAMETERS * p.screwMm;
+    const least =
+      p.fixing === 'self-tap'
+        ? Math.max(HOLE_FLOOR_MM + thread, TAPE_PAD_MM + TUNNEL_DEPTH_MM)
+        : Math.max(thread, footMm(p.screwMm) + TUNNEL_DEPTH_MM);
+    if (p.heightMm < least - 1e-9) {
+      throw new SettingsProblem(
+        `A standoff for a ${nice(p.screwMm)} mm wood or PT screw needs to be at least ${nice(least)} mm tall: ` +
+          `${nice(thread)} mm of thread in its post, and its ${p.fixing === 'self-tap' ? 'pad' : 'foot'} behind the hooks' room`,
+        ['heightMm'],
+      );
+    }
+  }
+  if (byNut(p.fixing)) {
     p.nutFitMm ??= NUT_FIT_MM;
     if (!(p.nutFitMm >= 0 && p.nutFitMm <= 1)) throw new RangeError("A nut's fit must be 0 to 1 mm");
     // the nut's seat and the boss round it behind the hooks' room (D607 a); screwed, the foot too (D600)
     const seat = nutSeat(p.screwMm, p.nutFitMm);
-    const base = p.fixing === 'nut' ? TAPE_PAD_MM : footMm(p.screwMm);
+    const base = onTape(p.fixing) ? TAPE_PAD_MM : footMm(p.screwMm);
     const nutLeast = Math.max(seat.bossTopMm, base) + TUNNEL_DEPTH_MM;
     if (p.heightMm < nutLeast - 1e-9) {
       throw new SettingsProblem(
@@ -204,7 +244,28 @@ export function standoffParams(given: Partial<StandoffParams>): StandoffParams {
 /** What each screw passes (D264): a board at its starting thickness and this standoff. */
 export function standoffScrews(p: StandoffParams): string {
   const board = SOLID_BOARD_DEFAULTS.thicknessMm;
-  if (p.fixing === 'nut' || p.fixing === 'nut-screwed') {
+  if (p.fixing === 'self-tap' || p.fixing === 'self-tap-screwed') {
+    // from the board's face: its thread's length into the post at least, and no further than the pilot goes
+    const pilot = p.pilotHoleMm ?? pilotHoleFor(p.screwMm);
+    const floor = p.fixing === 'self-tap' ? HOLE_FLOOR_MM : TIP_CLEAR_MM;
+    const [shortest, longest] = [board + THREAD_DIAMETERS * p.screwMm, board + p.heightMm - floor];
+    const wood =
+      `Each board's corner screw is a countersunk ${nice(p.screwMm)} mm wood or PT screw, ${nice(shortest)} to ` +
+      `${nice(longest)} mm long for a ${nice(board)} mm board, which cuts its own thread in the post's ` +
+      `${nice(pilot)} mm pilot hole: drive it snug, no more`;
+    if (p.fixing === 'self-tap-screwed') {
+      return (
+        `First screw the foot to the wall: two countersunk ${nice(p.screwMm)} mm screws, each passing the ` +
+        `${nice(footMm(p.screwMm))} mm foot, plus your wall plug. ${wood}.`
+      );
+    }
+    const piece = `${nice(p.tapeMm ?? TAPE_MM)} x ${nice(p.tapeLengthMm ?? TAPE_LENGTH_MM)} mm`;
+    return (
+      `Stick the pad to the wall with a ${piece} piece of double-sided tape at each post. ${wood}, as only the tape ` +
+      'holds the standoff against its turn.'
+    );
+  }
+  if (byNut(p.fixing)) {
     // from the board's face: through the nut pulled home at least, and its tip short of the wall
     const seat = nutSeat(p.screwMm, p.nutFitMm);
     const [shortest, longest] = [board + p.heightMm - seat.nutBottomMm, board + p.heightMm - TIP_CLEAR_MM];
@@ -324,7 +385,7 @@ export function makeStandoff(engine: Engine, params: StandoffParams): Manifold {
     for (const m of [barSolid, risen, postSolid]) m.delete();
   }
   for (const s of sections) s.delete();
-  if (p.fixing === 'nut' || p.fixing === 'nut-screwed') return nutted(engine, p, plain, centres);
+  if (onTape(p.fixing) || onFoot(p.fixing)) return nutted(engine, p, plain, centres);
   // each hole chamfered at both ends; a tight section at the board face for the trial (D267)
   const tight = Math.min(PILOT_MM, h);
   const holeCuts = centres.map(([x, y]) => {
@@ -353,23 +414,27 @@ export function makeStandoff(engine: Engine, params: StandoffParams): Manifold {
   return part;
 }
 
-/** The nut standoff (D592 a): the shape as above from 0.5 mm into its tape pad up, the pad a square the tape's width a
- * side round each post, one plate round them all, 2 mm thick at the wall, its edges chamfered as the bed edge's. Each
- * post holds its nut pulled into a seat from the wall side (D607 a), in a boss round the post behind the hooks' room,
- * and its hole goes on from the seat's ceiling to the board face. Screwed to the wall (D600), the plate is a foot round
- * the bosses and two screws' bosses, and each foot screw's hole is countersunk at its top. */
+/** The standoff held to the wall by tape or by a foot (D592 a, D600, D611): the shape as above from 0.5 mm into its tape
+ * pad up, the pad a square the tape's width a side round each post, one plate round them all, 2 mm thick at the wall, its
+ * edges chamfered as the bed edge's. With a nut, each post holds it pulled into a seat from the wall side (D607 a), in a
+ * boss round the post behind the hooks' room, and its hole goes on from the seat's ceiling to the board face; with a wood
+ * or PT screw, each post is a pilot hole from the board face down, to 1 mm above the pad (D611). Screwed to the wall
+ * (D600), the plate is a foot round the posts and two screws' bosses, and each foot screw's hole is countersunk at its
+ * top. */
 function nutted(engine: Engine, p: StandoffParams, plain: Manifold, centres: [number, number][]): Manifold {
   const { CrossSection, Manifold } = engine;
   const [tape, length] = [p.tapeMm ?? TAPE_MM, p.tapeLengthMm ?? TAPE_LENGTH_MM];
-  const { holeMm, countersinkMm } = screwHole(p.screwMm);
-  const seat = nutSeat(p.screwMm, p.nutFitMm);
+  const { holeMm, countersinkMm, standoffDiameterMm } = screwHole(p.screwMm);
+  const nut = byNut(p.fixing);
+  const seat = nut ? nutSeat(p.screwMm, p.nutFitMm) : undefined;
+  const postMm = seat?.bossMm ?? standoffDiameterMm;
   const h = p.heightMm;
-  const screwed = p.fixing === 'nut-screwed';
-  // taped: a rectangle, the piece of tape, round each post (C601); screwed: each boss and each foot screw's boss (D600)
+  const screwed = onFoot(p.fixing);
+  // taped: a rectangle, the piece of tape, round each post (C601); screwed: each post and each foot screw's boss (D600)
   const feet = screwed ? footScrewPlaces(p.boards) : [];
   const shapes = screwed
     ? [
-        ...centres.map(([x, y]) => new CrossSection([circle(x, y, seat.bossMm)])),
+        ...centres.map(([x, y]) => new CrossSection([circle(x, y, postMm)])),
         ...feet.map(([x, y]) => new CrossSection([circle(x, y, 2 * footBossMm(p.screwMm))])),
       ]
     : centres.map(([x, y]) => CrossSection.square([length, tape], true).translate([x, y]));
@@ -380,20 +445,25 @@ function nutted(engine: Engine, p: StandoffParams, plain: Manifold, centres: [nu
   const pad = chamferedExtrusion(engine, footprint, base, { bottomMm: BED_CHAMFER_MM, topMm: BED_CHAMFER_MM });
   const above = plain.trimByPlane([0, 0, 1], base - 0.5);
   // the boss round each nut's seat, behind the hooks' room (D607 a)
-  const bossOutlines = centres.map(([x, y]) => new CrossSection([circle(x, y, seat.bossMm)]));
+  const bossOutlines = seat === undefined ? [] : centres.map(([x, y]) => new CrossSection([circle(x, y, seat.bossMm)]));
   const bosses = bossOutlines.map((o) =>
-    chamferedExtrusion(engine, o, seat.bossTopMm, { bottomMm: BED_CHAMFER_MM, topMm: BOSS_CHAMFER_MM }),
+    chamferedExtrusion(engine, o, seat?.bossTopMm ?? 0, { bottomMm: BED_CHAMFER_MM, topMm: BOSS_CHAMFER_MM }),
   );
   const whole = Manifold.union([pad, above, ...bosses]);
   const sink = (countersinkMm - holeMm) / 2;
+  // a nut's hole from its seat's ceiling up; a wood screw's pilot from above the pad, or through the foot, up
+  const [hole, from] =
+    seat === undefined
+      ? [p.pilotHoleMm ?? pilotHoleFor(p.screwMm), screwed ? -1 : HOLE_FLOOR_MM]
+      : [holeMm, seat.topMm + BRIDGE_STEP_MM];
   const cuts = [
     ...centres.flatMap(([x, y]) => [
-      ringedSolid(engine, (grow) => circle(x, y, holeMm, grow), [
-        [seat.topMm + BRIDGE_STEP_MM, 0],
+      ringedSolid(engine, (grow) => circle(x, y, hole, grow), [
+        [from, 0],
         [h - MOUTH_MM, 0],
         [h + 1, MOUTH_MM + 1],
       ]),
-      seatCutter(engine, [x, y], p.screwMm, p.nutFitMm),
+      ...(seat === undefined ? [] : [seatCutter(engine, [x, y], p.screwMm, p.nutFitMm)]),
     ]),
     // each foot screw's hole, its countersink at the foot's top, and clear above it for the head and the driver
     ...feet.map(([x, y]) =>

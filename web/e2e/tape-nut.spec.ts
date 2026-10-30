@@ -109,3 +109,36 @@ test('starts a taped standoff at 18 mm, as tape boards stand (C604)', async ({ p
   await choose(page, 'standoffFixing', 'nut-screwed');
   await expect(height).toHaveValue('15');
 });
+
+test('makes a standoff for wood or PT screws, taped, its pilot hole following the screw size (D611)', async ({
+  page,
+}) => {
+  await ready(page);
+  await choose(page, 'typeGroup', 'connector');
+  await choose(page, 'boardType', 'standoff');
+  const pilot = page.locator('input[name="pilotHoleMm"]');
+  await expect(pilot).toBeDisabled(); // only with a wood or PT screw
+  await choose(page, 'standoffFixing', 'self-tap');
+  await expect(page.locator('input[name="tapeWidthMm"]')).toBeEnabled();
+  await expect(page.locator('input[name="heightMm"]')).toHaveValue('18');
+  await expect(pilot).toBeEnabled();
+  await expect(pilot).toHaveValue('3.4');
+  await expect(status(page)).toHaveAttribute(
+    'data-file-name',
+    'skadis-standoff-1-board-18mm-self-tap-tape-19x19mm.stl',
+    {
+      timeout: 30_000,
+    },
+  );
+  await expect(page.getByTestId('screw-note')).toContainText('wood or PT screw');
+  // the pilot starts from the screw size: 0.85 times it
+  await page.locator('input[name="screwMm"]').fill('3');
+  await expect(pilot).toHaveValue('2.55');
+  await expect(status(page)).toHaveAttribute(
+    'data-file-name',
+    'skadis-standoff-1-board-18mm-self-tap-tape-19x19mm-screw-3mm.stl',
+    {
+      timeout: 30_000,
+    },
+  );
+});

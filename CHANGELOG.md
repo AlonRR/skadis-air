@@ -18,6 +18,9 @@ All notable changes to this project are recorded here. The format follows
   countersunk machine screw through the board holds the board to it, and it stands on a pad for double-sided tape
   (D592, D607). Or it stands on a foot screwed to the wall by two countersunk screws, driven before the boards go on:
   "Nut, screwed to the wall" (D600). "Nut fit", under Advanced, sets the seat, the nut + 0.2 mm unless set (D607).
+- The standoff connector can take wood or PT screws instead: each post is a pilot hole the board's corner screw cuts
+  its own thread in, 0.85 times the screw unless set ("Pilot hole", under Advanced), taped to the wall on a whole pad
+  or on the screwed foot: "Wood or PT screw, taped to the wall" and "... screwed to the wall" (D611).
 
 ### Changed
 
