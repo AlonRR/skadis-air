@@ -25,3 +25,10 @@ solid blue edge, an open one dashed grey, and a corner is round where both its s
 ![The cover's first frame: the lightened and skeleton boards Curved above the middle, Straight below](d531-cover-halves.png)
 
 **What it shows:** the cover's first frame, each lattice board cut across its middle: Curved above, Straight below.
+
+## Q530: the open sides' two kinds
+
+![A closed board, four boards meeting through the slots and four between them, the seams in orange](q530-sides-on-printables.png)
+
+**What it shows:** `sides.png` as the gallery draws it, sixth on the Printables page since 23 Oct 2026: the two kinds of
+open side the owner asked to show.
