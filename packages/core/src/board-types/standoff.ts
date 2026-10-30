@@ -3,7 +3,7 @@
 // on the main form (D479): its holes take the boards' corner screws, the screw size itself, so it has no size of its
 // own. It prints as built, wall face down, the posts of a shared one on top (C101).
 import { SCREW_MM, SCREW_SIZE_SETTING } from '../screw-places.js';
-import { TAPE_WIDTH_SETTING } from '../tape.js';
+import { TAPE_LENGTH_SETTING, TAPE_WIDTH_SETTING } from '../tape.js';
 import { defineSettings } from '../settings.js';
 import { makeStandoff, standoffParams, standoffScrews, STANDOFF_DEFAULTS, type StandoffParams } from '../standoff.js';
 import { defineBoardType } from './define.js';
@@ -13,9 +13,18 @@ const BOARDS_IN_NAME = { '1': '1-board', '2': '2-boards', '2-stacked': '2-boards
 
 /** The standoff's settings as the library takes them, for its build and its screws alike. */
 function paramsOf(
-  v: Pick<StandoffParams, 'boards' | 'heightMm' | 'screwMm'> & { standoffFixing: string; tapeWidthMm: number },
+  v: Pick<StandoffParams, 'boards' | 'heightMm' | 'screwMm'> & {
+    standoffFixing: string;
+    tapeWidthMm: number;
+    tapeLengthMm: number;
+  },
 ) {
-  const nut = v.standoffFixing === 'nut' ? ({ fixing: 'nut', tapeMm: v.tapeWidthMm } as const) : {};
+  const nut =
+    v.standoffFixing === 'nut'
+      ? ({ fixing: 'nut', tapeMm: v.tapeWidthMm, tapeLengthMm: v.tapeLengthMm } as const)
+      : v.standoffFixing === 'nut-screwed'
+        ? ({ fixing: 'nut-screwed' } as const)
+        : {};
   return standoffParams({ boards: v.boards, heightMm: v.heightMm, screwMm: v.screwMm, ...nut });
 }
 
@@ -48,12 +57,14 @@ export const STANDOFF = defineBoardType({
       options: [
         { value: 'screw', label: 'Screw through to the wall' },
         { value: 'nut', label: 'Nut, taped to the wall' },
+        { value: 'nut-screwed', label: 'Nut, screwed to the wall' }, // D600
       ],
       default: 'screw',
       help:
         "Screw through: each board's corner screw goes on through the standoff into the wall. Nut: each post holds a " +
         'nut of the screw size, slid in from the side, and a countersunk machine screw through the board holds it; ' +
-        'the standoff stands on a square pad for double-sided tape, with no hole into the wall (D592).',
+        'the standoff stands on a rectangular pad for a piece of double-sided tape, with no hole into the wall (D592), or on a foot ' +
+        'screwed to the wall by two screws of the screw size, driven before the boards go on (D600).',
     },
     {
       kind: 'number',
@@ -67,12 +78,14 @@ export const STANDOFF = defineBoardType({
       help: "How far it holds the boards off the wall: 15 mm unless set; IKEA's spacers hold them about 20 mm off. For 2 or 4 boards, at least 12 mm.",
     },
     { ...TAPE_WIDTH_SETTING, appliesWhen: (v) => v['standoffFixing'] === 'nut' }, // D593, Q594
+    { ...TAPE_LENGTH_SETTING, appliesWhen: (v) => v['standoffFixing'] === 'nut' }, // C601
     SCREW_SIZE_SETTING,
   ]),
   build: (engine, v) => makeStandoff(engine, paramsOf(v)),
   label: (v) =>
     `${BOARDS_IN_NAME[v.boards]}-${v.heightMm}mm` +
-    (v.standoffFixing === 'nut' ? `-nut-tape-${v.tapeWidthMm}mm` : '') +
+    (v.standoffFixing === 'nut' ? `-nut-tape-${v.tapeWidthMm}x${v.tapeLengthMm}mm` : '') +
+    (v.standoffFixing === 'nut-screwed' ? '-nut-screwed' : '') +
     (v.screwMm === SCREW_MM ? '' : `-screw-${v.screwMm}mm`),
   screws: (v) => standoffScrews(paramsOf(v)),
 });

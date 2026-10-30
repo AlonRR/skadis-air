@@ -8,9 +8,12 @@ All notable changes to this project are recorded here. The format follows
 
 ### Added
 
-- Standoffs "For tape" on the boards: each corner post ends at the wall in a round pad for a square of double-sided tape, and the board has no screw holes (D593).
-- "Tape width", 19 mm unless set, for the pads; the boards and the standoff connector share it (Q594).
-- The standoff connector can be fixed by a nut and tape: a nut of the screw size (M3, M4 or M5) slides into each post under a roof, a countersunk machine screw through the board holds the board to it, and it stands on a pad for double-sided tape, with no hole into the wall (D592).
+- Standoffs "For tape" on the boards: each corner post ends at the wall in a rectangular pad for a piece of
+  double-sided tape, and the board has no screw holes (D593, C601).
+- "Tape width" and "Tape length", 12 x 18 mm unless set, the piece of tape cut from the roll that each pad takes; the
+  boards and the standoff connector share them (Q594, C601).
+- The standoff connector can be fixed by a nut and tape: a nut of the screw size (M3, M4 or M5) slides into each post under a roof, a countersunk machine screw through the board holds the board to it, and it stands on a pad for double-sided tape, with no hole into the wall (D592). Or it stands on a foot screwed to the
+  wall by two countersunk screws, driven before the boards go on: "Nut, screwed to the wall" (D600).
 
 ### Changed
 

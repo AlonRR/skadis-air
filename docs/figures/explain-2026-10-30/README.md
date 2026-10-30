@@ -106,16 +106,26 @@ written along it, the break between the brackets at the cut.
 
 ## D592 and D593 as built
 
-![A solid board from behind on tape standoffs: four corner posts, each flaring out to a round orange pad](d593-tape-board-back.png)
+![A solid board from behind on tape standoffs: four corner posts, each flaring out to a rectangular orange pad](d593-tape-board-back.png)
 
 **What it shows:** a 160 x 160 mm solid board on 15 mm standoffs "For tape", from behind: each corner post flares out
-at 45 degrees behind the hooks' 8 mm room to a round pad 19 mm across, in orange; no screw holes. Drawn by
-`node scripts/figures/shoot.mjs tape-nut`, the library's own part.
+at 45 degrees behind the hooks' 8 mm room to a 12 x 18 mm rectangular pad, a piece cut from a 12 mm roll, in orange
+(C601; it was round, 19 mm across, before the owner's "The tape designs should be rectangular"); no screw holes. Drawn
+by `node scripts/figures/shoot.mjs tape-nut`, the library's own part.
 
 ![A 1-board standoff cut through its nut's pocket, the nut in orange under a roof, and a 2-board one on one pad](d592-nut-standoff-cut.png)
 
 **What it shows:** the 1-board standoff "Nut, taped to the wall", cut through its M4 nut (orange), which slides in from
-the side under a 1.5 mm roof; behind it the 2-board one whole, on one tape pad. The same pass.
+the side under a 1.5 mm roof; behind it the 2-board one whole, on one tape pad, each post's pad a 12 x 18 mm piece. The
+same pass.
+
+## D600: the nut standoff screwed to the wall
+
+![The standoffs for 1 board and for 2, each on a foot with two countersunk screws in orange](d600-nut-standoff-screwed.png)
+
+**What it shows:** "Nut, screwed to the wall" (D600), for 1 board and for 2: a nut in each post as above, each standing
+on a 4 mm foot screwed to the wall by two countersunk 4 mm screws (orange), driven before the boards go on, which then
+cover them; no tape. The same pass.
 
 ## D591: as chosen
 

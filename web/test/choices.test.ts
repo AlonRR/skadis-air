@@ -40,10 +40,11 @@ describe('carriedAcrossGroups', () => {
     expect(carriedAcrossGroups({ widthMm: '240' })).toEqual({});
   });
 
-  it("carries the tape's width too, so a wall's boards and standoffs take one tape (D593, Q594)", () => {
-    expect(carriedAcrossGroups({ screwMm: '4', tapeWidthMm: '25', widthMm: '240' })).toEqual({
+  it("carries the tape's width and length too, so a wall's boards and standoffs take one tape (D593, Q594, C601)", () => {
+    expect(carriedAcrossGroups({ screwMm: '4', tapeWidthMm: '25', tapeLengthMm: '30', widthMm: '240' })).toEqual({
       screwMm: '4',
       tapeWidthMm: '25',
+      tapeLengthMm: '30',
     });
   });
 });

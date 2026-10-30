@@ -58,6 +58,7 @@ test("lists a board's fields in the owner's order, the size right above the scre
     'Screw holes',
     'Standoffs',
     'Tape width', // greyed out unless the standoffs are for tape (D593)
+    'Tape length', // the piece cut from the roll (C601)
     'Width',
     'Height',
     'Thickness',

@@ -13,7 +13,7 @@ import { defaultValues, optionsOff, readValues } from '../src/settings.js';
 import { ALL_OPEN } from '../src/slots.js';
 import { ISO_4032_NUTS, makeStandoff, standoffParams, type StandoffParams } from '../src/standoff.js';
 import { meshOf } from '../src/stl.js';
-import { TAPE_WIDTH_SETTING } from '../src/tape.js';
+import { TAPE_LENGTH_SETTING, TAPE_WIDTH_SETTING } from '../src/tape.js';
 import { degenerateFacets } from './facets.js';
 import { hookRoomZone, slotClearZone } from './slot-zone.js';
 
@@ -30,7 +30,7 @@ afterAll(() => {
 const HOOK_ROOM = 8; // a hook's 6 mm behind the board and C99's 2 mm
 const taped = (given: Partial<MountingParams> = {}, columns = 2, rows = 2) => {
   const p = solidBoardParams({ columns, rows });
-  const m = mountingParams({ screwHead: 'none', standoffHeightMm: 15, tapeMm: 19, ...given });
+  const m = mountingParams({ screwHead: 'none', standoffHeightMm: 15, tapeMm: 12, tapeLengthMm: 18, ...given });
   return keep(makeSolidBoard(engine, p, mountingCuts(m, p)));
 };
 
@@ -57,36 +57,43 @@ function facingDown(solid: Manifold, z0: number, z1: number): number {
   return area;
 }
 
-describe('the tape width (Q594)', () => {
-  it('is one setting, 19 mm unless set, from 10 to 40 mm', () => {
-    expect([
-      TAPE_WIDTH_SETTING.key,
-      TAPE_WIDTH_SETTING.default,
-      TAPE_WIDTH_SETTING.min,
-      TAPE_WIDTH_SETTING.max,
-    ]).toEqual(['tapeWidthMm', 19, 10, 40]);
+describe('the tape (Q594; the owner, 30 Oct 2026: "rectangular as tape comes on a roll")', () => {
+  it('is a piece of a roll: its width, 12 mm unless set, and the length cut, 18 mm unless set', () => {
+    const of = (t: typeof TAPE_WIDTH_SETTING | typeof TAPE_LENGTH_SETTING) => [t.key, t.default, t.min, t.max];
+    expect(of(TAPE_WIDTH_SETTING)).toEqual(['tapeWidthMm', 12, 10, 40]);
+    expect(of(TAPE_LENGTH_SETTING)).toEqual(['tapeLengthMm', 18, 10, 60]);
     for (const type of [boardType('solid'), boardType('lightened'), boardType('skeleton'), boardType('standoff')]) {
-      expect(type.settings.filter((s) => s.key === 'tapeWidthMm')).toHaveLength(1);
+      for (const key of ['tapeWidthMm', 'tapeLengthMm'])
+        expect(
+          type.settings.filter((s) => s.key === key),
+          `${type.id} ${key}`,
+        ).toHaveLength(1);
     }
   });
 });
 
 describe('tape standoffs on a board (D593)', () => {
-  it('end at the wall in a flat round pad the tape width across, on each corner post, with no hole', () => {
+  it('end at the wall in a flat rectangular pad the piece of tape, on each corner post, with no hole', () => {
     const board = taped();
     expect(board.boundingBox().min[2]).toBeCloseTo(-15, 9);
-    // 0.75 mm off the wall, past the pad's 0.5 mm chamfer: four discs 19 mm across, within 1 %
+    // 0.75 mm off the wall, past the pad's 0.5 mm chamfer: four rectangles 18 mm along the board's width and 12 mm up
     const pads = keep(board.slice(-15 + 0.75));
-    const four = 4 * Math.PI * 9.5 ** 2;
-    expect(Math.abs(pads.area() - four) / four).toBeLessThan(0.01);
-    expect(pads.toPolygons()).toHaveLength(4); // four discs, no hole in any
+    expect(Math.abs(pads.area() - 4 * 18 * 12) / (4 * 18 * 12)).toBeLessThan(1e-6);
+    const polygons = pads.toPolygons();
+    expect(polygons).toHaveLength(4); // four rectangles, no hole in any
+    for (const polygon of polygons) {
+      const xs = polygon.map(([x]) => x);
+      const ys = polygon.map(([, y]) => y);
+      expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(18, 6);
+      expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(12, 6);
+    }
     const plain = keep(makeSolidBoard(engine, solidBoardParams({ columns: 2, rows: 2 })));
     expect(board.genus()).toBe(plain.genus()); // nothing passes through a post or a pad
   });
 
   it("stay out of the hooks' room and the slots' 8 mm behind the board, and only past it grow to their pads", () => {
     const zoneBoard = { columns: 2, rows: 2, sides: ALL_OPEN };
-    const board = taped({ tapeMm: 20 }, 2, 2);
+    const board = taped({ tapeMm: 14, tapeLengthMm: 20, standoffHeightMm: 17 }, 2, 2);
     expect(keep(board.intersect(slotClearZone(engine, zoneBoard, 2, HOOK_ROOM - 0.05, keep))).volume()).toBe(0);
     expect(keep(board.intersect(hookRoomZone(engine, zoneBoard, 2, HOOK_ROOM - 0.05, keep))).volume()).toBe(0);
     // the control: deeper, the pads reach behind the hooks' room
@@ -94,21 +101,24 @@ describe('tape standoffs on a board (D593)', () => {
   });
 
   it('print with nothing facing down past 45 degrees, the pad flaring out from its post', () => {
-    const board = taped({ tapeMm: 20, standoffHeightMm: 20 }, 3, 3);
+    const board = taped({ tapeMm: 16, tapeLengthMm: 20, standoffHeightMm: 20 }, 3, 3);
     // as it prints, face down: the posts and pads from 5 mm up, past the plate, to 25 mm
     expect(facingDown(keep(printPose(board)), 5.05, 25.1)).toBe(0);
   });
 
-  it('refuses standoffs too short for the pad to flare behind the hooks, saying how tall', () => {
-    const cut = () => taped({ standoffHeightMm: 13 });
-    expect(cut).toThrow(/at least 13.5 mm/);
-    expect(taped({ standoffHeightMm: 13.5 }).volume()).toBeGreaterThan(0);
+  it('refuses standoffs too short for the pad to flare to its corners behind the hooks, saying how tall', () => {
+    // the default piece fits the default 15 mm standoffs; its corners 10.82 mm from the post's middle
+    const cut = () => taped({ standoffHeightMm: 14.5 });
+    expect(cut).toThrow(/at least 14.82 mm/);
+    expect(taped({ standoffHeightMm: 14.82 }).volume()).toBeGreaterThan(0);
+    expect(() => taped({ tapeMm: 19, tapeLengthMm: 19 })).toThrow(/at least 17.44 mm/);
   });
 
   it('refuses a pad wider than its corner leaves on the board, and screw holes with tape', () => {
-    expect(() => taped({ tapeMm: 22, standoffHeightMm: 20 })).toThrow(/at most 20 mm/);
-    expect(() => mountingParams({ screwHead: 'countersunk', standoffHeightMm: 15, tapeMm: 19 })).toThrow(RangeError);
-    expect(() => mountingParams({ screwHead: 'none', standoffHeightMm: 0, tapeMm: 19 })).toThrow(RangeError);
+    expect(() => taped({ tapeLengthMm: 22, standoffHeightMm: 25 })).toThrow(/at most 20 mm/);
+    expect(() => taped({ tapeMm: 21, standoffHeightMm: 25 })).toThrow(/at most 20 mm/);
+    expect(() => mountingParams({ screwHead: 'countersunk', standoffHeightMm: 15, tapeMm: 12 })).toThrow(RangeError);
+    expect(() => mountingParams({ screwHead: 'none', standoffHeightMm: 0, tapeMm: 12 })).toThrow(RangeError);
   });
 
   it('exports with no degenerate facet, on the lattice boards too', () => {
@@ -137,7 +147,7 @@ describe('the board form with tape standoffs (D593, the D589 mechanism)', () => 
 
   it('names the file by its tape and standoffs, not its holes', () => {
     const v = { ...defaultValues(solid.settings), screwHead: 'none', standoffs: 'tape' };
-    expect(boardFileName(solid, v, 'stl')).toBe('skadis-solid-160x160-tape-19mm-standoffs-15mm.stl');
+    expect(boardFileName(solid, v, 'stl')).toBe('skadis-solid-160x160-tape-12x18mm-standoffs-15mm.stl');
   });
 });
 
@@ -152,17 +162,19 @@ describe('the nut standoff connector (D592 a)', () => {
       5: { acrossMm: 8, tallMm: 4.7 },
     });
     expect(() => standoffParams({ fixing: 'nut', screwMm: 3.5 })).toThrow(/3, 4 or 5 mm/);
-    expect(standoffParams({ fixing: 'nut' }).tapeMm).toBe(19);
+    expect([standoffParams({ fixing: 'nut' }).tapeMm, standoffParams({ fixing: 'nut' }).tapeLengthMm]).toEqual([
+      12, 18,
+    ]);
   });
 
-  it('stands on a flat square pad the tape width a side, with no hole to the wall', () => {
+  it('stands on a flat rectangular pad the piece of tape, with no hole to the wall', () => {
     const part = nutted();
     const box = part.boundingBox();
-    expect(box.min.map((v) => Math.round(v * 1000) / 1000)).toEqual([-9.5, -9.5, 0]);
+    expect(box.min.map((v) => Math.round(v * 1000) / 1000)).toEqual([-9, -6, 0]);
     expect(box.max[2]).toBeCloseTo(15, 9);
     const foot = keep(part.slice(1));
     expect(foot.toPolygons()).toHaveLength(1); // no hole through the pad
-    expect(Math.abs(foot.area() - 19 * 19) / (19 * 19)).toBeLessThan(0.01);
+    expect(Math.abs(foot.area() - 18 * 12) / (18 * 12)).toBeLessThan(0.01);
   });
 
   it('holds a nut of the screw size under a roof, slid in from the side, and not one 0.5 mm larger', () => {
@@ -219,7 +231,117 @@ describe('the nut standoff connector (D592 a)', () => {
   it('is named by its nut and tape, and says what screw it takes', () => {
     const type = boardType('standoff');
     const v = { ...defaultValues(type.settings), standoffFixing: 'nut' };
-    expect(boardFileName(type, v, 'stl')).toBe('skadis-standoff-1-board-15mm-nut-tape-19mm.stl');
+    expect(boardFileName(type, v, 'stl')).toBe('skadis-standoff-1-board-15mm-nut-tape-12x18mm.stl');
     expect(type.screws?.(v)).toMatch(/countersunk M4 machine screw/);
   });
 });
+
+describe('the nut standoff screwed to the wall (D600 y, 30 Oct 2026)', () => {
+  const screwed = (given: Partial<StandoffParams> = {}) =>
+    keep(makeStandoff(engine, standoffParams({ fixing: 'nut-screwed', ...given })));
+  const BOARDS = ['1', '2', '2-stacked', '4'] as const;
+
+  it('stands on a foot with no tape pad, the foot screws through it, countersunk from the board side', () => {
+    for (const boards of BOARDS) {
+      const part = screwed({ boards });
+      expect(part.volume(), boards).toBeGreaterThan(0);
+      expect(degenerateFacets(meshOf(part)), boards).toBe(0);
+      const holes = footScrews(boards);
+      expect(holes.length, boards).toBe(2);
+      for (const [x, y] of holes) {
+        // a 4.5 mm hole through the foot, from the wall face up
+        const shaft = keep(keep(keep(engine.CrossSection.circle(2.2, 24)).extrude(20)).translate([x, y, -1]));
+        expect(keep(part.intersect(shaft)).volume(), `${boards} ${x},${y}`).toBeLessThan(1e-6);
+        // the foot round it: a ring 2 mm wider than the countersink, at the wall
+        const ring = keep(
+          keep(keep(engine.CrossSection.circle(6.5, 24)).subtract(keep(engine.CrossSection.circle(5, 24)))).extrude(
+            0.5,
+          ),
+        ).translate([x, y, 0.2]);
+        expect(keep(part.intersect(keep(ring))).volume(), `${boards} ${x},${y}`).toBeGreaterThan(0);
+        // a countersink for the head at the foot's top, 9 mm across: a disc 8 mm across just under its top is empty
+        const top = footTop(part, x, y);
+        const head = keep(keep(keep(engine.CrossSection.circle(3.9, 24)).extrude(0.3)).translate([x, y, top - 0.4]));
+        expect(keep(part.intersect(head)).volume(), `${boards} ${x},${y}`).toBeLessThan(1e-6);
+      }
+      // nothing of the foot reaches into the hooks' room next to the boards: the foot's top is behind it
+      expect(Math.max(...holes.map(([x, y]) => footTop(part, x, y))), boards).toBeLessThanOrEqual(15 - 8 + 1e-6);
+    }
+  });
+
+  it('holds the same nut under its roof as the taped one', () => {
+    for (const screwMm of [3, 4, 5] as const) {
+      const part = screwed({ screwMm });
+      const nut = ISO_4032_NUTS[screwMm] ?? { acrossMm: 0, tallMm: 0 };
+      const floor = part.boundingBox().max[2] - 1.5 - (nut.acrossMm + 0.3) / 2 + 0.5 - (nut.tallMm + 0.3);
+      const hex = keep(
+        keep(keep(engine.CrossSection.circle(nut.acrossMm / Math.sqrt(3), 6)).extrude(nut.tallMm)).translate([
+          0,
+          0,
+          floor + 0.05,
+        ]),
+      );
+      expect(keep(part.intersect(hex)).volume(), `M${screwMm}`).toBeLessThan(1e-6);
+    }
+  });
+
+  it("prints with nothing facing down past 45 degrees but the gables' flats", () => {
+    for (const boards of BOARDS) {
+      const part = screwed({ boards });
+      const posts = boards === '1' ? 1 : boards === '4' ? 4 : 2;
+      const flats = facingDown(part, 0.05, 15.1);
+      expect(flats, boards).toBeGreaterThan(0);
+      expect(flats, boards).toBeLessThan(7 * posts);
+    }
+  });
+
+  it('leaves the hooks their room at a seam', () => {
+    const board = { columns: 4, rows: 2, sides: ALL_OPEN };
+    const placed = keep(screwed({ boards: '2' }).translate([80, 10, -15 - 0.005]));
+    expect(keep(placed.intersect(hookRoomZone(engine, board, 2, HOOK_ROOM - 0.05, keep))).volume()).toBeLessThan(1e-6);
+    expect(keep(placed.intersect(slotClearZone(engine, board, 2, HOOK_ROOM - 0.05, keep))).volume()).toBeLessThan(1e-6);
+  });
+
+  it("refuses one too short for its foot below the hooks' room, saying how tall", () => {
+    expect(() => standoffParams({ fixing: 'nut-screwed', heightMm: 11 })).toThrow(/at least 12/);
+    expect(() => standoffParams({ fixing: 'nut-screwed', heightMm: 12 })).not.toThrow();
+  });
+
+  it('is named by its nut and screws, with no tape, and says both screws', () => {
+    const type = boardType('standoff');
+    const v = { ...defaultValues(type.settings), standoffFixing: 'nut-screwed' };
+    expect(boardFileName(type, v, 'stl')).toBe('skadis-standoff-1-board-15mm-nut-screwed.stl');
+    const note = type.screws?.(v) ?? '';
+    expect(note).toMatch(/countersunk M4 machine screw/);
+    expect(note).toMatch(/foot/);
+  });
+});
+
+/** Where the screwed standoff's foot screws are, round where the boards' corners meet (D600). */
+function footScrews(boards: '1' | '2' | '2-stacked' | '4'): [number, number][] {
+  if (boards === '1')
+    return [
+      [14, 0],
+      [0, 14],
+    ];
+  if (boards === '2')
+    return [
+      [0, 14],
+      [0, -14],
+    ];
+  if (boards === '2-stacked')
+    return [
+      [14, 0],
+      [-14, 0],
+    ];
+  return [
+    [0, 24],
+    [0, -24],
+  ];
+}
+
+/** The foot's top at (x, y), beside its screw hole: the highest solid in a thin column 5.5 mm off the hole. */
+function footTop(part: Manifold, x: number, y: number): number {
+  const probe = keep(keep(keep(engine.CrossSection.square([0.4, 0.4], true)).extrude(20)).translate([x + 5.6, y, -1]));
+  return keep(part.intersect(probe)).boundingBox().max[2];
+}

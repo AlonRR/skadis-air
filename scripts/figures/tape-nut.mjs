@@ -1,9 +1,10 @@
 // SPDX-FileCopyrightText: 2026 Alon A. Rabinowitz
 // SPDX-License-Identifier: MPL-2.0
 //
-// Tape standoffs and the nut standoff, as built (D592 a, D593, Q594; 30 Oct 2026): a solid board's back on tape
-// standoffs, each pad in orange; and the standoff held by a nut, cut through its nut's pocket, the nut in orange where
-// it sits, beside a 2-board one whole. Each part the library's own.
+// Tape standoffs and the nut standoff, as built (D592 a, D593, Q594, D600, C601; 30 Oct 2026): a solid board's back on
+// tape standoffs, each rectangular pad in orange; the standoff held by a nut, cut through its nut's pocket, the nut in
+// orange where it sits, beside a 2-board one whole; and the nut standoff screwed to the wall, its foot's screws in
+// orange. Each part the library's own.
 //
 //   node scripts/figures/shoot.mjs tape-nut      -> .check/figures/tape-nut/
 
@@ -17,7 +18,7 @@ export function build(kit) {
     title: 'Board · tape standoffs, from behind',
     caption: [
       'A 160 x 160 mm solid board on 15 mm standoffs "For tape": each corner post flares out at 45 degrees behind the',
-      "hooks' 8 mm room to a round pad 19 mm across (the tape width) at the wall. No screw holes; the board prints face down.",
+      "hooks' 8 mm room to a 12 x 18 mm pad at the wall, a piece cut from a 12 mm roll. No screw holes; it prints face down.",
     ],
     legend: [
       ['the pads and their flare, past the hooks’ room', COLOURS.orange],
@@ -49,11 +50,46 @@ export function build(kit) {
     ],
     legend: [
       ['the nut, ISO 4032 M4, 7 mm across the flats', COLOURS.orange],
-      ['the standoff, on a 19 mm tape pad', COLOURS.grey],
+      ['the standoff, on a 12 x 18 mm tape pad', COLOURS.grey],
     ],
     camera: { position: [62, -70, 48], target: [4, 14, 6], fov: 30 },
     labels: [],
     meshes: [mesh(half, COLOURS.grey), mesh(nutSolid, COLOURS.orange), mesh(two, COLOURS.grey)],
   };
-  return [tapeScene, nutScene];
+  // the nut standoff screwed to the wall (D600): for 1 board and for 2, the foot screws' countersunk holes marked by a
+  // countersunk screw standing in each
+  const screwedOne = lib.makeStandoff(engine, lib.standoffParams({ fixing: 'nut-screwed' }));
+  const screwedTwo = lib
+    .makeStandoff(engine, lib.standoffParams({ fixing: 'nut-screwed', boards: '2' }))
+    .translate([0, 44, 0]);
+  const feet = [...lib.footScrewPlaces('1'), ...lib.footScrewPlaces('2').map(([x, y]) => [x, y + 44])];
+  // a 4 mm countersunk screw's head, 8 mm across and 2.48 mm tall, seated in the foot 4 mm thick, its shank below
+  const screws = feet.map(([x, y]) =>
+    cylinder(x, y, 2, -6, 2).add(
+      CrossSection.circle(4, 32)
+        .extrude(2.48, 0, 0, [2 / 4, 2 / 4])
+        .mirror([0, 0, 1])
+        .translate([x, y, 4]),
+    ),
+  );
+  const screwedScene = {
+    id: 'nut-standoff-screwed',
+    title: 'Standoff · held by a nut, screwed to the wall',
+    caption: [
+      'The standoffs for 1 board and for 2 with a nut in each post, each standing on a foot screwed to the wall by two',
+      'countersunk 4 mm screws (orange), driven before the boards go on; the boards then cover them. No tape.',
+    ],
+    legend: [
+      ['the foot screws, countersunk from the board side', COLOURS.orange],
+      ['the standoff and its foot', COLOURS.grey],
+    ],
+    camera: { position: [75, -80, 70], target: [4, 20, 4], fov: 30 },
+    labels: [],
+    meshes: [
+      mesh(screwedOne, COLOURS.grey),
+      mesh(screwedTwo, COLOURS.grey),
+      ...screws.map((m) => mesh(m, COLOURS.orange)),
+    ],
+  };
+  return [tapeScene, nutScene, screwedScene];
 }

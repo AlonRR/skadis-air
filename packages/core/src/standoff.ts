@@ -7,7 +7,9 @@
 //
 // Or held by nuts and taped to the wall (D592 a, D593): each post holds a nut of the screw size under a roof, slid in
 // from the side, so a countersunk machine screw through the board's corner hole and the roof clamps the board to it;
-// its wall face a flat square pad for double-sided tape, the tape's width a side, with no hole through it.
+// its wall face a flat square pad for double-sided tape, the tape's width a side, with no hole through it. Or held by
+// the nuts and screwed to the wall (D600): a foot at the wall face round its posts, two screws of the screw size through
+// it, countersunk from the board side and driven before the boards go on.
 //
 // Across a seam runs a column of slots (D15), and a hook hangs its back tab below its slot behind the
 // board. So a shared spacer has the slot clip's shape (D281): next to the boards only its posts reach them, for as
@@ -21,7 +23,7 @@ import { chamferedExtrusion, EDGE_CHAMFER_MM, HOLE_MOUTH_MM as MOUTH_MM } from '
 import { circle, ringedSolid } from './rings.js';
 import { SettingsProblem } from './settings.js';
 import { HOOK_DEPTH_MM } from './skadis.js';
-import { TAPE_MM } from './tape.js';
+import { TAPE_LENGTH_MM, TAPE_MM } from './tape.js';
 
 /** The boards it serves: 1, 2 side by side, 2 one above the other, or 4, as the slot clip's choices (D281). */
 export type StandoffBoards = '1' | '2' | '2-stacked' | '4';
@@ -33,14 +35,19 @@ export interface StandoffParams {
   /** For the trial only (D267): the top 2 mm of each hole this wide, so the screw pushed through the board cuts into
    * it and carries the standoff; none unless given. */
   pilotMm?: number;
-  /** A screw through to the wall, as it starts; or a nut in each post and a tape pad at the wall (D592 a). */
-  fixing?: 'screw' | 'nut';
-  /** With the nut: the tape's width, the pad's side; TAPE_MM unless given (Q594). */
+  /** A screw through to the wall, as it starts; or a nut in each post and a tape pad at the wall (D592 a), or a foot
+   * screwed to the wall (D600). */
+  fixing?: 'screw' | 'nut' | 'nut-screwed';
+  /** With the nut: the tape's width, the pad's side across; TAPE_MM unless given (Q594). */
   tapeMm?: number;
+  /** With the nut: the piece's length, the pad's side along x; TAPE_LENGTH_MM unless given (C601). */
+  tapeLengthMm?: number;
 }
 
 /** ISO 4032 hex nuts (regular, style 1), the largest each may be, mm: across the flats (s) and tall (m), for the screw
- * sizes the page offers that have one. M3: 5.5 x 2.4, M4: 7 x 3.2, M5: 8 x 4.7. <<CONFIRM>> against the owner's nuts. */
+ * sizes the page offers that have one. M3: 5.5 x 2.4, M4: 7 x 3.2, M5: 8 x 4.7, as the standard's table gives them
+ * (https://www.wermac.org/bolts/dimensions_hex-nuts_across-flats-and-heights_din-iso.html; T599, 30 Oct 2026: "Look it
+ * up use standard sizes"). DIN 934's are the same across the flats and no taller (M5 4 mm), so they fit too. */
 export const ISO_4032_NUTS: Readonly<Record<number, { acrossMm: number; tallMm: number }>> = {
   3: { acrossMm: 5.5, tallMm: 2.4 },
   4: { acrossMm: 7, tallMm: 3.2 },
@@ -80,8 +87,44 @@ const pocketFloorMm = (p: Pick<StandoffParams, 'heightMm' | 'screwMm'>) => {
   const pocket = nutPocket(p.screwMm);
   return p.heightMm - NUT_ROOF_MM - pocket.gableMm - pocket.tallMm;
 };
-/** Where the screw's hole ends, above the tape pad. */
+/** Where the screw's hole ends, above the tape pad; screwed to the wall, it goes on through (D600). */
 const HOLE_FLOOR_MM = TAPE_PAD_MM + UNDER_HOLE_MM;
+const holeFloorMm = (p: Pick<StandoffParams, 'fixing'>) => (p.fixing === 'nut-screwed' ? 0 : HOLE_FLOOR_MM);
+
+/** The screwed nut standoff's foot (D600): thick enough for its screws' countersinks and a plain 1.75 mm under them,
+ * 4 mm for a 4 mm screw; each screw's boss 2.5 mm round its countersink. */
+const footMm = (screwMm: number) => {
+  const { holeMm, countersinkMm } = screwHole(screwMm);
+  return (countersinkMm - holeMm) / 2 + 1.75;
+};
+const footBossMm = (screwMm: number) => screwHole(screwMm).countersinkMm / 2 + 2.5;
+
+/** Where the screwed nut standoff's foot screws go, round where the boards' corners meet (D600): two, each clear of
+ * the posts and the bars, under the boards, so they are driven before the boards go on and the boards cover them. */
+export function footScrewPlaces(boards: StandoffBoards): [number, number][] {
+  if (boards === '1') {
+    return [
+      [14, 0],
+      [0, 14],
+    ];
+  }
+  if (boards === '2') {
+    return [
+      [0, 14],
+      [0, -14],
+    ];
+  }
+  if (boards === '2-stacked') {
+    return [
+      [14, 0],
+      [-14, 0],
+    ];
+  }
+  return [
+    [0, 24],
+    [0, -24],
+  ];
+}
 
 export const STANDOFF_DEFAULTS: StandoffParams = { boards: '1', heightMm: STANDOFF_DEFAULT_MM, screwMm: 4 };
 
@@ -112,12 +155,14 @@ export function standoffParams(given: Partial<StandoffParams>): StandoffParams {
   if (p.pilotMm !== undefined && !(p.pilotMm > 0 && p.pilotMm < screwHole(p.screwMm).holeMm)) {
     throw new RangeError("A standoff's tight section must be narrower than its hole");
   }
-  if (p.fixing !== undefined && p.fixing !== 'screw' && p.fixing !== 'nut') {
-    throw new RangeError('A standoff is fixed by a screw through it, or by a nut and tape');
+  if (p.fixing !== undefined && !['screw', 'nut', 'nut-screwed'].includes(p.fixing)) {
+    throw new RangeError('A standoff is fixed by a screw through it, or by a nut and tape or screws');
   }
   if (p.fixing === 'nut') {
     p.tapeMm ??= TAPE_MM;
+    p.tapeLengthMm ??= TAPE_LENGTH_MM;
     if (!(p.tapeMm > 0)) throw new RangeError('The tape must be more than 0 mm wide');
+    if (!(p.tapeLengthMm > 0)) throw new RangeError('A piece of tape must be more than 0 mm long');
     // the hole under the nut, the pocket, its gable and roof; and for one board, its pad behind the hooks' room
     const room = HOLE_FLOOR_MM + PAST_NUT_MM + p.heightMm - pocketFloorMm(p);
     const nutLeast = Math.max(room, p.boards === '1' ? TUNNEL_DEPTH_MM + TAPE_PAD_MM : 0);
@@ -125,6 +170,18 @@ export function standoffParams(given: Partial<StandoffParams>): StandoffParams {
       throw new SettingsProblem(
         `A nut standoff for an M${p.screwMm} nut needs to be at least ${nice(nutLeast)} mm tall: its tape pad, the ` +
           'nut under its roof and room for the screw below it',
+        ['heightMm'],
+      );
+    }
+  }
+  if (p.fixing === 'nut-screwed') {
+    // the nut under its roof and the screw's end below it; the foot behind the hooks' room (D600)
+    const room = PAST_NUT_MM + p.heightMm - pocketFloorMm(p);
+    const nutLeast = Math.max(room, footMm(p.screwMm) + TUNNEL_DEPTH_MM);
+    if (p.heightMm < nutLeast - 1e-9) {
+      throw new SettingsProblem(
+        `A nut standoff screwed to the wall for an M${p.screwMm} nut needs to be at least ${nice(nutLeast)} mm ` +
+          "tall: its foot behind the hooks' room, and the nut under its roof",
         ['heightMm'],
       );
     }
@@ -142,14 +199,20 @@ export function standoffParams(given: Partial<StandoffParams>): StandoffParams {
 /** What each screw passes (D264): a board at its starting thickness and this standoff. */
 export function standoffScrews(p: StandoffParams): string {
   const board = SOLID_BOARD_DEFAULTS.thicknessMm;
-  if (p.fixing === 'nut') {
+  if (p.fixing === 'nut' || p.fixing === 'nut-screwed') {
     // from the board's face: through the nut at least, and no further than the hole goes
-    const [shortest, longest] = [board + p.heightMm - pocketFloorMm(p), board + p.heightMm - HOLE_FLOOR_MM];
-    return (
+    const [shortest, longest] = [board + p.heightMm - pocketFloorMm(p), board + p.heightMm - holeFloorMm(p)];
+    const machine =
       `Each board's corner screw is a countersunk M${nice(p.screwMm)} machine screw, ${nice(shortest)} to ` +
-      `${nice(longest)} mm long for a ${nice(board)} mm board, into the nut; stick the pad to the wall with ` +
-      `${nice(p.tapeMm ?? TAPE_MM)} mm double-sided tape.`
-    );
+      `${nice(longest)} mm long for a ${nice(board)} mm board, into the nut`;
+    if (p.fixing === 'nut-screwed') {
+      return (
+        `First screw the foot to the wall: two countersunk ${nice(p.screwMm)} mm screws, each passing the ` +
+        `${nice(footMm(p.screwMm))} mm foot, plus your wall plug. ${machine}.`
+      );
+    }
+    const piece = `${nice(p.tapeMm ?? TAPE_MM)} x ${nice(p.tapeLengthMm ?? TAPE_LENGTH_MM)} mm`;
+    return `${machine}; stick the pad to the wall with a ${piece} piece of double-sided tape at each post.`;
   }
   return (
     `Each screw passes ${nice(board + p.heightMm)} mm of board and standoff, a ${nice(board)} mm board on this ` +
@@ -251,7 +314,7 @@ export function makeStandoff(engine: Engine, params: StandoffParams): Manifold {
     for (const m of [barSolid, risen, postSolid]) m.delete();
   }
   for (const s of sections) s.delete();
-  if (p.fixing === 'nut') return nutted(engine, p, plain, centres);
+  if (p.fixing === 'nut' || p.fixing === 'nut-screwed') return nutted(engine, p, plain, centres);
   // each hole chamfered at both ends; a tight section at the board face for the trial (D267)
   const tight = Math.min(PILOT_MM, h);
   const holeCuts = centres.map(([x, y]) => {
@@ -281,32 +344,55 @@ export function makeStandoff(engine: Engine, params: StandoffParams): Manifold {
 }
 
 /** The nut standoff (D592 a): the shape as above from 0.5 mm into its tape pad up, the pad a square the tape's width a
- * side round each post, one plate round them all, 2 mm thick at the wall, its edges chamfered as the bed edge's, with no hole through it; each post's hole from
- * the board face down to 1 mm above the pad, and its nut's pocket under the roof. */
+ * side round each post, one plate round them all, 2 mm thick at the wall, its edges chamfered as the bed edge's, with no
+ * hole through it; each post's hole from the board face down to 1 mm above the pad, and its nut's pocket under the roof.
+ * Screwed to the wall (D600), the plate is a foot round the posts and two screws' bosses, the posts' holes go on
+ * through it, and each foot screw's hole is countersunk at its top. */
 function nutted(engine: Engine, p: StandoffParams, plain: Manifold, centres: [number, number][]): Manifold {
   const { CrossSection, Manifold } = engine;
-  const tape = p.tapeMm ?? TAPE_MM;
-  const { holeMm, standoffDiameterMm } = screwHole(p.screwMm);
+  const [tape, length] = [p.tapeMm ?? TAPE_MM, p.tapeLengthMm ?? TAPE_LENGTH_MM];
+  const { holeMm, countersinkMm, standoffDiameterMm } = screwHole(p.screwMm);
   const h = p.heightMm;
-  const squares = centres.map(([x, y]) => CrossSection.square([tape, tape], true).translate([x, y]));
+  const screwed = p.fixing === 'nut-screwed';
+  // taped: a rectangle, the piece of tape, round each post (C601); screwed: each post and each foot screw's boss (D600)
+  const feet = screwed ? footScrewPlaces(p.boards) : [];
+  const shapes = screwed
+    ? [
+        ...centres.map(([x, y]) => new CrossSection([circle(x, y, standoffDiameterMm)])),
+        ...feet.map(([x, y]) => new CrossSection([circle(x, y, 2 * footBossMm(p.screwMm))])),
+      ]
+    : centres.map(([x, y]) => CrossSection.square([length, tape], true).translate([x, y]));
   // one plate under all the posts, so nothing of the bar above spans a gap between their squares
-  const joined = CrossSection.union(squares);
+  const joined = CrossSection.union(shapes);
   const footprint = joined.hull();
-  const pad = chamferedExtrusion(engine, footprint, TAPE_PAD_MM, { bottomMm: BED_CHAMFER_MM, topMm: BED_CHAMFER_MM });
-  const above = plain.trimByPlane([0, 0, 1], TAPE_PAD_MM - 0.5);
+  const base = screwed ? footMm(p.screwMm) : TAPE_PAD_MM;
+  const pad = chamferedExtrusion(engine, footprint, base, { bottomMm: BED_CHAMFER_MM, topMm: BED_CHAMFER_MM });
+  const above = plain.trimByPlane([0, 0, 1], base - 0.5);
   const whole = Manifold.union(pad, above);
   const floor = pocketFloorMm(p);
-  const cuts = centres.flatMap(([x, y]) => [
-    ringedSolid(engine, (grow) => circle(x, y, holeMm, grow), [
-      [HOLE_FLOOR_MM, 0],
-      [h - MOUTH_MM, 0],
-      [h + 1, MOUTH_MM + 1],
+  const sink = (countersinkMm - holeMm) / 2;
+  const cuts = [
+    ...centres.flatMap(([x, y]) => [
+      ringedSolid(engine, (grow) => circle(x, y, holeMm, grow), [
+        [screwed ? -1 : HOLE_FLOOR_MM, 0],
+        [h - MOUTH_MM, 0],
+        [h + 1, MOUTH_MM + 1],
+      ]),
+      nutPocketCutter(engine, [x, y], wayIn(p.boards, [x, y]), p.screwMm, floor, standoffDiameterMm / 2 + 2),
     ]),
-    nutPocketCutter(engine, [x, y], wayIn(p.boards, [x, y]), p.screwMm, floor, standoffDiameterMm / 2 + 2),
-  ]);
+    // each foot screw's hole, its countersink at the foot's top, and clear above it for the head and the driver
+    ...feet.map(([x, y]) =>
+      ringedSolid(engine, (grow) => circle(x, y, holeMm, grow), [
+        [-1, 0],
+        [base - sink, 0],
+        [base, sink],
+        [h + 1, sink],
+      ]),
+    ),
+  ];
   const cut = Manifold.union(cuts);
   const part = whole.subtract(cut);
   for (const m of [plain, pad, above, whole, ...cuts, cut]) m.delete();
-  for (const s of [...squares, joined, footprint]) s.delete();
+  for (const s of [...shapes, joined, footprint]) s.delete();
   return part;
 }

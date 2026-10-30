@@ -324,6 +324,7 @@ describe('the solid board type', () => {
       'screwHead',
       'standoffs',
       'tapeWidthMm', // with tape standoffs (D593, Q594)
+      'tapeLengthMm', // a piece cut from the roll (C601)
       'widthMm',
       'heightMm',
       'thicknessMm',
@@ -448,9 +449,10 @@ describe("the mounting's settings that apply only with another choice (D372)", (
       // the tape's width only with tape standoffs, which stand as tall as set (D593, Q594)
       const all = (given: Record<string, unknown>) => settingsNotApplying(boardType(id).settings, given);
       expect(all({ standoffs: 'tape', screwHead: 'none' })).not.toContain('tapeWidthMm');
+      expect(all({ standoffs: 'tape', screwHead: 'none' })).not.toContain('tapeLengthMm');
       expect(all({ standoffs: 'tape', screwHead: 'none' })).not.toContain('standoffHeightMm');
       // every other setting of a board applies always
-      expect(all({})).toEqual(['tapeWidthMm', ...notApplying(id, {})]);
+      expect(all({})).toEqual(['tapeWidthMm', 'tapeLengthMm', ...notApplying(id, {})]);
     }
   });
 
@@ -697,7 +699,8 @@ describe('the standoff connector type (D91 to D94)', () => {
       boards: '1',
       standoffFixing: 'screw', // a nut, taped, as an option (D592 a)
       heightMm: 15,
-      tapeWidthMm: 19,
+      tapeWidthMm: 12,
+      tapeLengthMm: 18,
       screwMm: 4,
     });
   });
