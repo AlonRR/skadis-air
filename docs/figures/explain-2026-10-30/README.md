@@ -103,3 +103,16 @@ is a gap in the part itself, level in every frame.
 
 **What it shows:** option (f): no line over the boards; beside each lattice board a bracket for each half, its look
 written along it, the break between the brackets at the cut.
+
+## D592 and D593 as built
+
+![A solid board from behind on tape standoffs: four corner posts, each flaring out to a round orange pad](d593-tape-board-back.png)
+
+**What it shows:** a 160 x 160 mm solid board on 15 mm standoffs "For tape", from behind: each corner post flares out
+at 45 degrees behind the hooks' 8 mm room to a round pad 19 mm across, in orange; no screw holes. Drawn by
+`node scripts/figures/shoot.mjs tape-nut`, the library's own part.
+
+![A 1-board standoff cut through its nut's pocket, the nut in orange under a roof, and a 2-board one on one pad](d592-nut-standoff-cut.png)
+
+**What it shows:** the 1-board standoff "Nut, taped to the wall", cut through its M4 nut (orange), which slides in from
+the side under a 1.5 mm roof; behind it the 2-board one whole, on one tape pad. The same pass.

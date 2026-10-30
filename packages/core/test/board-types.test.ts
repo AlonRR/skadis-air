@@ -323,6 +323,7 @@ describe('the solid board type', () => {
       'sides',
       'screwHead',
       'standoffs',
+      'tapeWidthMm', // with tape standoffs (D593, Q594)
       'widthMm',
       'heightMm',
       'thicknessMm',
@@ -444,8 +445,12 @@ describe("the mounting's settings that apply only with another choice (D372)", (
         'lockScrewMm',
       ]);
       expect(notApplying(id, { screwHead: 'round', lockScrews: 'bottom', lockScrewSize: 'own' })).toEqual(KEYS);
+      // the tape's width only with tape standoffs, which stand as tall as set (D593, Q594)
+      const all = (given: Record<string, unknown>) => settingsNotApplying(boardType(id).settings, given);
+      expect(all({ standoffs: 'tape', screwHead: 'none' })).not.toContain('tapeWidthMm');
+      expect(all({ standoffs: 'tape', screwHead: 'none' })).not.toContain('standoffHeightMm');
       // every other setting of a board applies always
-      expect(settingsNotApplying(boardType(id).settings, {})).toEqual(notApplying(id, {}));
+      expect(all({})).toEqual(['tapeWidthMm', ...notApplying(id, {})]);
     }
   });
 
@@ -688,7 +693,13 @@ describe('the standoff connector type (D91 to D94)', () => {
 
   it('is a connector, 15 mm tall for a 4 mm screw unless set (D238)', () => {
     expect(groupOf(standoff)).toBe('connector');
-    expect(defaultValues(standoff.settings)).toEqual({ boards: '1', heightMm: 15, screwMm: 4 });
+    expect(defaultValues(standoff.settings)).toEqual({
+      boards: '1',
+      standoffFixing: 'screw', // a nut, taped, as an option (D592 a)
+      heightMm: 15,
+      tapeWidthMm: 19,
+      screwMm: 4,
+    });
   });
 
   it('builds the spacer its values describe', () => {

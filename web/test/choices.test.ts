@@ -39,4 +39,11 @@ describe('carriedAcrossGroups', () => {
     expect(carriedAcrossGroups({ screwMm: '3.5', widthMm: '240', clipScrewSize: 'own' })).toEqual({ screwMm: '3.5' });
     expect(carriedAcrossGroups({ widthMm: '240' })).toEqual({});
   });
+
+  it("carries the tape's width too, so a wall's boards and standoffs take one tape (D593, Q594)", () => {
+    expect(carriedAcrossGroups({ screwMm: '4', tapeWidthMm: '25', widthMm: '240' })).toEqual({
+      screwMm: '4',
+      tapeWidthMm: '25',
+    });
+  });
 });

@@ -2,7 +2,7 @@
 // in each, and each type's values as its form reads them. Switching types, or reloading, loses none of them. One
 // JSON object under one key, as the printer and the theme are kept; storage that is missing or refused leaves the
 // page as it would be with nothing kept.
-import { readTypedNumber, SCREW_SIZE_SETTING, type AnyBoardType, type Setting } from 'skadis-air';
+import { readTypedNumber, SCREW_SIZE_SETTING, TAPE_WIDTH_SETTING, type AnyBoardType, type Setting } from 'skadis-air';
 
 const KEY = 'skadis-air-choices';
 
@@ -79,11 +79,12 @@ export function startingValues(
 }
 
 /**
- * What the form shown carries to a type of the OTHER group (Q511): the screw size alone, one choice for the boards
- * and the connectors both. Every other value, and each kind of place's own size under Advanced, stays within its
- * group, as startingValues has it.
+ * What the form shown carries to a type of the OTHER group (Q511): the screw size and the tape's width (D593, Q594),
+ * each one choice for the boards and the connectors both. Every other value, and each kind of place's own size under
+ * Advanced, stays within its group, as startingValues has it.
  */
 export function carriedAcrossGroups(shown: Readonly<Record<string, unknown>>): Record<string, unknown> {
-  const key = SCREW_SIZE_SETTING.key;
-  return key in shown ? { [key]: shown[key] } : {};
+  return Object.fromEntries(
+    [SCREW_SIZE_SETTING.key, TAPE_WIDTH_SETTING.key].filter((key) => key in shown).map((key) => [key, shown[key]]),
+  );
 }
