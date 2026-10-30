@@ -39,7 +39,7 @@ In this order, the first the cover:
 
 | Picture | What it shows |
 | --- | --- |
-| `cover-turn.gif` | Skådis Air: the solid, lightened and skeleton boards, each turning on its own axis, countersunk, on keyholes and on lock screws (the owner, 22 Oct 2026: "have the main image have each of the boards rotating and give each a different type of Screw holes") |
+| `cover-turn.gif` | Skådis Air: the solid, lightened and skeleton boards, each turning on its own axis, countersunk, on keyholes and on lock screws (the owner, 22 Oct 2026: "have the main image have each of the boards rotating and give each a different type of Screw holes"); the lightened and skeleton boards Curved above their middle and Straight below, a still line between, "Curved ↑ Straight ↓" under their names (D531, 30 Oct 2026) |
 | `page-tour.gif` | The page: a wall in panels first, so its first frame shows one ("the second webpage view should also show the wall option, so that users know its an option right away"), then the board types and their mountings, the 3D view turned by hand ("have the second image be a gif of the webpage switching between different options and rotating"), from `write-page-gifs.mjs`, 800 wide |
 | `page-phone.gif` | The page on a phone (the owner, 23 Oct 2026: "add a gif of the mobile version to printables"): the board turned by a finger, the 3D view staying at the top as the form scrolls under it, the board types, a setting's help opened and shut, a wall in panels and back, from `write-page-gifs.mjs page-phone`, 480 wide |
 | `board-types.png` | The Board section: the three kinds at 200 x 200 mm, each one's printed grams for a 200 x 200 mm board in PETG, as sliced (D313, from `docs/board-grams.json`) |

@@ -218,6 +218,12 @@
         }
         // labels stay where a still camera puts them, over the close-ups' lines; a moving camera's animation has none
         for (const l of s.labels ?? []) label(l, camera, whole);
+        // a rule: a line between two points as the main camera draws them, over the parts and still in every frame
+        for (const r of s.rules ?? []) {
+          const [x1, y1] = onScreen(camera, r.from, whole);
+          const [x2, y2] = onScreen(camera, r.to, whole);
+          add('line', { x1, y1, x2, y2, stroke: '#16222c', 'stroke-width': 3, 'stroke-linecap': 'round' });
+        }
       };
       window.frames = s.frames?.length ?? 0;
       window.draw(0);

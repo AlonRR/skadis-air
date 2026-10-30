@@ -42,6 +42,12 @@ const TEXT_SIZED = { size: [1120, 840], compact: true, width: 560 };
  * and a little towards the camera, as a countersink is drawn. */
 const holeCloseUp = (x) => ({ position: [x + 20, -42, 19], target: [x + 11, 10, 1.5], fov: 26, up: [0, 0, 1] });
 
+/** A 160 x 160 mm board centred on its own axis, so it turns in place. */
+const turning = (board) => {
+  const b = board.boundingBox();
+  return board.translate([-80, -80, -(b.min[2] + b.max[2]) / 2]);
+};
+
 export function build(kit) {
   const { box, cylinder, mesh, split, built } = kit;
   const part = (solid, group, view) => ({ ...mesh(solid, COLOUR.part), group, view });
@@ -64,11 +70,15 @@ export function build(kit) {
       ['skeleton', { screwHead: 'lock', standoffs: 'back' }, 'Skeleton · lock screws'],
     ];
     const SPACING = 205;
+    // a lattice board's top half Curved and its bottom half Straight (the owner, 30 Oct 2026: "the top half of the
+    // skeleton and lightened be the curved and the bottom half be the straight versions"), cut across its middle, which
+    // the camera below sees edge on
     const meshes = kinds.map(([kind, mounting], i) => {
-      const board = built(kind, { widthMm: 160, heightMm: 160, ...mounting });
-      const b = board.boundingBox();
-      // centred on its own axis, so it turns in place
-      return feature(board.translate([-80, -80, -(b.min[2] + b.max[2]) / 2]), `b${i}`);
+      const inLook = (look) =>
+        turning(built(kind, { widthMm: 160, heightMm: 160, ...mounting, ...(look ? { look } : {}) }));
+      if (kind === 'solid') return feature(inLook(), `b${i}`);
+      const top = box(-100, 100, 0, 100, -100, 100);
+      return feature(inLook('curved').intersect(top).add(inLook('straight').subtract(top)), `b${i}`);
     });
     const at = (i) => [(i - 1) * SPACING, 0, 0];
     const frames = [...Array(TURN_FRAMES).keys()].map((k) => ({
@@ -82,8 +92,16 @@ export function build(kit) {
         'Pegboards for IKEA SKÅDIS hooks, in any size: solid, lightened',
         'or skeleton, tiled into walls, made in your browser.',
       ],
-      camera: { position: [0, 140, 680], target: [0, -8, 0], fov: 38, drop: 0.14 },
-      labels: kinds.map(([, , text], i) => ({ text, at: [at(i)[0], -112, 0], tag: true })),
+      // the camera level with the boards' middles, so each one's cut between its looks draws as one still line in
+      // every frame of the turn, and a line drawn there over the boards stays on it (the owner, 30 Oct 2026: "the line
+      // should be unmoving on the gif")
+      camera: { position: [0, 0, 680], target: [0, 0, 0], fov: 38, drop: 0.14 },
+      // each lattice board's looks named under its label (D531 a), and the line across both at the cut
+      labels: [
+        ...kinds.map(([, , text], i) => ({ text, at: [at(i)[0], -112, 0], tag: true })),
+        ...[1, 2].map((i) => ({ text: 'Curved ↑  Straight ↓', at: [at(i)[0], -132, 0], tag: true, small: true })),
+      ],
+      rules: [{ from: [at(1)[0] - 100, 0, 0], to: [at(2)[0] + 100, 0, 0] }],
       frames,
       meshes,
     });
