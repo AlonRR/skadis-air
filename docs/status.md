@@ -251,6 +251,10 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D528 | **The Sides control draws the board as set** ("528 a", 30 Oct 2026; [mockup](figures/explain-2026-10-30/d528-sides-proposed.png)): its four buttons inside the board's drawing, a closed side a solid edge in the action blue and an open one dashed, and a corner round only where both its sides are closed, as the board is built; drawn by the page's own style over the design system's control (C584) | 30 Oct 2026 |
 | D529 | **Open sides comes first, right under the Look, then Sides, then the size** ("529 a", 30 Oct 2026; the owner: "in the web layout we should have the "Open sides" immediately under "look""): Look (lattice boards only), Open sides, Sides, Width, Height, Thickness; on the solid board, which has no Look, Open sides first | 30 Oct 2026 |
 | D531 | **The cover GIF: each lattice board Curved above its middle and Straight below, a still line between** ("531 a", 30 Oct 2026; the owner: "the top half of the skeleton and lightened be the curved and the bottom half be the straight versions", "add a line between them make sure the graphic lines up when the boards rotate. the line should be unmoving on the gif"): "Curved ↑ Straight ↓" under each one's label, and the camera level with the boards' middles, so the cut draws as one line in every frame and the line over it never moves (C585). The solid board is as it was. D531 and Q530 (30 Oct) share their numbers with C530 and C531 (28 Oct, `board-looks`), given before the pool was checked | 30 Oct 2026 |
+| Q588 | **A board's size comes right above the screw size** ("588 immediately above screw size", 30 Oct 2026): Look, Open sides, Sides, Screw holes, Standoffs, then Width, Height and Thickness, then Screw size; `boardSettings` in `board-types/solid.ts` gives every board type that order | 30 Oct 2026 |
+| D589 | **A board with keyholes or lock screws has its standoffs' "None" greyed out, "On the back" chosen and a note under it saying why** ("589 a", 30 Oct 2026; the owner: "grey out the button for "none" and give an error if clicked or should standoffs disappear"): an option the other values rule out is read as the first one left, by the library as by the page (C586) | 30 Oct 2026 |
+| D590 | **What to make is Board, Wall or Connector, each in the singular, and the Panels field goes** ("590 a and change the to singular e.g., board, connector", 30 Oct 2026; the owner: "merge "panels" into "what to make" call it Wall"): Wall makes a wall of the boards' panels, its boards the boards' own list (C587) | 30 Oct 2026 |
+| Q530 | **The open sides' two kinds are shown enough by `sides.png`**, sixth on the Printables page ("530 it's good", 30 Oct 2026) | 30 Oct 2026 |
 | A522 | **The Printables files, pictures and text are made again from `v0.9.0`** ("522 y"): the three standoffs' files new (their 0.4 mm bed chamfer), the other ten byte for byte as before; the nine gallery pictures and the text's four page GIFs and skeleton close-up made again; the text gives the boards in grams (D313), the Straight look and the one screw size. Staged in the editor 28 Oct 2026 and published by the owner at 07:02:01 UTC on 29 Oct 2026 (T524), who then sorted the files into folders and took out the 240 x 200 mm boards and the fit coupon (read back from Printables' API) | 28 Oct 2026 |
 | A521 | **`v0.9.0` is released** (the owner: "push a new version with the fixes and updates"): everything on `main` since `v0.8.0`, the Look (Q510), one screw size (D479, Q511), grams (D313), D519's fix, the standoff's bed chamfer and the design system's v0.9.0 (A513); `feat/skeleton-rework-r4` stays held for T320. The Printables files are not refreshed with it. Released 28 Oct 2026 | 28 Oct 2026 |
 | D479 | **One screw size for every screw place** ("479 a"): `Screw size` in the main form, 4 mm with its 8 mm countersunk head to start; under Advanced, a size for each kind of place (keyholes, lock screws, the slot clip), each the same as the screw size unless set; lock screws start at 4 mm too, their slots grooved for the head. Built 24 Oct 2026 (C495 to C509): each kind of place is "Same as the screw size" or "Own" under Advanced; lock screws from 3 mm are countersunk, passing the slot through an 8.5 mm groove and seating on a 45 degree countersink (D370's (a)), and up to 2.5 mm keep the pan head; the slot keeps its 5.2 mm for 4.2 mm up from where a hook rests (a real hook unmeasured, D414); a board kept by an older page builds with 4 mm lock screws; pictures drawn by `node scripts/figures/shoot.mjs screw-groove` | 24 Oct 2026 |
@@ -261,22 +265,8 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 ## Open questions
 
-- **Q530** (30 Oct 2026) The owner: "we should display the open sides types somewhere"; answered "530 a", a new Printables
-  picture of boards with open sides through the slots and between them. That picture is already on the page,
-  `sides.png`, sixth in the gallery since 23 Oct 2026: a closed board, four boards meeting through the slots and four
-  meeting between them, the seams in orange. Asked again: is that enough, or should the two kinds also be shown (b) on
-  the page, a small drawing in the Open sides choice, or (c) in the page's GIFs?
 - **A587** Release the page with D528 and D529 (`v0.10.0`), then make the Printables page's cover (D531) and its GIFs
   of the page again from it, and stage them in the editor for the owner's "Publish now".
-- **Q588** (30 Oct 2026) The owner: "move width, hight, and thickness above screw size". On `main` and in `v0.9.0`
-  they already come before Screw size on every screen width, with Panels, Screw holes and Standoffs between
-  (`docs/figures/explain-2026-10-30/q588-order-now.png`). Asked: which place was meant?
-- **D589** (30 Oct 2026) The owner: for a board that must have standoffs (keyholes, lock screws), grey out Standoffs'
-  "None" with an error if clicked, or should Standoffs disappear? Today None can still be chosen, and only the line
-  above Download says the board cannot be made. Options: (a) None greyed out, On the back chosen, a note saying
-  why (recommended); (b) the Standoffs choice hidden; (c) None clickable, an error beside it.
-- **D590** (30 Oct 2026) The owner: "merge "panels" into "what to make" call it Wall or board wall or multi-panel or
-  something". Options for the name: (a) Wall (recommended), (b) Board wall, (c) Multi-panel.
 
 `board-lightened` and `mounting-ikea` were planned and built on 15 Oct 2026 (D141 to D147, D155 to D158; C148 to
 C150, C159, C160; the backlog rows have the results). Waiting on the owner:

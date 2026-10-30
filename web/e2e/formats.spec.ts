@@ -47,7 +47,7 @@ function stlBox(bytes: Uint8Array) {
 
 async function wall(page: Page) {
   await ready(page);
-  await choose(page, 'panels', 'split');
+  await choose(page, 'typeGroup', 'wall');
   await page.locator('input[name="widthMm"]').fill('440');
   await page.locator('input[name="heightMm"]').fill('280');
   await expect(page.getByTestId('board-status')).toContainText('Wall ready: 6 panels', { timeout: 30_000 });
@@ -131,7 +131,7 @@ test('gives every panel of a wall in a file that fits the chosen bed as it comes
   await ready(page);
   await choose(page, 'printerBed', 'prusa'); // its first printer, the MK4S
   await expect(page.getByTestId('bed-note')).toContainText('250 × 210 mm');
-  await choose(page, 'panels', 'split');
+  await choose(page, 'typeGroup', 'wall');
   await page.locator('input[name="widthMm"]').fill('1000');
   await page.locator('input[name="heightMm"]').fill('640');
   await expect(page.getByTestId('board-status')).toContainText('Wall ready: 15 panels', { timeout: 90_000 });

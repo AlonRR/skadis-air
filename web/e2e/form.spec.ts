@@ -247,10 +247,10 @@ test('offers keyholes, which bring their standoffs, with lock screws under Advan
     'data-file-name',
     'skadis-solid-160x160-keyholes-lock-screws-standoffs-15mm.stl',
   );
-  // taking the standoffs off again would hang the board flat: a problem, saying why
-  await choose(page, 'standoffs', 'none');
-  await expect(status).toHaveAttribute('data-state', 'problem');
-  await expect(status).toContainText('standoffs at least 13.23 mm');
+  // taking the standoffs off again would hang the board flat: ruled out, greyed out with why (D589 a), where it had
+  // been a problem the status line alone said
+  await expect(page.locator('input[name="standoffs"][value="none"]')).toBeDisabled();
+  await expect(page.getByTestId('ruled-standoffs')).toContainText('Keyholes need standoffs');
 });
 
 test('offers lock screws alone, which bring their standoffs as keyholes do (D289)', async ({ page }) => {
@@ -309,7 +309,8 @@ test('puts boards or connectors in a field of its own, the types of the one chos
   const types = page.getByTestId('board-type');
   await expect(make.locator('legend')).toHaveText('What to make');
   const toggle = make.getByRole('radiogroup', { name: 'What to make' });
-  await expect(toggle.locator('.ws-choice__face')).toHaveText(['Boards', 'Connectors']);
+  // each in the singular, a wall between them (D590, 30 Oct 2026)
+  await expect(toggle.locator('.ws-choice__face')).toHaveText(['Board', 'Wall', 'Connector']);
   // a choice apart from the type's: the toggle is not in the type's field
   await expect(types.locator('input[name="typeGroup"]')).toHaveCount(0);
   await expect(types.locator('legend')).toHaveText('Board');

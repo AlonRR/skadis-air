@@ -201,13 +201,13 @@ const recordings = [
       await r.click(radio(page, 'boardType', 'lightened'));
       await r.type(page.locator('input[name="widthMm"]'), '240');
       await r.type(page.locator('input[name="heightMm"]'), '200');
-      await r.click(radio(page, 'panels', 'split'));
+      await r.click(radio(page, 'typeGroup', 'wall'));
       await r.type(page.locator('input[name="widthMm"]'), '1200');
       await r.type(page.locator('input[name="heightMm"]'), '800');
       await r.hold(1500);
       await r.type(page.locator('input[name="widthMm"]'), '160');
       await r.type(page.locator('input[name="heightMm"]'), '160');
-      await r.click(radio(page, 'panels', 'one'));
+      await r.click(radio(page, 'typeGroup', 'board'));
       await r.click(radio(page, 'boardType', 'solid'));
     },
   },
@@ -220,7 +220,7 @@ const recordings = [
     // goes through the board types and their mountings, and grows back into the wall
     async before(page) {
       await radio(page, 'boardType', 'lightened').click();
-      await radio(page, 'panels', 'split').click();
+      await radio(page, 'typeGroup', 'wall').click();
       await page.locator('input[name="widthMm"]').fill('1200');
       await page.locator('input[name="heightMm"]').fill('800');
       await page.keyboard.press('Tab');
@@ -230,7 +230,7 @@ const recordings = [
       await r.drag(260, -40);
       await r.type(page.locator('input[name="widthMm"]'), '160');
       await r.type(page.locator('input[name="heightMm"]'), '160');
-      await r.click(radio(page, 'panels', 'one'));
+      await r.click(radio(page, 'typeGroup', 'board'));
       await r.click(radio(page, 'standoffs', 'back'));
       await r.click(radio(page, 'screwHead', 'keyhole'));
       await r.drag(360, -40);
@@ -240,7 +240,7 @@ const recordings = [
       await r.click(radio(page, 'screwHead', 'countersunk'));
       await r.click(radio(page, 'standoffs', 'none'));
       await r.click(radio(page, 'boardType', 'lightened'));
-      await r.click(radio(page, 'panels', 'split'));
+      await r.click(radio(page, 'typeGroup', 'wall'));
       await r.type(page.locator('input[name="widthMm"]'), '1200');
       await r.type(page.locator('input[name="heightMm"]'), '800');
       await r.click(page.getByTestId('preview-reset'));
@@ -309,13 +309,13 @@ const recordings = [
       await r.hold(1400);
       await r.click(info);
       await r.click(radio(page, 'boardType', 'lightened'));
-      await r.click(radio(page, 'panels', 'split'));
+      await r.click(radio(page, 'typeGroup', 'wall'));
       await r.type(page.locator('input[name="widthMm"]'), '800');
       await r.type(page.locator('input[name="heightMm"]'), '600');
       await r.hold(1500);
       await r.type(page.locator('input[name="widthMm"]'), '160');
       await r.type(page.locator('input[name="heightMm"]'), '160');
-      await r.click(radio(page, 'panels', 'one'));
+      await r.click(radio(page, 'typeGroup', 'board'));
       await r.click(radio(page, 'boardType', 'solid'));
       await r.click(page.getByTestId('preview-reset'));
     },

@@ -1,6 +1,7 @@
 // A wall split into panels (backlog item tiling; D15, D37, D175 to D178). A board whose "Panels" setting says
-// "Split into panels" is a wall: its width and height are the wall's, and it is cut into panels as even as they
-// can be (D176), none larger than the bed takes, either way round, nor than the largest panel the user sets.
+// "Split into panels" ("Wall" in the page's What to make, D590) is a wall: its width and height are the wall's, and it
+// is cut into panels as even as they can be (D176), none larger than the bed takes, either way round, nor than the
+// largest panel the user sets.
 // The wall's outer edge follows its sides setting, closed unless opened (D37); every seam is open, half a slot
 // on each side, so the slots run on across it (D15). Each panel is a board with the wall's own settings, its
 // mounting in its own corners (D177). Panels of the same size and sides are one kind, printed as often as the

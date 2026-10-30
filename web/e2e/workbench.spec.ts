@@ -122,7 +122,7 @@ test.describe('a wall on a tall screen', () => {
 
   test('is framed to fill --stage-fit of the 3D view its print list leaves', async ({ page }) => {
     await ready(page);
-    await page.locator('input[name="panels"][value="split"]').check({ force: true });
+    await page.locator('input[name="typeGroup"][value="wall"]').check({ force: true });
     await page.locator('input[name="widthMm"]').fill('1200');
     await page.locator('input[name="heightMm"]').fill('800');
     await expect(page.getByTestId('board-status')).toContainText('Wall ready', { timeout: 60_000 });

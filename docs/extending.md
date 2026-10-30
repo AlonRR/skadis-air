@@ -66,14 +66,15 @@ behind a slot stands flush with (D306), and its pockets at the back face (`pocke
 root keeps off (D375); a lattice whose back face is not the lightened board's pockets gives its own `pocketsOf`,
 and `packages/core/test/root.test.ts` holds both lattice types to it.
 
-**A board that takes all of the solid board's settings** lists `BOARD_SETTINGS` from
-`board-types/solid.ts`, then its own, then `MOUNTING_SETTINGS`, the lattice boards their `LOOK_SETTING` before them all
-(Q510), a look being a choice a builder reads (the lattice's `corners`), not a type of its own, and builds from `boardParamsOf(values)`
+**A board that takes all of the solid board's settings** lists them with `boardSettings(before, own)` from
+`board-types/solid.ts`, which puts the solid board's and the mounting's in the form's order (Q588: the size right above
+the screw size) and its own among the fine ones, the lattice boards their `LOOK_SETTING` as `before` (Q510), a look being a choice a builder reads (the lattice's `corners`), not a type of its own, and builds from `boardParamsOf(values)`
 and names its file from `boardLabel(values)`, as the lightened board (`board-types/lightened.ts`) does;
 so a setting added to the solid board reaches it too, and its test checks it has every one of them.
 
 **Mounting** (screw holes and standoffs, D73 to D75) is three edits in such a type, as the solid board
-has it (C87): `...MOUNTING_SETTINGS` at the end of its `defineSettings([...])`, and
+has it (C87): its settings, which `boardSettings` gives, or `...MOUNTING_SETTINGS` at the end of its
+`defineSettings([...])` for a board that does not take the solid board's, and
 `mountingCuts(mountingOf(values), params)` as the third argument to `makeSolidBoard`, with
 `mountingLabel(values)` at the end of its `label`. The contract test then holds the new settings to
 the same rules, and `packages/core/test/mounting.test.ts` covers the shapes.

@@ -976,10 +976,9 @@ export function mountingCuts(
   return cuts;
 }
 
-/** The mounting's settings, as a board type lists them after its own (D48: the fine ones under Advanced): the screw
- * size on the main form, the screw for every hole, and under Advanced the keyholes' and the lock screws' own sizes,
- * the screw size's unless set (D479). */
-export const MOUNTING_SETTINGS = defineSettings([
+/** The mounting's choices, on the main form: the screw holes, and the standoffs, which keyholes and lock screws
+ * need (D589). */
+export const MOUNTING_HOLES = defineSettings([
   {
     kind: 'choice',
     key: 'screwHead',
@@ -1006,7 +1005,16 @@ export const MOUNTING_SETTINGS = defineSettings([
     key: 'standoffs',
     label: 'Standoffs',
     options: [
-      { value: 'none', label: 'None' },
+      {
+        value: 'none',
+        label: 'None',
+        // keyholes and lock screws stand the board on its standoffs (D190, D289): none is ruled out (D589)
+        offWhen: (v) =>
+          v['screwHead'] === 'keyhole' || v['screwHead'] === 'lock'
+            ? `${v['screwHead'] === 'keyhole' ? 'Keyholes' : 'Lock screws'} need standoffs: they hold the board ` +
+              'off the wall, so a hook has room behind it.'
+            : undefined,
+      },
       { value: 'back', label: 'On the back' },
     ],
     default: 'none',
@@ -1014,7 +1022,11 @@ export const MOUNTING_SETTINGS = defineSettings([
       'Posts on the back at the corners, round the screws, that hold the board off the wall so hooks have room. ' +
       'Keyholes and lock screws need them.',
   },
-  SCREW_SIZE_SETTING,
+]);
+
+/** The mounting's fine settings, under Advanced (D48): the keyholes' and lock screws' own sizes, the lock screws at the
+ * bottom with keyholes, and the standoffs' height. */
+export const MOUNTING_FINE = defineSettings([
   ...screwPlaceSettings(KEYHOLE_SCREW),
   {
     kind: 'choice',
@@ -1048,6 +1060,10 @@ export const MOUNTING_SETTINGS = defineSettings([
     appliesWhen: (v) => v['standoffs'] === 'back' || v['screwHead'] === 'keyhole' || v['screwHead'] === 'lock',
   },
 ]);
+
+/** The mounting's settings, as a board type lists them (D48: the fine ones under Advanced): the screw holes and
+ * standoffs, the screw size on the main form, the screw for every hole, and the fine ones (D479). */
+export const MOUNTING_SETTINGS = defineSettings([...MOUNTING_HOLES, SCREW_SIZE_SETTING, ...MOUNTING_FINE]);
 
 type MountingValues = Values<typeof MOUNTING_SETTINGS>;
 

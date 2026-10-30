@@ -10,7 +10,12 @@ All notable changes to this project are recorded here. The format follows
 
 - The Sides control draws the board as set: its buttons sit inside the board's drawing, a closed side is a solid blue
   edge and an open one dashed, and a corner is round where both its sides are closed, as the board is built (D528).
-- "Open sides" comes first on a board's form, right under the Look, then "Sides", then the size (D529).
+- "Open sides" comes first on a board's form, right under the Look, then "Sides" (D529); then "Screw holes" and
+  "Standoffs", and the width, height and thickness right above the screw size (Q588).
+- "What to make" is Board, Wall or Connector, and the "Panels" field is gone: Wall makes a wall of panels, as "Split
+  into panels" did (D590).
+- With keyholes or lock screws, the standoffs' "None" is greyed out, a note under it saying they need standoffs, where
+  choosing it had left a board that could not be made (D589).
 
 ## [0.9.0] - 2026-10-28
 

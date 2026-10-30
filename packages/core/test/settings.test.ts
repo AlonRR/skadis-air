@@ -1,7 +1,14 @@
 // The settings a board type declares, read from what the page or a caller hands in (backlog item
 // registry). The settings here are declared in this file alone: the reader must not know any board.
 import { describe, expect, it } from 'vitest';
-import { defineSettings, defaultValues, readTypedNumber, readValues, settingsNotApplying } from '../src/settings.js';
+import {
+  defineSettings,
+  defaultValues,
+  optionsOff,
+  readTypedNumber,
+  readValues,
+  settingsNotApplying,
+} from '../src/settings.js';
 
 const SETTINGS = defineSettings([
   {
@@ -240,5 +247,46 @@ describe('a setting that applies only with another choice (D372)', () => {
     expect(settingsNotApplying(GATED, { head: 'lock' })).toEqual(['sizeMm']);
     expect(settingsNotApplying(GATED, { head: 'lock', extra: 'more', sizeMm: 'abc' })).toEqual([]);
     expect(settingsNotApplying(SETTINGS, { widthMm: 'abc' })).toEqual([]);
+  });
+});
+
+describe('an option that another choice rules out (D589)', () => {
+  const RULED = defineSettings([
+    {
+      kind: 'choice',
+      key: 'head',
+      label: 'Screw head',
+      options: [
+        { value: 'countersunk', label: 'Countersunk' },
+        { value: 'keyhole', label: 'Keyholes' },
+      ],
+      default: 'countersunk',
+    },
+    {
+      kind: 'choice',
+      key: 'feet',
+      label: 'Feet',
+      options: [
+        { value: 'none', label: 'None', offWhen: (v) => (v['head'] === 'keyhole' ? 'Keyholes need feet.' : undefined) },
+        { value: 'back', label: 'On the back' },
+      ],
+      default: 'none',
+    },
+  ]);
+
+  it('reads an option ruled out as the first one left, with no error', () => {
+    const read = readValues(RULED, { head: 'keyhole', feet: 'none' });
+    expect(read.ok).toBe(true);
+    if (read.ok) expect(read.values.feet).toBe('back');
+  });
+
+  it('keeps the option where nothing rules it out', () => {
+    const read = readValues(RULED, { head: 'countersunk', feet: 'none' });
+    expect(read.ok && read.values.feet).toBe('none');
+  });
+
+  it('says which options are ruled out and why, for the page to grey them out', () => {
+    expect(optionsOff(RULED, { head: 'keyhole' })).toEqual({ feet: { none: 'Keyholes need feet.' } });
+    expect(optionsOff(RULED, { head: 'countersunk' })).toEqual({});
   });
 });

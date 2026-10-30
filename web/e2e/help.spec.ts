@@ -31,7 +31,8 @@ test('every setting with help has an i button beside its label, and its help sta
   for (const type of BOARD_TYPES) {
     await choose(page, 'boardType', type.id);
     await openAdvanced(page);
-    const helped = type.settings.filter((s) => s.help !== undefined);
+    // all but one board or a wall, which What to make sets, not the form (D590)
+    const helped = type.settings.filter((s) => s.help !== undefined && s.key !== 'panels');
     // one button for each setting with help, and none for a setting without
     await expect(form(page).locator('button[aria-expanded]')).toHaveCount(helped.length);
     for (const s of helped) {

@@ -58,11 +58,11 @@ test('makes nothing while the custom bed is not a size it can use, as for any fi
     await expect(width).toHaveAttribute('aria-invalid', 'true');
   }
   // a wall is not cut for another bed meanwhile
-  await choose(page, 'panels', 'split');
+  await choose(page, 'typeGroup', 'wall');
   await expect(status).toHaveAttribute('data-state', 'invalid');
   await expect(page.getByTestId('print-list')).toBeHidden();
   // the control: a bed it takes makes the board again, the field no longer marked
-  await choose(page, 'panels', 'one');
+  await choose(page, 'typeGroup', 'board');
   await width.fill('250');
   await expect(status).toHaveAttribute('data-state', 'ready');
   await expect(width).not.toHaveAttribute('aria-invalid', /.*/);

@@ -28,6 +28,8 @@ mountTheme(document.querySelector<HTMLButtonElement>('[data-testid="theme-toggle
 const choices = loadChoices();
 let shownValues: Record<string, unknown> = {};
 let shownGroup = '';
+// What to make (D590): a board, a wall of a board's panels, or a connector; a wall's boards are the boards' list
+let making = 'board';
 // Whether a wall's files are listed one by one, or folded away under "Download all" (D250 d).
 let filesShown = false;
 /** The types of a group, boards or connectors, in the list's order. */
@@ -245,7 +247,7 @@ function warnAboutBed(widthMm: number, heightMm: number): void {
   bedWarning.replaceChildren(
     headline,
     `This board is ${Math.round(widthMm)} × ${Math.round(heightMm)} mm; it does not fit the ` +
-      `${chosen.bed.xMm} × ${chosen.bed.yMm} mm bed. It can still be downloaded, or "Split into panels" ` +
+      `${chosen.bed.xMm} × ${chosen.bed.yMm} mm bed. It can still be downloaded, or "Wall" in What to make ` +
       'cuts it into panels that fit.',
   );
 }
@@ -285,21 +287,14 @@ function show(type: AnyBoardType): void {
   const tests = testPrintsOf(groupOf(type));
   const extras =
     tests.length === 0 ? {} : { advancedFirst: testPrintField(type, tests), advancedOpen: type.testPrint === true };
-  const form = renderForm(formBox, type, changed, startingValues(type, choices.values[type.id], before), extras);
+  // one board or a wall's panels, as What to make says (D590), not a field of the form
+  const fixed = { panels: making === 'wall' ? 'split' : 'one' };
+  const form = renderForm(formBox, type, changed, startingValues(type, choices.values[type.id], before), {
+    ...extras,
+    fixed,
+  });
   keep();
   current = changed;
-  // A wall is closed round its outer edge (D37): split, the sides still open close, and can be opened again.
-  formBox.querySelector('[role="radiogroup"][aria-label="Panels"]')?.addEventListener('change', () => {
-    if (chosenIn(formBox.querySelector('[aria-label="Panels"]') ?? formBox) !== 'split') return;
-    for (const side of formBox.querySelectorAll<HTMLButtonElement>('[data-side][aria-pressed="false"]')) side.click();
-  });
-  // A board on keyholes stands on standoffs, so a hook has room behind it (D190): keyholes turn them on, and lock
-  // screws alone, which go into them (D289).
-  formBox.querySelector('[role="radiogroup"][aria-label="Screw holes"]')?.addEventListener('change', () => {
-    const head = chosenIn(formBox.querySelector('[aria-label="Screw holes"]') ?? formBox);
-    if (head !== 'keyhole' && head !== 'lock') return;
-    formBox.querySelector<HTMLInputElement>('[aria-label="Standoffs"] input[value="back"]:not(:checked)')?.click();
-  });
   rebuild(type, form);
 }
 
@@ -337,37 +332,49 @@ async function start(): Promise<void> {
   // field titled for it (D250 h; D91, D112). Every type is one choice, the same name in both groups; each group's
   // list keeps the type last chosen in it. A test print is not in its group's list but at the top of the Advanced
   // fold of each of the group's forms, still the same choice, since the list and the form are in one form (D357).
+  // What to make, each in the singular (D590, 30 Oct 2026): a wall is made of the boards' types, so it shows their list
   const groups = [
-    { group: 'board', heading: 'Boards', title: 'Board' },
-    { group: 'connector', heading: 'Connectors', title: 'Connector' },
+    { group: 'board', label: 'Board', list: 'board', title: 'Board' },
+    { group: 'wall', label: 'Wall', list: 'board', title: 'Board' },
+    { group: 'connector', label: 'Connector', list: 'connector', title: 'Connector' },
   ] as const;
+  const lists = [
+    { group: 'board', heading: 'Boards' },
+    { group: 'connector', heading: 'Connectors' },
+  ] as const;
+  const listOf = (group: string) => groups.find((g) => g.group === group)?.list ?? 'board';
+  // a wall chosen before What to make had one, as "Split into panels" on the board last shown
+  if (choices.group === 'board' && choices.values[choices.types['board'] ?? '']?.['panels'] === 'split')
+    choices.group = 'wall';
   const typeTitle = typeList.querySelector('legend');
   const startGroup = groups.some((g) => g.group === choices.group) ? (choices.group ?? 'board') : 'board';
   const chosenOf = (group: string) => {
-    const kept = choices.types[group];
-    return typesOf(group).find((t) => t.id === kept) ?? typesOf(group)[0];
+    const kept = choices.types[listOf(group)];
+    return typesOf(listOf(group)).find((t) => t.id === kept) ?? typesOf(listOf(group))[0];
   };
   const toggle = choiceGroup(
     'typeGroup',
     'What to make',
-    groups.map((g) => ({ value: g.group, label: g.heading })),
+    groups.map((g) => ({ value: g.group, label: g.label })),
     startGroup,
   );
   makeField.append(toggle);
-  const lists = new Map<string, HTMLElement>();
-  for (const { group, heading } of groups) {
+  const shownLists = new Map<string, HTMLElement>();
+  for (const { group, heading } of lists) {
     const options = typesOf(group)
       .filter((t) => t.testPrint !== true)
       .map((t) => ({ value: t.id, label: t.name }));
-    const list = choiceGroup('boardType', heading, options, group === startGroup ? (chosenOf(group)?.id ?? '') : '');
+    const open = group === listOf(startGroup);
+    const list = choiceGroup('boardType', heading, options, open ? (chosenOf(startGroup)?.id ?? '') : '');
     for (const input of list.querySelectorAll<HTMLInputElement>('input')) input.dataset['group'] = group;
-    list.hidden = group !== startGroup; // hidden as it is, since the design system's v0.6.0 (D259; C179)
-    lists.set(group, list);
+    list.hidden = !open; // hidden as it is, since the design system's v0.6.0 (D259; C179)
+    shownLists.set(group, list);
     typeList.append(list);
   }
   // the group shown: its list, and the type last chosen in it, shown
   const showGroup = (group: string) => {
-    for (const [g, list] of lists) list.hidden = g !== group;
+    making = group;
+    for (const [g, list] of shownLists) list.hidden = g !== listOf(group);
     if (typeTitle !== null) typeTitle.textContent = groups.find((g) => g.group === group)?.title ?? 'Board';
     for (const input of toggle.querySelectorAll<HTMLInputElement>('input')) input.checked = input.value === group;
     choices.group = group;
@@ -377,9 +384,16 @@ async function start(): Promise<void> {
     if (input?.name !== 'typeGroup') return;
     const type = chosenOf(input.value);
     showGroup(input.value);
-    const option = lists.get(input.value)?.querySelector<HTMLInputElement>(`input[value="${type?.id ?? ''}"]`);
+    const option = shownLists
+      .get(listOf(input.value))
+      ?.querySelector<HTMLInputElement>(`input[value="${type?.id ?? ''}"]`);
     if (option) option.checked = true;
-    if (type !== undefined) show(type);
+    if (type === undefined) return;
+    show(type);
+    // A wall is closed round its outer edge (D37): made a wall, the sides still open close, and can be opened again.
+    if (input.value === 'wall')
+      for (const side of formBox?.querySelectorAll<HTMLButtonElement>('[data-side][aria-pressed="false"]') ?? [])
+        side.click();
   });
   // a type chosen in its group's list, or among the test prints in its form's Advanced fold (D357)
   const chooseType = (event: Event) => {
@@ -387,7 +401,8 @@ async function start(): Promise<void> {
     if (input?.name !== 'boardType') return;
     const group = input.dataset['group'] ?? 'board';
     const focused = document.activeElement === input;
-    showGroup(group); // a type chosen in the other group, as a script may, shows that group
+    // a type chosen in another list, as a script may, shows its group; a wall stays a wall among the boards
+    showGroup(listOf(making) === group ? making : group);
     choices.types[group] = input.value;
     show(boardType(input.value));
     // a test print's choice is made again with its form: the focus goes on to the new one, where the keys move it

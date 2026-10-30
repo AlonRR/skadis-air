@@ -26,7 +26,7 @@ const shots = [
   { name: 'board-lightened', type: 'lightened', fields: { widthMm: '240', heightMm: '200' } },
   { name: 'board-skeleton', type: 'skeleton', fields: { widthMm: '240', heightMm: '200' } },
   // a taller window, as a wall's print list takes its share of the stage and the slots must be wide enough to draw
-  { name: 'wall', type: 'solid', panels: 'split', fields: { widthMm: '1200', heightMm: '800' }, height: 1300 },
+  { name: 'wall', type: 'solid', make: 'wall', fields: { widthMm: '1200', heightMm: '800' }, height: 1300 },
   { name: 'slot-clip', type: 'slot-clip', choices: { boards: '4' } },
   { name: 'standoff', type: 'standoff', choices: { boards: '4' } },
   { name: 'page', type: 'skeleton', fields: { widthMm: '240', heightMm: '200' }, whole: true },
@@ -67,8 +67,9 @@ async function shoot(shot) {
   const page = await context.newPage();
   await page.goto(base);
   await ready(page);
+  // a wall is What to make's (D590), its boards the boards' list
+  if (shot.make) await choose(page, 'typeGroup', shot.make);
   await choose(page, 'boardType', shot.type);
-  if (shot.panels) await choose(page, 'panels', shot.panels);
   await inTurn(Object.entries(shot.choices ?? {}), ([name, value]) => choose(page, name, value));
   await inTurn(Object.entries(shot.fields ?? {}), ([name, value]) => page.locator(`input[name="${name}"]`).fill(value));
   await page.waitForTimeout(300); // the form builds again after a burst of typing

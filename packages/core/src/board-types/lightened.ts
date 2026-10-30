@@ -11,10 +11,10 @@ import {
   type PocketCorners,
   WARN_MEMBER_MM,
 } from '../lightened.js';
-import { MOUNTING_SETTINGS, mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
+import { mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
 import { type ChoiceSetting, defineSettings, type NumberSetting, type Values } from '../settings.js';
 import { defineBoardType } from './define.js';
-import { BOARD_SETTINGS, boardLabel, boardParamsOf } from './solid.js';
+import { boardLabel, boardParamsOf, boardSettings } from './solid.js';
 
 const MEMBER = {
   kind: 'number',
@@ -77,13 +77,9 @@ export const LOOK_SETTING = {
 /** The file name's look, only when it is not the start's: `straight-`, so `skadis-lightened-straight-...`. */
 export const lookLabel = (v: { look: string }) => (v.look === LOOKS.curved.value ? '' : `${v.look}-`);
 
-/** The lightened board's settings: its look, the solid board's, the lattice's, the mounting. */
-export const LIGHTENED_SETTINGS = defineSettings([
-  LOOK_SETTING,
-  ...BOARD_SETTINGS,
-  ...LATTICE_SETTINGS,
-  ...MOUNTING_SETTINGS,
-]);
+/** The lightened board's settings: its look, the solid board's and the mounting's in the form's order (Q588), the
+ * lattice's. */
+export const LIGHTENED_SETTINGS = boardSettings([LOOK_SETTING], LATTICE_SETTINGS);
 
 /** How each look draws the lightened board's pocket corners: on D278's eased curves, or 1 mm round, as L1's. */
 const LIGHTENED_CORNERS: Record<string, PocketCorners> = {

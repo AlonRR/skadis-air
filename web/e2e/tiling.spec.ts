@@ -1,4 +1,4 @@
-// A wall on the page (backlog item tiling; D175 to D178): "Split into panels" on a board makes its size a wall's,
+// A wall on the page (backlog item tiling; D175 to D178): "Wall" in What to make (D590) makes a board's size a wall's,
 // cut into panels the chosen bed takes, as even as they can be; the preview shows the whole wall, and a print
 // list gives each panel size with its count and its own download.
 import { expect, test, type Page } from '@playwright/test';
@@ -12,7 +12,7 @@ async function ready(page: Page) {
 // Seen in the phone GIF's frames (23 Oct 2026): a wall of one panel said "1 panels".
 test('a wall of one panel says "1 panel"', async ({ page }) => {
   await ready(page);
-  await choose(page, 'panels', 'split');
+  await choose(page, 'typeGroup', 'wall');
   await expect(page.getByTestId('board-status')).toHaveText('Wall ready: 1 panel, 1 to download below.', {
     timeout: 30_000,
   });
@@ -26,7 +26,7 @@ test('"Download all" says it holds each kind of panel once, where some kinds are
 }) => {
   test.setTimeout(90_000);
   await ready(page);
-  await choose(page, 'panels', 'split');
+  await choose(page, 'typeGroup', 'wall');
   await page.locator('input[name="widthMm"]').fill('1200');
   await page.locator('input[name="heightMm"]').fill('800');
   await expect(page.getByTestId('board-status')).toHaveText('Wall ready: 24 panels, 9 to download below.', {
@@ -43,7 +43,7 @@ test('splits a board into panels for the bed, lists each size with its count, an
   await ready(page);
   const status = page.getByTestId('board-status');
   await expect(page.getByTestId('print-list')).toBeHidden();
-  await choose(page, 'panels', 'split');
+  await choose(page, 'typeGroup', 'wall');
   await page.locator('input[name="widthMm"]').fill('440');
   await page.locator('input[name="heightMm"]').fill('280');
   await expect(status).toContainText('Wall ready: 6 panels', { timeout: 30_000 });
@@ -80,7 +80,7 @@ test.describe('on a phone', () => {
   test("a wall's print list is whole, and scrolls away under the pinned 3D view (C350)", async ({ page }) => {
     test.setTimeout(90_000);
     await ready(page);
-    await choose(page, 'panels', 'split');
+    await choose(page, 'typeGroup', 'wall');
     await page.locator('input[name="widthMm"]').fill('400');
     await page.locator('input[name="heightMm"]').fill('400');
     await expect(page.getByTestId('board-status')).toContainText('Wall ready: 4 panels', { timeout: 30_000 });
@@ -113,7 +113,7 @@ test.describe('on a phone', () => {
     }) => {
       test.setTimeout(90_000);
       await ready(page);
-      await choose(page, 'panels', 'split');
+      await choose(page, 'typeGroup', 'wall');
       await page.locator('input[name="widthMm"]').fill(wide);
       await page.locator('input[name="heightMm"]').fill(high);
       await expect(page.getByTestId('board-status')).toContainText(panels, { timeout: 60_000 });
@@ -140,11 +140,11 @@ test("closes the wall's sides when split, and they open again (D37)", async ({ p
   const pressed = () =>
     page.locator('[data-side]').evaluateAll((buttons) => buttons.map((b) => b.getAttribute('aria-pressed')));
   expect(await pressed()).toEqual(['false', 'false', 'false', 'false']); // one board: open all round
-  await choose(page, 'panels', 'split');
+  await choose(page, 'typeGroup', 'wall');
   expect(await pressed()).toEqual(['true', 'true', 'true', 'true']); // a wall: closed round its outer edge
   await page.locator('[data-side="right"]').click();
-  await choose(page, 'panels', 'one');
-  await choose(page, 'panels', 'split');
+  await choose(page, 'typeGroup', 'board');
+  await choose(page, 'typeGroup', 'wall');
   // closed again only where it was open: the user's choice for the right side is kept as closed now
   expect(await pressed()).toEqual(['true', 'true', 'true', 'true']);
 });
@@ -154,7 +154,7 @@ test("closes the wall's sides when split, and they open again (D37)", async ({ p
 test("offers nothing to download while a wall's settings are refused, as for one board", async ({ page }) => {
   test.setTimeout(90_000);
   await ready(page);
-  await choose(page, 'panels', 'split');
+  await choose(page, 'typeGroup', 'wall');
   await page.locator('input[name="widthMm"]').fill('4000');
   const status = page.getByTestId('board-status');
   await expect(status).toContainText('Wall ready: 20 panels', { timeout: 60_000 });
@@ -177,14 +177,14 @@ test('refuses one board larger than 400 mm, pointing to the panels (C51)', async
   await page.locator('input[name="widthMm"]').fill('440');
   const status = page.getByTestId('board-status');
   await expect(status).toHaveAttribute('data-state', 'problem');
-  await expect(status).toContainText('Split into panels');
+  await expect(status).toContainText('"Wall" in What to make');
 });
 
 test("makes the panels as large as the chosen printer's bed takes", async ({ page }) => {
   test.setTimeout(90_000);
   await ready(page);
   await choose(page, 'printerBed', 'prusa'); // the MK4S, 250 x 210 mm: 6 x 5 tiles
-  await choose(page, 'panels', 'split');
+  await choose(page, 'typeGroup', 'wall');
   await page.locator('input[name="widthMm"]').fill('440');
   await page.locator('input[name="heightMm"]').fill('280');
   await expect(page.getByTestId('board-status')).toContainText('Wall ready: 4 panels', { timeout: 30_000 });
@@ -193,7 +193,7 @@ test("makes the panels as large as the chosen printer's bed takes", async ({ pag
 test('makes a wall 1600 x 1600 mm and draws it, each kind of panel sent once', async ({ page }) => {
   test.setTimeout(120_000);
   await ready(page);
-  await choose(page, 'panels', 'split');
+  await choose(page, 'typeGroup', 'wall');
   await page.locator('input[name="widthMm"]').fill('1600');
   await page.locator('input[name="heightMm"]').fill('1600');
   const status = page.getByTestId('board-status');
@@ -216,7 +216,7 @@ test('makes a wall 20 m wide and draws it, only the panels the view needs in ful
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   await ready(page);
-  await choose(page, 'panels', 'split');
+  await choose(page, 'typeGroup', 'wall');
   await page.locator('input[name="widthMm"]').fill('20000');
   await page.locator('input[name="heightMm"]').fill('2400');
   const status = page.getByTestId('board-status');

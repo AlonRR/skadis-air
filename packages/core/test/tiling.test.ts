@@ -329,6 +329,6 @@ describe('a board too large to print as one', () => {
   it('is refused past 400 mm unless split into panels, saying so (C51)', () => {
     const built = buildBoard(engine, SOLID, { ...defaultValues(SOLID.settings), widthMm: 440 });
     expect(built.ok).toBe(false);
-    if (!built.ok) expect(built.problem).toContain('Split into panels');
+    if (!built.ok) expect(built.problem).toContain('"Wall" in What to make');
   });
 });

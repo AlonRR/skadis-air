@@ -6,7 +6,9 @@
 // Each setting's help is folded behind an "i" button beside its label (C317). The page may put a field of its own
 // first under Advanced, as it puts the test prints there (D357). A setting that applies only with another choice is
 // greyed out, its controls disabled, while it does not (D372): the reader leaves it unchecked then, so nothing marks it.
-import { readTypedNumber, settingsNotApplying } from 'skadis-air';
+// An option the other values rule out is greyed out the same way, why said under its choice (D589). A setting the page
+// sets itself is kept off the form (D590).
+import { optionsOff, readTypedNumber, settingsNotApplying } from 'skadis-air';
 import type { AnyBoardType, ChoiceSetting, NumberSetting, Problem, Setting, SidesSetting } from 'skadis-air';
 
 type Side = 'left' | 'right' | 'bottom' | 'top';
@@ -122,6 +124,8 @@ interface Field<V> {
   field: HTMLElement;
   read: () => V;
   enable: (on: boolean) => void;
+  /** Greys out the options the other values rule out, saying why under them, and moves off one so chosen (D589). */
+  rule?: (out: Readonly<Record<string, string>>) => void;
 }
 
 /** Marks a field as applying or not, so the page greys its label and notes as the design system greys a control. */
@@ -312,11 +316,34 @@ function choiceField(s: ChoiceSetting, changed: () => void, start?: unknown): Fi
     'aria-describedby',
     [...(folded === undefined ? [] : [folded.help.id]), idOf(s.key, 'error')].join(' '),
   );
+  // why an option is ruled out, under the choice (D589 a): kept hidden while none is
+  const why = element('p', { class: 'ws-note', 'data-testid': `ruled-${s.key}`, 'aria-live': 'polite' });
+  why.hidden = true;
+  field.append(why);
+  let applying = true;
+  let ruled: Readonly<Record<string, string>> = {};
+  const inputs = () => [...group.querySelectorAll<HTMLInputElement>('input')];
+  const set = () => {
+    for (const input of inputs()) input.disabled = !applying || input.value in ruled;
+  };
   const enable = (on: boolean) => {
     markApplies(field, on);
-    for (const input of group.querySelectorAll<HTMLInputElement>('input')) input.disabled = !on;
+    applying = on;
+    set();
   };
-  return { field, read: () => chosenIn(group), enable };
+  const rule = (out: Readonly<Record<string, string>>) => {
+    ruled = out;
+    set();
+    const checked = inputs().find((i) => i.checked);
+    if (checked !== undefined && checked.value in out) {
+      const left = inputs().find((i) => !(i.value in out));
+      if (left !== undefined) left.checked = true;
+    }
+    const reasons = [...new Set(Object.values(out))];
+    why.textContent = reasons.join(' ');
+    why.hidden = reasons.length === 0;
+  };
+  return { field, read: () => chosenIn(group), enable, rule };
 }
 
 function fieldFor(s: Setting, changed: () => void, start?: unknown): Field<unknown> {
@@ -339,6 +366,8 @@ function put(container: HTMLElement, kind: 'error' | 'warning', problem: Problem
 export interface FormExtras {
   advancedFirst?: HTMLElement;
   advancedOpen?: boolean;
+  /** Settings the page sets itself, kept off the form, as What to make sets one board or a wall (D590). */
+  fixed?: Readonly<Record<string, unknown>>;
 }
 
 /** Replaces the container's contents with a form for the board type, starting from `start` where it gives a value
@@ -359,21 +388,31 @@ export function renderForm(
   const kept = advanced.children.length; // the summary, the note and the page's field
   const readers = new Map<string, () => unknown>();
   const enablers = new Map<string, (on: boolean) => void>();
+  const rulers = new Map<string, NonNullable<Field<unknown>['rule']>>();
   const read = () => Object.fromEntries([...readers].map(([key, r]) => [key, r()]));
   // greys out what does not apply to the values held now, and turns the rest on, before the page reads them (D372)
   const applies = () => {
     const off = new Set(settingsNotApplying(type.settings, read()));
     for (const [key, enable] of enablers) enable(!off.has(key));
+    // and the options the values rule out, each choice moved off one so chosen (D589)
+    const out = optionsOff(type.settings, read());
+    for (const [key, rule] of rulers) rule(out[key] ?? {});
   };
   const edited = () => {
     applies();
     changed();
   };
+  const fixed = extras.fixed ?? {};
   for (const s of type.settings) {
+    if (s.key in fixed) {
+      readers.set(s.key, () => fixed[s.key]);
+      continue;
+    }
     const made = fieldFor(s, edited, start[s.key]);
     (s.advanced ? advanced : main).append(made.field);
     readers.set(s.key, made.read);
     enablers.set(s.key, made.enable);
+    if (made.rule !== undefined) rulers.set(s.key, made.rule);
   }
   applies();
   container.append(main);

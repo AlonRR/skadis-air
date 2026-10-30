@@ -99,7 +99,9 @@ export async function choose(page: Page, name: string, value: string): Promise<v
       if ((await input.count()) > 0) break;
     }
   }
-  const group = name === 'boardType' ? await input.getAttribute('data-group') : null;
+  // the group the type is in, unless its list is shown already: a wall's boards are the boards' list (D590)
+  const hidden = name === 'boardType' && (await input.evaluate((i) => i.closest('[hidden]') !== null));
+  const group = hidden ? await input.getAttribute('data-group') : null;
   if (group !== null) await page.locator(`input[name="typeGroup"][value="${group}"]`).check();
   const fold = input.locator('xpath=ancestor::details[1]');
   if ((await fold.count()) > 0 && (await fold.getAttribute('open')) === null) {

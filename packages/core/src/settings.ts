@@ -39,11 +39,19 @@ export interface SidesSetting {
   appliesWhen?: AppliesWhen;
 }
 
+/** A choice's option; `offWhen` says why the other values rule it out, if they do (D589): it is then read as the
+ * first option left, and the page greys it out with the reason under the choice. */
+export interface ChoiceOption {
+  value: string;
+  label: string;
+  offWhen?: (values: Readonly<Record<string, unknown>>) => string | undefined;
+}
+
 export interface ChoiceSetting {
   kind: 'choice';
   key: string;
   label: string;
-  options: readonly { value: string; label: string }[]; // in the order the page lists them
+  options: readonly ChoiceOption[]; // in the order the page lists them
   default: string; // one of the options' values
   help?: string;
   advanced?: boolean;
@@ -207,6 +215,49 @@ function offOf(settings: readonly Setting[], values: Record<string, number | str
   return off;
 }
 
+/** The options the other values rule out (D589), by setting and value, each with why: for a setting that applies. */
+function ruledOut(
+  settings: readonly Setting[],
+  values: Readonly<Record<string, unknown>>,
+  off: ReadonlySet<string>,
+): Record<string, Record<string, string>> {
+  const out: Record<string, Record<string, string>> = {};
+  for (const s of settings) {
+    if (s.kind !== 'choice' || off.has(s.key)) continue;
+    for (const o of s.options) {
+      const why = o.offWhen?.(values);
+      if (why !== undefined) (out[s.key] ??= {})[o.value] = why;
+    }
+  }
+  return out;
+}
+
+/** Each choice whose option the other values rule out (D589) read as the first option left. */
+function takeOptionsLeft(
+  settings: readonly Setting[],
+  values: Record<string, number | string | Sides>,
+  off: ReadonlySet<string>,
+) {
+  const ruled = ruledOut(settings, values, off);
+  for (const s of settings) {
+    const out = ruled[s.key];
+    const chosen = values[s.key];
+    if (s.kind !== 'choice' || out === undefined || typeof chosen !== 'string' || !(chosen in out)) continue;
+    const left = s.options.find((o) => !(o.value in out));
+    if (left !== undefined) values[s.key] = left.value;
+  }
+}
+
+/** The options the values given rule out (D589), by setting and value, each with why: for the page, which greys
+ * them out. */
+export function optionsOff(
+  settings: readonly Setting[],
+  given: Readonly<Record<string, unknown>>,
+): Record<string, Record<string, string>> {
+  const { values } = readEach(settings, given);
+  return ruledOut(settings, values, offOf(settings, values));
+}
+
 /** The keys of the settings that do not apply to what was given (D372), in the order declared, a value refused read
  * as its starting value: for the page, which greys them out. */
 export function settingsNotApplying(settings: readonly Setting[], given: Readonly<Record<string, unknown>>): string[] {
@@ -222,6 +273,7 @@ export function readValues<const S extends readonly Setting[]>(
 ): ReadResult<S> {
   const read = readEach(settings, given);
   const off = offOf(settings, read.values);
+  takeOptionsLeft(settings, read.values, off);
   const errors = read.errors.filter((p) => !off.has(p.key));
   const warnings = read.warnings.filter((p) => !off.has(p.key));
   if (errors.length > 0) return { ok: false, errors, warnings };

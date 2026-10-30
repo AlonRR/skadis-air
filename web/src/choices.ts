@@ -7,7 +7,7 @@ import { readTypedNumber, SCREW_SIZE_SETTING, type AnyBoardType, type Setting } 
 const KEY = 'skadis-air-choices';
 
 export interface Choices {
-  group?: string; // 'board' or 'connector'
+  group?: string; // what to make: 'board', 'wall' or 'connector' (D590)
   types: Record<string, string>; // the type last chosen in each group
   values: Record<string, Record<string, unknown>>; // each type's values, by its id
 }

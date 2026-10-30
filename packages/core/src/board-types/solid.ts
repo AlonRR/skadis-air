@@ -2,10 +2,11 @@
 // mounting (D73 to D75) after its own settings. The boards built on it (the lightened board) take its
 // settings, its board and its file name from here, so the two cannot drift apart.
 import { makeSolidBoard, solidBoardParams, SOLID_BOARD_DEFAULTS, type SolidBoardParams } from '../board-solid.js';
-import { MOUNTING_SETTINGS, mountingCuts, mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
+import { MOUNTING_FINE, MOUNTING_HOLES, mountingCuts, mountingLabel, mountingOf, mountingScrews } from '../mounting.js';
+import { SCREW_SIZE_SETTING } from '../screw-places.js';
 import { TILE_MM } from '../skadis.js';
 import { MAX_PANEL_TILES, MAX_WALL_MM } from '../tiling.js';
-import { defineSettings, SettingsProblem, type Values } from '../settings.js';
+import { defineSettings, type Setting, SettingsProblem, type Values } from '../settings.js';
 import { ALL_OPEN } from '../slots.js';
 import { defineBoardType } from './define.js';
 
@@ -21,9 +22,9 @@ const SIZE = {
 } as const;
 const PANEL = { ...SIZE, max: MAX_PANEL_TILES * TILE_MM, default: MAX_PANEL_TILES * TILE_MM, advanced: true } as const;
 
-/** The solid board's own settings, before the mounting's: its open sides and sides, size, thickness and slots. */
-export const BOARD_SETTINGS = defineSettings([
-  // Open sides, then the sides it moves, first (D529 a, 30 Oct 2026: right under the Look, where a board has one)
+/** A board's open sides and sides, first on its form (D529 a, 30 Oct 2026: right under the Look, where a board has
+ * one). */
+export const BOARD_SIDES = defineSettings([
   {
     kind: 'choice',
     key: 'seams',
@@ -47,6 +48,10 @@ export const BOARD_SETTINGS = defineSettings([
     default: ALL_OPEN,
     help: 'An open side has half slots, to join a neighbour or add one later; a closed side is a solid edge.',
   },
+]);
+
+/** A board's size and thickness, right above the screw size (Q588, 30 Oct 2026). */
+export const BOARD_SIZE = defineSettings([
   { kind: 'number', key: 'widthMm', label: 'Width', default: 4 * TILE_MM, ...SIZE },
   { kind: 'number', key: 'heightMm', label: 'Height', default: 4 * TILE_MM, ...SIZE },
   {
@@ -61,6 +66,11 @@ export const BOARD_SETTINGS = defineSettings([
     warnOutside: [4, 5.5], // the range IKEA hooks accept (C43)
     help: 'IKEA hooks fit boards about 4 to 5.5 mm thick.',
   },
+]);
+
+/** The rest of a board's settings: one board or a wall's panels, which the page asks in What to make (D590), and its
+ * slots, corners and panels under Advanced. */
+export const BOARD_REST = defineSettings([
   {
     kind: 'choice',
     key: 'panels',
@@ -70,7 +80,7 @@ export const BOARD_SETTINGS = defineSettings([
       { value: 'split', label: 'Split into panels' },
     ],
     default: 'one',
-    help: "Split, the width and height are a wall's, cut into panels your printer's bed takes; the sides are the wall's outer edges, and the seams are open.",
+    help: "A wall (\"Wall\" in What to make on the page): the width and height are a wall's, cut into panels your printer's bed takes; the sides are the wall's outer edges, and the seams are open.",
   },
   {
     kind: 'number',
@@ -113,16 +123,38 @@ export const BOARD_SETTINGS = defineSettings([
     key: 'panelWidthMm',
     label: 'Largest panel width',
     ...PANEL,
-    help: 'Split, panels are as large as the bed takes, and no larger than this.',
+    help: 'In a wall, panels are as large as the bed takes, and no larger than this.',
   },
   {
     kind: 'number',
     key: 'panelHeightMm',
     label: 'Largest panel height',
     ...PANEL,
-    help: 'Split, panels are as large as the bed takes, and no taller than this.',
+    help: 'In a wall, panels are as large as the bed takes, and no taller than this.',
   },
 ]);
+
+/** The solid board's own settings: its open sides and sides, size, thickness and slots. */
+export const BOARD_SETTINGS = defineSettings([...BOARD_SIDES, ...BOARD_SIZE, ...BOARD_REST]);
+
+/** A board type's settings in the form's order (Q588): those it puts first (the lattice boards' look), the open sides
+ * and sides, the screw holes and standoffs, the size and thickness right above the screw size, then one board or a
+ * wall, and under Advanced the board's, its own and the mounting's fine settings. */
+export function boardSettings<const B extends readonly Setting[], const O extends readonly Setting[]>(
+  before: B,
+  own: O,
+) {
+  return defineSettings([
+    ...before,
+    ...BOARD_SIDES,
+    ...MOUNTING_HOLES,
+    ...BOARD_SIZE,
+    SCREW_SIZE_SETTING,
+    ...BOARD_REST,
+    ...own,
+    ...MOUNTING_FINE,
+  ] as const);
+}
 
 type BoardValues = Values<typeof BOARD_SETTINGS>;
 
@@ -131,7 +163,7 @@ export function boardParamsOf(v: BoardValues): SolidBoardParams {
   const over = (['widthMm', 'heightMm'] as const).filter((key) => v[key] > MAX_PANEL_TILES * TILE_MM);
   if (over.length > 0) {
     throw new SettingsProblem(
-      `One board is at most ${MAX_PANEL_TILES * TILE_MM} mm a side; choose "Split into panels" to make a wall`,
+      `One board is at most ${MAX_PANEL_TILES * TILE_MM} mm a side; make a wall ("Wall" in What to make)`,
       over,
     );
   }
@@ -159,7 +191,7 @@ export const SOLID = defineBoardType({
   id: 'solid',
   name: 'Solid',
   description: 'A plain plate with the SKÅDIS slots.',
-  settings: defineSettings([...BOARD_SETTINGS, ...MOUNTING_SETTINGS]),
+  settings: boardSettings([], []),
   build: (engine, v) => {
     const params = boardParamsOf(v);
     return makeSolidBoard(engine, params, mountingCuts(mountingOf(v), params));

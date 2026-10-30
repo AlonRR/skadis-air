@@ -18,7 +18,7 @@ import {
   screwPlaces,
 } from '../src/mounting.js';
 import { circle, stadium } from '../src/rings.js';
-import { defaultValues } from '../src/settings.js';
+import { defaultValues, optionsOff, readValues } from '../src/settings.js';
 import { ALL_OPEN, boardExtent, type Sides, slotPlaces } from '../src/slots.js';
 import { printPose } from '../src/print-pose.js';
 import { meshOf } from '../src/stl.js';
@@ -953,5 +953,27 @@ describe('lock screws alone (D289)', () => {
     const solid = mounted({ columns: 3, rows: 3 }, { ...lock, lockScrewMm: 4 });
     expect(degenerateFacets(meshOf(solid))).toBe(0);
     expect(degenerateFacets(meshOf(keep(printPose(solid))))).toBe(0);
+  });
+});
+
+describe('standoffs that keyholes and lock screws need (D589)', () => {
+  it('rules out no standoffs with keyholes or lock screws, saying why, and reads them as on the back', () => {
+    for (const [head, why] of [
+      ['keyhole', 'Keyholes need standoffs'],
+      ['lock', 'Lock screws need standoffs'],
+    ] as const) {
+      const given = { screwHead: head, standoffs: 'none' };
+      expect(optionsOff(SOLID.settings, given)['standoffs']?.['none']).toMatch(new RegExp(`^${why}`));
+      const read = readValues(SOLID.settings, given);
+      expect(read.ok && read.values.standoffs).toBe('back');
+    }
+  });
+
+  it('leaves no standoffs free with the other screw holes', () => {
+    for (const head of ['countersunk', 'round', 'none']) {
+      expect(optionsOff(SOLID.settings, { screwHead: head })).toEqual({});
+      const read = readValues(SOLID.settings, { screwHead: head, standoffs: 'none' });
+      expect(read.ok && read.values.standoffs).toBe('none');
+    }
   });
 });

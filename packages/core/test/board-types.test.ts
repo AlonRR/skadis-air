@@ -314,11 +314,23 @@ describe('the solid board type', () => {
       ['between', 'Between the slots'],
     ]);
     expect(seams.default).toBe('through');
-    // first, then the sides it moves, then the size (D529 a, 30 Oct 2026: right under the Look, where a board has one)
-    const keys = solid.settings.map((x) => x.key);
-    expect(keys.slice(0, 5)).toEqual(['seams', 'sides', 'widthMm', 'heightMm', 'thicknessMm']);
-    for (const t of [boardType('lightened'), boardType('skeleton')])
-      expect(t.settings.map((x) => x.key).slice(0, 4)).toEqual(['look', 'seams', 'sides', 'widthMm']);
+    // first, then the sides it moves (D529 a, 30 Oct 2026: right under the Look, where a board has one); then the
+    // screw holes and standoffs, and the size right above the screw size (Q588, 30 Oct 2026)
+    const main = (t: { settings: readonly Setting[] }) =>
+      t.settings.filter((x) => x.advanced !== true).map((x) => x.key);
+    const order = [
+      'seams',
+      'sides',
+      'screwHead',
+      'standoffs',
+      'widthMm',
+      'heightMm',
+      'thicknessMm',
+      'screwMm',
+      'panels',
+    ];
+    expect(main(solid)).toEqual(order);
+    for (const t of [boardType('lightened'), boardType('skeleton')]) expect(main(t)).toEqual(['look', ...order]);
   });
 
   it('builds a board between the slots with its open sides moved, and names it so when a side is open (D288)', () => {
