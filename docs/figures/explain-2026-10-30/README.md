@@ -96,7 +96,7 @@ meet, "Curved" and "Straight" written in them.
 
 ![Option (e): each lattice board's halves moved apart, a gap at the cut](d591-e-line.png)
 
-**What it shows:** option (e): no line; each lattice board's Curved half and Straight half moved 5 mm apart, so the cut
+**What it shows:** option (e): no line; each lattice board's Curved half and Straight half moved 10 mm apart, so the cut
 is a gap in the part itself, level in every frame.
 
 ![Option (f): a grey bracket beside each half of each lattice board, Curved and Straight written along them](d591-f-line.png)
