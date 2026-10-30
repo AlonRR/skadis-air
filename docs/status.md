@@ -270,9 +270,10 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
   section at the very bottom of the text (`docs/printables.md`, the owner, 30 Oct 2026: "At the very bottom of the
   printables page add an updates section, look at other projects for a reference"), for the owner's "Publish now".
 - **D591** (30 Oct 2026) The owner: "The line that is between the types should be designed better maybe a correct
-  color maybe a different layout". Options (`docs/figures/explain-2026-10-30/d591-a-line.png` to `d591-c-line.png`):
-  (a) a dashed grey line across each lattice board alone (recommended), (b) one dashed grey line across both,
-  (c) orange marks in the gaps alone.
+  color maybe a different layout"; (a) to (c), a line in other colours and lengths, answered "591 still not good".
+  Asked again, with no line over the boards (`docs/figures/explain-2026-10-30/d591-d-line.png` to `d591-f-line.png`):
+  (d) a two-tone backdrop behind them, (e) the cut opened into a 10 mm gap, (f) a bracket beside each half, its look
+  written along it (recommended).
 - **D592** (30 Oct 2026) The owner: "Make a standoffs connector version that uses M nuts". What the nut is for
   (`docs/figures/explain-2026-10-30/d592-d593-sections.png`): (a) the board bolts onto the standoff, a nut in a pocket
   under it and a countersunk M4 machine screw through the board's corner hole, the standoff taped or screwed to the

@@ -86,3 +86,20 @@ a panel with the nut behind; a board whose corner standoffs end in pads taped to
 **What it shows:** sketches, not the parts: D592 (a) a nut in a pocket under the board, a countersunk M4 machine screw
 through the board's corner hole into it; D592 (b) a bolt through the board, the standoff and a panel, the nut behind;
 D593 a board's corner standoffs ending in pads for double-sided tape.
+
+## D591 again: three more ways, after "591 still not good"
+
+![Option (d): the lattice boards on a backdrop, light blue above the cut and light sand below, named Curved and Straight](d591-d-line.png)
+
+**What it shows:** option (d), frame 30: no line; behind the lattice boards a backdrop in two tones, the cut where they
+meet, "Curved" and "Straight" written in them.
+
+![Option (e): each lattice board's halves moved apart, a gap at the cut](d591-e-line.png)
+
+**What it shows:** option (e): no line; each lattice board's Curved half and Straight half moved 5 mm apart, so the cut
+is a gap in the part itself, level in every frame.
+
+![Option (f): a grey bracket beside each half of each lattice board, Curved and Straight written along them](d591-f-line.png)
+
+**What it shows:** option (f): no line over the boards; beside each lattice board a bracket for each half, its look
+written along it, the break between the brackets at the cut.
