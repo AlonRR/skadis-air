@@ -68,8 +68,10 @@
         fills the control in a 4 to 3 shape, as wide as the fieldset allows up to 18 rem, so it fits a 320 px phone
         (D419). The top and bottom buttons span the drawing, so the middle column can give way to the side buttons. A
         closed side is a solid edge in the action blue, an open one dashed; a corner is round only where both its sides
-        are closed, as the board is built. */
+        are closed, as the board is built. Its layers stay its own (isolation), so on a phone its buttons go under the
+        pinned 3D view as the form scrolls, not over it (the owner, 31 Oct 2026). */
       .ws-sides {
+        isolation: isolate;
         position: relative;
         grid-template-columns: auto minmax(0, 1fr) auto;
         grid-template-rows: auto minmax(0, 1fr) auto;

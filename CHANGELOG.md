@@ -6,6 +6,10 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- On a phone, the Sides control's buttons no longer show over the pinned 3D view as the form scrolls under it.
+
 ## [0.10.1] - 2026-10-31
 
 ### Added
