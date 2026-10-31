@@ -210,6 +210,18 @@ bash tests/test-overhang-report.sh  # its controls: known lengths, and travel, w
 node scripts/checks/write-keyhole-parts.mjs  # the keyhole parts as built, into .check/keyhole-parts/, to slice and report
 ```
 
+The settings sweep (D633 a, D634 b, 31 Oct 2026): every setting of every part through the library and the built page,
+into `.check/sweep/`, for a reviewer; the rules it found holding are `packages/core/test/settings-sweep.test.ts`:
+
+```bash
+npm run build -w skadis-air
+node scripts/checks/sweep-settings.mjs form      # every choice beside every other, read: about a minute
+node scripts/checks/sweep-settings.mjs alias     # each option a field lets be chosen, built: two that make one part
+node scripts/checks/sweep-settings.mjs build     # every pair of values built, each mesh checked; resumable
+node scripts/checks/sweep-settings.mjs report    # .check/sweep/report.md
+node scripts/checks/sweep-page.mjs http://127.0.0.1:4199/   # the built page served there, wide and phone, with shots
+```
+
 ## Figures
 
 `node scripts/figures/shoot.mjs <pass>` draws a design pass's figures, each part the library's own with a finding's
