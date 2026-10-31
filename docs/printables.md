@@ -22,7 +22,7 @@ to the printables page, use a better img for the main image", then "use a gifs a
 printed parts. Published at 18:46:30 UTC on 22 Oct 2026, from the owner's browser; since then a save in
 the editor is "Publish now", which changes the public page. The pictures and the text's GIFs below went up with one
 such save at 20:01:09 UTC that day (A310, A311), read back from Printables' API: the cover first, the eleven in order,
-the four GIFs in the text (the text then gave each board as a share of the solid board, replaced by grams under D313); the GIFs are served as the GIFs made, so they move. Another at 20:38:10 UTC put the turning cover first and the page tour second, the other ten after them as before (the owner's request that evening), read back the same way. At 21:01:37 UTC the page tour that opens on a wall took second place, read back the same way. On 23 Oct 2026 the owner approved a new set, a picture for each section of the page and the text's GIFs smaller, each with a line under it (A356; the Pictures below), made from `v0.6.0`, put in the editor by the agent and published by the owner at 15:35:53 UTC on 23 Oct 2026 (A352, A356; read back from Printables' API: the nine pictures in order, the six images in the text each with its line, and the Feedback and requests section). On 24 Oct 2026 the set was made again from `v0.8.0` (A407): six of the nine pictures, the three slot clips' files and five of the text's six GIFs changed, the rest came out the same; put in the editor by the agent, the order kept, and published by the owner at 10:57:40 UTC (T457; read back from Printables' API: the nine pictures in order, the thirteen files, the six images in the text each with its line). On 31 Oct 2026 the set was made again from `v0.10.0` (A587): of the gallery only the cover changed (D591), and all six page GIFs were recorded again from the published page; put in the editor by the agent, the eight pictures in their order with the new cover set as the cover, four of the text's GIFs replaced (page-in-use, page-types, page-edges, page-mounting; the turntable and the skeleton's close-up unchanged), the lines on tape and on standoffs held by nuts or wood screws, and the Updates section at the very bottom, which the live text had not had; published by the agent on the owner's word ("614 publish") at 05:55:53 UTC on 31 Oct 2026 (T614; read back from Printables' API: the eight pictures in order with the new cover, the four new GIFs in the text, the lines on tape and on the new standoffs, and the Updates section).
+the four GIFs in the text (the text then gave each board as a share of the solid board, replaced by grams under D313); the GIFs are served as the GIFs made, so they move. Another at 20:38:10 UTC put the turning cover first and the page tour second, the other ten after them as before (the owner's request that evening), read back the same way. At 21:01:37 UTC the page tour that opens on a wall took second place, read back the same way. On 23 Oct 2026 the owner approved a new set, a picture for each section of the page and the text's GIFs smaller, each with a line under it (A356; the Pictures below), made from `v0.6.0`, put in the editor by the agent and published by the owner at 15:35:53 UTC on 23 Oct 2026 (A352, A356; read back from Printables' API: the nine pictures in order, the six images in the text each with its line, and the Feedback and requests section). On 24 Oct 2026 the set was made again from `v0.8.0` (A407): six of the nine pictures, the three slot clips' files and five of the text's six GIFs changed, the rest came out the same; put in the editor by the agent, the order kept, and published by the owner at 10:57:40 UTC (T457; read back from Printables' API: the nine pictures in order, the thirteen files, the six images in the text each with its line). On 31 Oct 2026 the set was made again from `v0.10.0` (A587): of the gallery only the cover changed (D591), and all six page GIFs were recorded again from the published page; put in the editor by the agent, the eight pictures in their order with the new cover set as the cover, four of the text's GIFs replaced (page-in-use, page-types, page-edges, page-mounting; the turntable and the skeleton's close-up unchanged), the lines on tape and on standoffs held by nuts or wood screws, and the Updates section at the very bottom, which the live text had not had; published by the agent on the owner's word ("614 publish") at 05:55:53 UTC on 31 Oct 2026 (T614; read back from Printables' API: the eight pictures in order with the new cover, the four new GIFs in the text, the lines on tape and on the new standoffs, and the Updates section). On 31 Oct 2026 the set was made again from `v0.11.0` and `v0.11.1` (A629): the gallery's renders came out byte for byte as before, so of the gallery only the page tour and the phone GIFs, which show the form, were replaced, the four after them uploaded again to keep the order, the cover kept; in the text all four page GIFs were recorded again from the published page, the mounting one now choosing Tape and turning the board to its back to show the pads (D619 a), and the lines on Mounting and Tape and the v0.11.0 Updates entry written in; staged in the editor by the agent, waiting on the owner's word to publish (read back from Printables' API: the live page unchanged).
 
 ## Pictures
 
@@ -133,16 +133,17 @@ clip, and back to the solid board._
   and "Download all" gives them in one zip or one 3MF.
 - **A straighter look**: the lightened and skeleton boards come Curved, as here, or Straight, their pockets in
   straighter lines, with the same edge chamfer, V groove at the seams and mounting.
-- **Mounting**: countersunk or round-head screw holes in the corners, or keyholes at the top, on standoffs, so the
-  board lifts off its screws.
+- **Mounting**: countersunk or round-head screw holes in the corners, keyholes at the top so the board lifts off its
+  screws, lock screws or tape, on standoffs at the corners or behind the corner slots.
 - **The slot clip's options**: a screw or a keyhole to fix it to the wall, or neither.
 - **Open sides between the slots**: a board's open sides can run midway between the slots, so every slot at a seam
   is whole.
 - **Lock screws**: in place of keyholes, a screw through a slot at each corner into the standoff behind it holds the
   board; every slot still takes a hook.
 - **A slot clip for seams between the slots**: a peg in the nearest slot each side, its bar on the diagonal.
-- **Tape**: standoffs that end in pads for double-sided tape, for a wall you would rather not drill; the board has no
-  screw holes, and the page says about what the tape holds. For light things.
+- **Tape**: for a wall you would rather not drill, the board stands on posts behind its corner slots, each ending in a
+  pad for a piece of double-sided tape, up to 40 mm each way; it has no screw holes, and the page says about what the
+  tape holds. For light things.
 - **Standoffs held by nuts or wood screws**: the standoff can hold the boards by an M3 to M5 nut in each post, pulled
   into its seat from the wall side, or by a wood or PT screw cutting its own thread, and stand on tape or a foot
   screwed to the wall.
@@ -154,8 +155,8 @@ _ℹ️ In the GIF: the top and right sides ticked closed, the open sides moved 
 
 [GIF `page-mounting.gif`]
 
-_ℹ️ In the GIF: standoffs on the back, keyholes, the board seen from the back, lock screws, then the front again,
-countersunk and without standoffs._
+_ℹ️ In the GIF: standoffs at the corners, keyholes, the board seen from the back, lock screws, tape, then the front
+again, countersunk and without standoffs._
 
 ### Printing
 
@@ -190,6 +191,13 @@ to use, change, share or sell, with no conditions from this project.
 Not affiliated with IKEA. SKÅDIS is IKEA's name for its pegboard system.
 
 ### Updates
+
+#### 2026-10-31 · v0.11.0
+
+- "Mounting" in place of "Screw holes", with Tape in it, and the standoffs at the corners or behind the slots.
+- A board on tape stands on posts behind its corner slots, so a larger piece fits, up to 40 mm each way.
+- A setting that does not apply is hidden.
+- On a phone, the Sides control stays under the 3D view as the form scrolls.
 
 #### 2026-10-31 · v0.10.0
 

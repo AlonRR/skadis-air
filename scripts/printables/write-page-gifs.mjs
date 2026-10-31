@@ -279,15 +279,18 @@ const recordings = [
   {
     id: 'page-mounting',
     width: 560,
-    // standoffs, keyholes seen from the back, lock screws, and back
+    // standoffs at the corners, keyholes seen from the back, lock screws, tape (D619 a), and back: countersunk takes the
+    // standoffs off the slots to None again itself, as it began (D619)
     async steps(r, page) {
       await r.click(radio(page, 'standoffs', 'corners'));
       await r.click(radio(page, 'screwHead', 'keyhole'));
       await r.click(radio(page, 'view', 'back'));
       await r.click(radio(page, 'screwHead', 'lock'));
+      await r.click(radio(page, 'screwHead', 'tape'));
+      // a board of another depth is framed again from the front: back, to see its pads
+      await r.click(radio(page, 'view', 'back'));
       await r.click(radio(page, 'view', 'front'));
       await r.click(radio(page, 'screwHead', 'countersunk'));
-      await r.click(radio(page, 'standoffs', 'none'));
     },
   },
   {
