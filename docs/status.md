@@ -288,6 +288,30 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 ## Open questions
 
+- **D635** Switching from keyholes, lock screws or tape to a corner screw (31 Oct 2026, the settings sweep, D633 a):
+  the standoffs move to None, the first option left, so a board that stood on standoffs loses them. (a) move them to
+  At the corners (recommended: the board keeps standing off the wall), (b) keep None.
+- **D636** With keyholes, lock screws or tape the Standoffs field offers one choice, Behind slots, the other two
+  greyed with the reason (`docs/figures/sweep-2026-10-31/d636-standoffs-one-choice.png`); "For" on the slot clip was
+  hidden where it offered one. (a) keep it shown, greyed with its reason, as D619 and D620 a set (recommended: it
+  says why, and where the standoffs stand), (b) hide it there and say so in the Mounting note.
+- **D637** The words of the standoffs' greyed reasons and help (the sweep's review): "A corner screw needs its standoff
+  round it, at the corner. Lock screws are the screws that go through the slots into the standoffs behind them" does
+  not say what to change. (a) rewrite them to say which Mounting frees which option, and name "Behind slots" one way
+  throughout (recommended), (b) keep them.
+- **D638** "Lock screws" is both a Mounting option and the Advanced field that adds screws to a keyhole board.
+  (a) rename the Advanced field "Lock screws with keyholes" (recommended), (b) keep both names.
+- **D639** With a test print chosen under Advanced, the Board list shows nothing chosen
+  (`docs/figures/sweep-2026-10-31/d639-test-print-board-unchosen.png`). (a) hide the Board list while a test print is
+  chosen (recommended), (b) keep it.
+- **A640** Fix what the sweep found against decisions already made, each with its test first, and release `v0.11.3`:
+  the 5 mm nut standoff's facets of no area at a nut fit of 0.55 and 0.6 mm; the slot clip's Screw size shown with no
+  fixing and Screw head shown without a screw, and Open sides on a board closed all round (D620 a); refusals that name
+  no field (a board too small, a slot clip too shallow); "Tape need"; the tape note's square inches and pounds; decision
+  numbers in the standoff's Fixing help; the standoff's Screw size help naming Advanced sizes it has not; the seam
+  test's file name (no chamfer, "--0.5"); a board's tape length field to 60 mm where 40 is the most a board takes; the
+  README's four connectors, `docs/extending.md`'s "screw holes", the Printables text's "starting values" and the weight
+  note's "at the starting values" beside a 160 mm board.
 - **T615** Print the nut test print and say which seat holds (D607 a, 31 Oct 2026): nine taped 1-board nut standoffs,
   M3, M4 and M5, each with a seat the nut + 0.1, 0.2 and 0.3 mm across its flats, told apart by 1, 2 or 3 dots on
   the board face: `.check/test-print/skadis-trial-nuts.stl` (`node scripts/test-print/write-trial-plate.mjs nuts`;
