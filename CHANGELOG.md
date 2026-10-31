@@ -6,6 +6,19 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-10-31
+
+### Added
+
+- The nut test print, `node scripts/test-print/write-trial-plate.mjs nuts`: nine taped nut standoffs, M3 to M5, each
+  with a seat the nut + 0.1, 0.2 and 0.3 mm, told apart by dots on the board face, to find the "Nut fit" that holds
+  (D607).
+
+### Fixed
+
+- The tape note counts a taped nut standoff's pad less the hole its nut goes in through, and says so (D607, D609).
+- The tape note names its source as a commenter on one Printables mount, not "one maker" (D609).
+
 ## [0.10.0] - 2026-10-31
 
 ### Added
