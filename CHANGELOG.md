@@ -6,6 +6,11 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The slot clip asks which boards it joins only through the slots: between them one clip joins 2 boards either way,
+  and 4 by such clips along their seams, so "For" is hidden there.
+
 ## [0.11.1] - 2026-10-31
 
 ### Fixed

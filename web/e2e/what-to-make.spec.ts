@@ -66,6 +66,24 @@ test("lists a board's fields in the owner's order, the size right above the scre
   ]);
 });
 
+test("shows a slot clip's For only through the slots, where there is more than one clip (D620 a)", async ({ page }) => {
+  await ready(page);
+  await choose(page, 'typeGroup', 'connector');
+  await choose(page, 'boardType', 'slot-clip');
+  const forField = page.locator('.field').filter({ has: page.locator('input[name="boards"]') });
+  await expect(forField).toBeVisible();
+  await choose(page, 'boards', '4');
+  await choose(page, 'seams', 'between');
+  await expect(forField).toBeHidden();
+  await expect(status(page)).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
+  await expect(status(page)).toHaveAttribute(
+    'data-file-name',
+    'skadis-slot-clip-2-boards-between-slots-15mm-screw.stl',
+  );
+  await choose(page, 'seams', 'through');
+  await expect(forField).toBeVisible();
+});
+
 test('greys out no standoffs with keyholes or lock screws, saying why, and frees it again (D589 a)', async ({
   page,
 }) => {

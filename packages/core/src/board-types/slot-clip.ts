@@ -50,7 +50,12 @@ export const SLOT_CLIP = defineBoardType({
         { value: '4', label: '4 boards, where four corners meet' },
       ],
       default: SLOT_CLIP_DEFAULTS.boards,
-      help: "A peg goes in each board's nearest whole slot, 20 mm from the seam; the slots along the seam stay free.",
+      help:
+        "Through the slots: a peg goes in each board's nearest whole slot, 20 mm from the seam; the slots along the " +
+        'seam stay free.',
+      // between the slots one clip joins 2 boards either way, and 4 by clips along their seams (D290 a): nothing to
+      // choose there, so it is hidden (the owner, 31 Oct 2026; D620 a)
+      appliesWhen: (v) => v['seams'] !== 'between',
     },
     {
       kind: 'choice',

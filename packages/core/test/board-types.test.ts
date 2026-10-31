@@ -833,6 +833,20 @@ describe('the slot clip connector type (D187 to D189, D194, D195, D261, C191, C1
     if (two.ok) made.push(two.solid);
   });
 
+  // the owner, 31 Oct 2026: "the slot clips for between the slots has only 1 option, so we either need more options or
+  // we need to hide the options that are unavailable": between the slots one clip joins 2 boards either way, and 4 by
+  // clips along their seams (D290 a), so "For" does not apply there and is hidden (D620 a)
+  it('asks which boards it joins only through the slots, and between them reads the one clip there is', () => {
+    const off = (given: Record<string, unknown>) => settingsNotApplying(slotClip.settings, given);
+    expect(off({ seams: 'between' })).toContain('boards');
+    expect(off({ seams: 'through' })).not.toContain('boards');
+    for (const boards of ['2', '2-stacked', '4']) {
+      const read = readValues(slotClip.settings, { seams: 'between', boards });
+      expect(read.ok && read.values.boards, boards).toBe('2');
+      expect(read.ok && buildBoard(engine, slotClip, read.values).ok, boards).toBe(true);
+    }
+  });
+
   it('says a clip too shallow for the hooks room and its bar is a problem', () => {
     const built = buildBoard(engine, slotClip, { ...defaultValues(slotClip.settings), depthMm: 10 });
     expect(built.ok).toBe(false);
