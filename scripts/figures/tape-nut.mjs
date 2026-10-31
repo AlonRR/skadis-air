@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 //
 // Tape standoffs and the nut standoff, as built (D592 a, D593, Q594, D600, C601, D603; 30 Oct 2026): a solid board's back on
-// tape standoffs, each rectangular pad in orange; the standoff held by a nut, cut through its nut's seat, the nut in
+// tape, its posts behind the corner slots since D619 a (31 Oct 2026), each rectangular pad in orange; the standoff held by a nut, cut through its nut's seat, the nut in
 // orange pulled home (D607 a), beside a 2-board one whole; and the nut standoff screwed to the wall, its foot's screws in
 // orange. Each part the library's own.
 //
@@ -15,10 +15,10 @@ export function build(kit) {
   const padRegion = box(-5, 165, -5, 165, -19, -8);
   const tapeScene = {
     id: 'tape-board-back',
-    title: 'Board · tape standoffs, from behind',
+    title: 'Board · on tape, from behind',
     caption: [
-      'A 160 x 160 mm solid board on 18 mm standoffs "For tape": each corner post flares out at 45 degrees behind the',
-      "hooks' 8 mm room to a 19 x 19 mm pad at the wall, a piece cut from a 19 mm roll. No screw holes; it prints face down.",
+      'A 160 x 160 mm solid board on tape, on 18 mm standoffs behind its corner slots, as keyholes stand (D619 a): each',
+      "post flares out at 45 degrees behind the hooks' 8 mm room to a 19 x 19 mm pad at the wall. No screw holes.",
     ],
     legend: [
       ['the pads and their flare, past the hooks’ room', COLOURS.orange],
