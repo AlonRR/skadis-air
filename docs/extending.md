@@ -126,13 +126,13 @@ itself. A new kind of place is one entry and two edits, all in `packages/core/sr
 2. **Its settings**: `...screwPlaceSettings(PLACE)` in its type's `defineSettings([...])`, which lists
    `SCREW_SIZE_SETTING` too. They are two existing kinds of setting, so the page needs nothing new: a choice,
    `<key>Size`, of "Same as the screw size" or "Own", and a number, `<key>Mm`, which applies only with "Own" and is
-   greyed out until then.
+   hidden until then (D620 a).
 3. **Its size**: the type's `build`, `label` and `screws` read it with `screwAt(values, PLACE)`, the screw size unless
    "Own" is chosen.
 
 `packages/core/test/screw-places.test.ts` holds every entry to the contract: listed by some type, its two settings
 together under Advanced with the screw size, the choice and its labels, its own size starting at the screw size's
-start, greyed out as said, and the part built with the screw size the same as the part given that size as its own,
+start, hidden as said, and the part built with the screw size the same as the part given that size as its own,
 with a control at another size. A choice of the screw size or its own that is not a listed entry fails it.
 
 ## A new kind of setting

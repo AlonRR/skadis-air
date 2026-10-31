@@ -208,7 +208,7 @@ describe('on a lattice board (D375, D306)', () => {
     heightMm: 120,
     sides: seams === 'between' ? ALL_OPEN : CLOSED, // between the slots, the open sides run between them
     seams,
-    standoffs: 'back' as const,
+    standoffs: 'corners' as const,
     standoffHeightMm: 15,
   });
 
@@ -228,7 +228,10 @@ describe('on a lattice board (D375, D306)', () => {
   it('runs out from each standoff behind a slot where a web meets the frame round its slot, which it fills (D306)', () => {
     const grid = { columns: 3, rows: 3, sides: CLOSED };
     for (const type of LATTICE_LOOKS) {
-      for (const given of [{ screwHead: 'keyhole' }, { screwHead: 'lock' }] as const) {
+      for (const given of [
+        { screwHead: 'keyhole', standoffs: 'slots' },
+        { screwHead: 'lock', standoffs: 'slots' },
+      ] as const) {
         const board = keep(type.build(engine, { ...defaultValues(type.settings), ...common('through'), ...given }));
         for (const place of [...keyholePlaces(grid), ...bottomSlotPlaces(grid)]) {
           const where = `${type.id} ${given.screwHead} at ${place.join(', ')}`;
@@ -246,8 +249,8 @@ describe('on a lattice board (D375, D306)', () => {
       for (const seams of ['through', 'between'] as const) {
         for (const given of [
           { screwHead: 'countersunk' },
-          { screwHead: 'keyhole', lockScrews: 'bottom' },
-          { screwHead: 'lock' },
+          { screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'slots' },
+          { screwHead: 'lock', standoffs: 'slots' },
         ] as const) {
           const where = `${type.id} ${seams} ${given.screwHead}`;
           const board = keep(type.build(engine, { ...defaultValues(type.settings), ...common(seams), ...given }));
@@ -487,9 +490,9 @@ describe("the slot clip's posts, their roots on over the bar's side chamfer (D40
 
 describe("the walls of a hook's room in each standoff behind a slot, their roots on the back (D411)", () => {
   const MOUNTINGS = [
-    { screwHead: 'keyhole', lockScrews: 'none' },
-    { screwHead: 'keyhole', lockScrews: 'bottom' },
-    { screwHead: 'lock', lockScrews: 'none' },
+    { screwHead: 'keyhole', lockScrews: 'none', standoffs: 'slots' },
+    { screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'slots' },
+    { screwHead: 'lock', lockScrews: 'none', standoffs: 'slots' },
   ] as const;
   /** A board of a type, 80 x 80 mm closed all round on 15 mm standoffs, its standoffs behind its four corner slots. */
   const board = (type: typeof SOLID | typeof LIGHTENED | typeof SKELETON, given: object) =>
@@ -499,7 +502,7 @@ describe("the walls of a hook's room in each standoff behind a slot, their roots
         widthMm: 80,
         heightMm: 80,
         sides: CLOSED,
-        standoffs: 'back',
+        standoffs: 'slots',
         standoffHeightMm: 15,
         ...given,
       }),
@@ -568,6 +571,10 @@ describe("the walls of a hook's room in each standoff behind a slot, their roots
           { screwHead: 'keyhole', lockScrews: 'bottom', lockScrewSize: 'own', lockScrewMm: 2.5 },
           { screwHead: 'keyhole', lockScrews: 'none', screwMm: 3 },
           { screwHead: 'keyhole', lockScrews: 'none', screwMm: 5 },
+          // on tape, each post's pad at the wall, and posts with no screws (D619, 31 Oct 2026)
+          { screwHead: 'tape', standoffHeightMm: 18 },
+          { screwHead: 'tape', tapeWidthMm: 30, tapeLengthMm: 36, standoffHeightMm: 24 },
+          { screwHead: 'none' },
         ]) {
           const given = { ...size, ...mounting };
           let built: Manifold;
@@ -587,7 +594,8 @@ describe("the walls of a hook's room in each standoff behind a slot, their roots
     }
     // the skeleton refuses one: between the slots, a 5 mm screw's keyhole standoffs leave pockets beside them too
     // small for its taper, as it did before D411
-    expect(refused).toBe(1);
-    expect(checked).toBe(3 * 4 * 6 - 1);
+    const REFUSED = 1;
+    expect(refused).toBe(REFUSED);
+    expect(checked).toBe(3 * 4 * 9 - REFUSED);
   }, 180_000);
 });

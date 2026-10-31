@@ -55,17 +55,17 @@ const samples = [
   {
     name: 'solid-2x2-round-standoffs',
     type: solid,
-    values: { ...solidAt(80, 80, open), screwHead: 'round', standoffs: 'back' },
+    values: { ...solidAt(80, 80, open), screwHead: 'round', standoffs: 'corners' },
   },
   {
     name: 'solid-2x2-closed-countersunk-standoffs',
     type: solid,
-    values: { ...solidAt(80, 80, closed), screwMm: 5, cornerRadiusMm: 20, standoffs: 'back' },
+    values: { ...solidAt(80, 80, closed), screwMm: 5, cornerRadiusMm: 20, standoffs: 'corners' },
   },
   {
     name: 'lightened-3x2-closed-standoffs',
     type: lightened,
-    values: { ...lightenedAt(120, 80, closed), standoffs: 'back' },
+    values: { ...lightenedAt(120, 80, closed), standoffs: 'corners' },
   },
   {
     name: 'lightened-6x5-open-thinnest',
@@ -75,7 +75,7 @@ const samples = [
   {
     name: 'solid-2x2-closed-keyholes-lock-screws',
     type: solid,
-    values: { ...solidAt(80, 80, closed), screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'back' },
+    values: { ...solidAt(80, 80, closed), screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'slots' },
   },
   {
     // lock screws of their own size, 2.5 mm, whose 5 mm heads pass the slot; at the screw size, 4 mm, as above, a head
@@ -88,7 +88,7 @@ const samples = [
       lockScrews: 'bottom',
       lockScrewSize: 'own',
       lockScrewMm: 2.5,
-      standoffs: 'back',
+      standoffs: 'slots',
     },
   },
   {
@@ -101,18 +101,18 @@ const samples = [
       keyholeScrewSize: 'own',
       keyholeScrewMm: 5,
       lockScrews: 'bottom',
-      standoffs: 'back',
+      standoffs: 'slots',
     },
   },
   {
     name: 'lightened-4x4-keyholes',
     type: lightened,
-    values: { ...lightenedAt(160, 160, open), screwHead: 'keyhole', standoffs: 'back' },
+    values: { ...lightenedAt(160, 160, open), screwHead: 'keyhole', standoffs: 'slots' },
   },
   {
     name: 'skeleton-3x2-closed-keyholes',
     type: skeleton,
-    values: { ...skeletonAt(120, 80, closed), screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'back' },
+    values: { ...skeletonAt(120, 80, closed), screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'slots' },
   },
   {
     name: 'skeleton-6x5-open-thinnest',
@@ -138,7 +138,7 @@ const samples = [
       look: 'straight',
       screwHead: 'keyhole',
       lockScrews: 'bottom',
-      standoffs: 'back',
+      standoffs: 'slots',
     },
   },
   {
@@ -160,7 +160,7 @@ const samples = [
       ...solidAt(80, 80, { ...open, left: 'closed', bottom: 'closed' }),
       seams: 'between',
       screwHead: 'round',
-      standoffs: 'back',
+      standoffs: 'corners',
     },
   },
   {
@@ -171,7 +171,7 @@ const samples = [
       seams: 'between',
       screwHead: 'keyhole',
       lockScrews: 'bottom',
-      standoffs: 'back',
+      standoffs: 'slots',
     },
   },
   {
@@ -181,19 +181,19 @@ const samples = [
       ...skeletonAt(120, 120, { ...open, right: 'closed', top: 'closed' }),
       seams: 'between',
       screwHead: 'keyhole',
-      standoffs: 'back',
+      standoffs: 'slots',
     },
   },
   // lock screws alone, through a slot at each corner (D289)
   {
     name: 'solid-2x2-closed-lock-screws-4mm',
     type: solid,
-    values: { ...solidAt(80, 80, closed), screwHead: 'lock', lockScrewMm: 4, standoffs: 'back' },
+    values: { ...solidAt(80, 80, closed), screwHead: 'lock', lockScrewMm: 4, standoffs: 'slots' },
   },
   {
     name: 'skeleton-3x3-between-lock-screws',
     type: skeleton,
-    values: { ...skeletonAt(120, 120, open), seams: 'between', screwHead: 'lock', standoffs: 'back' },
+    values: { ...skeletonAt(120, 120, open), seams: 'between', screwHead: 'lock', standoffs: 'slots' },
   },
   { name: 'standoff-1-40mm-screw-5', type: boardType('standoff'), values: { boards: '1', heightMm: 40, screwMm: 5 } },
   { name: 'standoff-2-12mm-screw-3', type: boardType('standoff'), values: { boards: '2', heightMm: 12, screwMm: 3 } },

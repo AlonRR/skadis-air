@@ -280,8 +280,8 @@ for (const typeId of boardTypes) {
   ]);
   const mountings = {
     screws: { values: { screwHead: 'countersunk', standoffs: 'none' } },
-    standoffs: { values: { screwHead: 'countersunk', standoffs: 'back', standoffHeightMm: STANDOFF_MM } },
-    keyholes: { values: { screwHead: 'keyhole', standoffs: 'back', standoffHeightMm: STANDOFF_MM } },
+    standoffs: { values: { screwHead: 'countersunk', standoffs: 'corners', standoffHeightMm: STANDOFF_MM } },
+    keyholes: { values: { screwHead: 'keyhole', standoffs: 'slots', standoffHeightMm: STANDOFF_MM } },
   };
   for (const [id, m] of Object.entries(mountings)) {
     const values = { ...small, ...m.values };

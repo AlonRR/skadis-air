@@ -38,7 +38,7 @@ const lightenedKeyholes = (kit, given = {}) =>
     heightMm: 80,
     sides: CLOSED,
     screwHead: 'keyhole',
-    standoffs: 'back',
+    standoffs: 'slots',
     ...given,
   });
 

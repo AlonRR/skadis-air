@@ -19,7 +19,7 @@ export function build(kit) {
   const { box, cylinder, split, built, COLOURS } = kit;
   const closed = { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' };
   const board = (given = {}) =>
-    built('solid', { widthMm: 80, heightMm: 80, sides: closed, screwHead: 'lock', standoffs: 'back', ...given });
+    built('solid', { widthMm: 80, heightMm: 80, sides: closed, screwHead: 'lock', standoffs: 'slots', ...given });
   /** The slot as drawn, 5.2 x 15.2 mm, through z0 to z1. */
   const slot = (z0, z1) =>
     box(X - 2.6, X + 2.6, Y - 5, Y + 5, z0, z1)

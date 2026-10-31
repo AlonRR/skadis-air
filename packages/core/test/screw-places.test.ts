@@ -42,11 +42,17 @@ function part(type: AnyBoardType, given: Record<string, unknown>) {
   };
 }
 
+/** Whether a part type lists the screw size, the one setting, a board's saying when it applies (D620 a). */
+const sameScrewSize = (type: AnyBoardType) => {
+  const listed = type.settings.find((s) => s.key === SCREW_SIZE_SETTING.key);
+  return listed === SCREW_SIZE_SETTING || JSON.stringify(listed) === JSON.stringify(SCREW_SIZE_SETTING);
+};
+
 describe('the screw size (D479)', () => {
   it('is one setting on the main form of every part a screw goes through, 4 mm unless set', () => {
     const types = listing('screwMm');
     expect(types.map((t) => t.id)).toEqual(['solid', 'lightened', 'skeleton', 'standoff', 'slot-clip']);
-    for (const type of types) expect(type.settings).toContain(SCREW_SIZE_SETTING);
+    for (const type of types) expect(sameScrewSize(type), type.id).toBe(true);
     expect(SCREW_SIZE_SETTING.default).toBe(4);
     expect('advanced' in SCREW_SIZE_SETTING).toBe(false);
   });
@@ -87,7 +93,7 @@ describe('every kind of screw place', () => {
           const keys = type.settings.map((s) => s.key);
           expect(keys.indexOf(ownKey)).toBe(keys.indexOf(sizeKey) + 1);
           for (const key of [sizeKey, ownKey]) expect(type.settings.find((s) => s.key === key)?.advanced).toBe(true);
-          expect(type.settings).toContain(SCREW_SIZE_SETTING);
+          expect(sameScrewSize(type), type.id).toBe(true);
         }
       });
 
@@ -147,7 +153,7 @@ describe('every kind of screw place', () => {
 });
 
 describe('each size of its own changes its place alone (D479)', () => {
-  const board = { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'back', lockScrews: 'bottom' };
+  const board = { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'slots', lockScrews: 'bottom' };
   /** Where two parts differ: the box round what either has that the other has not. */
   const differ = (a: Manifold, b: Manifold) => {
     const both = keep(keep(a.subtract(b)).add(keep(b.subtract(a))));
@@ -263,7 +269,7 @@ describe('lock screws at the screw size (D479, A248)', () => {
     "start at 4 mm, so each lock screw's slot has a groove for its 8 mm head, clear of the slot's bottom end, where a hook rests",
     () => {
       const board = { columns: 2, rows: 2 };
-      const { solid } = part(SOLID, { widthMm: 80, heightMm: 80, screwHead: 'lock', standoffs: 'back' });
+      const { solid } = part(SOLID, { widthMm: 80, heightMm: 80, screwHead: 'lock', standoffs: 'slots' });
       for (const place of [...bottomSlotPlaces(board), ...keyholePlaces(board)]) {
         const cut = groove(solid, place);
         const box = cut.bounds();
@@ -282,7 +288,7 @@ describe('lock screws at the screw size (D479, A248)', () => {
         widthMm: 80,
         heightMm: 80,
         screwHead: 'lock',
-        standoffs: 'back',
+        standoffs: 'corners',
         lockScrewSize: 'own',
         lockScrewMm: 2.5,
       });
@@ -308,7 +314,7 @@ describe('values saved by an older page (D479)', () => {
     panelWidthMm: '400',
     panelHeightMm: '400',
     screwHead: 'lock',
-    standoffs: 'back',
+    standoffs: 'corners',
     screwMm: '4',
     lockScrews: 'none',
     lockScrewMm: '2.5',

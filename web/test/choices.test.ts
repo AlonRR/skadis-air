@@ -34,6 +34,30 @@ describe('startingValues', () => {
   });
 });
 
+describe('a board kept by the page before Mounting and Standoffs were remade (D617 to D619, 31 Oct 2026)', () => {
+  const solid = boardType('solid');
+  it('keeps its standoffs: on the back as at the corners, or behind the slots under keyholes and lock screws', () => {
+    for (const [screwHead, where] of [
+      ['countersunk', 'corners'],
+      ['round', 'corners'],
+      ['none', 'corners'],
+      ['keyhole', 'slots'],
+      ['lock', 'slots'],
+    ] as const) {
+      const start = startingValues(solid, { screwHead, standoffs: 'back' });
+      expect([start['screwHead'], start['standoffs']], screwHead).toEqual([screwHead, where]);
+    }
+  });
+
+  it('keeps a board on tape standoffs on tape, behind the slots, its tape as it was', () => {
+    const start = startingValues(solid, { screwHead: 'none', standoffs: 'tape', tapeWidthMm: '24' });
+    expect([start['screwHead'], start['standoffs'], start['tapeWidthMm']]).toEqual(['tape', 'slots', '24']);
+    // and from the board shown before it too
+    const after = startingValues(boardType('lightened'), {}, { screwHead: 'none', standoffs: 'tape' });
+    expect([after['screwHead'], after['standoffs']]).toEqual(['tape', 'slots']);
+  });
+});
+
 describe('carriedAcrossGroups', () => {
   it('carries the screw size alone, none of the rest', () => {
     expect(carriedAcrossGroups({ screwMm: '3.5', widthMm: '240', clipScrewSize: 'own' })).toEqual({ screwMm: '3.5' });

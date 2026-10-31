@@ -267,6 +267,11 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | Q608 | **A taped board carries little** ("608 not carry a lot", 30 Oct 2026). On Printables, SKÅDIS tape mounts mostly use 3M Command strips on pads about 20 x 50 mm; the one failure reported is Tesa Powerstrips falling off bare PLA, twice, its commenters' fix a coat of primer (relayed: Printables models 536629, 442713, 742361, 740831, 1530449 and 488974, read 30 Oct 2026) | 30 Oct 2026 |
 | D609 | **The page says what a taped part holds** ("609 a", 30 Oct 2026): beside the tape's settings, the pieces' area and about what it holds by 3M's static rule for its VHB tapes, the part's own weight from it, and that the pads want cleaning (C613) | 30 Oct 2026 |
 | D611 | **A standoff connector for wood or PT screws** (the owner, 30 Oct 2026: "create a version of the connectors that is similar to the nut version but instead of M screws with nuts have PT or Wood type screws into the connectors"): "Wood or PT screw, taped to the wall" and "Wood or PT screw, screwed to the wall", each post a pilot hole the board's corner screw cuts its thread in (C612) | 30 Oct 2026 |
+| D617 | **The mounting's first field is "Mounting", with Tape in it** ("617 c", 31 Oct 2026; the owner: "Tape should be in the screw holes section"): Countersunk, Round head, Keyholes, Lock screws, Tape, None (C628) | 31 Oct 2026 |
+| D618 | **Standoffs: None, At the corners, Behind slots** ("618 a"; the owner: "behind a peg, none, and corners"), the page's word for the holes (C623, C628) | 31 Oct 2026 |
+| D619 | **What each mounting stands on, and tape behind the slots** ("619 yes and tape a"): a corner screw on None or At the corners, Behind slots greyed with a note that lock screws are the screws behind the slots; keyholes and lock screws Behind slots only, as built; None any of the three; tape on four posts behind the corner tiles' slots, as the keyholes', each flaring to its pad behind the hooks' room (the owner: "use the keyholes design as the basis, this way their is a lot more room to grow the standoff for larger tape sizes"), the corner pads retired (C622, C624 to C626) | 31 Oct 2026 |
+| D620 | **A setting that does not apply is hidden, not greyed** ("620 a"; the owner: "Tape sizes should only appear when tape is clicked, the same if a screw option isn't clicked"): every such setting; an option that does not apply stays greyed with its note (D589) (C627) | 31 Oct 2026 |
+| A621 | **The Sides control drawn over the 3D view on a phone, fixed (99b95d9), ships with the mounting changes** ("621 with redesign", 31 Oct 2026) | 31 Oct 2026 |
 | A616 | **Release `v0.10.1`** ("616 y", 31 Oct 2026): the tape note's two fixes made after `v0.10.0` (a taped nut standoff's pad less the nut's way in, and its source named as a commenter), and the nut test print, which changes nothing on the page | 31 Oct 2026 |
 | T614 | **The Printables page is published with the `v0.10.0` set** ("614 publish", 31 Oct 2026): "Publish now" pressed by the agent on the owner's word at about 05:55:53 UTC, read back from Printables' API: the eight pictures in order with the new cover, the four replaced GIFs, the lines on tape and on the new standoffs, and the Updates section | 31 Oct 2026 |
 | A587 | **Release `v0.10.0`** ("587 y", 30 Oct 2026), with D607, D609 and D611 in it, then the Printables page's cover and GIFs again, the Updates section's entry, staged for the owner's "Publish now" | 30 Oct 2026 |
@@ -281,23 +286,6 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 ## Open questions
 
-- **D617** The mounting's first field takes Tape (the owner, 31 Oct 2026: "Tape should be in the screw holes
-  section"): Countersunk, Round head, Keyholes, Lock screws, Tape, None. Its name: (a) "Fixing", as the standoff
-  connector's (recommended: tape is not a screw hole), (b) "Screw holes" as now, (c) "Mounting".
-- **D618** The Standoffs field's three options (the owner: "behind a peg, none, and corners"): (a) None, At the
-  corners, Behind slots (recommended: the page says slot everywhere else), (b) None, Corners, Behind a peg.
-- **D619** What each fixing allows: Countersunk and Round head, None or At the corners (a corner screw needs its post
-  behind it; Behind slots greyed, with a note that Lock screws are the screws behind slots); Keyholes and Lock screws,
-  Behind slots only, as they are built now; None, any of the three. Tape (the owner: "use the keyholes design as the
-  basis"): four posts behind the corner tiles' slots, where the keyholes' stand, each flaring past the hooks' room to a
-  pad for its piece of tape: (a) Behind slots only, the corner pads retired (recommended), (b) Behind slots or At the
-  corners.
-- **D620** Settings that do not apply (the owner: "Tape sizes should only appear when tape is clicked, the same if a
-  screw option isn't clicked"): (a) every setting that does not apply is hidden, not greyed as D372 has it; an option
-  that does not apply stays greyed with its note, as D589 has it (recommended: one rule), (b) only the tape's sizes
-  and the screw sizes are hidden, the rest stay greyed.
-- **A621** The Sides control drawn over the 3D view on a phone is fixed on `main` (99b95d9, 31 Oct 2026): release it
-  with the mounting changes (recommended), or alone now as `v0.10.2`?
 - **T615** Print the nut test print and say which seat holds (D607 a, 31 Oct 2026): nine taped 1-board nut standoffs,
   M3, M4 and M5, each with a seat the nut + 0.1, 0.2 and 0.3 mm across its flats, told apart by 1, 2 or 3 dots on
   the board face: `.check/test-print/skadis-trial-nuts.stl` (`node scripts/test-print/write-trial-plate.mjs nuts`;

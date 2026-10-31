@@ -59,7 +59,7 @@ test('puts a size for the keyholes and the lock screws under Advanced, the screw
   await advanced(page).locator('summary').click();
   const keys = ['keyholeScrewSize', 'keyholeScrewMm', 'lockScrewSize', 'lockScrewMm'];
   for (const key of keys) {
-    await expect(advanced(page).locator(`[name="${key}"]`).first()).toBeVisible();
+    await expect(advanced(page).locator(`[name="${key}"]`).first()).toBeAttached(); // shown while it applies (D620 a)
     await expect(main(page).locator(`[name="${key}"]`)).toHaveCount(0);
   }
   await expect(fieldOf(page, 'keyholeScrewSize').locator('.ws-choice__face')).toHaveText([
@@ -67,7 +67,7 @@ test('puts a size for the keyholes and the lock screws under Advanced, the screw
     'Own',
   ]);
   await expect(chosen(page, 'keyholeScrewSize')).toHaveValue('same');
-  // countersunk corners: neither kind of place is on the board, so all four are greyed out
+  // countersunk corners: neither kind of place is on the board, so all four are hidden (D620 a)
   for (const key of keys) expect(await applies(page, key), key).toBe(false);
   // keyholes: their choice applies, their own size greyed out until "Own"
   await choose(page, 'screwHead', 'keyhole');

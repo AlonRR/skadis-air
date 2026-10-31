@@ -13,8 +13,8 @@ adjust and to print.
 
 **Version 0.10.1: three kinds of board, walls of any size up to 1 km, and two connectors, on the page.** The page
 in `web/` makes a solid board of 40 mm tiles: you set its size, its thickness and which sides are open
-(half slots, to join a neighbour, or running between the slots so every slot is whole) or closed, give it screw holes in its corners (countersunk or for a
-round head, keyholes at the top so it lifts off its screws, or lock screws through its corner slots) and standoffs on the back, or standoffs for double-sided tape in place of screw holes, see it in 3D, and download it as an STL that lies as it
+(half slots, to join a neighbour, or running between the slots so every slot is whole) or closed, mount it by screws in its corners (countersunk or for a
+round head), keyholes at the top so it lifts off its screws, lock screws through its corner slots, or double-sided tape, stand it on standoffs at its corners or behind its corner slots, see it in 3D, and download it as an STL that lies as it
 prints. A lightened board is the same with open pockets cut between the slots: a rim round each slot,
 joined to its neighbours by diagonal webs, in about 68 g where the solid board takes 116 g; a skeleton board makes every rim and web
 of that lattice an I-beam, thin through the middle, in about 70 g (each for a 200 x 200 mm board in PETG, as the slicer counts it: [`docs/board-grams.json`](docs/board-grams.json)). It warns when the board is larger than your printer's bed. It also makes a small coupon to

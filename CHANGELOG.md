@@ -6,9 +6,24 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The first mounting field is "Mounting", with Tape among its options: Countersunk, Round head, Keyholes, Lock screws,
+  Tape or None (D617).
+- Standoffs are None, At the corners or Behind slots (D618): a corner screw's at the corners, round it; keyholes', lock
+  screws' and tape's behind the four corner tiles' slots, each leaving its slot a hook's room; with no screws, either.
+  The option a mounting cannot stand on is greyed out, saying why (D619).
+- A board on tape stands on posts behind its corner slots, as keyholes do, each flaring out to its pad behind the
+  hooks' room, so a larger piece fits: up to 40 mm each way where the slots are a corner tile's, and between the slots
+  the corner slot that leaves the pad room. The corner tape pads are gone (D619).
+- A setting that does not apply is hidden, not greyed out: the tape's sizes show only with tape, and the screw size only
+  with a screw (D620).
+- A board kept in the browser by an older page keeps its standoffs and its tape.
+
 ### Fixed
 
 - On a phone, the Sides control's buttons no longer show over the pinned 3D view as the form scrolls under it.
+- A choice moved off an option the others rule out changes at once what else applies.
 
 ## [0.10.1] - 2026-10-31
 

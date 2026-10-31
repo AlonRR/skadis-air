@@ -5,7 +5,8 @@
 // given, the choices kept in the browser (D250 g), and each number field steps by arrows beside it (D250 c).
 // Each setting's help is folded behind an "i" button beside its label (C317). The page may put a field of its own
 // first under Advanced, as it puts the test prints there (D357). A setting that applies only with another choice is
-// greyed out, its controls disabled, while it does not (D372): the reader leaves it unchecked then, so nothing marks it.
+// hidden, its controls disabled, while it does not (D372; D620 a, 31 Oct 2026, where it was greyed out): the reader
+// leaves it unchecked then, so nothing marks it.
 // An option the other values rule out is greyed out the same way, why said under its choice (D589). A setting the page
 // sets itself is kept off the form (D590). A number whose starting value hangs on the others follows it until set (D603).
 import { optionsOff, readTypedNumber, settingsNotApplying } from 'skadis-air';
@@ -132,9 +133,10 @@ interface Field<V> {
   follow?: (values: Readonly<Record<string, unknown>>) => void;
 }
 
-/** Marks a field as applying or not, so the page greys its label and notes as the design system greys a control. */
+/** Marks a field as applying or not, and shows it only while it applies (D620 a). */
 const markApplies = (field: HTMLElement, on: boolean) => {
   field.dataset['applies'] = String(on);
+  field.hidden = !on;
 };
 
 function numberField(s: NumberSetting, changed: () => void, start?: unknown): Field<string> {
@@ -416,13 +418,14 @@ export function renderForm(
   const rulers = new Map<string, NonNullable<Field<unknown>['rule']>>();
   const followers = new Map<string, NonNullable<Field<unknown>['follow']>>();
   const read = () => Object.fromEntries([...readers].map(([key, r]) => [key, r()]));
-  // greys out what does not apply to the values held now, and turns the rest on, before the page reads them (D372)
+  // the options the values rule out greyed out, each choice moved off one so chosen (D589); then, from the values
+  // that leaves, hides what does not apply and shows the rest, before the page reads them (D372, D620 a): a choice
+  // moved so, as the standoffs off the slots by a corner screw (D619), changes what applies
   const applies = () => {
-    const off = new Set(settingsNotApplying(type.settings, read()));
-    for (const [key, enable] of enablers) enable(!off.has(key));
-    // and the options the values rule out, each choice moved off one so chosen (D589)
     const out = optionsOff(type.settings, read());
     for (const [key, rule] of rulers) rule(out[key] ?? {});
+    const off = new Set(settingsNotApplying(type.settings, read()));
+    for (const [key, enable] of enablers) enable(!off.has(key));
     // and each number whose starting value hangs on them moved with it, unless set by hand (D603 b)
     for (const follow of followers.values()) follow(read());
   };

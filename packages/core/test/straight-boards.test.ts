@@ -81,7 +81,7 @@ describe("the look, a choice on the lightened and the skeleton boards (Q510; the
   it("names a Straight board's file skadis-<id>-straight-..., and a Curved board's as before", () => {
     for (const id of ['lightened', 'skeleton']) {
       const type = boardType(id);
-      const start: Record<string, unknown> = { ...defaultValues(type.settings), rimMm: 2.5, standoffs: 'back' };
+      const start: Record<string, unknown> = { ...defaultValues(type.settings), rimMm: 2.5, standoffs: 'corners' };
       const curved = boardFileName(type, start as never, 'stl');
       expect(curved).toMatch(new RegExp(`^skadis-${id}-160x160-rim-2[.]5mm`));
       expect(curved).not.toMatch(/straight|curved/);

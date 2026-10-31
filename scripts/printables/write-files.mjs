@@ -39,17 +39,17 @@ const MOUNTINGS = [
   {
     folder: 'keyholes, on standoffs',
     name: 'keyholes-15mm-standoffs',
-    mounting: { screwHead: 'keyhole', standoffs: 'back' },
+    mounting: { screwHead: 'keyhole', standoffs: 'slots' },
   },
   {
     folder: 'keyholes+lock screws, on standoffs',
     name: 'keyholes-lock-screws-15mm-standoffs',
-    mounting: { screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'back' },
+    mounting: { screwHead: 'keyhole', lockScrews: 'bottom', standoffs: 'slots' },
   },
   {
     folder: 'lock screws, on standoffs',
     name: 'lock-screws-15mm-standoffs',
-    mounting: { screwHead: 'lock', standoffs: 'back' },
+    mounting: { screwHead: 'lock', standoffs: 'slots' },
   },
   { folder: 'no screw holes', name: 'no-screw-holes', mounting: { screwHead: 'none' } },
 ];

@@ -93,7 +93,7 @@ const grips = [...clips, ...standoffs];
 const keyhole = [
   {
     name: 'lightened board on keyholes, 80 x 80 mm (T151)',
-    solid: pagePart('lightened', { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'back' }),
+    solid: pagePart('lightened', { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'slots' }),
   },
 ];
 // the nut test print (D607 a), a plate of its own: nine taped nut standoffs, M3 to M5, each at three seats

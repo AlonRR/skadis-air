@@ -231,7 +231,7 @@ const recordings = [
       await r.type(page.locator('input[name="widthMm"]'), '160');
       await r.type(page.locator('input[name="heightMm"]'), '160');
       await r.click(radio(page, 'typeGroup', 'board'));
-      await r.click(radio(page, 'standoffs', 'back'));
+      await r.click(radio(page, 'standoffs', 'corners'));
       await r.click(radio(page, 'screwHead', 'keyhole'));
       await r.drag(360, -40);
       await r.click(radio(page, 'boardType', 'skeleton'));
@@ -281,7 +281,7 @@ const recordings = [
     width: 560,
     // standoffs, keyholes seen from the back, lock screws, and back
     async steps(r, page) {
-      await r.click(radio(page, 'standoffs', 'back'));
+      await r.click(radio(page, 'standoffs', 'corners'));
       await r.click(radio(page, 'screwHead', 'keyhole'));
       await r.click(radio(page, 'view', 'back'));
       await r.click(radio(page, 'screwHead', 'lock'));

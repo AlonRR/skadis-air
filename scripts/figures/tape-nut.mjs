@@ -10,7 +10,7 @@
 
 export function build(kit) {
   const { lib, engine, box, cylinder, mesh, split, built, COLOURS, CrossSection } = kit;
-  const board = built('solid', { screwHead: 'none', standoffs: 'tape' });
+  const board = built('solid', { screwHead: 'tape' });
   // the pads: all of the standoffs past the hooks' 8 mm room behind the board
   const padRegion = box(-5, 165, -5, 165, -19, -8);
   const tapeScene = {

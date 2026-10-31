@@ -45,7 +45,7 @@ function pagePart(id, given) {
   return printed;
 }
 
-const T151 = { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'back', standoffHeightMm: 15 };
+const T151 = { widthMm: 80, heightMm: 80, screwHead: 'keyhole', standoffs: 'slots', standoffHeightMm: 15 };
 const PARTS = [
   { name: 't151-board', make: () => pagePart('lightened', T151) },
   { name: 't151-board-lock-screws', make: () => pagePart('lightened', { ...T151, lockScrews: 'bottom' }) },

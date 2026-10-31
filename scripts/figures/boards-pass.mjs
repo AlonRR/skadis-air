@@ -175,7 +175,7 @@ export function build(kit) {
 
   // B6: a board's own standoff, square where it meets the back and at its wall end
   {
-    const board = built('solid', { widthMm: 80, heightMm: 80, sides: closed, standoffs: 'back' });
+    const board = built('solid', { widthMm: 80, heightMm: 80, sides: closed, standoffs: 'corners' });
     const h = 15;
     const ring = cylinder(10, 10, 6.4, -1.2, 0.6).subtract(cylinder(10, 10, 4.6, -2, 1));
     const end = cylinder(10, 10, 6, -h - 0.01, -h + 1).subtract(cylinder(10, 10, 4, -h - 1, -h + 2));

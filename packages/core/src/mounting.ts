@@ -31,15 +31,30 @@ import {
   screwAt,
   screwPlaceSettings,
 } from './screw-places.js';
-import { defineSettings, SettingsProblem, type Values } from './settings.js';
-import { TAPE_LENGTH_MM, TAPE_LENGTH_SETTING, TAPE_STANDOFF_MM, TAPE_WIDTH_SETTING, tapeHolds } from './tape.js';
+import { defineSettings, type NumberSetting, SettingsProblem, type Values } from './settings.js';
+import {
+  TAPE_LENGTH_MM,
+  TAPE_LENGTH_SETTING,
+  TAPE_MM,
+  TAPE_STANDOFF_MM,
+  TAPE_WIDTH_SETTING,
+  tapeHolds,
+} from './tape.js';
 import { HOOK_DEPTH_MM, HOOK_DROP_MM, HOOK_WIDTH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
 import { ALL_OPEN, boardExtent, type Extent, slotPlaces } from './slots.js';
 
-export type ScrewHead = 'countersunk' | 'round' | 'keyhole' | 'lock' | 'none';
+/** How a board holds to the wall (D74; "Mounting", D617 c): a screw in each corner, countersunk or round; keyholes at
+ * the top two corners (D156); lock screws alone at all four (D289); tape (D619 a); or nothing. */
+export type ScrewHead = 'countersunk' | 'round' | 'keyhole' | 'lock' | 'tape' | 'none';
+/** Where a board's standoffs stand (D618 a): round the corner screws, or behind the corner tiles' slots, as keyholes,
+ * lock screws and tape have them (D619). */
+export type StandoffPlace = 'corners' | 'slots';
 
 export interface MountingParams {
-  screwHead: ScrewHead; // D74; keyholes at the top two corners (D156); lock screws alone at all four (D289)
+  screwHead: ScrewHead;
+  /** Where the standoffs stand, when there are any: behind the slots with keyholes, lock screws and tape, at the
+   * corners with a corner screw; with neither, either, at the corners unless given (D619). */
+  standoffs: StandoffPlace;
   screwMm: number; // the screw size, 4 mm unless set (D76): the corner screws', and every other's unless given (D479)
   keyholeScrewMm: number; // the keyholes' screw: the screw size unless given (D479)
   standoffHeightMm: number; // how far the standoffs stand behind the board; 0 for none (D75)
@@ -47,16 +62,16 @@ export interface MountingParams {
   /** The lock screws' size, the screw size unless given (D479): a head up to 5 mm passes the slot, a larger one, as a
    * 4 mm screw's 8 mm head, a groove cut in it (A248). */
   lockScrewMm: number;
-  /** With tape standoffs (D593): the tape's width, which each corner standoff's rectangular pad at the wall is across;
-   * the board then has no screw holes. None unless given. */
+  /** On tape (D593, D619 a): the tape's width, which each standoff's rectangular pad at the wall is across; TAPE_MM
+   * unless given, and only on tape. */
   tapeMm?: number;
-  /** With tape standoffs: the piece's length, the pad's side along the board's width (C601); TAPE_LENGTH_MM unless
-   * given. */
+  /** On tape: the piece's length, the pad's side along the board's width (C601); TAPE_LENGTH_MM unless given. */
   tapeLengthMm?: number;
 }
 
 export const MOUNTING_DEFAULTS: MountingParams = {
   screwHead: 'countersunk',
+  standoffs: 'corners',
   screwMm: SCREW_MM,
   keyholeScrewMm: SCREW_MM,
   standoffHeightMm: 0,
@@ -72,7 +87,11 @@ export const STANDOFF_DEFAULT_MM = 15;
 export const SCREW_INSET_MM = 10;
 /** The least plain hole a countersink must leave behind it, so the head cannot pull through (C84). */
 const MIN_PLAIN_HOLE_MM = 1;
-const HEADS: ReadonlySet<string> = new Set(['countersunk', 'round', 'keyhole', 'lock', 'none']);
+const HEADS: ReadonlySet<string> = new Set(['countersunk', 'round', 'keyhole', 'lock', 'tape', 'none']);
+/** The mountings that stand on standoffs behind the slots, and only there (D190, D289, D619 a). */
+const BEHIND_SLOTS: ReadonlySet<string> = new Set(['keyhole', 'lock', 'tape']);
+/** The mountings with a screw in each corner, whose standoffs stand round it (D619). */
+const AT_CORNERS: ReadonlySet<string> = new Set(['countersunk', 'round']);
 /** What a keyhole leaves behind its channel (D157): about three lines of a 0.4 mm nozzle. */
 export const MIN_BEHIND_CHANNEL_MM = 1.2;
 /** The least standoff a board on keyholes stands on: the room a hook takes behind it and C99's margin (D190). */
@@ -86,10 +105,34 @@ const KEYHOLE_WALL_MM = 3;
 const HOOK_ROOM_MM = HOOK_DEPTH_MM + 2;
 /** A tape pad's edge at the wall, straight before its flare (D593): enough for its 0.5 mm chamfer and 0.5 mm more. */
 const TAPE_BAND_MM = 1;
-/** How far a tape pad's corners reach out past its corner standoff, which its 45 degree flare takes as much height for:
- * the flare starts behind the hooks' room, so a board, printing face down, prints nothing of it over air (D593, C601). */
-const tapeFlareMm = (m: Pick<MountingParams, 'screwMm'>, tapeMm: number, lengthMm: number) =>
-  Math.max(0, Math.hypot(tapeMm, lengthMm) / 2 - screwHole(m.screwMm).standoffDiameterMm / 2);
+/** A tape pad's rectangle at the wall round a standoff's middle: the piece, its length along the board's width (C601). */
+const tapeRect = ([x, y]: readonly [number, number], tapeMm: number, lengthMm: number): Vec2[] =>
+  [
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+    [-1, 1],
+  ].map(([a = 0, b = 0]): Vec2 => [x + (a * lengthMm) / 2, y + (b * tapeMm) / 2]);
+
+/** How far a point lies outside a ring, 0 inside it. */
+function pastRing(ring: readonly Vec2[], p: Vec2): number {
+  if (insideRings([ring], p)) return 0;
+  let least = Infinity;
+  ring.forEach((a, i) => {
+    const b = ring[(i + 1) % ring.length] ?? a;
+    const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
+    const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)));
+    least = Math.min(least, Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy));
+  });
+  return least;
+}
+
+/** How far a tape pad's corners reach out past its standoff's outline, which its 45 degree flare takes as much height
+ * for: no face of the hull of the two runs out further than the farthest corner lies past the outline, a convex one.
+ * The flare starts behind the hooks' room, so a board, printing face down, prints nothing of it over air (D593, C601,
+ * D619 a). */
+const tapeFlareMm = (post: readonly Vec2[], place: readonly [number, number], tapeMm: number, lengthMm: number) =>
+  Math.max(0, ...tapeRect(place, tapeMm, lengthMm).map((c) => pastRing(post, c)));
 /** How far the hook's room behind a slot reaches past the slot's chamfer (D244): past the slot cutter's flare. */
 const ROOM_PAST_CHAMFER_MM = 1.5;
 /** On a lattice board, the least wall a standoff behind a slot keeps round what is cut in it (D306): about three lines
@@ -190,30 +233,55 @@ export function keyholeSeat(screwMm: number): KeyholeSeatSize {
  * lock screws' size the screw size unless given (D479). */
 export function mountingParams(given: Partial<MountingParams>): MountingParams {
   const screwMm = given.screwMm ?? MOUNTING_DEFAULTS.screwMm;
+  const head = given.screwHead ?? MOUNTING_DEFAULTS.screwHead;
   const m: MountingParams = {
     ...MOUNTING_DEFAULTS,
     ...given,
     screwMm,
     keyholeScrewMm: given.keyholeScrewMm ?? screwMm,
     lockScrewMm: given.lockScrewMm ?? screwMm,
+    standoffs: given.standoffs ?? (BEHIND_SLOTS.has(head) ? 'slots' : 'corners'),
   };
   if (!HEADS.has(m.screwHead)) {
-    throw new RangeError('The screw holes must be countersunk, round, keyholes, lock screws or none');
+    throw new RangeError('The mounting must be countersunk, round, keyholes, lock screws, tape or none');
+  }
+  if (m.standoffs !== 'corners' && m.standoffs !== 'slots') {
+    throw new RangeError('The standoffs stand at the corners or behind the slots');
+  }
+  // keyholes, lock screws and tape stand behind the slots, and a corner screw needs its standoff round it (D619)
+  if (BEHIND_SLOTS.has(m.screwHead) && m.standoffs !== 'slots') {
+    throw new RangeError(`${behindWhat(m)} stand on standoffs behind the slots, not at the corners`);
+  }
+  if (AT_CORNERS.has(m.screwHead) && m.standoffs !== 'corners') {
+    throw new RangeError('A corner screw needs its standoff round it, at the corner, not behind a slot');
   }
   if (!(m.screwMm > 0)) throw new RangeError('The screw size must be more than 0 mm');
   if (!(m.keyholeScrewMm > 0)) throw new RangeError('The keyhole screw size must be more than 0 mm');
   if (!(m.standoffHeightMm >= 0)) throw new RangeError('The standoffs cannot be less than 0 mm tall');
   if (typeof m.lockScrews !== 'boolean') throw new RangeError('Lock screws must be on or off');
   if (!(m.lockScrewMm > 0)) throw new RangeError('The lock screw size must be more than 0 mm');
-  if (m.tapeMm !== undefined) {
-    if (!(m.tapeMm > 0)) throw new RangeError('The tape must be more than 0 mm wide');
+  if (m.screwHead === 'tape') {
+    m.tapeMm ??= TAPE_MM;
     m.tapeLengthMm ??= TAPE_LENGTH_MM;
+    if (!(m.tapeMm > 0)) throw new RangeError('The tape must be more than 0 mm wide');
     if (!(m.tapeLengthMm > 0)) throw new RangeError('A piece of tape must be more than 0 mm long');
-    if (m.screwHead !== 'none') throw new RangeError('A board on tape standoffs has no screw holes (D593)');
     if (!(m.standoffHeightMm > 0)) throw new RangeError('Tape goes on standoffs: they must be more than 0 mm tall');
+  } else if (m.tapeMm !== undefined || m.tapeLengthMm !== undefined) {
+    throw new RangeError('A piece of tape is for a board on tape (D619 a)');
   }
   return m;
 }
+
+/** What stands on standoffs behind the slots, as a message names it. */
+function behindWhat(m: Pick<MountingParams, 'screwHead'>): string {
+  const names: Partial<Record<ScrewHead, string>> = { keyhole: 'Keyholes', lock: 'Lock screws', tape: 'Tape' };
+  return names[m.screwHead] ?? 'Standoffs behind the slots';
+}
+
+/** Whether a board stands on standoffs behind its corner slots (D190, D289, D619): with keyholes, lock screws and tape
+ * always, and with no screws when its standoffs are put there. */
+const standsBehindSlots = (m: MountingParams) =>
+  BEHIND_SLOTS.has(m.screwHead) || (m.standoffs === 'slots' && m.standoffHeightMm > 0);
 
 const nice = (n: number) => String(Math.round(n * 100) / 100);
 
@@ -231,9 +299,6 @@ export function keyholeScrews(start: string, screwMm: number): string {
  * head's seat and channel and a roof over it, then a hook's room behind the slot in front (D235, D244, D358); a lock
  * screw's head in its recess behind the room, and some standoff under it (A248). */
 function leastStandoffMm(m: MountingParams): number {
-  if (m.tapeMm !== undefined) {
-    return HOOK_ROOM_MM + tapeFlareMm(m, m.tapeMm, m.tapeLengthMm ?? TAPE_LENGTH_MM) + TAPE_BAND_MM;
-  }
   const underLock = HOOK_ROOM_MM + lockRecessMm(m.lockScrewMm) + UNDER_HEAD_MM;
   if (m.screwHead === 'lock') return underLock;
   if (m.screwHead !== 'keyhole') return 0;
@@ -247,13 +312,6 @@ function leastStandoffMm(m: MountingParams): number {
  * build and what the screws pass alike, so neither gives a length the board cannot have (Q9). */
 function checkStandoffs(m: MountingParams): void {
   const least = leastStandoffMm(m);
-  if (m.standoffHeightMm < least - 1e-9 && m.tapeMm !== undefined) {
-    throw new SettingsProblem(
-      `A tape pad ${nice(m.tapeMm)} x ${nice(m.tapeLengthMm ?? TAPE_LENGTH_MM)} mm flares out to its corners from ` +
-        `its standoff behind the hooks' room: choose standoffs at least ${nice(least)} mm tall, or a smaller piece`,
-      ['standoffHeightMm', 'tapeWidthMm', 'tapeLengthMm'],
-    );
-  }
   if (m.standoffHeightMm < least - 1e-9) {
     throw new SettingsProblem(
       `${m.screwHead === 'keyhole' ? 'Keyholes' : 'Lock screws'} stand the board off the wall, with a hook's room ` +
@@ -263,17 +321,20 @@ function checkStandoffs(m: MountingParams): void {
   }
 }
 
+/** What a board's tape holds (D609 a): a piece on each of its four posts behind the corner slots (D619 a); nothing
+ * off tape. */
+export function mountingTape(m: MountingParams): string | undefined {
+  return m.screwHead !== 'tape' || m.tapeMm === undefined
+    ? undefined
+    : tapeHolds(4, m.tapeMm, m.tapeLengthMm ?? TAPE_LENGTH_MM, 'board');
+}
+
 /** What each of a board's screws passes (D264): the board, and its standoffs when it has them; a keyhole's screw
  * stands in the wall instead, and a lock screw passes what the standoff leaves under its head. Every corner has its
  * screw, between the slots too (D371 a). Refuses, as the build does, standoffs too short for keyholes or lock screws,
  * where a lock screw would pass less than nothing (Q9). */
-/** What a board's tape holds (D609 a): a piece on each of its four corner posts; nothing off tape. */
-export function mountingTape(m: MountingParams): string | undefined {
-  return m.tapeMm === undefined ? undefined : tapeHolds(4, m.tapeMm, m.tapeLengthMm ?? TAPE_LENGTH_MM, 'board');
-}
-
 export function mountingScrews(m: MountingParams, thicknessMm: number): string | undefined {
-  if (m.screwHead === 'none') return undefined;
+  if (m.screwHead === 'none' || m.screwHead === 'tape') return undefined;
   checkStandoffs(m);
   if (m.screwHead === 'lock') {
     const under = m.standoffHeightMm - HOOK_ROOM_MM - lockRecessMm(m.lockScrewMm);
@@ -585,9 +646,9 @@ export function keyholePad(screwMm: number, [x, y]: readonly [number, number], g
   return stadium(x, y, k.entryMm + 2 * KEYHOLE_WALL_MM, k.slideMm + k.entryMm + 2 * KEYHOLE_WALL_MM, grow);
 }
 
-/** The screw a standoff behind a slot is sized for: the keyhole's, or for lock screws alone, which have no such screw,
- * a 4 mm screw's (D289), whatever the screw size, which their lock screws take (D479). */
-const standoffScrewOf = (m: MountingParams) => (m.screwHead === 'lock' ? SCREW_MM : m.keyholeScrewMm);
+/** The screw a standoff behind a slot is sized for: the keyhole's, or for lock screws alone, tape or no screws, which
+ * have no such screw, a 4 mm screw's (D289, D619), whatever the screw size, which their lock screws take (D479). */
+const standoffScrewOf = (m: MountingParams) => (m.screwHead === 'keyhole' ? m.keyholeScrewMm : SCREW_MM);
 /** Whether lock screws go through any of the slots the standoffs stand behind (A248, D289). */
 const lockScrewsOf = (m: MountingParams) => m.screwHead === 'lock' || (m.screwHead === 'keyhole' && m.lockScrews);
 
@@ -632,16 +693,39 @@ function standoffOutline(m: MountingParams, board: MountingBoard): Outline {
 export function mountingPads(m: MountingParams, board: MountingBoard): Vec2[][] {
   if (m.screwHead === 'none' && m.standoffHeightMm === 0) return [];
   const padMm = screwHole(m.screwMm).countersinkMm + 2 * PAD_MARGIN_MM;
-  if (m.screwHead !== 'keyhole' && m.screwHead !== 'lock')
+  if (!standsBehindSlots(m))
     return screwPlaces(board).map(([x, y]) => circle(x, y, 2 * padRadiusMm(board, [x, y], padMm / 2)));
   const grow = standoffGrowMm(m, board);
   if (grow === undefined || board.frameMm === undefined || grow <= board.frameMm - FRAME_INSET_MM + 1e-9) return [];
   if (board.rows < 2 || board.columns < 2) return []; // refused by mountingCuts
-  const [screwMm, outline] = [standoffScrewOf(m), standoffOutline(m, board)];
   const slot = slotOf(board);
-  return [...keyholePlaces(board, screwMm, outline), ...bottomSlotPlaces(board, screwMm, outline)].map(([x, y]) =>
-    stadium(x, y, slot.widthMm, slot.heightMm, grow + FRAME_INSET_MM),
-  );
+  const [tops, bottoms] = slotStandoffPlaces(m, board);
+  return [...tops, ...bottoms].map(([x, y]) => stadium(x, y, slot.widthMm, slot.heightMm, grow + FRAME_INSET_MM));
+}
+
+/**
+ * The slots a board's standoffs stand behind, top then bottom, each left then right: its corner tiles' through the
+ * slots (D244, D245); between them, the slot nearest each corner that keeps the standoff on the board (D289 a), and on
+ * tape its pad too, so a larger piece takes a slot further in rather than reach past the edge (D619 a). Refuses, on
+ * tape, a board with no such slot for its pad.
+ */
+function slotStandoffPlaces(
+  m: MountingParams,
+  board: MountingBoard,
+): [readonly (readonly [number, number])[], readonly (readonly [number, number])[]] {
+  const [screwMm, outline] = [standoffScrewOf(m), standoffOutline(m, board)];
+  const tape = m.screwHead === 'tape' ? ([m.tapeMm ?? TAPE_MM, m.tapeLengthMm ?? TAPE_LENGTH_MM] as const) : undefined;
+  const fits: Outline = tape === undefined ? outline : (q) => [...outline(q), ...tapeRect(q, ...tape)];
+  try {
+    return [keyholePlaces(board, screwMm, fits), bottomSlotPlaces(board, screwMm, fits)];
+  } catch (error) {
+    if (tape === undefined || !(error instanceof RangeError)) throw error;
+    throw new SettingsProblem(
+      `On this board no slot near a corner leaves a tape pad ${nice(tape[0])} x ${nice(tape[1])} mm room on it: ` +
+        'choose a smaller piece, or make the board a tile larger',
+      ['tapeWidthMm', 'tapeLengthMm'],
+    );
+  }
 }
 
 /**
@@ -833,6 +917,96 @@ function standoffsMeet(places: readonly (readonly [number, number])[], outline: 
   return boxes.some((a, i) => boxes.some((b, j) => j > i && a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1));
 }
 
+/** How deep past the hook's room the ramp over a hook's tab cuts a standoff behind a slot (hookRoomCutter, D369), at
+ * the standoff's lowest point, `belowMm` below the slot's middle: from 0 where the ramp starts, short of a keyhole's
+ * channel, to its whole rise at the tab's end. */
+function rampDepthMm(board: MountingBoard, screwMm: number, belowMm: number): number {
+  const slot = slotOf(board);
+  const k = keyhole(screwMm);
+  const start = -(k.slideMm + k.entryMm) / 2 - RAMP_SHORT_MM;
+  const end = -slot.heightMm / 2 - (HOOK_DROP_MM + 2);
+  return Math.min(start - end, Math.max(0, start + belowMm));
+}
+
+/** How far below its slot's middle a standoff behind it reaches, with its tape pad if it has one. */
+function lowestMm(ring: readonly Vec2[], [, y]: readonly [number, number], tape?: number[]): number {
+  const ys = ring.map((p) => p[1]);
+  return Math.max(y - Math.min(...ys), (tape?.[0] ?? 0) / 2);
+}
+
+/**
+ * Refuses a tape pad that would reach past the board, or meet another (D619 a): centred on its standoff behind a corner
+ * slot, it is at most twice that standoff's room to the nearest edge each way, 40 mm where the slot is a corner tile's,
+ * through the slots, so the pads of two panels at a seam never meet.
+ */
+function checkTape(
+  board: MountingBoard,
+  places: readonly (readonly [number, number])[],
+  outline: Outline,
+  [tapeMm = TAPE_MM, lengthMm = TAPE_LENGTH_MM]: number[],
+): void {
+  const e = extentOfBoard(board);
+  const across = Math.min(...places.flatMap(([x]) => [x - e.x0, e.x1 - x]));
+  const up = Math.min(...places.flatMap(([, y]) => [y - e.y0, e.y1 - y]));
+  const over = [
+    ['tapeLengthMm', lengthMm > 2 * across + 1e-9],
+    ['tapeWidthMm', tapeMm > 2 * up + 1e-9],
+  ] as const;
+  const keys = over.filter(([, past]) => past).map(([key]) => key);
+  if (keys.length > 0) {
+    throw new SettingsProblem(
+      `On this board a tape pad is at most ${nice(2 * across)} mm long and ${nice(2 * up)} mm wide: centred on its ` +
+        "standoff behind a corner slot, a larger one would reach past the board's edge",
+      keys,
+    );
+  }
+  if (standoffsMeet(places, (q) => [...outline(q), ...tapeRect(q, tapeMm, lengthMm)])) {
+    throw new SettingsProblem(
+      'On this board two tape pads would meet, behind the slots nearest its corners: choose smaller pieces, or make ' +
+        'it a tile larger',
+      ['tapeWidthMm', 'tapeLengthMm'],
+    );
+  }
+}
+
+/**
+ * Refuses standoffs behind the slots, with tape or no screws, too short for what they hold (D619): the hook's room
+ * behind the slot and the ramp over its tab where the standoff runs out below it, with 1.2 mm behind them; on tape,
+ * besides, a pad's corners flaring out from the standoff behind the hooks' room (D593).
+ */
+function checkPosts(
+  m: MountingParams,
+  board: MountingBoard,
+  places: readonly (readonly [number, number])[],
+  outline: Outline,
+  screwMm: number,
+  tape?: number[],
+): void {
+  let least = 0;
+  let flare = 0;
+  for (const place of places) {
+    const ring = outline(place);
+    least = Math.max(least, HOOK_ROOM_MM + rampDepthMm(board, screwMm, lowestMm(ring, place, tape)));
+    if (tape !== undefined)
+      flare = Math.max(flare, tapeFlareMm(ring, place, tape[0] ?? TAPE_MM, tape[1] ?? TAPE_LENGTH_MM));
+  }
+  least += MIN_BEHIND_CHANNEL_MM;
+  if (tape !== undefined) least = Math.max(least, HOOK_ROOM_MM + flare + TAPE_BAND_MM);
+  if (m.standoffHeightMm >= least - 1e-9) return;
+  if (tape !== undefined) {
+    throw new SettingsProblem(
+      `A tape pad ${nice(tape[0] ?? TAPE_MM)} x ${nice(tape[1] ?? TAPE_LENGTH_MM)} mm flares out to its corners ` +
+        `from its standoff behind the hooks' room: choose standoffs at least ${nice(least)} mm tall, or a smaller piece`,
+      ['standoffHeightMm', 'tapeWidthMm', 'tapeLengthMm'],
+    );
+  }
+  throw new SettingsProblem(
+    'Standoffs behind the slots leave a hook its room behind the slot in front of each: choose standoffs at least ' +
+      `${nice(least)} mm tall`,
+    ['standoffHeightMm'],
+  );
+}
+
 /** What the mounting adds to and cuts from a board of this size: BoardCuts for makeSolidBoard. */
 export function mountingCuts(
   m: MountingParams,
@@ -844,10 +1018,11 @@ export function mountingCuts(
   const keyholes = m.screwHead === 'keyhole';
   // lock screws alone (D289): the keyholes' standoffs and the bottom ones, a lock screw through each
   const locked = m.screwHead === 'lock';
-  const behindSlots = keyholes || locked;
-  const what = keyholes ? 'Keyholes' : 'Lock screws';
+  // keyholes, lock screws and tape stand behind the corner slots, and with no screws standoffs put there (D619)
+  const behindSlots = standsBehindSlots(m);
+  const what = behindWhat(m);
   // the standoffs behind the slots: on a lattice board the frame round the slot (D306); on the solid board a keyhole's
-  // and its walls (D237), sized from its screw, or for lock screws alone, which have no such screw, a 4 mm screw's
+  // and its walls (D237), sized from its screw, or with none, a 4 mm screw's
   const [standoffScrewMm, outline] = [standoffScrewOf(m), standoffOutline(m, board)];
   const recessMm = lockRecessMm(m.lockScrewMm);
   checkStandoffs(m);
@@ -857,15 +1032,16 @@ export function mountingCuts(
         'meet the bottom ones or each other',
     );
   }
-  const [tops, bottoms] = behindSlots
-    ? [keyholePlaces(board, standoffScrewMm, outline), bottomSlotPlaces(board, standoffScrewMm, outline)]
-    : [[], []];
+  const [tops, bottoms] = behindSlots ? slotStandoffPlaces(m, board) : [[], []];
   if (behindSlots && standoffsMeet([...tops, ...bottoms], outline)) {
     throw new RangeError(
       `${what} need a larger board: between the slots, two of its standoffs would meet, behind the slots nearest ` +
         'its corners; open a side, or make it a tile larger',
     );
   }
+  const tape = m.screwHead === 'tape' ? [m.tapeMm ?? TAPE_MM, m.tapeLengthMm ?? TAPE_LENGTH_MM] : undefined;
+  if (tape !== undefined) checkTape(board, [...tops, ...bottoms], outline, tape);
+  if (behindSlots && !keyholes && !locked) checkPosts(m, board, [...tops, ...bottoms], outline, standoffScrewMm, tape);
   const countersunk = m.screwHead === 'countersunk';
   if (countersunk && t - depth < MIN_PLAIN_HOLE_MM) {
     throw new SettingsProblem(
@@ -875,26 +1051,8 @@ export function mountingCuts(
     );
   }
   const bore = sunkRound(m, t); // a round head sunk in a counterbore, flush with the front (D279)
-  // the corner screws' places, which keyholes and lock screws, behind the slots, never look for
+  // the corner screws' places, which the standoffs behind the slots never look for
   const places = behindSlots ? [] : screwPlaces(board);
-  // a tape pad stays on the board: centred on its corner standoff, it is at most twice the standoff's room to the
-  // nearest edge across, 20 mm at a corner's usual place, so the pads of two panels at a seam never meet (D593)
-  if (m.tapeMm !== undefined) {
-    const e = extentOfBoard(board);
-    const room = Math.min(...places.flatMap(([x, y]) => [x - e.x0, e.x1 - x, y - e.y0, e.y1 - y]));
-    const sides = [
-      ['tapeWidthMm', m.tapeMm],
-      ['tapeLengthMm', m.tapeLengthMm ?? TAPE_LENGTH_MM],
-    ] as const;
-    const over = sides.filter(([, mm]) => mm > 2 * room + 1e-9).map(([key]) => key);
-    if (over.length > 0) {
-      throw new SettingsProblem(
-        `On this board a tape pad is at most ${nice(2 * room)} mm each way: centred on its corner standoff, a larger ` +
-          "one would reach past the board's edge",
-        over,
-      );
-    }
-  }
   const back = -m.standoffHeightMm - 1; // through the standoffs too, and a millimetre beyond
   const levels: [number, number][] = countersunk
     ? [
@@ -1019,101 +1177,145 @@ export function mountingCuts(
       for (const s of [whole, room]) s.delete();
       return solid;
     };
-    // Tape standoffs (D593, C601): each corner post's foot a rectangular pad, the piece of tape, its length along the
-    // board's width, its edge 1 mm straight at the wall, chamfered 0.5 mm; from there the hull of it and the post 0.5 mm
-    // in, as high as its corners reach out, so no face of the flare is past 45 degrees; the flare meets the post behind
-    // the hooks' room and runs 0.5 mm on inside it, so the two cross rather than share a surface.
-    const tapePad = (engine: Engine, [x, y]: readonly [number, number], tapeMm: number, lengthMm: number) => {
+    // On tape (D619 a): each post behind its corner slot ends at the wall in a rectangular pad, the piece of tape, its
+    // length along the board's width, its edge 1 mm straight at the wall, chamfered 0.5 mm; from there the hull of it
+    // and the post's outline 0.5 mm in, as high as its corners reach out past that outline, so no face of the flare is
+    // past 45 degrees (D593, C601). Below the band's top the hull is cut back to the piece, so the pad at the wall is
+    // the piece and nothing more where the post is longer than the piece across. The post stops 0.25 mm inside the
+    // flare, where the flare, 0.5 mm in from the post at its top and at most 45 degrees, is still inside the post: at
+    // 0.5 mm the two met on the post's edge and left facets of no area on a lattice board (C622). The hook's room and
+    // the ramp over its tab are cut from them together, as from a post alone.
+    const taped = (
+      engine: Engine,
+      place: readonly [number, number],
+      pockets: Vec2[][],
+      [tapeMm, lengthMm]: number[],
+    ) => {
       const h = m.standoffHeightMm;
-      const out = tapeFlareMm(m, tapeMm, lengthMm);
+      const ring = outline(place);
+      const out = tapeFlareMm(ring, place, tapeMm ?? TAPE_MM, lengthMm ?? TAPE_LENGTH_MM);
       const edge = Math.min(0.5, TAPE_BAND_MM / 2);
       const rect = (grow: number, z: number): Vec3[] =>
-        [
-          [-1, -1],
-          [1, -1],
-          [1, 1],
-          [-1, 1],
-        ].map(([a = 0, b = 0]) => [x + a * (lengthMm / 2 + grow), y + b * (tapeMm / 2 + grow), z]);
+        tapeRect(place, (tapeMm ?? TAPE_MM) + 2 * grow, (lengthMm ?? TAPE_LENGTH_MM) + 2 * grow).map(([x, y]): Vec3 => [
+          x,
+          y,
+          z,
+        ]);
       const top = -h + TAPE_BAND_MM + out + 0.5;
-      const post = circle(x, y, standoffDiameterMm, -0.5).map(([a, b]): Vec3 => [a, b, top]);
-      return engine.Manifold.hull([...rect(-edge, -h), ...rect(0, -h + edge), ...rect(0, -h + TAPE_BAND_MM), ...post]);
+      const inner = grownRing(
+        ring,
+        ring.map(() => 0.5),
+      ).map(([x, y]): Vec3 => [x, y, top]);
+      const hull = engine.Manifold.hull([
+        ...rect(-edge, -h),
+        ...rect(0, -h + edge),
+        ...rect(0, -h + TAPE_BAND_MM),
+        ...inner,
+      ]);
+      // below the band's top, what the hull holds past the piece, where the post is longer than the piece across
+      const band = engine.Manifold.hull([...rect(-edge, -h), ...rect(0, -h + edge), ...rect(0, -h + TAPE_BAND_MM + 1)]);
+      const [x, y] = place;
+      const reach = Math.max(tapeMm ?? TAPE_MM, lengthMm ?? TAPE_LENGTH_MM) + 2 * (out + 1) + 40;
+      const slab = engine.Manifold.cube([reach, reach, TAPE_BAND_MM + 1]).translate([
+        x - reach / 2,
+        y - reach / 2,
+        -h - 1,
+      ]);
+      const past = slab.subtract(band);
+      const flare = hull.subtract(past);
+      const whole = standoff(engine, ring, backFree(board, place, { pockets }));
+      const post = whole.trimByPlane([0, 0, 1], top - 0.25);
+      const both = engine.Manifold.union(post, flare);
+      const room = hookRoomCutter(engine, place, board, standoffScrewMm);
+      const solid = both.subtract(room);
+      for (const s of [hull, band, slab, past, flare, whole, post, both, room]) s.delete();
+      return solid;
     };
     cuts.extraSolids = (engine: Engine): Manifold[] => {
-      if (!behindSlots && m.tapeMm !== undefined) {
-        const [tapeMm, lengthMm] = [m.tapeMm, m.tapeLengthMm ?? TAPE_LENGTH_MM];
-        // each post from 0.5 mm into its pad, so the two never share the wall's plane (D593)
-        const posts = places.map((p) => {
-          const post = round(engine, p);
-          const trimmed = post.trimByPlane([0, 0, 1], -m.standoffHeightMm + 0.5);
-          post.delete();
-          return trimmed;
-        });
-        return [...posts, ...places.map((p) => tapePad(engine, p, tapeMm, lengthMm))];
-      }
       if (!behindSlots) return places.map((p) => round(engine, p));
       const pockets = board.pocketsOf?.(engine, mountingPads(m, board)) ?? [];
       // at the bottom, behind the corner slots as at the top (D245), the lock screws through them (A248)
-      return [...bottoms, ...tops].map((p) => pad(engine, p, pockets));
+      return [...bottoms, ...tops].map((p) =>
+        tape === undefined ? pad(engine, p, pockets) : taped(engine, p, pockets, tape),
+      );
     };
   }
   return cuts;
 }
 
-/** Why a screw hole is ruled out with tape standoffs (D593), by the D589 mechanism: the tape holds the board. */
-const onTape = (v: Readonly<Record<string, unknown>>) =>
-  v['standoffs'] === 'tape' ? 'Tape standoffs hold the board on double-sided tape: it has no screw holes.' : undefined;
+/** The mountings with a screw, which the screw size is for (D620 a: shown only with one). */
+const SCREWED: ReadonlySet<unknown> = new Set(['countersunk', 'round', 'keyhole', 'lock']);
+const NAMES: Readonly<Record<string, string>> = { keyhole: 'Keyholes', lock: 'Lock screws', tape: 'Tape' };
+/** Why the standoffs are ruled out at the corners, or not at all, by the D589 mechanism: keyholes, lock screws and
+ * tape stand on standoffs behind the slots (D190, D289, D619 a). */
+const onlyBehindSlots = (v: Readonly<Record<string, unknown>>) => {
+  const name = NAMES[String(v['screwHead'])];
+  return name === undefined
+    ? undefined
+    : `${name} stand the board on standoffs behind its corner slots, which hold it off the wall so a hook has room ` +
+        'behind it.';
+};
 
-/** The mounting's choices, on the main form: the screw holes, and the standoffs, which keyholes and lock screws
- * need (D589), or tape and its width (D593, Q594). */
+/** The mounting's choices, on the main form: how the board holds to the wall (D617 c: "Mounting"), and where its
+ * standoffs stand (D618 a), which keyholes, lock screws and tape need behind the slots (D589, D619); the tape's width
+ * and length with tape alone (D593, Q594, D620 a). */
 export const MOUNTING_HOLES = defineSettings([
   {
     kind: 'choice',
     key: 'screwHead',
-    label: 'Screw holes',
+    label: 'Mounting',
     options: [
-      { value: 'countersunk', label: 'Countersunk', offWhen: onTape },
-      { value: 'round', label: 'Round head', offWhen: onTape },
-      { value: 'keyhole', label: 'Keyholes', offWhen: onTape },
-      { value: 'lock', label: 'Lock screws', offWhen: onTape },
+      { value: 'countersunk', label: 'Countersunk' },
+      { value: 'round', label: 'Round head' },
+      { value: 'keyhole', label: 'Keyholes' },
+      { value: 'lock', label: 'Lock screws' },
+      { value: 'tape', label: 'Tape' },
       { value: 'none', label: 'None' },
     ],
     default: MOUNTING_DEFAULTS.screwHead,
     help:
-      'One in each corner, 10 mm in from both edges, or where that would land on a slot, as between the slots, the ' +
-      'nearest place with as much room round it. A countersunk head keeps the front flat, and a round head is sunk ' +
-      'in a counterbore, flush too, where the board leaves 1 mm under it. Keyholes, ' +
+      'Countersunk and round head: a screw in each corner, 10 mm in from both edges, or where that would land on a ' +
+      'slot, as between the slots, the nearest place with as much room round it. A countersunk head keeps the front ' +
+      'flat, and a round head is sunk in a counterbore, flush too, where the board leaves 1 mm under it. Keyholes, ' +
       'in the top two standoffs, behind the top corner slots, let the board drop onto two countersunk screws ' +
       'standing about 4 mm out of the wall and lift off them; the front stays plain, and hooks still fit those slots. ' +
       'Lock screws, one through a slot at each corner into the standoff behind it, head and all, hold the board ' +
-      'without keyholes; every slot still takes a hook.',
+      'without keyholes; every slot still takes a hook. Tape: each standoff behind a corner slot ends at the wall in ' +
+      'a rectangular pad for a piece of double-sided tape, and the board has no screw holes.',
   },
   {
     kind: 'choice',
     key: 'standoffs',
     label: 'Standoffs',
     options: [
+      { value: 'none', label: 'None', offWhen: onlyBehindSlots },
+      { value: 'corners', label: 'At the corners', offWhen: onlyBehindSlots },
       {
-        value: 'none',
-        label: 'None',
-        // keyholes and lock screws stand the board on its standoffs (D190, D289): none is ruled out (D589)
+        value: 'slots',
+        label: 'Behind slots',
+        // a corner screw needs its standoff round it (D619)
         offWhen: (v) =>
-          v['screwHead'] === 'keyhole' || v['screwHead'] === 'lock'
-            ? `${v['screwHead'] === 'keyhole' ? 'Keyholes' : 'Lock screws'} need standoffs: they hold the board ` +
-              'off the wall, so a hook has room behind it.'
+          v['screwHead'] === 'countersunk' || v['screwHead'] === 'round'
+            ? 'A corner screw needs its standoff round it, at the corner. Lock screws are the screws that go ' +
+              'through the slots into the standoffs behind them.'
             : undefined,
       },
-      { value: 'back', label: 'On the back' },
-      { value: 'tape', label: 'For tape' },
     ],
     default: 'none',
     help:
-      'Posts on the back at the corners, round the screws, that hold the board off the wall so hooks have room. ' +
-      'Keyholes and lock screws need them. For tape, each ends at the wall in a rectangular pad for a piece of ' +
-      'double-sided tape, the standoffs start at 18 mm, and the board has no screw holes.',
+      'Posts on the back that hold the board off the wall, so hooks have room behind it. At the corners, round the ' +
+      "corner screws. Behind slots, behind the four corner tiles' slots, each leaving its slot a hook's room: " +
+      'keyholes, lock screws and tape stand on these.',
   },
-  { ...TAPE_WIDTH_SETTING, appliesWhen: (v) => v['standoffs'] === 'tape' }, // D593, Q594
-  { ...TAPE_LENGTH_SETTING, appliesWhen: (v) => v['standoffs'] === 'tape' }, // C601
+  { ...TAPE_WIDTH_SETTING, appliesWhen: (v) => v['screwHead'] === 'tape' }, // D593, Q594, D620 a
+  { ...TAPE_LENGTH_SETTING, appliesWhen: (v) => v['screwHead'] === 'tape' }, // C601
 ]);
+
+/** The screw size, on a board's form with a screw only, a corner screw, keyholes or lock screws (D620 a). */
+export const MOUNTING_SCREW_SIZE = {
+  ...SCREW_SIZE_SETTING,
+  appliesWhen: (v) => SCREWED.has(v['screwHead']),
+} as const satisfies NumberSetting;
 
 /** The mounting's fine settings, under Advanced (D48): the keyholes' and lock screws' own sizes, the lock screws at the
  * bottom with keyholes, and the standoffs' height. */
@@ -1141,26 +1343,23 @@ export const MOUNTING_FINE = defineSettings([
     label: 'Standoff height',
     unit: 'mm',
     default: STANDOFF_DEFAULT_MM,
-    startsAt: (v) => (v['standoffs'] === 'tape' ? TAPE_STANDOFF_MM : STANDOFF_DEFAULT_MM), // D603 b
+    startsAt: (v) => (v['screwHead'] === 'tape' ? TAPE_STANDOFF_MM : STANDOFF_DEFAULT_MM), // D603 b, C604
     min: 3,
     max: 40,
     step: 0.5,
     help:
-      'With standoffs on the back or for tape, or keyholes or lock screws, which stand on them: how far the ' +
-      "standoffs hold the board off the wall, 15 mm unless set, and 18 mm for tape, which a 19 mm piece's pad needs; " +
+      'With standoffs, which keyholes, lock screws and tape stand on: how far the ' +
+      'standoffs hold the board off the wall, 15 mm unless set, and 18 mm for tape, as the taped standoff connector, so ' +
+      'the parts of a taped wall match; ' +
       "IKEA's spacers hold it about 20 mm off.",
     advanced: true,
-    appliesWhen: (v) =>
-      v['standoffs'] === 'back' ||
-      v['standoffs'] === 'tape' ||
-      v['screwHead'] === 'keyhole' ||
-      v['screwHead'] === 'lock',
+    appliesWhen: (v) => v['standoffs'] !== 'none' || NAMES[String(v['screwHead'])] !== undefined,
   },
 ]);
 
 /** The mounting's settings, as a board type lists them (D48: the fine ones under Advanced): the screw holes and
  * standoffs, the screw size on the main form, the screw for every hole, and the fine ones (D479). */
-export const MOUNTING_SETTINGS = defineSettings([...MOUNTING_HOLES, SCREW_SIZE_SETTING, ...MOUNTING_FINE]);
+export const MOUNTING_SETTINGS = defineSettings([...MOUNTING_HOLES, MOUNTING_SCREW_SIZE, ...MOUNTING_FINE]);
 
 type MountingValues = Values<typeof MOUNTING_SETTINGS>;
 
@@ -1172,9 +1371,10 @@ export function mountingOf(v: MountingValues): MountingParams {
     screwMm: v.screwMm,
     keyholeScrewMm: screwAt(v, KEYHOLE_SCREW),
     standoffHeightMm: v.standoffs === 'none' ? 0 : v.standoffHeightMm,
+    ...(v.standoffs === 'none' ? {} : { standoffs: v.standoffs }), // D618 a
     lockScrews: v.lockScrews === 'bottom',
     lockScrewMm: screwAt(v, LOCK_SCREW),
-    ...(v.standoffs === 'tape' ? { tapeMm: v.tapeWidthMm, tapeLengthMm: v.tapeLengthMm } : {}), // D593, C601
+    ...(v.screwHead === 'tape' ? { tapeMm: v.tapeWidthMm, tapeLengthMm: v.tapeLengthMm } : {}), // D593, C601
   });
 }
 
@@ -1183,8 +1383,7 @@ export function mountingOf(v: MountingValues): MountingParams {
 export function mountingLabel(v: MountingValues): string {
   const parts: string[] = [];
   if (v.screwHead === 'round') parts.push('round-head');
-  // on tape, the tape says it has no holes (D593)
-  if (v.screwHead === 'none' && v.standoffs !== 'tape') parts.push('no-holes');
+  if (v.screwHead === 'none') parts.push('no-holes');
   if (v.screwHead === 'keyhole') parts.push(v.lockScrews === 'bottom' ? 'keyholes-lock-screws' : 'keyholes');
   if (v.screwHead === 'lock') parts.push('lock-screws');
   const locks = v.screwHead === 'lock' || (v.screwHead === 'keyhole' && v.lockScrews === 'bottom');
@@ -1192,8 +1391,10 @@ export function mountingLabel(v: MountingValues): string {
   if (locks && lockMm !== SCREW_MM) parts.push(`${lockMm}mm`);
   // the corner screws' size or the keyholes', which lock screws alone have none of
   const screwMm = v.screwHead === 'keyhole' ? screwAt(v, KEYHOLE_SCREW) : v.screwMm;
-  if (v.screwHead !== 'none' && v.screwHead !== 'lock' && screwMm !== SCREW_MM) parts.push(`screw-${screwMm}mm`);
-  if (v.standoffs === 'tape') parts.push(`tape-${v.tapeWidthMm}x${v.tapeLengthMm}mm`);
-  if (v.standoffs !== 'none') parts.push(`standoffs-${v.standoffHeightMm}mm`);
+  if (SCREWED.has(v.screwHead) && v.screwHead !== 'lock' && screwMm !== SCREW_MM) parts.push(`screw-${screwMm}mm`);
+  if (v.screwHead === 'tape') parts.push(`tape-${v.tapeWidthMm}x${v.tapeLengthMm}mm`);
+  // behind the slots with no screws, which keyholes, lock screws and tape say for themselves (D618 a)
+  const where = v.screwHead === 'none' && v.standoffs === 'slots' ? 'behind-slots-' : '';
+  if (v.standoffs !== 'none') parts.push(`standoffs-${where}${v.standoffHeightMm}mm`);
   return parts.map((p) => `-${p}`).join('');
 }

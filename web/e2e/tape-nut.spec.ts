@@ -3,7 +3,8 @@
 //
 // Tape standoffs on a board (D593, 30 Oct 2026: "Add a standoffs on boards and connectors that is ment for double sided
 // sticky tape"), the tape's width a setting (Q594: "set a standard with a size option"), and the standoff connector
-// held by a nut and taped to the wall (D592 a).
+// held by a nut and taped to the wall (D592 a). Since 31 Oct 2026 tape is a mounting (D617 c), its posts behind the
+// corner slots (D619 a), its sizes shown only with it (D620 a).
 import { expect, test, type Page } from '@playwright/test';
 import { choose, chosen } from './design-system.js';
 
@@ -14,32 +15,41 @@ async function ready(page: Page) {
 
 const status = (page: Page) => page.getByTestId('board-status');
 
-test('makes a board on tape standoffs, its screw holes greyed out with why, its tape as wide as set', async ({
+test('makes a board on tape, on standoffs behind its corner slots, its tape as set and shown only with it', async ({
   page,
 }) => {
   await ready(page);
   const tape = page.locator('input[name="tapeWidthMm"]');
-  await expect(tape).toBeDisabled(); // only with tape standoffs (D372)
-  await choose(page, 'standoffs', 'tape');
-  await expect(chosen(page, 'screwHead')).toHaveValue('none');
-  for (const head of ['countersunk', 'round', 'keyhole', 'lock'])
-    await expect(page.locator(`input[name="screwHead"][value="${head}"]`)).toBeDisabled();
-  await expect(page.getByTestId('ruled-screwHead')).toContainText('no screw holes');
-  await expect(tape).toBeEnabled();
+  const length = page.locator('input[name="tapeLengthMm"]');
+  const screw = page.locator('input[name="screwMm"]');
+  await expect(tape).toBeHidden(); // only on tape (D620 a)
+  await expect(screw).toBeVisible();
+  await choose(page, 'screwHead', 'tape');
+  // its standoffs behind the slots, the other two greyed out with why (D619 a)
+  await expect(chosen(page, 'standoffs')).toHaveValue('slots');
+  for (const where of ['none', 'corners'])
+    await expect(page.locator(`input[name="standoffs"][value="${where}"]`)).toBeDisabled();
+  await expect(page.getByTestId('ruled-standoffs')).toContainText('behind its corner slots');
+  await expect(screw).toBeHidden(); // no screw on tape (D620 a)
+  await expect(tape).toBeVisible();
   await expect(tape).toHaveValue('19'); // D603 b
   // a piece of a roll: its length too (the owner, 30 Oct 2026: "tape comes on a roll and is cut to rectangular pieces")
-  await expect(page.locator('input[name="tapeLengthMm"]')).toHaveValue('19');
+  await expect(length).toHaveValue('19');
   await expect(status(page)).toHaveAttribute('data-file-name', 'skadis-solid-160x160-tape-19x19mm-standoffs-18mm.stl', {
     timeout: 30_000,
   });
-  // a larger piece on standoffs too short for its flare: refused, saying how tall, the fields marked
-  await tape.fill('20');
-  await page.locator('input[name="tapeLengthMm"]').fill('20');
+  // a piece larger than the 18 mm standoffs leave room to flare to: refused, saying how tall
+  await tape.fill('30');
+  await length.fill('36');
   await expect(status(page)).toHaveAttribute('data-state', 'problem', { timeout: 30_000 });
-  await expect(status(page)).toContainText('at least 18.14 mm');
-  // and back: screw holes free again
-  await choose(page, 'standoffs', 'back');
-  await expect(page.locator('input[name="screwHead"][value="countersunk"]')).toBeEnabled();
+  // the post's round ends drawn as polygons, a hair inside the circle: 22.35 mm, not the 22.34 of the circle
+  await expect(status(page)).toContainText('at least 22.35 mm');
+  // and back: a corner screw, its size shown again, the tape hidden, the standoffs off the slots
+  await choose(page, 'screwHead', 'countersunk');
+  await expect(screw).toBeVisible();
+  await expect(tape).toBeHidden();
+  await expect(chosen(page, 'standoffs')).toHaveValue('none');
+  await expect(page.locator('input[name="standoffs"][value="slots"]')).toBeDisabled();
 });
 
 test('makes a standoff held by a nut and taped, named for both, and says which screw it takes', async ({ page }) => {
@@ -84,14 +94,15 @@ test('starts the standoffs at 18 mm with tape, and back at 15 without, unless se
   await ready(page);
   const height = page.locator('input[name="standoffHeightMm"]');
   await expect(height).toHaveValue('15');
-  await choose(page, 'standoffs', 'tape');
+  await choose(page, 'screwHead', 'tape');
   await expect(height).toHaveValue('18');
-  await choose(page, 'standoffs', 'back');
+  await choose(page, 'screwHead', 'countersunk');
+  await choose(page, 'standoffs', 'corners');
   await expect(height).toHaveValue('15');
   // a height set by hand stays where it was set
   await page.getByTestId('advanced').locator('summary').click();
   await height.fill('20');
-  await choose(page, 'standoffs', 'tape');
+  await choose(page, 'screwHead', 'tape');
   await expect(height).toHaveValue('20');
   await expect(status(page)).toHaveAttribute('data-file-name', 'skadis-solid-160x160-tape-19x19mm-standoffs-20mm.stl', {
     timeout: 30_000,
@@ -147,11 +158,11 @@ test('says beside the tape what it holds, and nothing off tape (D609 a)', async 
   await ready(page);
   const note = page.getByTestId('tape-note');
   await expect(note).toHaveText('');
-  await choose(page, 'standoffs', 'tape');
+  await choose(page, 'screwHead', 'tape');
   await expect(note).toContainText('4 pieces of 19 x 19 mm tape, 14.44 cm²');
   await expect(note).toContainText('about 250 g');
   await page.locator('input[name="tapeLengthMm"]').fill('12');
   await expect(note).toContainText('9.12 cm²');
-  await choose(page, 'standoffs', 'back');
+  await choose(page, 'screwHead', 'countersunk');
   await expect(note).toHaveText('');
 });

@@ -54,7 +54,7 @@ export function build(kit) {
       widthMm: 120,
       heightMm: 120,
       screwHead: 'keyhole',
-      standoffs: 'back',
+      standoffs: 'slots',
       lockScrews: 'bottom',
     });
     const behind = box(-1, 141, -1, 141, -40, -0.01);
@@ -85,7 +85,7 @@ export function build(kit) {
       heightMm: 80,
       sides: sides('closed', 'closed', 'closed', 'closed'),
       screwHead: 'lock',
-      standoffs: 'back',
+      standoffs: 'slots',
     });
     const behind = box(-1, 81, -1, 81, -40, -0.01);
     scenes.push({

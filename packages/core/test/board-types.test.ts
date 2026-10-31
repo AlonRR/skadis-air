@@ -210,7 +210,7 @@ describe('the solid board type', () => {
     const slots = genus({ ...v, screwHead: 'none' });
     expect(genus(v)).toBe(slots + 4);
     expect(genus({ ...v, screwHead: 'round' })).toBe(slots + 4);
-    const built = buildBoard(engine, solid, { ...v, standoffs: 'back' });
+    const built = buildBoard(engine, solid, { ...v, standoffs: 'corners' });
     expect(built.ok && built.solid.boundingBox().min[2]).toBeCloseTo(-15, 9); // the starting standoff height (D238)
     if (built.ok) made.push(built.solid);
   });
@@ -273,13 +273,13 @@ describe('the solid board type', () => {
       [SOLID, { heightMm: '440' }, 'One board is at most 400 mm a side', ['heightMm']],
       [
         SOLID,
-        { screwHead: 'keyhole', standoffs: 'back', standoffHeightMm: '10' },
+        { screwHead: 'keyhole', standoffs: 'slots', standoffHeightMm: '10' },
         'choose standoffs at least 13.23 mm tall',
         ['standoffHeightMm'],
       ],
       [
         LIGHTENED,
-        { screwHead: 'lock', standoffs: 'back', standoffHeightMm: '10' },
+        { screwHead: 'lock', standoffs: 'slots', standoffHeightMm: '10' },
         'choose standoffs at least',
         ['standoffHeightMm'],
       ],
@@ -294,7 +294,7 @@ describe('the solid board type', () => {
       expect(problem(type, given)).toEqual({ problem: expect.stringContaining(words), keys });
     }
     // the control: a problem of no one setting names none
-    const meet = problem(SOLID, { screwHead: 'keyhole', standoffs: 'back', widthMm: '40' });
+    const meet = problem(SOLID, { screwHead: 'keyhole', standoffs: 'slots', widthMm: '40' });
     expect(meet).toEqual({ problem: expect.stringContaining('need a board at least 80 x 80 mm'), keys: [] });
   });
 
@@ -362,7 +362,9 @@ describe('the solid board type', () => {
   it('adds to the name only the mounting that differs from the starting one (C85)', () => {
     const v = defaultValues(solid.settings);
     const name = (given: Record<string, string | number>) => boardFileName(solid, { ...v, ...given }, 'stl');
-    expect(name({ screwHead: 'round', standoffs: 'back' })).toBe('skadis-solid-160x160-round-head-standoffs-15mm.stl');
+    expect(name({ screwHead: 'round', standoffs: 'corners' })).toBe(
+      'skadis-solid-160x160-round-head-standoffs-15mm.stl',
+    );
     expect(name({ screwHead: 'none', screwMm: 3.5 })).toBe('skadis-solid-160x160-no-holes.stl');
     expect(name({ screwMm: 3.5, standoffHeightMm: 25 })).toBe('skadis-solid-160x160-screw-3.5mm.stl');
     expect(name({ screwHead: 'keyhole' })).toBe('skadis-solid-160x160-keyholes.stl');
@@ -385,11 +387,11 @@ describe('the solid board type', () => {
     expect(name({ screwHead: 'keyhole', lockScrewMm: 4 })).toBe('skadis-solid-160x160-keyholes.stl'); // no lock screws
     expect(name({ lockScrews: 'bottom' })).toBe('skadis-solid-160x160.stl'); // lock screws go only with keyholes
     // lock screws alone (D289), their size where it is not the starting one: the screw size's unless their own
-    expect(name({ screwHead: 'lock', standoffs: 'back' })).toBe('skadis-solid-160x160-lock-screws-standoffs-15mm.stl');
-    expect(name({ screwHead: 'lock', screwMm: 3.5, standoffs: 'back' })).toBe(
+    expect(name({ screwHead: 'lock', standoffs: 'slots' })).toBe('skadis-solid-160x160-lock-screws-standoffs-15mm.stl');
+    expect(name({ screwHead: 'lock', screwMm: 3.5, standoffs: 'slots' })).toBe(
       'skadis-solid-160x160-lock-screws-3.5mm-standoffs-15mm.stl',
     );
-    expect(name({ screwHead: 'lock', lockScrewSize: 'own', lockScrewMm: 4, screwMm: 3.5, standoffs: 'back' })).toBe(
+    expect(name({ screwHead: 'lock', lockScrewSize: 'own', lockScrewMm: 4, screwMm: 3.5, standoffs: 'slots' })).toBe(
       'skadis-solid-160x160-lock-screws-standoffs-15mm.stl',
     );
   });
@@ -402,9 +404,10 @@ describe('the solid board type', () => {
       'Round head',
       'Keyholes',
       'Lock screws',
+      'Tape',
       'None',
     ]);
-    const keyholes = buildBoard(engine, solid, { ...v, screwHead: 'keyhole', standoffs: 'back' });
+    const keyholes = buildBoard(engine, solid, { ...v, screwHead: 'keyhole', standoffs: 'slots' });
     expect(keyholes.ok).toBe(true);
     if (keyholes.ok) made.push(keyholes.solid);
     const flat = buildBoard(engine, solid, { ...v, screwHead: 'keyhole' });
@@ -426,7 +429,7 @@ describe("the mounting's settings that apply only with another choice (D372)", (
   it('greys out each where it does not apply, for every board, and nothing else of theirs', () => {
     for (const id of ['solid', 'lightened', 'skeleton']) {
       expect(notApplying(id, {})).toEqual(KEYS);
-      expect(notApplying(id, { standoffs: 'back' })).toEqual(KEYS.filter((k) => k !== 'standoffHeightMm'));
+      expect(notApplying(id, { standoffs: 'corners' })).toEqual(KEYS.filter((k) => k !== 'standoffHeightMm'));
       expect(notApplying(id, { screwHead: 'keyhole' })).toEqual(['keyholeScrewMm', 'lockScrewSize', 'lockScrewMm']);
       expect(notApplying(id, { screwHead: 'keyhole', keyholeScrewSize: 'own' })).toEqual([
         'lockScrewSize',
@@ -446,13 +449,16 @@ describe("the mounting's settings that apply only with another choice (D372)", (
         'lockScrewMm',
       ]);
       expect(notApplying(id, { screwHead: 'round', lockScrews: 'bottom', lockScrewSize: 'own' })).toEqual(KEYS);
-      // the tape's width only with tape standoffs, which stand as tall as set (D593, Q594)
+      // the tape's width and length only on tape, which stands as tall as set (D593, Q594, D619 a); the screw size
+      // only with a screw (D620 a)
       const all = (given: Record<string, unknown>) => settingsNotApplying(boardType(id).settings, given);
-      expect(all({ standoffs: 'tape', screwHead: 'none' })).not.toContain('tapeWidthMm');
-      expect(all({ standoffs: 'tape', screwHead: 'none' })).not.toContain('tapeLengthMm');
-      expect(all({ standoffs: 'tape', screwHead: 'none' })).not.toContain('standoffHeightMm');
+      expect(all({ screwHead: 'tape' })).not.toContain('tapeWidthMm');
+      expect(all({ screwHead: 'tape' })).not.toContain('tapeLengthMm');
+      expect(all({ screwHead: 'tape' })).not.toContain('standoffHeightMm');
       // every other setting of a board applies always
       expect(all({})).toEqual(['tapeWidthMm', 'tapeLengthMm', ...notApplying(id, {})]);
+      expect(all({ screwHead: 'tape' })).toContain('screwMm');
+      expect(all({ screwHead: 'none' })).toContain('screwMm');
     }
   });
 
@@ -489,7 +495,7 @@ describe("the mounting's settings that apply only with another choice (D372)", (
       return read.ok ? [] : read.errors.map((e) => e.key);
     };
     expect(keys({ screwHead: 'keyhole', lockScrews: 'sideways' })).toEqual(['lockScrews']);
-    expect(keys({ standoffs: 'back', standoffHeightMm: '1' })).toEqual(['standoffHeightMm']);
+    expect(keys({ standoffs: 'corners', standoffHeightMm: '1' })).toEqual(['standoffHeightMm']);
     expect(keys({ screwHead: 'keyhole', standoffHeightMm: '1' })).toEqual(['standoffHeightMm']);
     expect(keys({ screwHead: 'lock', standoffHeightMm: '1' })).toEqual(['standoffHeightMm']);
     const own = { lockScrewSize: 'own', lockScrewMm: '9' };
@@ -534,13 +540,11 @@ describe("the mounting's settings that apply only with another choice (D372)", (
     expect(help('lockScrews')).toMatch(/^With keyholes: /);
     expect(help('keyholeScrewSize')).toMatch(/^With keyholes: /);
     expect(help('keyholeScrewMm')).toMatch(/^With keyholes, and "Own" chosen above: /);
-    expect(help('lockScrewSize')).toMatch(/^With lock screws, at the bottom with keyholes or as the screw holes: /);
+    expect(help('lockScrewSize')).toMatch(/^With lock screws, at the bottom with keyholes or as the mounting: /);
     expect(help('lockScrewMm')).toMatch(
-      /^With lock screws, at the bottom with keyholes or as the screw holes, and "Own" chosen above: /,
+      /^With lock screws, at the bottom with keyholes or as the mounting, and "Own" chosen above: /,
     );
-    expect(help('standoffHeightMm')).toMatch(
-      /^With standoffs on the back or for tape, or keyholes or lock screws, which stand on them: /,
-    );
+    expect(help('standoffHeightMm')).toMatch(/^With standoffs, which keyholes, lock screws and tape stand on: /);
   });
 });
 
@@ -717,8 +721,9 @@ describe('the standoff connector type (D91 to D94)', () => {
   });
 
   it('shares its screw size setting with the board, so the two cannot drift apart', () => {
-    const screw = (type: AnyBoardType) => type.settings.find((s) => s.key === 'screwMm');
-    expect(screw(standoff)).toBe(screw(boardType('solid')));
+    // the board's says when it applies, with a screw only (D620 a); the rest is the one setting
+    const screw = (type: AnyBoardType) => ({ ...type.settings.find((s) => s.key === 'screwMm'), appliesWhen: 0 });
+    expect(screw(standoff)).toEqual(screw(boardType('solid')));
   });
 
   it('comes for 2 boards either way and 4 (D92, D281), and prints as built, wall face down, the posts on top', () => {
@@ -799,8 +804,9 @@ describe('the slot clip connector type (D187 to D189, D194, D195, D261, C191, C1
   });
 
   it('shares its screw size setting with the board, so the two cannot drift apart', () => {
-    const screw = (type: AnyBoardType) => type.settings.find((s) => s.key === 'screwMm');
-    expect(screw(slotClip)).toBe(screw(boardType('solid')));
+    // the board's says when it applies, with a screw only (D620 a); the rest is the one setting
+    const screw = (type: AnyBoardType) => ({ ...type.settings.find((s) => s.key === 'screwMm'), appliesWhen: 0 });
+    expect(screw(slotClip)).toEqual(screw(boardType('solid')));
   });
 
   it('builds the clip its values describe, and prints as built, wall face down, the pegs on top', () => {
@@ -905,17 +911,17 @@ describe('what each screw passes, from the part itself (D264)', () => {
     expect(screws('solid')).toBe(
       "Each corner screw passes the board's 5 mm, plus any standoff behind it and your wall plug.",
     );
-    expect(screws('lightened', { standoffs: 'back' })).toBe(
+    expect(screws('lightened', { standoffs: 'corners' })).toBe(
       'Each corner screw passes 20 mm of board and standoff, plus your wall plug.',
     );
-    expect(screws('skeleton', { standoffs: 'back', standoffHeightMm: 25 })).toBe(
+    expect(screws('skeleton', { standoffs: 'corners', standoffHeightMm: 25 })).toBe(
       'Each corner screw passes 30 mm of board and standoff, plus your wall plug.',
     );
     expect(screws('solid', { screwHead: 'none' })).toBeUndefined();
   });
 
   it('says a round head sunk in its counterbore leaves the screw less board to pass (D279)', () => {
-    expect(screws('skeleton', { standoffs: 'back', standoffHeightMm: 25, screwHead: 'round' })).toBe(
+    expect(screws('skeleton', { standoffs: 'corners', standoffHeightMm: 25, screwHead: 'round' })).toBe(
       'Each corner screw passes 26.6 mm of board and standoff under its head, plus your wall plug.',
     );
     expect(screws('solid', { screwHead: 'round' })).toBe(
@@ -932,7 +938,7 @@ describe('what each screw passes, from the part itself (D264)', () => {
     for (const id of ['solid', 'lightened', 'skeleton']) {
       expect(screws(id, { seams: 'between', sides: some as never })).toBe(screws(id));
       expect(screws(id, { seams: 'between' })).toBe(screws(id));
-      expect(screws(id, { seams: 'between', standoffs: 'back' })).toBe(screws(id, { standoffs: 'back' }));
+      expect(screws(id, { seams: 'between', standoffs: 'corners' })).toBe(screws(id, { standoffs: 'corners' }));
     }
     expect(screws('lightened', { seams: 'between' })).toBe(
       "Each corner screw passes the board's 5 mm, plus any standoff behind it and your wall plug.",
@@ -940,7 +946,7 @@ describe('what each screw passes, from the part itself (D264)', () => {
   });
 
   it("says where a keyhole's screw stands, and what a lock screw passes", () => {
-    const keyholes = { screwHead: 'keyhole', standoffs: 'back' };
+    const keyholes = { screwHead: 'keyhole', standoffs: 'slots' };
     expect(screws('solid', keyholes)).toBe(
       'Each keyhole hangs on a 4 mm countersunk screw (a 90 degree head) left standing out of the wall, the top of ' +
         'its head 3.73 to 4.03 mm out.',
@@ -961,14 +967,14 @@ describe('what each screw passes, from the part itself (D264)', () => {
   it('says what each lock screw passes, with lock screws alone (D289), at the screw size unless their own (D479)', () => {
     // a 4 mm countersunk head on its 45 degree seat: 2.48 mm tall, 0.25 mm of it in the hole, its top 0.3 mm short of
     // the hook's 8 mm of room, so it bears 2.53 mm behind the room and the screw passes 15 - 10.53 mm (D479, D370 a)
-    expect(screws('solid', { screwHead: 'lock', standoffs: 'back' })).toBe(
+    expect(screws('solid', { screwHead: 'lock', standoffs: 'slots' })).toBe(
       'Each lock screw passes 4.47 mm of standoff under its head, plus your wall plug.',
     );
-    expect(screws('skeleton', { screwHead: 'lock', standoffs: 'back', seams: 'between' })).toBe(
+    expect(screws('skeleton', { screwHead: 'lock', standoffs: 'slots', seams: 'between' })).toBe(
       'Each lock screw passes 4.47 mm of standoff under its head, plus your wall plug.',
     );
     // a 2.5 mm lock screw of its own, as the start was before D479: its 2.3 mm head in a recess 2.3 mm deep
-    expect(screws('solid', { screwHead: 'lock', standoffs: 'back', lockScrewSize: 'own', lockScrewMm: 2.5 })).toBe(
+    expect(screws('solid', { screwHead: 'lock', standoffs: 'slots', lockScrewSize: 'own', lockScrewMm: 2.5 })).toBe(
       'Each lock screw passes 4.7 mm of standoff under its head, plus your wall plug.',
     );
   });
@@ -981,7 +987,7 @@ describe('what each screw passes, from the part itself (D264)', () => {
     for (const given of [{ screwHead: 'lock' }, { screwHead: 'keyhole', lockScrews: 'bottom', screwMm: '3' }]) {
       const values = (standoffHeightMm: string) => {
         const read = readValues(SOLID.settings, {
-          standoffs: 'back',
+          standoffs: 'corners',
           lockScrewSize: 'own',
           lockScrewMm: '5',
           standoffHeightMm,

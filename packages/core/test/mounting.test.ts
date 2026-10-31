@@ -75,6 +75,7 @@ describe('mountingParams: the starting values', () => {
       screwMm: 4,
       keyholeScrewMm: 4, // the screw size unless given (D479)
       standoffHeightMm: 0,
+      standoffs: 'corners', // a corner screw's standoffs, when it has any, round it (D619)
       lockScrews: false,
       lockScrewMm: 4, // the screw size unless given, its 8 mm head through a groove in the slot (D479, A248)
     });
@@ -723,7 +724,7 @@ describe('between the slots (D289, D371)', () => {
             heightMm: 80,
             sides,
             seams,
-            standoffs: 'back' as const,
+            standoffs: 'corners' as const,
           };
           const places = screwPlaces({ columns: 2, rows: 2, sides, seams });
           const where = `${type.id} ${seams} ${JSON.stringify(sides)}`;
@@ -957,23 +958,24 @@ describe('lock screws alone (D289)', () => {
 });
 
 describe('standoffs that keyholes and lock screws need (D589)', () => {
-  it('rules out no standoffs with keyholes or lock screws, saying why, and reads them as on the back', () => {
+  it('rules out no standoffs with keyholes or lock screws, saying why, and reads them as behind the slots (D619)', () => {
     for (const [head, why] of [
-      ['keyhole', 'Keyholes need standoffs'],
-      ['lock', 'Lock screws need standoffs'],
+      ['keyhole', 'Keyholes stand the board on standoffs behind its corner slots'],
+      ['lock', 'Lock screws stand the board on standoffs behind its corner slots'],
     ] as const) {
       const given = { screwHead: head, standoffs: 'none' };
       expect(optionsOff(SOLID.settings, given)['standoffs']?.['none']).toMatch(new RegExp(`^${why}`));
       const read = readValues(SOLID.settings, given);
-      expect(read.ok && read.values.standoffs).toBe('back');
+      expect(read.ok && read.values.standoffs).toBe('slots');
     }
   });
 
-  it('leaves no standoffs free with the other screw holes', () => {
+  it('leaves no standoffs free with the other mountings, and a corner screw none behind the slots (D619)', () => {
     for (const head of ['countersunk', 'round', 'none']) {
-      expect(optionsOff(SOLID.settings, { screwHead: head })).toEqual({});
       const read = readValues(SOLID.settings, { screwHead: head, standoffs: 'none' });
       expect(read.ok && read.values.standoffs).toBe('none');
+      expect(optionsOff(SOLID.settings, { screwHead: head })['standoffs']?.['none']).toBeUndefined();
     }
+    expect(optionsOff(SOLID.settings, { screwHead: 'none' })).toEqual({});
   });
 });

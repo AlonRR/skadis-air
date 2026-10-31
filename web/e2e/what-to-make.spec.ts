@@ -55,9 +55,9 @@ test("lists a board's fields in the owner's order, the size right above the scre
     'Look',
     'Open sides',
     'Sides',
-    'Screw holes',
+    'Mounting', // D617 c
     'Standoffs',
-    'Tape width', // greyed out unless the standoffs are for tape (D593)
+    'Tape width', // hidden unless the mounting is Tape (D593, D620 a)
     'Tape length', // the piece cut from the roll (C601)
     'Width',
     'Height',
@@ -73,20 +73,25 @@ test('greys out no standoffs with keyholes or lock screws, saying why, and frees
   const none = page.locator('input[name="standoffs"][value="none"]');
   const why = page.getByTestId('ruled-standoffs');
   await expect(none).toBeEnabled();
-  await expect(why).toBeHidden();
+  // a corner screw: behind the slots greyed out, saying why (D619)
+  await expect(why).toContainText('A corner screw needs its standoff round it');
   for (const [head, words] of [
-    ['keyhole', 'Keyholes need standoffs'],
-    ['lock', 'Lock screws need standoffs'],
+    ['keyhole', 'Keyholes stand the board on standoffs behind its corner slots'],
+    ['lock', 'Lock screws stand the board on standoffs behind its corner slots'],
   ] as const) {
     await choose(page, 'screwHead', head);
     await expect(none).toBeDisabled();
-    await expect(chosen(page, 'standoffs')).toHaveValue('back');
+    await expect(chosen(page, 'standoffs')).toHaveValue('slots');
     await expect(why).toBeVisible();
     await expect(why).toContainText(words);
     await expect(status(page)).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
   }
   await choose(page, 'screwHead', 'countersunk');
   await expect(none).toBeEnabled();
+  await expect(why).not.toContainText('Keyholes');
+  await expect(why).toContainText('A corner screw needs its standoff round it');
+  // with no screws, every place is open, and nothing is said (D619)
+  await choose(page, 'screwHead', 'none');
   await expect(why).toBeHidden();
   await choose(page, 'standoffs', 'none');
   await expect(status(page)).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });

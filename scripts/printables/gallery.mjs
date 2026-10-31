@@ -69,8 +69,8 @@ export function build(kit) {
   {
     const kinds = [
       ['solid', { screwHead: 'countersunk' }, 'Solid · countersunk'],
-      ['lightened', { screwHead: 'keyhole', standoffs: 'back' }, 'Lightened · keyholes'],
-      ['skeleton', { screwHead: 'lock', standoffs: 'back' }, 'Skeleton · lock screws'],
+      ['lightened', { screwHead: 'keyhole', standoffs: 'slots' }, 'Lightened · keyholes'],
+      ['skeleton', { screwHead: 'lock', standoffs: 'slots' }, 'Skeleton · lock screws'],
     ];
     const SPACING = 205;
     // a lattice board's top half Curved and its bottom half Straight (the owner, 30 Oct 2026: "the top half of the
@@ -157,7 +157,7 @@ export function build(kit) {
   // for the text, at the lightened board: the lightened board on keyholes, turning, so its front and the standoffs
   // behind show
   {
-    const board = built('lightened', { widthMm: 160, heightMm: 160, screwHead: 'keyhole', standoffs: 'back' });
+    const board = built('lightened', { widthMm: 160, heightMm: 160, screwHead: 'keyhole', standoffs: 'slots' });
     const centred = board.translate([-80, -80, 5]);
     const behind = box(-90, 90, -90, 90, -40, -0.01 + 5);
     const R = 430;
@@ -276,8 +276,8 @@ export function build(kit) {
   // the Mounting section: from the back, keyholes on standoffs and lock screws through the corner slots; at the
   // front, close-ups of a countersunk and a round-head screw hole, each cut through the hole with its screw in it
   {
-    const keyholes = built('solid', { widthMm: 120, heightMm: 120, screwHead: 'keyhole', standoffs: 'back' });
-    const locks = built('solid', { widthMm: 120, heightMm: 120, screwHead: 'lock', standoffs: 'back' }).translate([
+    const keyholes = built('solid', { widthMm: 120, heightMm: 120, screwHead: 'keyhole', standoffs: 'slots' });
+    const locks = built('solid', { widthMm: 120, heightMm: 120, screwHead: 'lock', standoffs: 'slots' }).translate([
       -170, 0, 0,
     ]);
     const behind = box(-300, 300, -10, 130, -40, -0.01);

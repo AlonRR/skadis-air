@@ -45,7 +45,7 @@ function pagePart(id, given) {
 }
 
 const CLOSED = { left: 'closed', right: 'closed', bottom: 'closed', top: 'closed' };
-const BOARD = { widthMm: 80, heightMm: 80, sides: CLOSED, standoffs: 'back', standoffHeightMm: 15 };
+const BOARD = { widthMm: 80, heightMm: 80, sides: CLOSED, standoffs: 'corners', standoffHeightMm: 15 };
 const PARTS = [
   ...['solid', 'lightened', 'skeleton'].flatMap((id) => [
     { name: `${id}-80-standoffs`, make: () => pagePart(id, { ...BOARD, screwHead: 'countersunk' }) },

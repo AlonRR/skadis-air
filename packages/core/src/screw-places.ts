@@ -103,14 +103,14 @@ export const KEYHOLE_SCREW = {
   min: 3,
   max: 5,
   appliesWhen: (v) => v['screwHead'] === 'keyhole',
-  inPlay: { screwHead: 'keyhole', standoffs: 'back' },
+  inPlay: { screwHead: 'keyhole', standoffs: 'slots' },
 } as const satisfies ScrewPlace;
 
 /** A board's lock screws (A248, D289), through the slots into the standoffs behind them. */
 export const LOCK_SCREW = {
   key: 'lockScrew',
   label: 'Lock screw',
-  when: 'With lock screws, at the bottom with keyholes or as the screw holes',
+  when: 'With lock screws, at the bottom with keyholes or as the mounting',
   help:
     'their diameter. Up to 2.5 mm, a pan head 5 mm across passes through the slot and sits in a flat recess. From ' +
     "3 mm, as the screw size's 4 mm, a countersunk screw: its head, twice the screw across, passes through a groove " +
@@ -118,7 +118,7 @@ export const LOCK_SCREW = {
   min: 2,
   max: 5,
   appliesWhen: (v) => v['screwHead'] === 'lock' || (v['screwHead'] === 'keyhole' && v['lockScrews'] === 'bottom'),
-  inPlay: { screwHead: 'lock', standoffs: 'back' },
+  inPlay: { screwHead: 'lock', standoffs: 'slots' },
 } as const satisfies ScrewPlace;
 
 /** The slot clip's screw (D195, D265): through its bar, or the one its keyhole hangs on. */

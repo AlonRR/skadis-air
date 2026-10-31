@@ -67,6 +67,18 @@ export function valueFor(s: Setting, given: unknown, strict = false): unknown {
 }
 
 /**
+ * A board's values as a page before 31 Oct 2026 kept them, as this page names them (C623): its standoffs "On the back"
+ * at the corners, or behind the slots under keyholes and lock screws, where they stood (D618 a); "For tape" now the
+ * mounting Tape, on standoffs behind the slots (D617 c, D619 a). Anything else as it was.
+ */
+export function fromOlderPage(values: Readonly<Record<string, unknown>>): Readonly<Record<string, unknown>> {
+  const behind = values['screwHead'] === 'keyhole' || values['screwHead'] === 'lock';
+  if (values['standoffs'] === 'back') return { ...values, standoffs: behind ? 'slots' : 'corners' };
+  if (values['standoffs'] === 'tape') return { ...values, screwHead: 'tape', standoffs: 'slots' };
+  return values;
+}
+
+/**
  * The values a type's form starts with: its own, as last left, then over them those of the type shown before, of
  * the same group, for the settings both have, where they are values this type takes (a board's size goes on to the
  * next board; a slot clip's "2 boards, one above the other" does not become a standoff's; a board's height, 160 mm,
@@ -74,9 +86,10 @@ export function valueFor(s: Setting, given: unknown, strict = false): unknown {
  */
 export function startingValues(
   type: AnyBoardType,
-  own: Readonly<Record<string, unknown>> = {},
-  before: Readonly<Record<string, unknown>> = {},
+  ownKept: Readonly<Record<string, unknown>> = {},
+  beforeKept: Readonly<Record<string, unknown>> = {},
 ): Record<string, unknown> {
+  const [own, before] = [fromOlderPage(ownKept), fromOlderPage(beforeKept)];
   const start: Record<string, unknown> = {};
   for (const s of type.settings) {
     const value = valueFor(s, before[s.key], true) ?? valueFor(s, own[s.key]);

@@ -3,6 +3,7 @@
 // hidden. Only the help folds: a warning, an error, a count and what the screws pass are always shown.
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { BOARD_TYPES } from '../../packages/core/src/board-types/index.js';
+import { settingsNotApplying } from '../../packages/core/src/settings.js';
 import { choose } from './design-system.js';
 
 async function ready(page: Page) {
@@ -33,10 +34,16 @@ test('every setting with help has an i button beside its label, and its help sta
     await openAdvanced(page);
     // all but one board or a wall, which What to make sets, not the form (D590)
     const helped = type.settings.filter((s) => s.help !== undefined && s.key !== 'panels');
-    // one button for each setting with help, and none for a setting without
+    // one button for each setting with help, and none for a setting without; shown with its field, which a setting
+    // that does not apply to the values held is not (D620 a)
     await expect(form(page).locator('button[aria-expanded]')).toHaveCount(helped.length);
+    const off = settingsNotApplying(type.settings, {});
     for (const s of helped) {
       const info = infoOf(page, s.key);
+      if (off.includes(s.key)) {
+        await expect(info, `${type.id} ${s.key}`).toBeHidden();
+        continue;
+      }
       await expect(info, `${type.id} ${s.key}`).toBeVisible();
       await expect(info).toHaveAttribute('aria-expanded', 'false');
       await expect(info).toHaveAccessibleName(`About ${s.label.toLowerCase()}`);
@@ -119,8 +126,8 @@ test('a folded help is still the description of its control for a screen reader,
   const thickness = page.locator('input[name="thicknessMm"]');
   await expect(thickness).toHaveAccessibleDescription(/IKEA hooks fit boards about 4 to 5\.5 mm thick\./);
   await expect(thickness).toHaveAccessibleName('Thickness (mm)');
-  const screws = form(page).locator('[role="radiogroup"][aria-label="Screw holes"]');
-  await expect(screws).toHaveAccessibleDescription(/One in each corner/);
+  const screws = form(page).locator('[role="radiogroup"][aria-label="Mounting"]');
+  await expect(screws).toHaveAccessibleDescription(/a screw in each corner/);
   const sides = form(page).locator('[role="group"][aria-label="Closed sides"]');
   await expect(sides).toHaveAccessibleDescription(/An open side has half slots/);
   // the Sides fieldset is named by its legend's words, not the i button's name inside the legend too
@@ -243,7 +250,8 @@ for (const [name, use] of [
       for (const type of BOARD_TYPES) {
         await choose(page, 'boardType', type.id);
         await openAdvanced(page);
-        const measured = await opened(form(page).locator('button[aria-expanded]'));
+        // the shown ones: a setting that does not apply is hidden, its button with it (D620 a)
+        const measured = await opened(form(page).locator('button[aria-expanded]:visible'));
         expect(measured.length, type.id).toBeGreaterThan(0);
         const wrong = measured.flatMap((m) =>
           Object.entries(m)
@@ -273,18 +281,18 @@ for (const [name, use] of [
     }) => {
       await ready(page);
       await openAdvanced(page);
-      const measured = await rows(form(page).locator('button[aria-expanded]'));
+      const measured = await rows(form(page).locator('button[aria-expanded]:visible'));
       expect(measured.length).toBeGreaterThan(10);
       const tall = measured.filter((m) => m.row > m.line + 0.5).map((m) => `${m.key} ${m.row} > ${m.line}`);
       expect(tall).toEqual([]);
       expect(measured.filter((m) => !m.hit).map((m) => m.key)).toEqual([]);
       expect(Math.min(...measured.map((m) => m.button))).toBeGreaterThanOrEqual(name === 'with a mouse' ? 35.5 : 43.5);
       // controls: a button left its full height in the row, and one with something drawn over its middle, are caught
-      const last = form(page).locator('button[aria-expanded]').last();
+      const last = form(page).locator('button[aria-expanded]:visible').last();
       await last.evaluate((b) => b.style.setProperty('margin-block', '0'));
       const [kept] = await rows(last);
       expect(kept?.row).toBeGreaterThan((kept?.line ?? 0) + 0.5);
-      const first = form(page).locator('button[aria-expanded]').first();
+      const first = form(page).locator('button[aria-expanded]:visible').first();
       await first.evaluate((b) => {
         b.scrollIntoView({ block: 'center' }); // where the measure scrolls it, so the cover stays over it
         const box = b.getBoundingClientRect();

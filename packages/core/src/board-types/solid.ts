@@ -5,13 +5,13 @@ import { makeSolidBoard, solidBoardParams, SOLID_BOARD_DEFAULTS, type SolidBoard
 import {
   MOUNTING_FINE,
   MOUNTING_HOLES,
+  MOUNTING_SCREW_SIZE,
   mountingCuts,
   mountingLabel,
   mountingOf,
   mountingScrews,
   mountingTape,
 } from '../mounting.js';
-import { SCREW_SIZE_SETTING } from '../screw-places.js';
 import { TILE_MM } from '../skadis.js';
 import { MAX_PANEL_TILES, MAX_WALL_MM } from '../tiling.js';
 import { defineSettings, type Setting, SettingsProblem, type Values } from '../settings.js';
@@ -157,7 +157,7 @@ export function boardSettings<const B extends readonly Setting[], const O extend
     ...BOARD_SIDES,
     ...MOUNTING_HOLES,
     ...BOARD_SIZE,
-    SCREW_SIZE_SETTING,
+    MOUNTING_SCREW_SIZE,
     ...BOARD_REST,
     ...own,
     ...MOUNTING_FINE,

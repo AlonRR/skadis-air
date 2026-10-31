@@ -224,7 +224,7 @@ test('offers screw holes and standoffs, and names the file for what differs from
   await expect(chosen(page, 'standoffs')).toHaveValue('none'); // D75: an option
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-file-name', 'skadis-solid-160x160.stl');
   await choose(page, 'screwHead', 'round');
-  await choose(page, 'standoffs', 'back');
+  await choose(page, 'standoffs', 'corners');
   const status = page.getByTestId('board-status');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-round-head-standoffs-15mm.stl');
   await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 20 mm'); // 5 mm of board, 15 mm of standoff (D238)
@@ -237,7 +237,7 @@ test('offers keyholes, which bring their standoffs, with lock screws under Advan
   const status = page.getByTestId('board-status');
   await choose(page, 'screwHead', 'keyhole');
   // choosing keyholes turns the standoffs on, so a hook has room behind the board (D190)
-  await expect(chosen(page, 'standoffs')).toHaveValue('back');
+  await expect(chosen(page, 'standoffs')).toHaveValue('slots');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-keyholes-standoffs-15mm.stl');
   await expect(status).toHaveAttribute('data-state', 'ready');
   await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 20 mm');
@@ -250,14 +250,16 @@ test('offers keyholes, which bring their standoffs, with lock screws under Advan
   // taking the standoffs off again would hang the board flat: ruled out, greyed out with why (D589 a), where it had
   // been a problem the status line alone said
   await expect(page.locator('input[name="standoffs"][value="none"]')).toBeDisabled();
-  await expect(page.getByTestId('ruled-standoffs')).toContainText('Keyholes need standoffs');
+  await expect(page.getByTestId('ruled-standoffs')).toContainText(
+    'Keyholes stand the board on standoffs behind its corner slots',
+  );
 });
 
 test('offers lock screws alone, which bring their standoffs as keyholes do (D289)', async ({ page }) => {
   await ready(page);
   const status = page.getByTestId('board-status');
   await choose(page, 'screwHead', 'lock');
-  await expect(chosen(page, 'standoffs')).toHaveValue('back');
+  await expect(chosen(page, 'standoffs')).toHaveValue('slots');
   await expect(status).toHaveAttribute('data-file-name', 'skadis-solid-160x160-lock-screws-standoffs-15mm.stl');
   await expect(status).toHaveAttribute('data-state', 'ready');
   await expect(page.getByTestId('board-size')).toHaveText('160 × 160 × 20 mm');
@@ -336,7 +338,7 @@ test('says beside the screw size what each screw passes, from the part (D264)', 
   await expect(note).toHaveText(
     "Each corner screw passes the board's 5 mm, plus any standoff behind it and your wall plug.",
   );
-  await choose(page, 'standoffs', 'back');
+  await choose(page, 'standoffs', 'corners');
   await expect(note).toHaveText('Each corner screw passes 20 mm of board and standoff, plus your wall plug.');
   await page.locator('input[name="standoffHeightMm"]').fill('25');
   await expect(note).toContainText('30 mm of board and standoff');
