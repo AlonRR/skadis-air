@@ -6,6 +6,10 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- With Tape, the note under Standoffs says "Tape stands the board", not "Tape stand".
+
 ## [0.11.0] - 2026-10-31
 
 ### Changed

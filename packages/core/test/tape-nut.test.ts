@@ -231,6 +231,13 @@ describe('the board form: Mounting and Standoffs (D617 c, D618 a, D619, D620 a, 
     expect(off('countersunk')).toEqual(['slots']);
     expect(off('round')).toEqual(['slots']);
     for (const head of ['keyhole', 'lock', 'tape']) expect(off(head), head).toEqual(['corners', 'none']);
+    // each said as one thing or many: tape stands, keyholes and lock screws stand
+    const said = (head: string) => optionsOff(solid.settings, { screwHead: head })['standoffs']?.['none'] ?? '';
+    expect(said('tape')).toMatch(/^Tape stands the board on standoffs behind its corner slots/);
+    expect(said('keyhole')).toMatch(/^Keyholes stand the board/);
+    expect(() => mountingParams({ screwHead: 'tape', standoffs: 'corners', standoffHeightMm: 18 })).toThrow(
+      /^Tape stands on/,
+    );
     expect(off('none')).toEqual([]);
     const why = optionsOff(solid.settings, { screwHead: 'countersunk' })['standoffs']?.['slots'];
     expect(why).toMatch(/corner/);

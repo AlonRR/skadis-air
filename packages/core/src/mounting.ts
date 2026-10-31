@@ -250,7 +250,9 @@ export function mountingParams(given: Partial<MountingParams>): MountingParams {
   }
   // keyholes, lock screws and tape stand behind the slots, and a corner screw needs its standoff round it (D619)
   if (BEHIND_SLOTS.has(m.screwHead) && m.standoffs !== 'slots') {
-    throw new RangeError(`${behindWhat(m)} stand on standoffs behind the slots, not at the corners`);
+    throw new RangeError(
+      `${behindWhat(m)} ${m.screwHead === 'tape' ? 'stands' : 'stand'} on standoffs behind the slots, not at the corners`,
+    );
   }
   if (AT_CORNERS.has(m.screwHead) && m.standoffs !== 'corners') {
     throw new RangeError('A corner screw needs its standoff round it, at the corner, not behind a slot');
@@ -1252,7 +1254,7 @@ const onlyBehindSlots = (v: Readonly<Record<string, unknown>>) => {
   const name = NAMES[String(v['screwHead'])];
   return name === undefined
     ? undefined
-    : `${name} stand the board on standoffs behind its corner slots, which hold it off the wall so a hook has room ` +
+    : `${name} ${v['screwHead'] === 'tape' ? 'stands' : 'stand'} the board on standoffs behind its corner slots, which hold it off the wall so a hook has room ` +
         'behind it.';
 };
 
