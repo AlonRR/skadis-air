@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-10-31
+
 ### Changed
 
 - The slot clip asks which boards it joins only through the slots: between them one clip joins 2 boards either way,
