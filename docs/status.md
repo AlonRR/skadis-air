@@ -281,6 +281,23 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 ## Open questions
 
+- **D617** The mounting's first field takes Tape (the owner, 31 Oct 2026: "Tape should be in the screw holes
+  section"): Countersunk, Round head, Keyholes, Lock screws, Tape, None. Its name: (a) "Fixing", as the standoff
+  connector's (recommended: tape is not a screw hole), (b) "Screw holes" as now, (c) "Mounting".
+- **D618** The Standoffs field's three options (the owner: "behind a peg, none, and corners"): (a) None, At the
+  corners, Behind slots (recommended: the page says slot everywhere else), (b) None, Corners, Behind a peg.
+- **D619** What each fixing allows: Countersunk and Round head, None or At the corners (a corner screw needs its post
+  behind it; Behind slots greyed, with a note that Lock screws are the screws behind slots); Keyholes and Lock screws,
+  Behind slots only, as they are built now; None, any of the three. Tape (the owner: "use the keyholes design as the
+  basis"): four posts behind the corner tiles' slots, where the keyholes' stand, each flaring past the hooks' room to a
+  pad for its piece of tape: (a) Behind slots only, the corner pads retired (recommended), (b) Behind slots or At the
+  corners.
+- **D620** Settings that do not apply (the owner: "Tape sizes should only appear when tape is clicked, the same if a
+  screw option isn't clicked"): (a) every setting that does not apply is hidden, not greyed as D372 has it; an option
+  that does not apply stays greyed with its note, as D589 has it (recommended: one rule), (b) only the tape's sizes
+  and the screw sizes are hidden, the rest stay greyed.
+- **A621** The Sides control drawn over the 3D view on a phone is fixed on `main` (99b95d9, 31 Oct 2026): release it
+  with the mounting changes (recommended), or alone now as `v0.10.2`?
 - **T615** Print the nut test print and say which seat holds (D607 a, 31 Oct 2026): nine taped 1-board nut standoffs,
   M3, M4 and M5, each with a seat the nut + 0.1, 0.2 and 0.3 mm across its flats, told apart by 1, 2 or 3 dots on
   the board face: `.check/test-print/skadis-trial-nuts.stl` (`node scripts/test-print/write-trial-plate.mjs nuts`;
