@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-31
+
 ### Changed
 
 - The first mounting field is "Mounting", with Tape among its options: Countersunk, Round head, Keyholes, Lock screws,
