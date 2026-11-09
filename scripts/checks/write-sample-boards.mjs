@@ -151,6 +151,18 @@ const samples = [
     type: skeleton,
     values: { ...skeletonAt(240, 200, open), look: 'straight', rimMm: 1.2, webMm: 1.2, coreMm: 0.8 },
   },
+  // no slot at the corners, the grid moved 20 mm (D641 a)
+  { name: 'solid-5x5-offset-open', type: solid, values: { ...solidAt(200, 200, open), seams: 'offset' } },
+  {
+    name: 'lightened-4x4-offset-keyholes',
+    type: lightened,
+    values: { ...lightenedAt(160, 160, open), seams: 'offset', screwHead: 'keyhole', standoffs: 'slots' },
+  },
+  {
+    name: 'skeleton-3x3-offset-lock-screws',
+    type: skeleton,
+    values: { ...skeletonAt(120, 120, open), seams: 'offset', screwHead: 'lock', standoffs: 'slots' },
+  },
   // open sides between the slots (D282, D288 a), each corner's fixing where its sides leave room (D289 a)
   { name: 'solid-3x2-between-open', type: solid, values: { ...solidAt(120, 80, open), seams: 'between' } },
   {

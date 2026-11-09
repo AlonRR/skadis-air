@@ -379,10 +379,12 @@ function buildOne(engine, type, given, pass) {
 
 const chosenTypes = (id) => (id ? BOARD_TYPES.filter((t) => t.id === id) : BOARD_TYPES);
 
-async function buildPass(id) {
+async function buildPass(id, only) {
   const engine = await loadEngine();
+  const [onlyKey, onlyValue] = only?.split('=') ?? [];
   for (const type of chosenTypes(id)) {
-    const factors = type.settings.map((s) => levels(type, s, true));
+    // `key=value` holds one setting at one value, so every pair of the others is built beside it: a new option's sweep
+    const factors = type.settings.map((s) => (s.key === onlyKey ? [onlyValue] : levels(type, s, true)));
     const rows = pairwise(factors, 633);
     let i = 0;
     for (const row of rows) {
@@ -557,10 +559,10 @@ function report() {
   console.log(`report: ${form.findings.length} form findings, ${parts.length} parts, ${faults.length} part findings`);
 }
 
-const [pass, id] = process.argv.slice(2);
+const [pass, id, only] = process.argv.slice(2);
 mkdirSync(out, { recursive: true });
 if (pass === 'form') formPass();
-else if (pass === 'build') await buildPass(id);
+else if (pass === 'build') await buildPass(id, only);
 else if (pass === 'alias') await aliasPass(id);
 else if (pass === 'report') report();
 else {
