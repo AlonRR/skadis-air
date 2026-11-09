@@ -99,6 +99,12 @@ export async function choose(page: Page, name: string, value: string): Promise<v
       if ((await input.count()) > 0) break;
     }
   }
+  // with a test print chosen the Board list gives way to the way back (D639 a), as a person goes back to a board
+  const note = page.getByTestId('test-print-note');
+  if (name === 'boardType' && (await note.isVisible())) {
+    const inFold = await input.evaluate((i) => i.closest('details') !== null);
+    if (!inFold) await note.getByRole('button', { name: 'Back to boards' }).click();
+  }
   // the group the type is in, unless its list is shown already: a wall's boards are the boards' list (D590)
   const hidden = name === 'boardType' && (await input.evaluate((i) => i.closest('[hidden]') !== null));
   const group = hidden ? await input.getAttribute('data-group') : null;

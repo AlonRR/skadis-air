@@ -29,7 +29,7 @@ test('makes a board on tape, on standoffs behind its corner slots, its tape as s
   await expect(chosen(page, 'standoffs')).toHaveValue('slots');
   for (const where of ['none', 'corners'])
     await expect(page.locator(`input[name="standoffs"][value="${where}"]`)).toBeDisabled();
-  await expect(page.getByTestId('ruled-standoffs')).toContainText('behind its corner slots');
+  await expect(page.getByTestId('ruled-standoffs')).toContainText('behind the corner slots');
   await expect(screw).toBeHidden(); // no screw on tape (D620 a)
   await expect(tape).toBeVisible();
   await expect(tape).toHaveValue('19'); // D603 b

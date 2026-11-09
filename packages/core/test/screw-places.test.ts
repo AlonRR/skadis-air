@@ -45,7 +45,9 @@ function part(type: AnyBoardType, given: Record<string, unknown>) {
 /** Whether a part type lists the screw size, the one setting, a board's saying when it applies (D620 a). */
 const sameScrewSize = (type: AnyBoardType) => {
   const listed = type.settings.find((s) => s.key === SCREW_SIZE_SETTING.key);
-  return listed === SCREW_SIZE_SETTING || JSON.stringify(listed) === JSON.stringify(SCREW_SIZE_SETTING);
+  // the standoff says in its own words what its posts take (A640); the rest is the one setting
+  const plain = (s: unknown) => JSON.stringify({ ...(s as object), help: undefined });
+  return listed === SCREW_SIZE_SETTING || plain(listed) === plain(SCREW_SIZE_SETTING);
 };
 
 describe('the screw size (D479)', () => {
