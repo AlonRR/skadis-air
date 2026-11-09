@@ -48,7 +48,7 @@ test('makes a board on tape, on standoffs behind its corner slots, its tape as s
   await choose(page, 'screwHead', 'countersunk');
   await expect(screw).toBeVisible();
   await expect(tape).toBeHidden();
-  await expect(chosen(page, 'standoffs')).toHaveValue('none');
+  await expect(chosen(page, 'standoffs')).toHaveValue('corners'); // D635 a: the board keeps standing off the wall
   await expect(page.locator('input[name="standoffs"][value="slots"]')).toBeDisabled();
 });
 
