@@ -312,14 +312,17 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
   numbers in the standoff's Fixing help; the standoff's Screw size help naming Advanced sizes it has not; the seam
   test's file name (no chamfer, "--0.5"); a board's tape length field to 60 mm where 40 is the most a board takes; the
   README's four connectors, `docs/extending.md`'s "screw holes", the Printables text's "starting values" and the weight
-  note's "at the starting values" beside a 160 mm board. Also, found by the sweep of D641 a, on today's pattern too: a lightened board closed all round, 240 x 120 mm, 10 mm thick, rim and web 1.2 mm, corner radius 20 mm, countersunk, has 2 facets of no area and 2 open edges.
+  note's "at the starting values" beside a 160 mm board. Also, found by the sweep of D641 a, on today's pattern too: a lightened board closed all round, 240 x 120 mm, 10 mm thick, rim and web 1.2 mm, corner radius 20 mm, countersunk, has 2 facets of no area and 2 open edges; and the refusal of a board too narrow for two standoffs with no slot at the
+  corners names no field, as the others listed here.
 - **D642** The new choice's words (D641 a, 9 Nov 2026), under Open sides, a third option beside the two there were:
   (a) "Through the slots, none at the corners", as built (recommended); (b) "Through the slots, moved 20 mm"; (c) a
   field of its own instead. Pictures in `docs/figures/slot-pattern-2026-11-09/`.
 - **A643** Release the second slot pattern as `v0.12.0`, so the page has it: the site is the latest release (A291).
-- **D644** Four boards with no slot at the corners meet where the 4-board clip's and standoff's pegs have no slots, so
-  they join by 2-board clips along their seams, which the help says (D641 a, 9 Nov 2026): (a) leave it so (recommended);
-  (b) a 4-board connector for this pattern.
+  The Printables files do not change; the text gets a line for the new choice, and comment 3701868 an answer, both the
+  owner's to publish.
+- **D644** Four boards with no slot at the corners meet where the 4-board clip's pegs have no slots, so they join by
+  2-board clips along their seams, which the help says (D641 a, 9 Nov 2026); the 4-board standoff has no pegs and fits as
+  it is: (a) leave it so (recommended); (b) a 4-board clip for this pattern.
 - **T615** Print the nut test print and say which seat holds (D607 a, 31 Oct 2026): nine taped 1-board nut standoffs,
   M3, M4 and M5, each with a seat the nut + 0.1, 0.2 and 0.3 mm across its flats, told apart by 1, 2 or 3 dots on
   the board face: `.check/test-print/skadis-trial-nuts.stl` (`node scripts/test-print/write-trial-plate.mjs nuts`;
