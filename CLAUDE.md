@@ -218,6 +218,7 @@ npm run build -w skadis-air
 node scripts/checks/sweep-settings.mjs form      # every choice beside every other, read: about a minute
 node scripts/checks/sweep-settings.mjs alias     # each option a field lets be chosen, built: two that make one part
 node scripts/checks/sweep-settings.mjs build     # every pair of values built, each mesh checked; resumable
+node scripts/checks/sweep-settings.mjs build solid seams=offset   # one type, one setting held: every pair of the others beside a new option
 node scripts/checks/sweep-settings.mjs report    # .check/sweep/report.md
 node scripts/checks/sweep-page.mjs http://127.0.0.1:4199/   # the built page served there, wide and phone, with shots
 ```

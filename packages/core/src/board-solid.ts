@@ -63,7 +63,9 @@ export function solidBoardParams(
     }
   }
   if (p.seams !== 'through' && p.seams !== 'offset' && p.seams !== 'between') {
-    throw new RangeError('The open sides must run through the slots, with or without one at the corners, or between them');
+    throw new RangeError(
+      'The open sides must run through the slots, with or without one at the corners, or between them',
+    );
   }
   return p;
 }
