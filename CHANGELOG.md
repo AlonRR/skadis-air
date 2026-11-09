@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-09
+
 ### Added
 
 - Open sides can run through the slots shifted: the SKÅDIS grid moved 20 mm, on every board type, so a board joins panels
