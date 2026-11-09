@@ -44,6 +44,9 @@ export const POCKET_CORNER_MM = 1;
 /** How far a sharp corner's mitre may reach, over the offset, before it is cut square: a pocket's corner of 11.5
  * degrees or more stays sharp through the sharp corners' opening (Q510); the lattice's are 45 degrees or more. */
 const SHARP_MITRE_LIMIT = 10;
+/** With the grid moved 20 mm (D641 a) a corner screw's pad leaves a speck of pocket between it and the corner, 3.4 mm
+ * across, 7.7 mm2 (the next smallest is 56): under this area it is left solid, where the screw's load comes in. */
+const LEAST_MOVED_POCKET_MM2 = 30;
 
 /** The lattice asked for, with the starting values filled in, refused when a member is under the minimum. */
 export function latticeParams(given: Partial<LatticeParams>): LatticeParams {
@@ -92,6 +95,20 @@ function bar([x0, y0]: Vec2, [x1, y1]: Vec2, width: number): Vec2[] {
  * here against the minimum, so a test can build a lattice under it.
  */
 export function pocketShape(
+  engine: Engine,
+  board: SolidBoardParams,
+  members: Members,
+  pads: readonly Vec2[][],
+): CrossSection {
+  const pockets = latticePockets(engine, board, members, pads);
+  if (!slotsMoved(board.sides, board.seams)) return pockets;
+  const parts = pockets.decompose();
+  const kept = engine.CrossSection.compose(parts.filter((p) => p.area() >= LEAST_MOVED_POCKET_MM2));
+  for (const p of [pockets, ...parts]) p.delete();
+  return kept;
+}
+
+function latticePockets(
   engine: Engine,
   board: SolidBoardParams,
   members: Members,

@@ -271,6 +271,7 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D618 | **Standoffs: None, At the corners, Behind slots** ("618 a"; the owner: "behind a peg, none, and corners"), the page's word for the holes (C623, C628) | 31 Oct 2026 |
 | D619 | **What each mounting stands on, and tape behind the slots** ("619 yes and tape a"): a corner screw on None or At the corners, Behind slots greyed with a note that lock screws are the screws behind the slots; keyholes and lock screws Behind slots only, as built; None any of the three; tape on four posts behind the corner tiles' slots, as the keyholes', each flaring to its pad behind the hooks' room (the owner: "use the keyholes design as the basis, this way their is a lot more room to grow the standoff for larger tape sizes"), the corner pads retired (C622, C624 to C626) | 31 Oct 2026 |
 | D620 | **A setting that does not apply is hidden, not greyed** ("620 a"; the owner: "Tape sizes should only appear when tape is clicked, the same if a screw option isn't clicked"): every such setting; an option that does not apply stays greyed with its note (D589) (C627) | 31 Oct 2026 |
+| D641 | **A second slot pattern, no slot at the corners** ("641 a", 9 Nov 2026; asked for in Printables comment 3701868, 5 Nov 2026, to join another generator's panels): the SKÅDIS grid moved 20 mm, on every board type, today's the default, with open sides through the slots only. A move across or up makes the same board, so on 40 mm tiles there are exactly two patterns | 9 Nov 2026 |
 | D633 | **A settings sweep, then a reviewer** ("633 a", 31 Oct 2026; the owner: "a sonnet agent test every setting to find bugs and inconsistencies"): `scripts/checks/sweep-settings.mjs` reads every choice of every type beside every other and builds every pair of values, `scripts/checks/sweep-page.mjs` walks the built page; the rules that hold are kept as tests (`packages/core/test/settings-sweep.test.ts`), and a Sonnet agent reviews the report, the page's words and its pictures, reporting only; each finding is reproduced before the owner sees it | 31 Oct 2026 |
 | D634 | **The sweep's reach: the page, the files and the docs** ("634 b"): the form, the file names, the parts' meshes and the 3D view, and the README, the Printables text and the changelog against the page; no slicing | 31 Oct 2026 |
 | A621 | **The Sides control drawn over the 3D view on a phone, fixed (99b95d9), ships with the mounting changes** ("621 with redesign", 31 Oct 2026) | 31 Oct 2026 |
@@ -311,13 +312,14 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
   numbers in the standoff's Fixing help; the standoff's Screw size help naming Advanced sizes it has not; the seam
   test's file name (no chamfer, "--0.5"); a board's tape length field to 60 mm where 40 is the most a board takes; the
   README's four connectors, `docs/extending.md`'s "screw holes", the Printables text's "starting values" and the weight
-  note's "at the starting values" beside a 160 mm board.
-- **D641** A second slot pattern, asked for in a Printables comment (comment 3701868, 5 Nov 2026; the owner replied
-  9 Nov that it will be looked into): a printer of another generator's panels wants ours to join them. Measured from
-  the comment's picture, both panels 200 mm wide, ours has its whole slots at (20, 20) and the 40 mm grid on its corners; the
-  other has no slot at a corner, half slots at (20, 0) and (0, 20), the same grid moved 20 mm. A move in X or in Y makes
-  the same board, so on 40 mm tiles there are exactly two patterns. (a) a choice between the two on every board type,
-  today's the default, with open sides through the slots only (recommended); (b) a number for the shift; (c) leave it.
+  note's "at the starting values" beside a 160 mm board. Also, found by the sweep of D641 a, on today's pattern too: a lightened board closed all round, 240 x 120 mm, 10 mm thick, rim and web 1.2 mm, corner radius 20 mm, countersunk, has 2 facets of no area and 2 open edges.
+- **D642** The new choice's words (D641 a, 9 Nov 2026), under Open sides, a third option beside the two there were:
+  (a) "Through the slots, none at the corners", as built (recommended); (b) "Through the slots, moved 20 mm"; (c) a
+  field of its own instead. Pictures in `docs/figures/slot-pattern-2026-11-09/`.
+- **A643** Release the second slot pattern as `v0.12.0`, so the page has it: the site is the latest release (A291).
+- **D644** Four boards with no slot at the corners meet where the 4-board clip's and standoff's pegs have no slots, so
+  they join by 2-board clips along their seams, which the help says (D641 a, 9 Nov 2026): (a) leave it so (recommended);
+  (b) a 4-board connector for this pattern.
 - **T615** Print the nut test print and say which seat holds (D607 a, 31 Oct 2026): nine taped 1-board nut standoffs,
   M3, M4 and M5, each with a seat the nut + 0.1, 0.2 and 0.3 mm across its flats, told apart by 1, 2 or 3 dots on
   the board face: `.check/test-print/skadis-trial-nuts.stl` (`node scripts/test-print/write-trial-plate.mjs nuts`;

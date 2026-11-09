@@ -6,6 +6,11 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Open sides can run through the slots with none at the corners: the SKÅDIS grid moved 20 mm, on every board type, so a
+  board joins panels from generators that lay it out that way. Boards and files at the other settings do not change.
+
 ## [0.11.2] - 2026-10-31
 
 ### Changed

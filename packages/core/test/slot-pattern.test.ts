@@ -4,7 +4,9 @@ import type { CrossSection, Manifold } from 'manifold-3d';
 import { afterAll, describe, expect, it } from 'vitest';
 import { BOARD_TYPES } from '../src/board-types/index.js';
 import { loadEngine } from '../src/engine.js';
-import { keyholePlaces, bottomSlotPlaces, screwPlaces } from '../src/mounting.js';
+import { boardParamsOf } from '../src/board-types/solid.js';
+import { framedBoard, LATTICE_DEFAULTS, latticeMembers, pocketShape } from '../src/lightened.js';
+import { keyholePlaces, bottomSlotPlaces, mountingOf, mountingPads, screwPlaces } from '../src/mounting.js';
 import { defaultValues, readValues } from '../src/settings.js';
 import { ALL_OPEN, boardExtent, type Sides, slotPlaces, slotsWorth } from '../src/slots.js';
 import { meshOf } from '../src/stl.js';
@@ -186,6 +188,41 @@ describe('the boards with no slot at the corners (D641 a)', () => {
             expect(degenerateFacets(mesh)).toBe(0);
           },
         );
+});
+
+describe("the pockets at a board's corners with no slot there (D641 a)", () => {
+  /** Each pocket's area, smallest first, on a lattice board with a corner screw of this size. */
+  function pocketAreas(seams: string, screwMm: number): number[] {
+    const type = typeOf('lightened');
+    const read = readValues(type.settings, {
+      ...defaultValues(type.settings),
+      widthMm: 200,
+      heightMm: 200,
+      seams,
+      screwHead: 'countersunk',
+      screwMm,
+    });
+    if (!read.ok) throw new Error('refused');
+    const values = read.values as never;
+    const board = boardParamsOf(values);
+    const framed = framedBoard(board, LATTICE_DEFAULTS);
+    const shape = keep(
+      pocketShape(engine, board, latticeMembers(board, LATTICE_DEFAULTS), mountingPads(mountingOf(values), framed)),
+    );
+    return shape
+      .decompose()
+      .map((p) => keep(p).area())
+      .sort((a, b) => a - b);
+  }
+
+  for (const screwMm of [3, 4, 5])
+    it(`leave no speck beside a ${screwMm} mm corner screw's pad`, () => {
+      expect(pocketAreas('offset', screwMm)[0]).toBeGreaterThan(30);
+    });
+
+  it("keeps today's pockets, the control: none so small", () => {
+    expect(pocketAreas('through', 4)[0]).toBeGreaterThan(30);
+  });
 });
 
 describe('what stands behind a board with no slot at the corners (D641 a)', () => {

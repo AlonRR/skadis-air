@@ -305,12 +305,13 @@ describe('the solid board type', () => {
     expect(boardFileName(solid, closed, 'stl')).toBe('skadis-solid-160x160-closed-left-bottom.stl');
   });
 
-  it('offers open sides through the slots or between them, through unless set (D282)', () => {
+  it('offers open sides through the slots, with none at the corners (D641 a), or between them, through unless set (D282)', () => {
     const seams = solid.settings.find((x) => x.key === 'seams');
     expect(seams?.kind).toBe('choice');
     if (seams?.kind !== 'choice') return;
     expect(seams.options.map((o) => [o.value, o.label])).toEqual([
       ['through', 'Through the slots'],
+      ['offset', 'Through the slots, none at the corners'],
       ['between', 'Between the slots'],
     ]);
     expect(seams.default).toBe('through');
