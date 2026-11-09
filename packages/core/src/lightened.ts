@@ -13,7 +13,7 @@ import type { Engine } from './engine.js';
 import { type MountingBoard, mountingCuts, mountingPads, type MountingParams } from './mounting.js';
 import { stadium } from './rings.js';
 import { GRID_PITCH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
-import { slotPlaces } from './slots.js';
+import { slotPlaces, slotsMoved } from './slots.js';
 
 /**
  * How a pocket's corners are drawn: on the long eased curves of today's boards (D278), or as the first boards had them
@@ -111,10 +111,23 @@ export function pocketShape(
     contours.push(stadium(s.xMm, s.yMm, w, h, members.rimGrowMm));
   }
   // Every tile's X, corner to corner through its centre, also where a closed side, or an open one between the slots,
-  // leaves out the corner's slot: there the web runs into the edge band.
+  // leaves out the corner's slot: there the web runs into the edge band. With the grid moved 20 mm (D641 a) the same
+  // diagonals run through the middles of the tile's sides, a diamond round its centre.
+  const moved = slotsMoved(board.sides, board.seams);
   for (let i = 0; i < board.columns; i++) {
     for (let j = 0; j < board.rows; j++) {
       const centre: Vec2 = [TILE_MM * i + half, TILE_MM * j + half];
+      if (moved) {
+        const [x, y] = centre;
+        const corners: Vec2[] = [
+          [x + half, y],
+          [x, y + half],
+          [x - half, y],
+          [x, y - half],
+        ];
+        corners.forEach((a, k) => contours.push(bar(a, corners[(k + 1) % 4] ?? a, members.webMm)));
+        continue;
+      }
       for (const [dx, dy] of [
         [-1, -1],
         [1, -1],

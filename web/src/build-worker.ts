@@ -51,6 +51,7 @@ function slotOf(values: Readonly<Record<string, unknown>>): Slot {
     widthMm: SLOT_WIDTH_MM + clearance,
     heightMm: SLOT_HEIGHT_MM + clearance,
     chamferMm: given('slotChamferMm'),
+    ...(values['seams'] === 'offset' ? { noCornerSlots: true } : {}),
   };
 }
 

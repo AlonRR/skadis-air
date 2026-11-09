@@ -27,7 +27,7 @@ export interface SolidBoardParams {
   slotClearanceMm: number; // added to the slot's width and height (D40)
   slotChamferMm: number; // 45 degree chamfer round each slot, at both faces (D41)
   cornerRadiusMm: number; // where both sides at a corner are closed (D39); open corners stay square to tile
-  seams: Seams; // the open sides through the slots (D15) or between them (D282, D288 a)
+  seams: Seams; // the open sides through the slots (D15), the grid moved 20 mm (D641 a), or between them (D282, D288 a)
 }
 
 export const SOLID_BOARD_DEFAULTS = {
@@ -62,8 +62,8 @@ export function solidBoardParams(
       throw new RangeError(`The ${side} side must be open or closed`);
     }
   }
-  if (p.seams !== 'through' && p.seams !== 'between') {
-    throw new RangeError('The open sides must run through the slots or between them');
+  if (p.seams !== 'through' && p.seams !== 'offset' && p.seams !== 'between') {
+    throw new RangeError('The open sides must run through the slots, with or without one at the corners, or between them');
   }
   return p;
 }

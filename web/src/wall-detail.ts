@@ -17,7 +17,26 @@ export interface Slot {
   widthMm: number;
   heightMm: number;
   chamferMm: number;
+  noCornerSlots?: boolean; // the grid moved 20 mm, as the panels cut it (D641 a)
 }
+
+/** Where a 40 mm tile's picture has its slots, mm from its corner: one in the middle and a quarter at each corner
+ * (D15), or with no slot at the corners, a half on the middle of each side (D641 a). */
+export const tileSlots = (slot: Slot): readonly (readonly [number, number])[] =>
+  slot.noCornerSlots === true
+    ? [
+        [20, 0],
+        [0, 20],
+        [40, 20],
+        [20, 40],
+      ]
+    : [
+        [20, 20],
+        [0, 0],
+        [40, 0],
+        [0, 40],
+        [40, 40],
+      ];
 
 /** A wall's panels as a grid: where each column and row starts and how wide or tall it is, mm, left to right
  * and bottom to top, which kind of panel is at a column and a row, and the slots they cut. */

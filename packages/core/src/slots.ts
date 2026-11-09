@@ -5,7 +5,9 @@
 // or closed, leaving them out (D34); a board is open all round unless told otherwise (D37). Or an open side runs
 // between the slots (D282, D288 a): 10 mm right of or above the grid line it would run through, so its seam falls
 // midway between two columns of slots, or across the web between two slots' ends, and every slot is whole; a
-// closed side stays where it is.
+// closed side stays where it is. Or the whole grid is moved 20 mm (D641 a, 9 Nov 2026), as some other generators lay
+// it out: no slot at a corner, a half slot on the middle of each open side's tile, so a board joins their panels. A
+// move across or up makes the same board, so on 40 mm tiles there are exactly these two patterns.
 import { GRID_PITCH_MM, TILE_MM } from './skadis.js';
 
 export type Side = 'left' | 'right' | 'bottom' | 'top';
@@ -14,8 +16,14 @@ export type Sides = Record<Side, SideState>;
 
 export const ALL_OPEN: Readonly<Sides> = Object.freeze({ left: 'open', right: 'open', bottom: 'open', top: 'open' });
 
-/** Where a board's open sides run: through a line of slots, cutting them in half (D15), or between them (D282). */
-export type Seams = 'through' | 'between';
+/** Where a board's open sides run: through a line of slots, cutting them in half (D15), the same with the grid moved
+ * 20 mm so no slot is at a corner (D641 a), or between them (D282). */
+export type Seams = 'through' | 'offset' | 'between';
+
+/** Whether these slots are the grid moved 20 mm (D641 a): a board closed all round has no seam to match, and keeps the
+ * pattern of an IKEA board. */
+export const slotsMoved = (sides: Sides, seams: Seams): boolean =>
+  seams === 'offset' && Object.values(sides).some((state) => state === 'open');
 
 /** How far an open side between the slots lies right of or above the grid line it would run through (D288 a):
  * midway between the 40 mm grid's slots and the shifted grid's. */
@@ -69,6 +77,7 @@ export function slotPlaces(columns: number, rows: number, sides: Sides, seams: S
   tiles(columns, 'The number of columns');
   tiles(rows, 'The number of rows');
   if (seams === 'between') return wholePlaces(columns, rows, sides);
+  if (slotsMoved(sides, seams)) return movedPlaces(columns, rows, sides);
   const places: SlotPlace[] = [];
   // the shifted grid: one whole slot in the middle of every tile
   for (let i = 0; i < columns; i++) {
@@ -87,6 +96,24 @@ export function slotPlaces(columns: number, rows: number, sides: Sides, seams: S
       places.push({ xMm: TILE_MM * i, yMm: TILE_MM * j, part });
     }
   }
+  return places;
+}
+
+/** The grid moved 20 mm (D641 a): whole inside, half on an edge, left out on a closed side; none falls on a corner. */
+function movedPlaces(columns: number, rows: number, sides: Sides): SlotPlace[] {
+  const [right, top] = [TILE_MM * columns, TILE_MM * rows];
+  const places: SlotPlace[] = [];
+  const add = (xMm: number, yMm: number) => {
+    const on: Side[] = [];
+    if (xMm === 0) on.push('left');
+    if (xMm === right) on.push('right');
+    if (yMm === 0) on.push('bottom');
+    if (yMm === top) on.push('top');
+    if (on.some((side) => sides[side] === 'closed')) return;
+    places.push({ xMm, yMm, part: on.length === 0 ? 'whole' : 'half' });
+  };
+  for (let i = 0; i < columns; i++) for (let j = 0; j <= rows; j++) add(TILE_MM * i + HALF, TILE_MM * j);
+  for (let i = 0; i <= columns; i++) for (let j = 0; j < rows; j++) add(TILE_MM * i, TILE_MM * j + HALF);
   return places;
 }
 

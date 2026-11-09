@@ -30,7 +30,7 @@ import { mountingCuts, mountingPads, type MountingParams } from './mounting.js';
 import { loftedSolid } from './rings.js';
 import { SettingsProblem } from './settings.js';
 import { SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
-import { slotPlaces } from './slots.js';
+import { slotPlaces, slotsMoved } from './slots.js';
 
 export interface SkeletonParams extends LatticeParams {
   coreMm: number; // how narrow a member gets through the middle (D147)
@@ -106,6 +106,8 @@ function alongOf(
     [s.xMm, s.yMm + (h - w) / 2],
   ]);
   const outline = boardFace(board);
+  // the diagonals through the slots: the grid's, or 20 mm along with it (D641 a)
+  const moved = slotsMoved(board.sides, board.seams) ? TILE_MM / 2 : 0;
   const rounds = pads.map((ring): [Vec2, number] => {
     const [cx, cy] = ring.reduce(([x, y], [px, py]) => [x + px / ring.length, y + py / ring.length], [0, 0]);
     const [fx, fy] = ring[0] ?? [cx, cy];
@@ -115,7 +117,7 @@ function alongOf(
     ring.map((a, i): Along => {
       const b = ring[(i + 1) % ring.length] ?? a;
       const m: Vec2 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-      const web = Math.min(offGrid(m[0] - m[1]), offGrid(m[0] + m[1])) / Math.SQRT2;
+      const web = Math.min(offGrid(m[0] - m[1] - moved), offGrid(m[0] + m[1] - moved)) / Math.SQRT2;
       if (near(web, members.webMm / 2)) return 'web';
       if (slots.some(([s0, s1]) => near(toSegment(m, s0, s1) - w / 2, members.rimGrowMm))) return 'rim';
       const edge = Math.min(...outline.map((p, k) => toSegment(m, p, outline[(k + 1) % outline.length] ?? p)));

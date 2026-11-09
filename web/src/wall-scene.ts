@@ -27,7 +27,16 @@ import {
 import { panelCount, TILE_MM } from 'skadis-air';
 import type { PanelLine, Placed, WallReply } from './build-messages.js';
 import { BOARD, OUTLINE, OUTLINE_ANGLE_DEGREES, STAND_IN } from './preview-scene.js';
-import { chooseDetail, key, pixelsAtOneMm, wallRect, type Rect, type Slot, type WallGrid } from './wall-detail.js';
+import {
+  chooseDetail,
+  key,
+  pixelsAtOneMm,
+  tileSlots,
+  wallRect,
+  type Rect,
+  type Slot,
+  type WallGrid,
+} from './wall-detail.js';
 
 /** How many pixels the picture of the tile the stand-ins repeat has a side. */
 const PICTURE_PX = 256;
@@ -41,12 +50,12 @@ export const TRIANGLE_BUDGET = 5_000_000;
 let picture: { of: string; texture: CanvasTexture } | null = null;
 
 /**
- * One 40 mm tile's slot pattern, as the tiles are cut (D15): a whole slot in the middle and a quarter of one at
- * each corner, each the wall's slot, cut out, so what is behind shows through as through a real slot, in a grey
+ * One 40 mm tile's slot pattern, as the tiles are cut (tileSlots), each the wall's slot, cut out, so what is behind shows through as through a real slot, in a grey
  * ring for its chamfer, on a white plate the material's colour tints. Made once for each size of slot.
  */
-function slotPicture({ widthMm, heightMm, chamferMm }: Slot, anisotropy: number): CanvasTexture {
-  const of = `${widthMm} ${heightMm} ${chamferMm}`;
+function slotPicture(wallSlot: Slot, anisotropy: number): CanvasTexture {
+  const { widthMm, heightMm, chamferMm } = wallSlot;
+  const of = `${widthMm} ${heightMm} ${chamferMm} ${wallSlot.noCornerSlots === true}`;
   if (picture?.of === of) return picture.texture;
   picture?.texture.dispose();
   const canvas = document.createElement('canvas');
@@ -66,13 +75,7 @@ function slotPicture({ widthMm, heightMm, chamferMm }: Slot, anisotropy: number)
     g.closePath();
     g.fill();
   };
-  for (const [x, y] of [
-    [20, 20],
-    [0, 0],
-    [40, 0],
-    [0, 40],
-    [40, 40],
-  ] as const) {
+  for (const [x, y] of tileSlots(wallSlot)) {
     slot(x, y, widthMm + 2 * chamferMm, heightMm + 2 * chamferMm, '#8f959b'); // the chamfer, all round
     g.globalCompositeOperation = 'destination-out'; // the slot itself, through
     slot(x, y, widthMm, heightMm, '#000000');

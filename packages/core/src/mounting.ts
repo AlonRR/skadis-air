@@ -41,7 +41,7 @@ import {
   tapeHolds,
 } from './tape.js';
 import { HOOK_DEPTH_MM, HOOK_DROP_MM, HOOK_WIDTH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM, TILE_MM } from './skadis.js';
-import { ALL_OPEN, boardExtent, type Extent, slotPlaces } from './slots.js';
+import { ALL_OPEN, boardExtent, type Extent, slotPlaces, slotsMoved } from './slots.js';
 
 /** How a board holds to the wall (D74; "Mounting", D617 c): a screw in each corner, countersunk or round; keyholes at
  * the top two corners (D156); lock screws alone at all four (D289); tape (D619 a); or nothing. */
@@ -593,7 +593,7 @@ function standoffSlot(board: MountingBoard, outline: Outline, [cx, cy]: readonly
       Math.max(...ys) <= e.y1 - m
     );
   };
-  const [best] = slotPlaces(board.columns, board.rows, board.sides ?? ALL_OPEN, 'between')
+  const [best] = slotPlaces(board.columns, board.rows, board.sides ?? ALL_OPEN, board.seams ?? 'between')
     .map((s): [number, number] => [s.xMm, s.yMm])
     .filter(fits)
     .map((q) => ({ q, d: Math.hypot(q[0] - cx, q[1] - cy), dy: Math.abs(q[1] - cy), dx: Math.abs(q[0] - cx) }))
@@ -601,6 +601,11 @@ function standoffSlot(board: MountingBoard, outline: Outline, [cx, cy]: readonly
   if (best === undefined) throw new RangeError('The board is too small for a standoff behind a slot at each corner');
   return best.q;
 }
+
+/** Whether a board's standoffs stand behind the slots found nearest its corners: between the slots (D289 a), or with
+ * the grid moved 20 mm, where a corner tile has no slot at its centre (D641 a). */
+const slotsSearched = (b: MountingBoard): boolean =>
+  b.seams === 'between' || slotsMoved(b.sides ?? ALL_OPEN, b.seams ?? 'through');
 
 /** The middles of a board's two keyholes: its top corner tiles' centre slots, which the standoffs stand behind,
  * 11.25 mm clear of every other slot and hook where panels meet (D244); between the slots, the slot nearest each top
@@ -611,7 +616,7 @@ export function keyholePlaces(
   screwMm = MOUNTING_DEFAULTS.screwMm,
   outline: Outline = (q) => keyholePad(screwMm, q),
 ): readonly (readonly [number, number])[] {
-  if (board.seams === 'between') {
+  if (slotsSearched(board)) {
     const e = extentOfBoard(board);
     return [standoffSlot(board, outline, [e.x0, e.y1]), standoffSlot(board, outline, [e.x1, e.y1])];
   }
@@ -630,7 +635,7 @@ export function bottomSlotPlaces(
   screwMm = MOUNTING_DEFAULTS.screwMm,
   outline: Outline = (q) => keyholePad(screwMm, q),
 ): readonly (readonly [number, number])[] {
-  if (board.seams === 'between') {
+  if (slotsSearched(board)) {
     const e = extentOfBoard(board);
     return [standoffSlot(board, outline, [e.x0, e.y0]), standoffSlot(board, outline, [e.x1, e.y0])];
   }
@@ -1037,8 +1042,11 @@ export function mountingCuts(
   const [tops, bottoms] = behindSlots ? slotStandoffPlaces(m, board) : [[], []];
   if (behindSlots && standoffsMeet([...tops, ...bottoms], outline)) {
     throw new RangeError(
-      `${what} need a larger board: between the slots, two of its standoffs would meet, behind the slots nearest ` +
-        'its corners; open a side, or make it a tile larger',
+      board.seams === 'between'
+        ? `${what} need a larger board: between the slots, two of its standoffs would meet, behind the slots nearest ` +
+            'its corners; open a side, or make it a tile larger'
+        : `${what} need a larger board: with no slot at the corners, two of its standoffs would meet, behind the slots ` +
+            'nearest its corners; make it a tile larger',
     );
   }
   const tape = m.screwHead === 'tape' ? [m.tapeMm ?? TAPE_MM, m.tapeLengthMm ?? TAPE_LENGTH_MM] : undefined;

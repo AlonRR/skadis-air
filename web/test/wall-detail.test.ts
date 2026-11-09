@@ -7,6 +7,7 @@ import {
   chooseDetail,
   panelRect,
   pixelsAtOneMm,
+  tileSlots,
   wallRect,
   wallSize,
   type DetailOptions,
@@ -186,4 +187,21 @@ describe('a wall between the slots (D288)', () => {
       for (const s of detail.standIns) for (const q of detail.plain) expect(overlap(s, q)).toBe(0);
     });
   }
+});
+
+describe('the slots in the picture of a tile (D641 a)', () => {
+  const slot = { widthMm: 5.2, heightMm: 15.2, chamferMm: 1 };
+
+  it("draws today's: a slot in the middle and one at each corner", () => {
+    expect([...tileSlots(slot)].map(String).sort()).toEqual(['0,0', '0,40', '20,20', '40,0', '40,40']);
+  });
+
+  it('with no slot at the corners, one on the middle of each side and none in the middle', () => {
+    expect([...tileSlots({ ...slot, noCornerSlots: true })].map(String).sort()).toEqual([
+      '0,20',
+      '20,0',
+      '20,40',
+      '40,20',
+    ]);
+  });
 });

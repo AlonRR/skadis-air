@@ -42,6 +42,8 @@ import { TUNNEL_DEPTH_MM } from './standoff.js';
 
 /** The boards it joins: 2 side by side, 2 one above the other (C191), or 4 where their corners meet. */
 export type SlotClipBoards = '2' | '2-stacked' | '4';
+/** Where the boards' open sides run: a clip has no form for the grid moved 20 mm, whose side seams it fits as it is (D641 a). */
+export type ClipSeams = Exclude<Seams, 'offset'>;
 /** How it is fixed to the wall, if at all (D195). */
 export type SlotClipFixing = 'none' | 'screw' | 'keyhole';
 /** A screw's head: in a countersink, or a round (pan) head in a counterbore (D265). */
@@ -54,7 +56,7 @@ export interface SlotClipParams {
   fixing: SlotClipFixing;
   screwHead: SlotClipScrewHead; // for a screw (D265)
   screwMm: number; // the screw's diameter, for a screw or a keyhole (D76)
-  seams: Seams; // where the boards' open sides run: through the slots, or between them (D282, D290 a)
+  seams: ClipSeams; // where the boards' open sides run: through the slots, or between them (D282, D290 a)
   /** For the trial only (T268): the snap lip on split pegs, to be locked by a fill in the slit (makeSlotFill); ribs
    * unless given. The page's clip never asks for it (D261). */
   grip?: 'ribs' | 'lip';
@@ -217,7 +219,7 @@ export function slotClipScrews(p: SlotClipParams): string | undefined {
 }
 
 /** Where its pegs are, round the point between them: between the slots, on the diagonal, a row apart (D290 a). */
-function pegCentres(boards: SlotClipBoards, seams: Seams): [number, number][] {
+function pegCentres(boards: SlotClipBoards, seams: ClipSeams): [number, number][] {
   if (seams === 'between') {
     const b = BETWEEN_SHIFT_MM;
     return [
