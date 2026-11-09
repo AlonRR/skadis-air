@@ -33,6 +33,9 @@ describe('the page line', () => {
     expect(line).toContain(whole(grams.gramsByBoard['lightened-curved']));
     expect(line).toContain('200 × 200 mm');
     expect(line).toContain('PETG');
+    // says the figure is the 200 mm sample's, whatever size is on screen (A640)
+    expect(line).toMatch(/^A 200 × 200 mm board of this kind weighs about \d+ g/);
+    expect(line).not.toContain('at the starting values');
     expect(line).not.toContain('%');
   });
 

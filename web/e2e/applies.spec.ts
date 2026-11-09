@@ -122,8 +122,12 @@ test('a value refused while its setting applies blocks nothing once it does not,
   await expect(page.getByTestId('error-lockScrewMm')).toHaveText('');
   await expect(size).not.toHaveAttribute('aria-invalid', /.*/);
   await expect(page.getByTestId('board-status')).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
-  // off the standoffs behind the slots that lock screws stood on (D289), which a corner screw cannot (D619)
-  await expect(page.getByTestId('board-status')).toHaveAttribute('data-file-name', 'skadis-solid-160x160.stl');
+  // off the standoffs behind the slots that lock screws stood on (D289), which a corner screw cannot (D619), to the
+  // corners, as the board keeps standing off the wall (D635 a)
+  await expect(page.getByTestId('board-status')).toHaveAttribute(
+    'data-file-name',
+    'skadis-solid-160x160-standoffs-15mm.stl',
+  );
   // the control: lock screws again, and the 9 is refused again
   await choose(page, 'screwHead', 'lock');
   await expect(page.getByTestId('error-lockScrewMm')).toHaveText("Lock screw's own size must be from 2 to 5 mm");

@@ -271,6 +271,16 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D618 | **Standoffs: None, At the corners, Behind slots** ("618 a"; the owner: "behind a peg, none, and corners"), the page's word for the holes (C623, C628) | 31 Oct 2026 |
 | D619 | **What each mounting stands on, and tape behind the slots** ("619 yes and tape a"): a corner screw on None or At the corners, Behind slots greyed with a note that lock screws are the screws behind the slots; keyholes and lock screws Behind slots only, as built; None any of the three; tape on four posts behind the corner tiles' slots, as the keyholes', each flaring to its pad behind the hooks' room (the owner: "use the keyholes design as the basis, this way their is a lot more room to grow the standoff for larger tape sizes"), the corner pads retired (C622, C624 to C626) | 31 Oct 2026 |
 | D620 | **A setting that does not apply is hidden, not greyed** ("620 a"; the owner: "Tape sizes should only appear when tape is clicked, the same if a screw option isn't clicked"): every such setting; an option that does not apply stays greyed with its note (D589) (C627) | 31 Oct 2026 |
+| D635 | **A board on standoffs keeps them when it moves to a corner screw**, which moves them to At the corners ("Both D635 a and D636 a"): a setting may name where a ruled-out choice moves (`movesTo`), the page and the library by one rule (`optionLeft`) | 9 Nov 2026 |
+| D636 | **Standoffs stays shown with its one choice under keyholes, lock screws and tape**, the others greyed with why | 9 Nov 2026 |
+| D637 | **The greyed reasons say which Mounting frees which option, and the slots are "the corner slots" throughout** ("637 a") | 9 Nov 2026 |
+| D638 | **The Advanced field is "Lock screws with keyholes"**, the Mounting option "Lock screws" ("638 a") | 9 Nov 2026 |
+| D639 | **The Board list gives way, while a test print is chosen, to a line naming it and "Back to boards"** ("639 a") | 9 Nov 2026 |
+| A640 | **The settings sweep's fixes, each test-first** ("640 y"), released with A643 as one `v0.12.0`, as the shifted pattern was on `main` before them, which a patch number would not fit | 9 Nov 2026 |
+| D642 | **"Through the slots, shifted"**, the third option under Open sides, the file name `-shifted` (the owner, on Q647) | 9 Nov 2026 |
+| A643 | **Release `v0.12.0`** ("643 y") | 9 Nov 2026 |
+| D644 | **Four shifted boards at a corner join by 2-board clips, a 4-board clip for them later** ("a with b later", read so on Q647; backlog `clip-4-shifted`). The 4-board standoff has no pegs and fits as it is | 9 Nov 2026 |
+| Q647 | **"643 a with b later" was D644, and "644 a" was both D635 a and D636 a** (the owner) | 9 Nov 2026 |
 | D641 | **A second slot pattern, no slot at the corners** ("641 a", 9 Nov 2026; asked for in Printables comment 3701868, 5 Nov 2026, to join another generator's panels): the SKÅDIS grid moved 20 mm, on every board type, today's the default, with open sides through the slots only. A move across or up makes the same board, so on 40 mm tiles there are exactly two patterns | 9 Nov 2026 |
 | D633 | **A settings sweep, then a reviewer** ("633 a", 31 Oct 2026; the owner: "a sonnet agent test every setting to find bugs and inconsistencies"): `scripts/checks/sweep-settings.mjs` reads every choice of every type beside every other and builds every pair of values, `scripts/checks/sweep-page.mjs` walks the built page; the rules that hold are kept as tests (`packages/core/test/settings-sweep.test.ts`), and a Sonnet agent reviews the report, the page's words and its pictures, reporting only; each finding is reproduced before the owner sees it | 31 Oct 2026 |
 | D634 | **The sweep's reach: the page, the files and the docs** ("634 b"): the form, the file names, the parts' meshes and the 3D view, and the README, the Printables text and the changelog against the page; no slicing | 31 Oct 2026 |
@@ -289,40 +299,6 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 ## Open questions
 
-- **D635** Switching from keyholes, lock screws or tape to a corner screw (31 Oct 2026, the settings sweep, D633 a):
-  the standoffs move to None, the first option left, so a board that stood on standoffs loses them. (a) move them to
-  At the corners (recommended: the board keeps standing off the wall), (b) keep None.
-- **D636** With keyholes, lock screws or tape the Standoffs field offers one choice, Behind slots, the other two
-  greyed with the reason (`docs/figures/sweep-2026-10-31/d636-standoffs-one-choice.png`); "For" on the slot clip was
-  hidden where it offered one. (a) keep it shown, greyed with its reason, as D619 and D620 a set (recommended: it
-  says why, and where the standoffs stand), (b) hide it there and say so in the Mounting note.
-- **D637** The words of the standoffs' greyed reasons and help (the sweep's review): "A corner screw needs its standoff
-  round it, at the corner. Lock screws are the screws that go through the slots into the standoffs behind them" does
-  not say what to change. (a) rewrite them to say which Mounting frees which option, and name "Behind slots" one way
-  throughout (recommended), (b) keep them.
-- **D638** "Lock screws" is both a Mounting option and the Advanced field that adds screws to a keyhole board.
-  (a) rename the Advanced field "Lock screws with keyholes" (recommended), (b) keep both names.
-- **D639** With a test print chosen under Advanced, the Board list shows nothing chosen
-  (`docs/figures/sweep-2026-10-31/d639-test-print-board-unchosen.png`). (a) hide the Board list while a test print is
-  chosen (recommended), (b) keep it.
-- **A640** Fix what the sweep found against decisions already made, each with its test first, and release `v0.11.3`:
-  the 5 mm nut standoff's facets of no area at a nut fit of 0.55 and 0.6 mm; the slot clip's Screw size shown with no
-  fixing and Screw head shown without a screw, and Open sides on a board closed all round (D620 a); refusals that name
-  no field (a board too small, a slot clip too shallow); "Tape need"; the tape note's square inches and pounds; decision
-  numbers in the standoff's Fixing help; the standoff's Screw size help naming Advanced sizes it has not; the seam
-  test's file name (no chamfer, "--0.5"); a board's tape length field to 60 mm where 40 is the most a board takes; the
-  README's four connectors, `docs/extending.md`'s "screw holes", the Printables text's "starting values" and the weight
-  note's "at the starting values" beside a 160 mm board. Also, found by the sweep of D641 a, on today's pattern too: a lightened board closed all round, 240 x 120 mm, 10 mm thick, rim and web 1.2 mm, corner radius 20 mm, countersunk, has 2 facets of no area and 2 open edges; and the refusal of a board too narrow for two standoffs with no slot at the
-  corners names no field, as the others listed here.
-- **D642** The new choice's words (D641 a, 9 Nov 2026), under Open sides, a third option beside the two there were:
-  (a) "Through the slots, none at the corners", as built (recommended); (b) "Through the slots, moved 20 mm"; (c) a
-  field of its own instead. Pictures in `docs/figures/slot-pattern-2026-11-09/`.
-- **A643** Release the second slot pattern as `v0.12.0`, so the page has it: the site is the latest release (A291).
-  The Printables files do not change; the text gets a line for the new choice, and comment 3701868 an answer, both the
-  owner's to publish.
-- **D644** Four boards with no slot at the corners meet where the 4-board clip's pegs have no slots, so they join by
-  2-board clips along their seams, which the help says (D641 a, 9 Nov 2026); the 4-board standoff has no pegs and fits as
-  it is: (a) leave it so (recommended); (b) a 4-board clip for this pattern.
 - **T615** Print the nut test print and say which seat holds (D607 a, 31 Oct 2026): nine taped 1-board nut standoffs,
   M3, M4 and M5, each with a seat the nut + 0.1, 0.2 and 0.3 mm across its flats, told apart by 1, 2 or 3 dots on
   the board face: `.check/test-print/skadis-trial-nuts.stl` (`node scripts/test-print/write-trial-plate.mjs nuts`;

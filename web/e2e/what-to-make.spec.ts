@@ -106,7 +106,7 @@ test('greys out no standoffs with keyholes or lock screws, saying why, and frees
   }
   await choose(page, 'screwHead', 'countersunk');
   await expect(none).toBeEnabled();
-  await expect(why).not.toContainText('Keyholes');
+  await expect(why).not.toContainText('Keyholes stand');
   await expect(why).toContainText('Behind slots needs Keyholes');
   // with no screws, every place is open, and nothing is said (D619)
   await choose(page, 'screwHead', 'none');

@@ -5,6 +5,7 @@
 // prints. The lists are read from the registry, as form.spec.ts reads them (C380).
 import { expect, test, type Page } from '@playwright/test';
 import { BOARD_TYPES, groupOf } from '../../packages/core/src/board-types/index.js';
+import { choose } from './design-system.js';
 
 const BOARDS = BOARD_TYPES.filter((t) => groupOf(t) === 'board' && t.testPrint !== true);
 const TEST_PRINTS = BOARD_TYPES.filter((t) => t.testPrint === true);
@@ -76,12 +77,12 @@ test('choosing the fit coupon shows its form, its Advanced open on it, and untic
   await expect(page.locator('input[name="boardType"]:checked')).toHaveCount(1);
 });
 
-test('choosing a board in the Board list goes back, with nothing ticked under Test prints (D357)', async ({ page }) => {
+test('Back to boards goes back, with nothing ticked under Test prints (D357, D639 a)', async ({ page }) => {
   await ready(page);
   await advanced(page).locator('summary').click();
   await testPrints(page).getByRole('radio', { name: 'Fit test coupon' }).check();
   await expect(status(page)).toHaveAttribute('data-file-name', /^skadis-fit-coupon-/);
-  await boardList(page).getByRole('radio', { name: 'Solid' }).check();
+  await page.getByTestId('test-print-note').getByRole('button', { name: 'Back to boards' }).click();
   await expect(status(page)).toHaveAttribute('data-file-name', /^skadis-solid-/);
   expect(await values(boardList(page), true)).toEqual(['solid']);
   expect(await values(testPrints(page), true)).toEqual([]);
@@ -134,4 +135,26 @@ test('the connectors are untouched: their list, and no test prints in their form
       await expect(page.getByTestId('board-form').locator(`input[value="${t.id}"]`)).toHaveCount(0);
     }
   }
+});
+
+test('hides the Board list while a test print is chosen, says so, and goes back to the board (D639 a)', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await page.goto('./');
+  await expect(status(page)).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
+  await choose(page, 'boardType', 'lightened');
+  await expect(status(page)).toHaveAttribute('data-file-name', /^skadis-lightened-/, { timeout: 30_000 });
+  const list = page.getByTestId('board-type').locator('input[name="boardType"][value="solid"]');
+  const note = page.getByTestId('test-print-note');
+  await expect(list).toBeVisible();
+  await expect(note).toBeHidden();
+  await choose(page, 'boardType', 'fit-coupon');
+  await expect(status(page)).toHaveAttribute('data-file-name', /^skadis-fit-coupon-/, { timeout: 30_000 });
+  await expect(list).toBeHidden();
+  await expect(note).toContainText('Fit test coupon');
+  await note.getByRole('button', { name: 'Back to boards' }).click();
+  await expect(status(page)).toHaveAttribute('data-file-name', /^skadis-lightened-/, { timeout: 30_000 });
+  await expect(list).toBeVisible();
+  await expect(note).toBeHidden();
 });

@@ -19,5 +19,5 @@ export function gramsLine(typeId: string, values: { look?: unknown }): string {
   const g = gramsFor(typeId, values);
   if (g === undefined) return '';
   const material = grams.filament.split(' ')[0];
-  return `About ${Math.round(g)} g for a ${grams.sizeMm} × ${grams.sizeMm} mm board at the starting values, printed in ${material}. Other sizes and settings weigh differently.`;
+  return `A ${grams.sizeMm} × ${grams.sizeMm} mm board of this kind weighs about ${Math.round(g)} g in ${material}, its other settings at their start. Other sizes and settings weigh differently.`;
 }

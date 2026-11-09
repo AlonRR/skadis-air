@@ -29,9 +29,9 @@ What it will make:
   - **solid**: a plain plate with the SKÅDIS slots;
   - **lightened**: pockets cut between the slots, with a rim kept round each slot;
   - **skeleton** (ultralight): rims round the slots tied by thin beams, mostly open.
-- **Connectors** of four kinds ([figure](docs/figures/connector-types.png)): a standoff, a slot clip
-  ([figure](docs/figures/slot-clip.png)), an angle joiner and a desk clamp, for 1, 2 or 4 boards where that
-  applies. The seam plate in the first figure was dropped for the slot clip, which needs no screw holes.
+- **Connectors** ([figure](docs/figures/connector-types.png)): a standoff and a slot clip
+  ([figure](docs/figures/slot-clip.png)), for 1, 2 or 4 boards where that applies; an angle joiner and a desk clamp
+  are planned. The seam plate in the first figure was dropped for the slot clip, which needs no screw holes.
 
 Every decision is in [`docs/status.md`](docs/status.md), the work in order in
 [`docs/backlog.md`](docs/backlog.md), and the SKÅDIS dimensions, each with its source, in

@@ -8,8 +8,24 @@ All notable changes to this project are recorded here. The format follows
 
 ### Added
 
-- Open sides can run through the slots with none at the corners: the SKÅDIS grid moved 20 mm, on every board type, so a
-  board joins panels from generators that lay it out that way. Boards and files at the other settings do not change.
+- Open sides can run through the slots shifted: the SKÅDIS grid moved 20 mm, on every board type, so a board joins panels
+  from generators that lay it out that way.
+
+### Changed
+
+- A board moved from keyholes, lock screws or tape to a corner screw keeps its standoffs, at the corners.
+- The standoffs' greyed reasons say which Mounting frees which option; the Advanced "Lock screws" is "Lock screws with
+  keyholes".
+- With a test print chosen, the Board list gives way to its name and "Back to boards".
+- A refused board size or clip depth marks the field to change. The tape note is metric. A board's tape length stops at
+  the 40 mm it can take.
+- Settings that do nothing are hidden: the slot clip's screw size with no fixing, its head without a screw, and Open sides
+  on a board closed all round.
+
+### Fixed
+
+- Facets of no area in the nut standoff's seat, and in a countersink on a corner rounded past 10 mm.
+- The seam test's file name says a chamfer other than the starting one, and a negative clearance has no double dash.
 
 ## [0.11.2] - 2026-10-31
 

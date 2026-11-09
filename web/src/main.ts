@@ -381,6 +381,36 @@ async function start(): Promise<void> {
     shownLists.set(group, list);
     typeList.append(list);
   }
+  // a test print is chosen under Advanced: its list, which would show nothing chosen, gives way to a line saying which,
+  // and the way back to the board that was shown (D639 a)
+  const plainType = new Map<string, string>();
+  const testNote = document.createElement('div');
+  testNote.dataset['testid'] = 'test-print-note';
+  testNote.hidden = true;
+  const testName = document.createElement('p');
+  const backToBoards = document.createElement('button');
+  backToBoards.type = 'button';
+  backToBoards.className = 'ws-btn';
+  backToBoards.textContent = 'Back to boards';
+  testNote.append(testName, backToBoards);
+  typeList.append(testNote);
+  const markTestPrint = (type: AnyBoardType | undefined) => {
+    const test = type?.testPrint === true;
+    const list = shownLists.get(listOf(making));
+    if (list !== undefined) list.hidden = test;
+    testNote.hidden = !test;
+    if (type === undefined) return;
+    if (test) testName.textContent = `Test print: ${type.name}.`;
+    else plainType.set(listOf(making), type.id);
+  };
+  backToBoards.addEventListener('click', () => {
+    const group = listOf(making);
+    const id = plainType.get(group) ?? typesOf(group).find((t) => t.testPrint !== true)?.id;
+    const option = shownLists.get(group)?.querySelector<HTMLInputElement>(`input[value="${id ?? ''}"]`);
+    if (option === null || option === undefined) return;
+    option.checked = true;
+    option.dispatchEvent(new Event('change', { bubbles: true }));
+  });
   // the group shown: its list, and the type last chosen in it, shown
   const showGroup = (group: string) => {
     making = group;
@@ -398,6 +428,7 @@ async function start(): Promise<void> {
       .get(listOf(input.value))
       ?.querySelector<HTMLInputElement>(`input[value="${type?.id ?? ''}"]`);
     if (option) option.checked = true;
+    markTestPrint(type);
     if (type === undefined) return;
     show(type);
     // A wall is closed round its outer edge (D37): made a wall, the sides still open close, and can be opened again.
@@ -414,6 +445,7 @@ async function start(): Promise<void> {
     // a type chosen in another list, as a script may, shows its group; a wall stays a wall among the boards
     showGroup(listOf(making) === group ? making : group);
     choices.types[group] = input.value;
+    markTestPrint(boardType(input.value));
     show(boardType(input.value));
     // a test print's choice is made again with its form: the focus goes on to the new one, where the keys move it
     if (focused && !input.isConnected)
@@ -423,6 +455,7 @@ async function start(): Promise<void> {
   formBox?.addEventListener('change', chooseType);
   showGroup(startGroup);
   const first = chosenOf(startGroup);
+  markTestPrint(first);
   if (first !== undefined) show(first);
 }
 

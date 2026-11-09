@@ -76,7 +76,7 @@ the screw size) and its own among the fine ones, the lattice boards their `LOOK_
 and names its file from `boardLabel(values)`, as the lightened board (`board-types/lightened.ts`) does;
 so a setting added to the solid board reaches it too, and its test checks it has every one of them.
 
-**Mounting** (screw holes and standoffs, D73 to D75) is three edits in such a type, as the solid board
+**Mounting** (the screw choice and standoffs, D73 to D75) is three edits in such a type, as the solid board
 has it (C87): its settings, which `boardSettings` gives, or `...MOUNTING_SETTINGS` at the end of its
 `defineSettings([...])` for a board that does not take the solid board's, and
 `mountingCuts(mountingOf(values), params)` as the third argument to `makeSolidBoard`, with

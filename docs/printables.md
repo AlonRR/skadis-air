@@ -88,7 +88,7 @@ download an STL or 3MF. Everything runs in the page; nothing is sent anywhere.
 _ℹ️ In the GIF: a lightened board sized 240 x 200 mm, then split into panels for a 1200 x 800 mm wall, and back to one
 solid board._
 
-The files here are ready to print at the page's starting values. For any other size, edge or mounting, use the page.
+The boards here are 200 x 200 mm, ready to print. For any other size, edge or mounting, use the page.
 
 ### What is here
 
@@ -138,6 +138,8 @@ clip, and back to the solid board._
 - **The slot clip's options**: a screw or a keyhole to fix it to the wall, or neither.
 - **Open sides between the slots**: a board's open sides can run midway between the slots, so every slot at a seam
   is whole.
+- **Shifted slots**: a board's open sides can run through the slots with the grid moved 20 mm, a half slot on the middle
+  of each tile along the side and none at a corner, to join panels from generators that lay it out that way.
 - **Lock screws**: in place of keyholes, a screw through a slot at each corner into the standoff behind it holds the
   board; every slot still takes a hook.
 - **A slot clip for seams between the slots**: a peg in the nearest slot each side, its bar on the diagonal.
@@ -191,6 +193,13 @@ to use, change, share or sell, with no conditions from this project.
 Not affiliated with IKEA. SKÅDIS is IKEA's name for its pegboard system.
 
 ### Updates
+
+#### 2026-11-09 · v0.12.0
+
+- Open sides can run through the slots shifted, the grid moved 20 mm, to join panels from generators that lay it out so.
+- A board that moves from keyholes, lock screws or tape to a corner screw keeps its standoffs, at the corners.
+- A greyed option says what to change, and a refused size marks the field to change.
+- With a test print chosen, the Board list gives way to its name and a way back.
 
 #### 2026-10-31 · v0.11.0
 
