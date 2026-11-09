@@ -56,12 +56,22 @@ export interface ChoiceSetting {
   label: string;
   options: readonly ChoiceOption[]; // in the order the page lists them
   default: string; // one of the options' values
+  /** Where the choice moves when the other values rule out the option chosen, if that option is left; else the first
+   * option left (D635 a). */
+  movesTo?: string;
   help?: string;
   advanced?: boolean;
   appliesWhen?: AppliesWhen;
 }
 
 export type Setting = NumberSetting | SidesSetting | ChoiceSetting;
+
+/** The option a choice moves to when the option chosen is ruled out (D589, D635 a), the page's and the library's one
+ * rule: the one the setting names if that is left, else the first left; undefined if none is. */
+export function optionLeft(setting: ChoiceSetting, out: Readonly<Record<string, string>>): string | undefined {
+  if (setting.movesTo !== undefined && !(setting.movesTo in out)) return setting.movesTo;
+  return setting.options.find((o) => !(o.value in out))?.value;
+}
 
 /** Keeps the settings' literal keys, so a board type's values are typed from its declaration. */
 export function defineSettings<const S extends readonly Setting[]>(settings: S): S {
@@ -250,8 +260,8 @@ function takeOptionsLeft(
     const out = ruled[s.key];
     const chosen = values[s.key];
     if (s.kind !== 'choice' || out === undefined || typeof chosen !== 'string' || !(chosen in out)) continue;
-    const left = s.options.find((o) => !(o.value in out));
-    if (left !== undefined) values[s.key] = left.value;
+    const left = optionLeft(s, out);
+    if (left !== undefined) values[s.key] = left;
   }
 }
 

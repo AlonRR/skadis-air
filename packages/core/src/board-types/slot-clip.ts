@@ -96,7 +96,7 @@ export const SLOT_CLIP = defineBoardType({
       step: 0.5,
       help: "The gap behind the boards, as the standoffs' height: 15 mm unless set. At least 12 mm, so hooks have room.",
     },
-    SCREW_SIZE_SETTING,
+    { ...SCREW_SIZE_SETTING, appliesWhen: (v) => v['fixing'] !== 'none' }, // A640, D620 a
     {
       kind: 'number',
       key: 'pegClearanceMm',
@@ -122,6 +122,7 @@ export const SLOT_CLIP = defineBoardType({
         "For a screw: flush in its countersink, or a round (pan) head sunk in a counterbore below the bar's face, so " +
         'hooks along the seam keep their room. A round head on a 4 mm screw needs the clip at least 13.4 mm deep.',
       advanced: true,
+      appliesWhen: (v) => v['fixing'] === 'screw', // A640, D620 a
     },
     ...screwPlaceSettings(CLIP_SCREW),
   ]),

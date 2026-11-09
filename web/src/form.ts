@@ -9,7 +9,7 @@
 // leaves it unchecked then, so nothing marks it.
 // An option the other values rule out is greyed out the same way, why said under its choice (D589). A setting the page
 // sets itself is kept off the form (D590). A number whose starting value hangs on the others follows it until set (D603).
-import { optionsOff, readTypedNumber, settingsNotApplying } from 'skadis-air';
+import { optionLeft, optionsOff, readTypedNumber, settingsNotApplying } from 'skadis-air';
 import type { AnyBoardType, ChoiceSetting, NumberSetting, Problem, Setting, SidesSetting } from 'skadis-air';
 
 type Side = 'left' | 'right' | 'bottom' | 'top';
@@ -363,7 +363,7 @@ function choiceField(s: ChoiceSetting, changed: () => void, start?: unknown): Fi
     set();
     const checked = inputs().find((i) => i.checked);
     if (checked !== undefined && checked.value in out) {
-      const left = inputs().find((i) => !(i.value in out));
+      const left = inputs().find((i) => i.value === optionLeft(s, out));
       if (left !== undefined) left.checked = true;
     }
     const reasons = [...new Set(Object.values(out))];

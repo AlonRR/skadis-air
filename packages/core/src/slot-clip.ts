@@ -37,6 +37,7 @@ import { chamferedExtrusion, EDGE_CHAMFER_MM, longBlend, placed } from './chamfe
 import { circle, HALF_STEP, ringedSolid, stadium } from './rings.js';
 import { insideRings, outwardNormals, rootCurve, rootReach, rootSize } from './root.js';
 import { BOARD_THICKNESS_MM, GRID_PITCH_MM, SLOT_HEIGHT_MM, SLOT_WIDTH_MM } from './skadis.js';
+import { SettingsProblem } from './settings.js';
 import { BETWEEN_SHIFT_MM, type Seams } from './slots.js';
 import { TUNNEL_DEPTH_MM } from './standoff.js';
 
@@ -193,15 +194,17 @@ export function slotClipParams(given: Partial<SlotClipParams>): SlotClipParams {
     );
   }
   if (p.fixing === 'screw' && round && p.depthMm < roundHeadClipDepth(p.screwMm) - 1e-9) {
-    throw new RangeError(
+    throw new SettingsProblem(
       `A slot clip with a round head on a ${nice(p.screwMm)} mm screw needs to be at least ` +
         `${nice(roundHeadClipDepth(p.screwMm))} mm deep, to sink the head below the bar`,
+      ['depthMm'],
     );
   }
   if (p.fixing === 'keyhole' && p.depthMm < keyholeClipDepth(p.screwMm) - 1e-9) {
-    throw new RangeError(
+    throw new SettingsProblem(
       `A slot clip with a keyhole for a ${nice(p.screwMm)} mm screw needs to be at least ` +
         `${nice(keyholeClipDepth(p.screwMm))} mm deep`,
+      ['depthMm'],
     );
   }
   return p;

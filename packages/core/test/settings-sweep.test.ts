@@ -9,6 +9,7 @@ import { ALL_OPEN, type Sides } from '../src/slots.js';
 import {
   defaultValues,
   defineSettings,
+  optionLeft,
   optionsOff,
   readValues,
   settingsNotApplying,
@@ -54,8 +55,8 @@ function pageOrder(settings: readonly Setting[], given: Record<string, unknown>)
     const out = off[s.key];
     const chosen = moved[s.key];
     if (s.kind !== 'choice' || out === undefined || typeof chosen !== 'string' || !(chosen in out)) continue;
-    const left = s.options.find((o) => !(o.value in out));
-    if (left !== undefined) moved[s.key] = left.value;
+    const left = optionLeft(s, out);
+    if (left !== undefined) moved[s.key] = left;
   }
   return readValues(settings, moved);
 }

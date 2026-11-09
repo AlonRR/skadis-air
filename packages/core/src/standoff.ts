@@ -325,8 +325,9 @@ function seatCutter(engine: Engine, [x, y]: readonly [number, number], screwMm: 
   ]);
   const step = (w: number, d: number, z: number) =>
     Manifold.cube([w, d, BRIDGE_STEP_MM + 0.01]).translate([x - w / 2, y - d / 2, z - 0.005]);
-  // the slot across the flats (along y, the hexagon's corners being along x), then the square on it
-  const slot = step(holeMm, seat.acrossMm, seat.topMm);
+  // the slot across the flats (along y, the hexagon's corners being along x), then the square on it; its ends a hair
+  // inside the flats, as on them it left facets of no area at some fits (A640)
+  const slot = step(holeMm, seat.acrossMm - 0.02, seat.topMm);
   const square = step(holeMm, holeMm, seat.topMm + BRIDGE_STEP_MM);
   const all = Manifold.union([pocket, slot, square]);
   for (const m of [pocket, slot, square]) m.delete();

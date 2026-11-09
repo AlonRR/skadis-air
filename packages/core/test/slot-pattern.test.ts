@@ -134,9 +134,9 @@ describe('the setting (D641 a)', () => {
       expect(seams?.kind === 'choice' && seams.options.map((o) => o.value)).toContain('offset');
       const start = defaultValues(type.settings);
       expect(start['seams']).toBe('through');
-      expect(type.label({ ...start, seams: 'offset' })).toContain('no-corner-slots');
-      expect(type.label(start)).not.toContain('no-corner-slots');
-      expect(type.label({ ...start, seams: 'offset', sides: CLOSED })).not.toContain('no-corner-slots');
+      expect(type.label({ ...start, seams: 'offset' })).toContain('shifted');
+      expect(type.label(start)).not.toContain('shifted');
+      expect(type.label({ ...start, seams: 'offset', sides: CLOSED })).not.toContain('shifted');
     });
 });
 
@@ -271,6 +271,6 @@ describe('what stands behind a board with no slot at the corners (D641 a)', () =
       screwHead: 'keyhole',
     });
     if (!read.ok) throw new Error('refused too soon');
-    expect(() => type.build(engine, read.values)).toThrow(/no slot at the corners/);
+    expect(() => type.build(engine, read.values)).toThrow(/with the slots shifted/);
   });
 });

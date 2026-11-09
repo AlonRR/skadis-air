@@ -960,8 +960,8 @@ describe('lock screws alone (D289)', () => {
 describe('standoffs that keyholes and lock screws need (D589)', () => {
   it('rules out no standoffs with keyholes or lock screws, saying why, and reads them as behind the slots (D619)', () => {
     for (const [head, why] of [
-      ['keyhole', 'Keyholes stand the board on standoffs behind its corner slots'],
-      ['lock', 'Lock screws stand the board on standoffs behind its corner slots'],
+      ['keyhole', 'Keyholes stand the board on standoffs behind the corner slots'],
+      ['lock', 'Lock screws stand the board on standoffs behind the corner slots'],
     ] as const) {
       const given = { screwHead: head, standoffs: 'none' };
       expect(optionsOff(SOLID.settings, given)['standoffs']?.['none']).toMatch(new RegExp(`^${why}`));

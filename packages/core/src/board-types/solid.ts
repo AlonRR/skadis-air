@@ -39,13 +39,17 @@ export const BOARD_SIDES = defineSettings([
     label: 'Open sides',
     options: [
       { value: 'through', label: 'Through the slots' },
-      { value: 'offset', label: 'Through the slots, none at the corners' },
+      { value: 'offset', label: 'Through the slots, shifted' }, // D642
       { value: 'between', label: 'Between the slots' },
     ],
     default: 'through',
+    // only where a side is open, or a wall's panels have seams between them (A640, D620 a)
+    appliesWhen: (v) =>
+      v['panels'] === 'split' ||
+      (typeof v['sides'] === 'object' && v['sides'] !== null && Object.values(v['sides']).includes('open')),
     help:
       'Where an open side runs. Through the slots, it cuts a line of them in half, and a neighbour has the other ' +
-      'halves. None at the corners is the same grid moved 20 mm, a half slot on the middle of each tile along the side ' +
+      'halves. Shifted is the same grid moved 20 mm, a half slot on the middle of each tile along the side ' +
       'and none at a corner, to join panels from generators that lay it out so; four such boards meet where no ' +
       "four-board clip's pegs have slots, so join them with 2-board clips. Between the slots, it runs midway between " +
       'two columns of them, or across the plate between two ' +
@@ -195,7 +199,7 @@ export function boardParamsOf(v: BoardValues): SolidBoardParams {
  * an open side differs so: `240x200-closed-left-between-slots`. */
 export function boardLabel(v: BoardValues): string {
   const closed = (['left', 'right', 'bottom', 'top'] as const).filter((side) => v.sides[side] === 'closed');
-  const pattern = { through: '', offset: '-no-corner-slots', between: '-between-slots' }[v.seams];
+  const pattern = { through: '', offset: '-shifted', between: '-between-slots' }[v.seams];
   const seams = closed.length < 4 ? pattern : '';
   return `${v.widthMm}x${v.heightMm}${closed.length > 0 ? `-closed-${closed.join('-')}` : ''}${seams}`;
 }

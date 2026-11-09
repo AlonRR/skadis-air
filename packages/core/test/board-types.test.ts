@@ -293,9 +293,9 @@ describe('the solid board type', () => {
     for (const [type, given, words, keys] of cases) {
       expect(problem(type, given)).toEqual({ problem: expect.stringContaining(words), keys });
     }
-    // the control: a problem of no one setting names none
+    // a board one tile across names the side that is too short (A640), not both
     const meet = problem(SOLID, { screwHead: 'keyhole', standoffs: 'slots', widthMm: '40' });
-    expect(meet).toEqual({ problem: expect.stringContaining('need a board at least 80 x 80 mm'), keys: [] });
+    expect(meet).toEqual({ problem: expect.stringContaining('need a board at least 80 x 80 mm'), keys: ['widthMm'] });
   });
 
   it('names its file with its size, and the sides that are closed', () => {
@@ -311,7 +311,7 @@ describe('the solid board type', () => {
     if (seams?.kind !== 'choice') return;
     expect(seams.options.map((o) => [o.value, o.label])).toEqual([
       ['through', 'Through the slots'],
-      ['offset', 'Through the slots, none at the corners'],
+      ['offset', 'Through the slots, shifted'],
       ['between', 'Between the slots'],
     ]);
     expect(seams.default).toBe('through');
@@ -722,8 +722,12 @@ describe('the standoff connector type (D91 to D94)', () => {
   });
 
   it('shares its screw size setting with the board, so the two cannot drift apart', () => {
-    // the board's says when it applies, with a screw only (D620 a); the rest is the one setting
-    const screw = (type: AnyBoardType) => ({ ...type.settings.find((s) => s.key === 'screwMm'), appliesWhen: 0 });
+    // the board's says when it applies, with a screw only (D620 a); the standoff has its own help (A640); the rest is the one setting
+    const screw = (type: AnyBoardType) => ({
+      ...type.settings.find((s) => s.key === 'screwMm'),
+      appliesWhen: 0,
+      help: 0,
+    });
     expect(screw(standoff)).toEqual(screw(boardType('solid')));
   });
 

@@ -52,5 +52,8 @@ export const SEAM_TEST = defineBoardType({
     },
   ]),
   build: (engine, v) => makeSeamTest(engine, seamTestParams(v)),
-  label: (v) => `${mm(v.thicknessMm)}mm-${mm(v.slotClearanceMm)}`,
+  // the clearance, a negative one without two dashes, and the chamfer where it is not the starting one (A640)
+  label: (v) =>
+    `${mm(v.thicknessMm)}mm-${v.slotClearanceMm < 0 ? `minus${mm(-v.slotClearanceMm)}` : mm(v.slotClearanceMm)}` +
+    (v.slotChamferMm === SOLID_BOARD_DEFAULTS.slotChamferMm ? '' : `-chamfer-${mm(v.slotChamferMm)}`),
 });

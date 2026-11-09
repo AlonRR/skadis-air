@@ -1028,25 +1028,28 @@ export function mountingCuts(
   // keyholes, lock screws and tape stand behind the corner slots, and with no screws standoffs put there (D619)
   const behindSlots = standsBehindSlots(m);
   const what = behindWhat(m);
+  const need = m.screwHead === 'tape' ? 'needs' : 'need';
   // the standoffs behind the slots: on a lattice board the frame round the slot (D306); on the solid board a keyhole's
   // and its walls (D237), sized from its screw, or with none, a 4 mm screw's
   const [standoffScrewMm, outline] = [standoffScrewOf(m), standoffOutline(m, board)];
   const recessMm = lockRecessMm(m.lockScrewMm);
   checkStandoffs(m);
   if (behindSlots && (board.rows < 2 || board.columns < 2)) {
-    throw new RangeError(
-      `${what} need a board at least ${2 * TILE_MM} x ${2 * TILE_MM} mm: on one tile, the top standoffs would ` +
+    throw new SettingsProblem(
+      `${what} ${need} a board at least ${2 * TILE_MM} x ${2 * TILE_MM} mm: on one tile, the top standoffs would ` +
         'meet the bottom ones or each other',
+      [...(board.columns < 2 ? ['widthMm'] : []), ...(board.rows < 2 ? ['heightMm'] : [])],
     );
   }
   const [tops, bottoms] = behindSlots ? slotStandoffPlaces(m, board) : [[], []];
   if (behindSlots && standoffsMeet([...tops, ...bottoms], outline)) {
-    throw new RangeError(
+    throw new SettingsProblem(
       board.seams === 'between'
-        ? `${what} need a larger board: between the slots, two of its standoffs would meet, behind the slots nearest ` +
+        ? `${what} ${need} a larger board: between the slots, two of its standoffs would meet, behind the slots nearest ` +
             'its corners; open a side, or make it a tile larger'
-        : `${what} need a larger board: with no slot at the corners, two of its standoffs would meet, behind the slots ` +
-            'nearest its corners; make it a tile larger',
+        : `${what} ${need} a larger board: with the slots shifted, two of its standoffs would meet, behind the slots ` +
+            'nearest its corners; make it a tile wider',
+      board.seams === 'between' ? ['widthMm', 'heightMm'] : ['widthMm'],
     );
   }
   const tape = m.screwHead === 'tape' ? [m.tapeMm ?? TAPE_MM, m.tapeLengthMm ?? TAPE_LENGTH_MM] : undefined;
@@ -1081,10 +1084,13 @@ export function mountingCuts(
   ];
   const shaftLevels = m.standoffHeightMm > 0 ? [...mouth, ...levels.slice(1)] : levels;
   const cuts: BoardCuts = {};
+  // a corner rounded past 10 mm brings its chamfer to a large countersink, on the diagonal where both have a point: the
+  // hole turned half a step has none there, as a post has not (A640); at 10 mm or less they do not meet
+  const turn = (board.cornerRadiusMm ?? SOLID_BOARD_DEFAULTS.cornerRadiusMm) > 10 ? HALF_STEP : 0;
   const hole = (engine: Engine, [x, y]: readonly [number, number]) => {
-    const shaft = ringedSolid(engine, (grow) => circle(x, y, holeMm, grow), shaftLevels);
+    const shaft = ringedSolid(engine, (grow) => circle(x, y, holeMm, grow, turn), shaftLevels);
     if (bore === null) return shaft;
-    const cup = ringedSolid(engine, (grow) => circle(x, y, bore.acrossMm, grow), [
+    const cup = ringedSolid(engine, (grow) => circle(x, y, bore.acrossMm, grow, turn), [
       [t - bore.deepMm, 0],
       [t + 1, 0],
     ]);
@@ -1262,8 +1268,8 @@ const onlyBehindSlots = (v: Readonly<Record<string, unknown>>) => {
   const name = NAMES[String(v['screwHead'])];
   return name === undefined
     ? undefined
-    : `${name} ${v['screwHead'] === 'tape' ? 'stands' : 'stand'} the board on standoffs behind its corner slots, which hold it off the wall so a hook has room ` +
-        'behind it.';
+    : `${name} ${v['screwHead'] === 'tape' ? 'stands' : 'stand'} the board on standoffs behind the corner slots, a ` +
+        "hook's room behind each: to use None or At the corners, choose Countersunk, Round head or None under Mounting.";
 };
 
 /** The mounting's choices, on the main form: how the board holds to the wall (D617 c: "Mounting"), and where its
@@ -1306,19 +1312,21 @@ export const MOUNTING_HOLES = defineSettings([
         // a corner screw needs its standoff round it (D619)
         offWhen: (v) =>
           v['screwHead'] === 'countersunk' || v['screwHead'] === 'round'
-            ? 'A corner screw needs its standoff round it, at the corner. Lock screws are the screws that go ' +
-              'through the slots into the standoffs behind them.'
+            ? 'Behind slots needs Keyholes, Lock screws, Tape or None under Mounting: a corner screw has its standoff ' +
+              'round it, at the corner.'
             : undefined,
       },
     ],
     default: 'none',
+    movesTo: 'corners', // D635 a: a board that stood on standoffs keeps them, at the corners, with a corner screw
     help:
-      'Posts on the back that hold the board off the wall, so hooks have room behind it. At the corners, round the ' +
-      "corner screws. Behind slots, behind the four corner tiles' slots, each leaving its slot a hook's room: " +
+      'Posts on the back that hold the board off the wall, so hooks have room behind it. At the corners: a post round ' +
+      "each corner screw. Behind slots: a post behind each of the corner slots, leaving the slot a hook's room; " +
       'keyholes, lock screws and tape stand on these.',
   },
   { ...TAPE_WIDTH_SETTING, appliesWhen: (v) => v['screwHead'] === 'tape' }, // D593, Q594, D620 a
-  { ...TAPE_LENGTH_SETTING, appliesWhen: (v) => v['screwHead'] === 'tape' }, // C601
+  // C601; a board takes a pad 40 mm long at the most, centred behind a slot 20 mm from its edge (A640)
+  { ...TAPE_LENGTH_SETTING, max: 40, appliesWhen: (v) => v['screwHead'] === 'tape' },
 ]);
 
 /** The screw size, on a board's form with a screw only, a corner screw, keyholes or lock screws (D620 a). */
@@ -1334,7 +1342,7 @@ export const MOUNTING_FINE = defineSettings([
   {
     kind: 'choice',
     key: 'lockScrews',
-    label: 'Lock screws',
+    label: 'Lock screws with keyholes', // D638 a: not the Mounting of that name
     options: [
       { value: 'none', label: 'None' },
       { value: 'bottom', label: 'At the bottom' },

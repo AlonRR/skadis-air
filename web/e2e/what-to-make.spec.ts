@@ -92,10 +92,10 @@ test('greys out no standoffs with keyholes or lock screws, saying why, and frees
   const why = page.getByTestId('ruled-standoffs');
   await expect(none).toBeEnabled();
   // a corner screw: behind the slots greyed out, saying why (D619)
-  await expect(why).toContainText('A corner screw needs its standoff round it');
+  await expect(why).toContainText('Behind slots needs Keyholes');
   for (const [head, words] of [
-    ['keyhole', 'Keyholes stand the board on standoffs behind its corner slots'],
-    ['lock', 'Lock screws stand the board on standoffs behind its corner slots'],
+    ['keyhole', 'Keyholes stand the board on standoffs behind the corner slots'],
+    ['lock', 'Lock screws stand the board on standoffs behind the corner slots'],
   ] as const) {
     await choose(page, 'screwHead', head);
     await expect(none).toBeDisabled();
@@ -107,7 +107,7 @@ test('greys out no standoffs with keyholes or lock screws, saying why, and frees
   await choose(page, 'screwHead', 'countersunk');
   await expect(none).toBeEnabled();
   await expect(why).not.toContainText('Keyholes');
-  await expect(why).toContainText('A corner screw needs its standoff round it');
+  await expect(why).toContainText('Behind slots needs Keyholes');
   // with no screws, every place is open, and nothing is said (D619)
   await choose(page, 'screwHead', 'none');
   await expect(why).toBeHidden();

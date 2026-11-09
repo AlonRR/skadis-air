@@ -89,10 +89,10 @@ export const STANDOFF = defineBoardType({
       help:
         "Screw through: each board's corner screw goes on through the standoff into the wall. Nut: each post holds a " +
         'nut of the screw size, pulled up into a seat from the wall side before the standoff goes up, and a countersunk ' +
-        'machine screw through the board holds it (D607); the standoff stands on a rectangular pad for a piece of ' +
-        'double-sided tape (D592), or on a foot screwed to the wall by two screws of the screw size, driven before the ' +
-        'boards go on (D600). Wood or PT screw: the same, each post a pilot hole that a countersunk wood screw, or a PT ' +
-        'screw made for plastic, cuts its own thread in (D611). Taped or screwed to the wall, it holds boards with ' +
+        'machine screw through the board holds it; the standoff stands on a rectangular pad for a piece of ' +
+        'double-sided tape, or on a foot screwed to the wall by two screws of the screw size, driven before the ' +
+        'boards go on. Wood or PT screw: the same, each post a pilot hole that a countersunk wood screw, or a PT ' +
+        'screw made for plastic, cuts its own thread in. Taped or screwed to the wall, it holds boards with ' +
         'corner screw holes and no standoffs of their own: a board on tape standoffs has no holes for it.',
     },
     {
@@ -140,7 +140,12 @@ export const STANDOFF = defineBoardType({
         'With a wood or PT screw: the hole in each post that the screw cuts its thread in, 0.85 times the screw ' +
         'unless set. A screw that is hard to drive or splits the post wants more; one that strips wants less.',
     },
-    SCREW_SIZE_SETTING,
+    {
+      ...SCREW_SIZE_SETTING,
+      help:
+        'The screw each post takes: the corner screw through it, the machine screw into its nut, or the wood or PT ' +
+        'screw into its pilot hole. Each hole is 0.5 mm wider than the screw.',
+    },
   ]),
   build: (engine, v) => makeStandoff(engine, paramsOf(v)),
   label: (v) =>

@@ -251,7 +251,7 @@ test('offers keyholes, which bring their standoffs, with lock screws under Advan
   // been a problem the status line alone said
   await expect(page.locator('input[name="standoffs"][value="none"]')).toBeDisabled();
   await expect(page.getByTestId('ruled-standoffs')).toContainText(
-    'Keyholes stand the board on standoffs behind its corner slots',
+    'Keyholes stand the board on standoffs behind the corner slots',
   );
 });
 

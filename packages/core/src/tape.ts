@@ -68,7 +68,7 @@ export function tapeHolds(
   const own = part === 'board' ? "the board's own weight among it" : "the boards' share and the standoff's among it";
   return (
     `${count} of ${nice(widthMm)} x ${nice(lengthMm)} mm tape, ${nice(cm2)} cm²${less}, ${pieces === 1 ? 'holds' : 'hold'} ` +
-    `about ${grams} g by 3M's rule for its VHB foam tapes, four square inches for each pound held still, ${own}; ` +
+    `about ${grams} g by 3M's rule for its VHB foam tapes, about 17.6 g for each cm² held still, ${own}; ` +
     'less where a hook levers the board off the wall, so hang light things. Wipe the pads and the wall with alcohol ' +
     'first: a commenter on one Printables mount reports tape coming off bare PLA twice.'
   );
