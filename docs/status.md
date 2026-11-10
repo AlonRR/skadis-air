@@ -271,6 +271,8 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 | D618 | **Standoffs: None, At the corners, Behind slots** ("618 a"; the owner: "behind a peg, none, and corners"), the page's word for the holes (C623, C628) | 31 Oct 2026 |
 | D619 | **What each mounting stands on, and tape behind the slots** ("619 yes and tape a"): a corner screw on None or At the corners, Behind slots greyed with a note that lock screws are the screws behind the slots; keyholes and lock screws Behind slots only, as built; None any of the three; tape on four posts behind the corner tiles' slots, as the keyholes', each flaring to its pad behind the hooks' room (the owner: "use the keyholes design as the basis, this way their is a lot more room to grow the standoff for larger tape sizes"), the corner pads retired (C622, C624 to C626) | 31 Oct 2026 |
 | D620 | **A setting that does not apply is hidden, not greyed** ("620 a"; the owner: "Tape sizes should only appear when tape is clicked, the same if a screw option isn't clicked"): every such setting; an option that does not apply stays greyed with its note (D589) (C627) | 31 Oct 2026 |
+| A650 | **The Printables text gets the `v0.12.0` lines** ("650 y", 10 Nov 2026): the Shifted slots line, the v0.12.0 Updates entry and "The boards here are 200 x 200 mm, ready to print"; put in the editor and "Publish now" pressed by the agent at about 07:40 UTC, read back from Printables' API: the three changes there, the six images in the text, the eight pictures and the 50 files as before | 10 Nov 2026 |
+| A652 | **The local branches merged into `main` are deleted** ("652 y", 10 Nov 2026): 75 of 75 by `git branch -d`, each tip checked an ancestor of `main` first; the three merged ones checked out in a worktree and the nine not merged are kept | 10 Nov 2026 |
 | D635 | **A board on standoffs keeps them when it moves to a corner screw**, which moves them to At the corners ("Both D635 a and D636 a"): a setting may name where a ruled-out choice moves (`movesTo`), the page and the library by one rule (`optionLeft`) | 9 Nov 2026 |
 | D636 | **Standoffs stays shown with its one choice under keyholes, lock screws and tape**, the others greyed with why | 9 Nov 2026 |
 | D637 | **The greyed reasons say which Mounting frees which option, and the slots are "the corner slots" throughout** ("637 a") | 9 Nov 2026 |
@@ -299,6 +301,8 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 ## Open questions
 
+- **A651** Post a reply to 3DNIK's Printables comment 3701868 (5 Nov 2026), or the owner pastes it: that `v0.12.0`
+  has Open sides "Through the slots, shifted", and that four such boards at a corner join by 2-board clips for now (D644).
 - **T615** Print the nut test print and say which seat holds (D607 a, 31 Oct 2026): nine taped 1-board nut standoffs,
   M3, M4 and M5, each with a seat the nut + 0.1, 0.2 and 0.3 mm across its flats, told apart by 1, 2 or 3 dots on
   the board face: `.check/test-print/skadis-trial-nuts.stl` (`node scripts/test-print/write-trial-plate.mjs nuts`;
