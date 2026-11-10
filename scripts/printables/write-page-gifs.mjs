@@ -69,17 +69,32 @@ function recorder(page, dir, { centre, phone }) {
     };
     await more();
   };
-  // frames until the board is made, or the form says why not, at most `left` of them
-  const untilMade = async (left) => {
+  // Whether a board is still being made or drawn: the status says building until the answer comes, and the 3D view
+  // is busy until it is drawn. (It had read the view's data-state for "building", which the view never says.)
+  const busy = () =>
+    page.evaluate(
+      () =>
+        document.querySelector('[data-testid="board-status"]')?.getAttribute('data-state') === 'building' ||
+        document.querySelector('[data-testid="preview"]')?.hasAttribute('aria-busy') === true,
+    );
+  // the frames at which a step began while the page was still making the last change's board: the pointer moving
+  // on before the model is shown, as the owner saw in the text's GIFs (10 Nov 2026)
+  const early = [];
+  // The page builds 150 ms after the last change (web/src/main.ts), so a board not yet building may be about to:
+  // frames until it has been idle for QUIET_MS, at most `left` of them. A change that builds nothing, such as the
+  // view or a help note, waits QUIET_MS alone.
+  const QUIET_MS = 400;
+  const untilQuiet = async (left, since = undefined) => {
     await snap();
-    const state = await page.getByTestId('board-status').getAttribute('data-state');
-    const preview = await page.getByTestId('preview').getAttribute('data-state');
-    if ((state === 'building' || preview === 'building') && left > 0) await untilMade(left - 1);
+    const idleSince = (await busy()) ? undefined : (since ?? Date.now());
+    if (idleSince !== undefined && Date.now() - idleSince >= QUIET_MS) return;
+    if (left === 0) throw new Error('the page was still making a board after 400 frames');
+    await untilQuiet(left - 1, idleSince);
   };
-  // until the board is made, and `ms` more
+  // until the board the change set off is made and drawn, and `ms` from when it was, QUIET_MS of them already
   const settle = async (ms = 900) => {
-    await untilMade(300);
-    await hold(ms);
+    await untilQuiet(400);
+    await hold(Math.max(0, ms - QUIET_MS));
   };
   // on a phone: the page scrolled until the control is below what is pinned at the top, frames while it scrolls
   const clearOfPinned = async (target) => {
@@ -97,6 +112,7 @@ function recorder(page, dir, { centre, phone }) {
     if (moved) await hold(700);
   };
   const pointAt = async (target) => {
+    if (await busy()) early.push(frames.length);
     await (phone ? clearOfPinned(target) : target.scrollIntoViewIfNeeded());
     const box = await target.boundingBox();
     if (box === null) throw new Error('a control to point at is not on the page');
@@ -118,8 +134,8 @@ function recorder(page, dir, { centre, phone }) {
     });
   return {
     frames,
+    early,
     hold,
-    settle,
     /** The radio button or button a label names, pointed at and used. */
     async click(target) {
       await pointAt(target);
@@ -259,6 +275,8 @@ const recordings = [
       await r.click(radio(page, 'boardType', 'standoff'));
       await r.click(radio(page, 'boardType', 'slot-clip'));
       await r.click(radio(page, 'typeGroup', 'board'));
+      // the fit coupon is still chosen there, its Board list given way to the way back (D639 a)
+      await r.click(page.getByTestId('test-print-note').getByRole('button', { name: 'Back to boards' }));
       await r.click(radio(page, 'boardType', 'solid'));
     },
   },
@@ -279,8 +297,8 @@ const recordings = [
   {
     id: 'page-mounting',
     width: 560,
-    // standoffs at the corners, keyholes seen from the back, lock screws, tape (D619 a), and back: countersunk takes the
-    // standoffs off the slots to None again itself, as it began (D619)
+    // standoffs at the corners, keyholes seen from the back, lock screws, tape (D619 a), and back: countersunk keeps
+    // the standoffs, at the corners (D635 a), so None is chosen again, as it began
     async steps(r, page) {
       await r.click(radio(page, 'standoffs', 'corners'));
       await r.click(radio(page, 'screwHead', 'keyhole'));
@@ -291,6 +309,7 @@ const recordings = [
       await r.click(radio(page, 'view', 'back'));
       await r.click(radio(page, 'view', 'front'));
       await r.click(radio(page, 'screwHead', 'countersunk'));
+      await r.click(radio(page, 'standoffs', 'none'));
     },
   },
   {
@@ -407,7 +426,10 @@ await inTurn(recordings, async (g) => {
     gif,
   ]);
   const seconds = (r.frames.at(-1).at - r.frames[0].at) / 1000;
-  console.log(`${gif}: ${r.frames.length} frames, ${seconds.toFixed(1)} s`);
+  // a step begun before the last board was shown is a fault of this recording, not of the page
+  const early = r.early.length === 0 ? 'every step after the board was shown' : `${r.early.length} steps early`;
+  console.log(`${gif}: ${r.frames.length} frames, ${seconds.toFixed(1)} s, ${early}`);
+  if (r.early.length > 0) process.exitCode = 1;
   await context.close();
 });
 await browser.close();

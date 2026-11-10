@@ -302,6 +302,10 @@ connector types drawn in [`figures/connector-types.png`](figures/connector-types
 
 ## Open questions
 
+- **D654** Replace the Printables text's four page GIFs with the ones made again on 10 Nov 2026 (C653), each step after
+  its board is shown (`docs/figures/page-gifs-2026-11-10/README.md`), and press "Publish now": (a) those four only, (b) the
+  gallery's page tour and phone GIFs made again too, as the page tour's last wall was still being made for 5.8 s when it
+  moved on (recommended).
 - **T615** Print the nut test print and say which seat holds (D607 a, 31 Oct 2026): nine taped 1-board nut standoffs,
   M3, M4 and M5, each with a seat the nut + 0.1, 0.2 and 0.3 mm across its flats, told apart by 1, 2 or 3 dots on
   the board face: `.check/test-print/skadis-trial-nuts.stl` (`node scripts/test-print/write-trial-plate.mjs nuts`;
