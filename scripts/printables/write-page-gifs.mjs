@@ -84,7 +84,7 @@ function recorder(page, dir, { centre, phone }) {
   // frames until it has been idle for QUIET_MS, at most `left` of them. A change that builds nothing, such as the
   // view or a help note, waits QUIET_MS alone.
   const QUIET_MS = 400;
-  const untilQuiet = async (left, since = undefined) => {
+  const untilQuiet = async (left, since) => {
     await snap();
     const idleSince = (await busy()) ? undefined : (since ?? Date.now());
     if (idleSince !== undefined && Date.now() - idleSince >= QUIET_MS) return;
